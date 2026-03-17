@@ -1,0 +1,8 @@
+torch
+torchvision
+monai[all]
+nibabel
+wandb
+numpy
+scipy
+matplotlib

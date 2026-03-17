@@ -1,0 +1,10 @@
+data/
+wandb/
+__pycache__/
+*.pyc
+.venv/
+checkpoints/
+checkpoint_backup/
+data/
+wandb/
+additional_contents/
