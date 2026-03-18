@@ -53,7 +53,8 @@ def parse_args() -> argparse.Namespace:
         choices=SUPPORTED_GENERATOR_VERSIONS,
         help="Generator pipeline version: v1/v2 legacy flow, v3 percentile-synchronized targets.",
     )
-    parser.add_argument("--aug-prob", type=float, default=0.7, help="Probability of applying generator augmentation.")
+    parser.add_argument("--aug-prob-train", type=float, default=0.7, help="Probability of applying generator augmentation during training.")
+    parser.add_argument("--aug-prob-val", type=float, default=0.0, help="Probability of applying generator augmentation during validation.")
     parser.add_argument(
         "--baseline-contrast",
         type=str,
@@ -247,7 +248,8 @@ def main() -> None:
 
     if args.fully_artificial:
         args.use_generator = True
-        args.aug_prob = 1.0
+        args.aug_prob_train = 1.0
+        args.aug_prob_val = 1.0
 
     if args.use_generator and args.gen_weights is None:
         args.gen_weights = str(
@@ -417,7 +419,7 @@ def main() -> None:
             unet_input = x
             used_generator = False
 
-            if args.use_generator and random.random() < args.aug_prob:
+            if args.use_generator and random.random() < args.aug_prob_train:
                 used_generator = True
                 with torch.no_grad(), torch.amp.autocast('cuda', enabled=use_amp):
                     guidance_map, target_hist = _build_generator_guidance(
@@ -502,7 +504,7 @@ def main() -> None:
                 y_val = (val_batch["label"].as_tensor().to(device=device, memory_format=torch.channels_last_3d) > 0).float()
 
                 val_input = x_val
-                if args.use_generator and random.random() < args.aug_prob:
+                if args.use_generator and random.random() < args.aug_prob_val:
                     with torch.amp.autocast('cuda', enabled=use_amp):
                         guidance_map_val, _ = _build_generator_guidance(
                             x=x_val,

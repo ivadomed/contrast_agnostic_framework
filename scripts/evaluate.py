@@ -84,6 +84,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bigaug-contrast", type=str, default="t1w", choices=sorted(CONTRAST_TO_INDEX))
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--cache-rate", type=float, default=0.0)
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=1,
+        help="Evaluation batch size (number of subjects). Increase cautiously to avoid GPU OOM.",
+    )
+    parser.add_argument(
+        "--sw-batch-size",
+        type=int,
+        default=4,
+        help="Sliding-window internal batch size. Increase for speed if memory allows.",
+    )
+    parser.add_argument(
+        "--disable-amp",
+        action="store_true",
+        help="Disable mixed precision during evaluation (AMP is enabled by default on CUDA).",
+    )
     parser.add_argument("--split-file", type=str, default=str(PROJECT_ROOT / "splits" / "brats_subject_split.json"))
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()
@@ -96,6 +113,13 @@ def _default_checkpoint_path(tag: str, contrast: str) -> str:
 def _extract_contrast(image: torch.Tensor, contrast: str) -> torch.Tensor:
     index = CONTRAST_TO_INDEX[normalize_contrast_name(contrast)]
     return image[:, index : index + 1, ...]
+
+
+def _stack_target_contrasts(image: torch.Tensor) -> tuple[torch.Tensor, int]:
+    # Convert [B, C, ...] multi-contrast input to [B*4, 1, ...] in TARGET_CONTRASTS order.
+    batch_size = image.shape[0]
+    stacked = torch.cat([_extract_contrast(image, contrast) for contrast in TARGET_CONTRASTS], dim=0)
+    return stacked, batch_size
 
 
 def _format_metric(value: Any) -> str:
@@ -504,7 +528,7 @@ def main() -> None:
     dataset = Subset(full_dataset, test_indices)
 
     loader_kwargs = {
-        "batch_size": 1,
+        "batch_size": args.batch_size,
         "shuffle": False,
         "num_workers": args.num_workers,
         "pin_memory": torch.cuda.is_available(),
@@ -518,7 +542,12 @@ def main() -> None:
     print(f"Evaluating on held-out test subjects: {len(test_subjects)} (samples: {len(test_indices)})")
     print(f"Evaluating model specs: {len(model_specs)}")
 
-    inferer = SlidingWindowInferer(roi_size=(128, 128, 128), sw_batch_size=4)
+    inferer = SlidingWindowInferer(roi_size=(128, 128, 128), sw_batch_size=args.sw_batch_size)
+    print(
+        "Eval settings: "
+        f"batch_size={args.batch_size}, sw_batch_size={args.sw_batch_size}, "
+        f"amp_enabled={device.type == 'cuda' and not args.disable_amp}"
+    )
 
     model_instances: dict[str, UNet | None] = {}
     metrics: dict[str, dict[str, DiceMetric]] = {}
@@ -537,22 +566,30 @@ def main() -> None:
             for contrast in TARGET_CONTRASTS
         }
 
-    with torch.no_grad():
+    amp_enabled = device.type == "cuda" and not args.disable_amp
+    autocast_dtype = torch.float16
+
+    with torch.inference_mode():
         for batch in dataloader:
-            x = batch["image"].to(device).float()
-            y = (batch["label"].to(device) > 0).float()
+            x = batch["image"].to(device, non_blocking=True).float()
+            y = (batch["label"].to(device, non_blocking=True) > 0).float()
 
-            for contrast in TARGET_CONTRASTS:
-                x_contrast = _extract_contrast(x, contrast)
+            x_stacked, batch_size = _stack_target_contrasts(x)
 
-                for spec in model_specs:
-                    model_id = spec["model_id"]
-                    model = model_instances[model_id]
-                    if model is None:
-                        continue
-                    logits = inferer(x_contrast, model)
-                    pred = (torch.sigmoid(logits) > 0.5).float()
-                    metrics[model_id][contrast](y_pred=pred, y=y)
+            for spec in model_specs:
+                model_id = spec["model_id"]
+                model = model_instances[model_id]
+                if model is None:
+                    continue
+
+                with torch.autocast(device_type=device.type, dtype=autocast_dtype, enabled=amp_enabled):
+                    logits = inferer(x_stacked, model)
+                pred = (torch.sigmoid(logits) > 0.5).float()
+
+                for idx, contrast in enumerate(TARGET_CONTRASTS):
+                    start = idx * batch_size
+                    end = (idx + 1) * batch_size
+                    metrics[model_id][contrast](y_pred=pred[start:end], y=y)
 
     long_rows: list[dict[str, Any]] = []
     wide_rows: list[dict[str, Any]] = []

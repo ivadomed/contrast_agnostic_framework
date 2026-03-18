@@ -3,6 +3,8 @@ import os
 
 import argparse
 import io
+import json
+import random
 import sys
 from pathlib import Path
 
@@ -11,6 +13,7 @@ import torch
 import wandb
 from monai.data import DataLoader
 from PIL import Image
+from torch.utils.data import Subset
 from torchvision.utils import make_grid
 
 # --- SPEED OPTIMIZATION 1: Multiprocessing File Sharing ---
@@ -51,6 +54,10 @@ def parse_args() -> argparse.Namespace:
         help="Source MRI contrast to train the generator on.",
     )
     parser.add_argument("--data-dir", type=str, default=str(PROJECT_ROOT / "data"))
+    parser.add_argument("--split-file", type=str, default=str(PROJECT_ROOT / "splits" / "brats_subject_split.json"))
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--train-ratio", type=float, default=0.7)
+    parser.add_argument("--val-ratio", type=float, default=0.15)
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--lr", type=float, default=3e-4)
@@ -77,6 +84,74 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--version", type=str, default="v2")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()
+
+
+def _subject_id_from_sample(sample: dict) -> str:
+    image_path = sample["image"]
+    if isinstance(image_path, (list, tuple)):
+        image_path = image_path[0]
+    image_name = Path(str(image_path)).name
+    if image_name.endswith(".nii.gz"):
+        return image_name[:-7]
+    return Path(image_name).stem
+
+
+def _load_or_create_split(
+    samples: list[dict],
+    split_file: Path,
+    train_ratio: float,
+    val_ratio: float,
+    seed: int,
+) -> dict:
+    subjects = [_subject_id_from_sample(sample) for sample in samples]
+    unique_subjects = sorted(set(subjects))
+
+    split_file.parent.mkdir(parents=True, exist_ok=True)
+    if split_file.exists():
+        with split_file.open("r", encoding="utf-8") as f:
+            split = json.load(f)
+    else:
+        shuffled = unique_subjects[:]
+        rng = random.Random(seed)
+        rng.shuffle(shuffled)
+
+        n_total = len(shuffled)
+        n_train = int(n_total * train_ratio)
+        n_val = int(n_total * val_ratio)
+        n_train = max(1, min(n_train, n_total - 2))
+        n_val = max(1, min(n_val, n_total - n_train - 1))
+
+        split = {
+            "seed": seed,
+            "train_subjects": shuffled[:n_train],
+            "val_subjects": shuffled[n_train : n_train + n_val],
+            "test_subjects": shuffled[n_train + n_val :],
+        }
+        with split_file.open("w", encoding="utf-8") as f:
+            json.dump(split, f, indent=2)
+
+    train_set = set(split.get("train_subjects", []))
+    val_set = set(split.get("val_subjects", []))
+    test_set = set(split.get("test_subjects", []))
+
+    train_indices, val_indices, test_indices = [], [], []
+    for idx, subject in enumerate(subjects):
+        if subject in train_set:
+            train_indices.append(idx)
+        elif subject in val_set:
+            val_indices.append(idx)
+        elif subject in test_set:
+            test_indices.append(idx)
+
+    split["train_indices"] = train_indices
+    split["val_indices"] = val_indices
+    split["test_indices"] = test_indices
+    split["dataset_size"] = len(samples)
+
+    with split_file.open("w", encoding="utf-8") as f:
+        json.dump(split, f, indent=2)
+
+    return split
 
 
 def log_visualizations_to_wandb(
@@ -178,6 +253,28 @@ def main() -> None:
         cache_rate=args.cache_rate,
         num_workers=args.num_workers,
         source_contrast=args.source_contrast,
+    )
+
+    split = _load_or_create_split(
+        samples=dataset.data,
+        split_file=Path(args.split_file),
+        train_ratio=args.train_ratio,
+        val_ratio=args.val_ratio,
+        seed=args.seed,
+    )
+    train_indices = split.get("train_indices", [])
+    if not train_indices:
+        raise ValueError(
+            f"No train indices found in split file: {args.split_file}. "
+            "Please verify split generation settings."
+        )
+    dataset = Subset(dataset, train_indices)
+
+    print(
+        f"Using split file: {args.split_file}\n"
+        f"Generator train subjects: {len(split.get('train_subjects', []))} "
+        f"(samples: {len(train_indices)}) | "
+        f"Excluded val/test subjects: {len(split.get('val_subjects', [])) + len(split.get('test_subjects', []))}"
     )
     
     loader_kwargs = {
