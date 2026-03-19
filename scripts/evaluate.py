@@ -114,6 +114,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def _default_checkpoint_path(tag: str, contrast: str) -> str:
+    if tag == "baseline":
+        return str(PROJECT_ROOT / "checkpoints" / "baseline" / f"baseline_{contrast}" / "best_segmenter.pth")
     return str(PROJECT_ROOT / "checkpoints" / f"best_segmenter_{tag}_{contrast}.pth")
 
 
@@ -211,6 +213,8 @@ def maybe_build_segmenter(device: torch.device, weights_path: str) -> UNet | Non
 def maybe_build_segmenter_ensemble(
     device: torch.device,
     best_weights_path: str,
+    family: str,
+    source_contrast: str,
     num_ensemble: int,
 ) -> list[UNet]:
     best_path = Path(best_weights_path)
@@ -221,10 +225,15 @@ def maybe_build_segmenter_ensemble(
     models: list[UNet] = []
     models.append(build_segmenter(device=device, weights_path=str(best_path)))
 
-    # v4 convention: best_segmenter.pth + optional last_segmenter_1..4.pth in same run folder.
-    if best_path.name == "best_segmenter.pth" and num_ensemble > 0:
+    if num_ensemble > 0:
+        ensemble_dir = best_path.parent
+
+        # Legacy baseline convention: best in checkpoints/baseline/, rolling last in baseline_<contrast>/.
+        if family == "baseline" and best_path.name.startswith("best_segmenter_baseline_"):
+            ensemble_dir = best_path.parent / f"baseline_{source_contrast}"
+
         for idx in range(1, num_ensemble + 1):
-            candidate = best_path.parent / f"last_segmenter_{idx}.pth"
+            candidate = ensemble_dir / f"last_segmenter_{idx}.pth"
             if not candidate.exists():
                 print(f"Skipping missing ensemble checkpoint: {candidate}")
                 continue
@@ -633,6 +642,8 @@ def main() -> None:
         models = maybe_build_segmenter_ensemble(
             device=device,
             best_weights_path=checkpoint_path,
+            family=spec["family"],
+            source_contrast=spec["source_contrast"],
             num_ensemble=args.num_ensemble,
         )
         model_instances[model_id] = models

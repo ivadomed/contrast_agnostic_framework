@@ -34,7 +34,7 @@ import torch.multiprocessing as mp
 mp.set_sharing_strategy('file_system')
 
 
-SUPPORTED_GENERATOR_VERSIONS = ("v1", "v2", "v3")
+SUPPORTED_GENERATOR_VERSIONS = ("v1", "v2", "v3", "v4")
 
 
 def parse_args() -> argparse.Namespace:
@@ -212,7 +212,7 @@ def _build_generator_guidance(
 ) -> tuple[torch.Tensor, torch.Tensor | None]:
     target_hist: torch.Tensor | None = None
 
-    if args.gen_version == "v3":
+    if args.gen_version == "v3" or args.gen_version == "v4":
         target_hist, _, guidance_map = generate_unified_targets(
             input_images=x,
             num_bins=args.num_bins,
@@ -414,8 +414,21 @@ def main() -> None:
         checkpoint_dir = PROJECT_ROOT / "checkpoints" / "baseline"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
+    rolling_last_enabled = (args.use_generator and args.gen_version == "v4") or (not args.use_generator)
+    if args.use_generator and args.gen_version == "v4":
+        rolling_checkpoint_dir = checkpoint_dir
+    elif not args.use_generator:
+        # Keep baseline best checkpoints in checkpoints/baseline/, but isolate rolling last checkpoints per contrast.
+        rolling_checkpoint_dir = checkpoint_dir / f"baseline_{args.baseline_contrast}"
+        rolling_checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        rolling_checkpoint_dir = None
+
     if args.use_generator and args.gen_version == "v4":
         best_checkpoint_path = checkpoint_dir / "best_segmenter.pth"
+    elif not args.use_generator and rolling_checkpoint_dir is not None:
+        # Baseline now mirrors v4 style: best and last checkpoints in the same per-contrast folder.
+        best_checkpoint_path = rolling_checkpoint_dir / "best_segmenter.pth"
     else:
         best_checkpoint_path = checkpoint_dir / f"best_segmenter_{tag}_{args.baseline_contrast}.pth"
 
@@ -587,14 +600,14 @@ def main() -> None:
                 f"train_loss={mean_loss:.4f} | val_loss={mean_val_loss:.4f} | val_dice={mean_val_dice:.4f}"
             )
 
-        if args.use_generator and args.gen_version == "v4":
+        if rolling_last_enabled and rolling_checkpoint_dir is not None:
             # Keep a strict rolling buffer of the latest 4 checkpoints.
             slot = ((epoch + 1 - 1) % 4) + 1
-            last_checkpoint_path = checkpoint_dir / f"last_segmenter_{slot}.pth"
+            last_checkpoint_path = rolling_checkpoint_dir / f"last_segmenter_{slot}.pth"
             torch.save(segmenter.state_dict(), last_checkpoint_path)
 
             # Defensive cleanup in case stale files exist from older naming schemes.
-            for stale_path in checkpoint_dir.glob("last_segmenter_*.pth"):
+            for stale_path in rolling_checkpoint_dir.glob("last_segmenter_*.pth"):
                 stem = stale_path.stem
                 try:
                     idx = int(stem.rsplit("_", 1)[-1])
