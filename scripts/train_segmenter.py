@@ -399,11 +399,26 @@ def main() -> None:
     
     scaler = torch.amp.GradScaler('cuda', enabled=use_amp)
 
+    if args.fully_artificial:
+        tag = "fullyartificial"
+    else:
+        tag = "generator" if args.use_generator else "baseline"
+
     if args.use_generator:
-        checkpoint_dir = PROJECT_ROOT / "checkpoints" / args.version
+        if args.gen_version == "v4":
+            model_id = f"v4_{tag}_{args.baseline_contrast}"
+            checkpoint_dir = PROJECT_ROOT / "checkpoints" / "v4" / model_id
+        else:
+            checkpoint_dir = PROJECT_ROOT / "checkpoints" / args.version
     else:
         checkpoint_dir = PROJECT_ROOT / "checkpoints" / "baseline"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.use_generator and args.gen_version == "v4":
+        best_checkpoint_path = checkpoint_dir / "best_segmenter.pth"
+    else:
+        best_checkpoint_path = checkpoint_dir / f"best_segmenter_{tag}_{args.baseline_contrast}.pth"
+
     best_val_dice = float("-inf")
 
     global_step = 0
@@ -560,22 +575,34 @@ def main() -> None:
 
         if mean_val_dice > best_val_dice:
             best_val_dice = mean_val_dice
-            if args.fully_artificial:
-                tag = "fullyartificial"
-            else:
-                tag = "generator" if args.use_generator else "baseline"
-            save_path = checkpoint_dir / f"best_segmenter_{tag}_{args.baseline_contrast}.pth"
-            torch.save(segmenter.state_dict(), save_path)
+            torch.save(segmenter.state_dict(), best_checkpoint_path)
             print(
                 f"Epoch {epoch + 1:03d}/{args.epochs:03d} | "
                 f"train_loss={mean_loss:.4f} | val_loss={mean_val_loss:.4f} | "
-                f"val_dice={mean_val_dice:.4f} | ✓ saved best model → {save_path}"
+                f"val_dice={mean_val_dice:.4f} | ✓ saved best model → {best_checkpoint_path}"
             )
         else:
             print(
                 f"Epoch {epoch + 1:03d}/{args.epochs:03d} | "
                 f"train_loss={mean_loss:.4f} | val_loss={mean_val_loss:.4f} | val_dice={mean_val_dice:.4f}"
             )
+
+        if args.use_generator and args.gen_version == "v4":
+            # Keep a strict rolling buffer of the latest 4 checkpoints.
+            slot = ((epoch + 1 - 1) % 4) + 1
+            last_checkpoint_path = checkpoint_dir / f"last_segmenter_{slot}.pth"
+            torch.save(segmenter.state_dict(), last_checkpoint_path)
+
+            # Defensive cleanup in case stale files exist from older naming schemes.
+            for stale_path in checkpoint_dir.glob("last_segmenter_*.pth"):
+                stem = stale_path.stem
+                try:
+                    idx = int(stem.rsplit("_", 1)[-1])
+                except ValueError:
+                    stale_path.unlink(missing_ok=True)
+                    continue
+                if idx < 1 or idx > 4:
+                    stale_path.unlink(missing_ok=True)
 
     wandb.finish()
 

@@ -57,6 +57,13 @@ def parse_args() -> argparse.Namespace:
         help="Inline model spec: model_id,family,source_contrast,checkpoint_path",
     )
     parser.add_argument(
+        "--num-ensemble",
+        type=int,
+        default=0,
+        choices=[0, 1, 2, 3, 4],
+        help="For v4 models, number of last_segmenter_X checkpoints to ensemble with best_segmenter.pth.",
+    )
+    parser.add_argument(
         "--output-dir",
         type=str,
         default=str(PROJECT_ROOT / "results" / "eval"),
@@ -201,6 +208,50 @@ def maybe_build_segmenter(device: torch.device, weights_path: str) -> UNet | Non
     return build_segmenter(device=device, weights_path=str(checkpoint_path))
 
 
+def maybe_build_segmenter_ensemble(
+    device: torch.device,
+    best_weights_path: str,
+    num_ensemble: int,
+) -> list[UNet]:
+    best_path = Path(best_weights_path)
+    if not best_path.exists():
+        print(f"Skipping missing checkpoint: {best_path}")
+        return []
+
+    models: list[UNet] = []
+    models.append(build_segmenter(device=device, weights_path=str(best_path)))
+
+    # v4 convention: best_segmenter.pth + optional last_segmenter_1..4.pth in same run folder.
+    if best_path.name == "best_segmenter.pth" and num_ensemble > 0:
+        for idx in range(1, num_ensemble + 1):
+            candidate = best_path.parent / f"last_segmenter_{idx}.pth"
+            if not candidate.exists():
+                print(f"Skipping missing ensemble checkpoint: {candidate}")
+                continue
+            models.append(build_segmenter(device=device, weights_path=str(candidate)))
+
+    return models
+
+
+def _predict_from_ensemble(
+    models: list[UNet],
+    inferer: SlidingWindowInferer,
+    x_input: torch.Tensor,
+) -> torch.Tensor:
+    probabilities: list[torch.Tensor] = []
+    for model in models:
+        logits = inferer(x_input, model)
+
+        # Binary UNet outputs one channel; convert to two-class logits before softmax.
+        if logits.shape[1] == 1:
+            logits = torch.cat([torch.zeros_like(logits), logits], dim=1)
+
+        probabilities.append(torch.softmax(logits, dim=1))
+
+    mean_probabilities = torch.mean(torch.stack(probabilities, dim=0), dim=0)
+    return torch.argmax(mean_probabilities, dim=1, keepdim=True).float()
+
+
 def _validate_family(family: str) -> str:
     normalized = family.strip().lower()
     valid = {"baseline", "generator", "bigaug", "fullyartificial"}
@@ -277,35 +328,55 @@ def _discover_models(checkpoint_dir: Path) -> list[dict[str, Any]]:
     # Pattern matches: best_segmenter_<family>_<contrast>.pth
     # Also matches: best_segmenter_generator_<contrast>.pth inside v1/v2 folders
     pattern = re.compile(r"^best_segmenter_(baseline|generator|bigaug|fullyartificial)_([a-zA-Z0-9]+)\.pth$")
+    v4_model_id_pattern = re.compile(r"^(?:v4_)?(baseline|generator|bigaug|fullyartificial)_([a-zA-Z0-9]+)$")
     specs: list[dict[str, Any]] = []
     
     # Use rglob to find files in subdirectories (baseline, v1, v2)
     for checkpoint in sorted(checkpoint_dir.rglob("*.pth")):
         match = pattern.match(checkpoint.name)
-        if not match:
-            continue
-            
-        family = match.group(1)
-        contrast = normalize_contrast_name(match.group(2))
-        
-        # Determine a useful Model ID by looking at the parent directory name
-        parent_dir = checkpoint.parent.name
-        if parent_dir in ["v1", "v2", "v3", "baseline"]:
-            model_id = f"{parent_dir}_{family}_{contrast}"
-        else:
-            model_id = f"{family}_{contrast}"
+        if match:
+            family = match.group(1)
+            contrast = normalize_contrast_name(match.group(2))
 
-        specs.append(
-            _normalize_model_spec(
-                {
-                    "model_id": model_id,
-                    "family": family,
-                    "source_contrast": contrast,
-                    "checkpoint_path": str(checkpoint),
-                    "enabled": True,
-                }
+            # Determine a useful Model ID by looking at the parent directory name
+            parent_dir = checkpoint.parent.name
+            if parent_dir in ["v1", "v2", "v3", "baseline"]:
+                model_id = f"{parent_dir}_{family}_{contrast}"
+            else:
+                model_id = f"{family}_{contrast}"
+
+            specs.append(
+                _normalize_model_spec(
+                    {
+                        "model_id": model_id,
+                        "family": family,
+                        "source_contrast": contrast,
+                        "checkpoint_path": str(checkpoint),
+                        "enabled": True,
+                    }
+                )
             )
-        )
+            continue
+
+        if checkpoint.name == "best_segmenter.pth":
+            run_dir_name = checkpoint.parent.name
+            v4_match = v4_model_id_pattern.match(run_dir_name)
+            if not v4_match:
+                continue
+
+            family = v4_match.group(1)
+            contrast = normalize_contrast_name(v4_match.group(2))
+            specs.append(
+                _normalize_model_spec(
+                    {
+                        "model_id": run_dir_name,
+                        "family": family,
+                        "source_contrast": contrast,
+                        "checkpoint_path": str(checkpoint),
+                        "enabled": True,
+                    }
+                )
+            )
     return specs
 
 
@@ -546,10 +617,11 @@ def main() -> None:
     print(
         "Eval settings: "
         f"batch_size={args.batch_size}, sw_batch_size={args.sw_batch_size}, "
-        f"amp_enabled={device.type == 'cuda' and not args.disable_amp}"
+        f"amp_enabled={device.type == 'cuda' and not args.disable_amp}, "
+        f"num_ensemble={args.num_ensemble}"
     )
 
-    model_instances: dict[str, UNet | None] = {}
+    model_instances: dict[str, list[UNet]] = {}
     metrics: dict[str, dict[str, DiceMetric]] = {}
     exists_map: dict[str, int] = {}
     for spec in model_specs:
@@ -558,9 +630,14 @@ def main() -> None:
         print(
             f"Model {model_id}: family={spec['family']} source={spec['source_contrast']} checkpoint={checkpoint_path}"
         )
-        model = maybe_build_segmenter(device=device, weights_path=checkpoint_path)
-        model_instances[model_id] = model
-        exists_map[model_id] = 1 if model is not None else 0
+        models = maybe_build_segmenter_ensemble(
+            device=device,
+            best_weights_path=checkpoint_path,
+            num_ensemble=args.num_ensemble,
+        )
+        model_instances[model_id] = models
+        exists_map[model_id] = 1 if len(models) > 0 else 0
+        print(f"Loaded checkpoints for {model_id}: {len(models)}")
         metrics[model_id] = {
             contrast: DiceMetric(include_background=False, reduction="mean")
             for contrast in TARGET_CONTRASTS
@@ -578,13 +655,12 @@ def main() -> None:
 
             for spec in model_specs:
                 model_id = spec["model_id"]
-                model = model_instances[model_id]
-                if model is None:
+                models = model_instances[model_id]
+                if not models:
                     continue
 
                 with torch.autocast(device_type=device.type, dtype=autocast_dtype, enabled=amp_enabled):
-                    logits = inferer(x_stacked, model)
-                pred = (torch.sigmoid(logits) > 0.5).float()
+                    pred = _predict_from_ensemble(models=models, inferer=inferer, x_input=x_stacked)
 
                 for idx, contrast in enumerate(TARGET_CONTRASTS):
                     start = idx * batch_size
