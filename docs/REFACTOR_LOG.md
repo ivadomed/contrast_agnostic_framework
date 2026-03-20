@@ -35,3 +35,27 @@
 - Component: Performance (Data Caching + Training Throughput)
 - Change Applied: Optimized BraTSDataModule to avoid constructing/caching validation datasets during generator-only training and reused training dataset metadata for split generation to remove redundant dataset instantiation. Reduced generator logging overhead by throttling auxiliary per-step metric logs and retaining optional media logging behind an explicit flag. Added trainer performance knobs (benchmark, num_sanity_val_steps, higher log_every_n_steps) and updated run_generators launcher to default to set_slot 3 with speed-oriented Hydra overrides.
 - Reasoning & Google-Grade Standard: Eliminating unnecessary data pipeline work and reducing logging pressure improves GPU utilization and iteration speed while preserving model behavior; codified launcher defaults reduce operator variance across runs.
+
+## Entry 7
+- Date: 2026-03-20
+- Component: Performance (Host-Device Syncs & GPU Vectorization)
+- Change Applied: Completely rewrote `src/histogram_ops.py` to eliminate `for i in range(b)` and `for chunk_idx in range(num_chunks)` loops. Replaced sequential dynamic masking with fully batched index lookups using `torch.searchsorted` and `torch.nanquantile`. Stripped away `.item()` and `.numel()` calls.
+- Reasoning & Google-Grade Standard: Dynamic shaping and item extraction inside an inner loop forces the GPU to synchronize with the CPU host, severely stalling kernel dispatches. Transitioning to 100% vectorized array manipulations allows operations to be enqueued instantly in parallel directly on the C++ backend. Initial iteration still iterated over chunks causing memory format thrashing and ~0.14it/s latency; the full continuous tensor replacement brought speeds to ~1.53it/s. 
+
+## Entry 8
+- Date: 2026-03-20
+- Component: Performance (Algorithmic Complexity & O(N³) Reduction)
+- Change Applied: Refactored `src/kornia_augmentations.py` (`RandomElasticTransform3D`) to avoid redundant static allocations using early-out caching (`_cached_kernel` & `_cached_grid`) and forced continuous tensor casting before `F.grid_sample`. Most importantly, rewrote the 3D Gaussian Blur core within `kornia_augmentations.py` and `histogram_ops.py` to replace dense `F.conv3d` with three separated 1D convolutions (Depth, Height, Width).
+- Reasoning & Google-Grade Standard: Kornia's Elastic Transform uses massive 3D Gaussian kernel bounds up to $79^3$ based on dynamic sigmas. Dense convolutions in 3D scale at $O(N^3)$. Because Gaussian blur is linearly separable, executing three consecutive 1D convolutions reduces the MAC operations from roughly 3 Trillion to a fraction of a percent (from $O(N^3)$ to $O(3N)$), preventing the GPU from buckling under sheer math load during heavy augmentation probabilities. Speeds successfully jumped from 0.21it/s back to stable 1.47it/s.
+
+## Entry 9
+- Date: 2026-03-20
+- Component: Performance (Loss Function Convolution Scaling)
+- Change Applied: Re-mapped `GuidanceLoss3D` in `src/losses.py` to apply the Gaussian blur to the absolute raw difference (`blur(pred - target)`) instead of blurring predictions and targets independently before differencing. Fused `DiceEdgeLoss3D` separable Sobel convolutions into an explicitly staked 3-channel Sobel kernel to dispatch gradients with a single execution layer.
+- Reasoning & Google-Grade Standard: Because convolution is functionally distributive and linear, subtracting first and blurring later maintains absolute mathematical equivalence but strictly eliminates 50% of the forward convolutions required in `GuidanceLoss3D`. Fused kernels drop Python function-call dispatch latency, resulting in better multi-processor saturation across the GPU grid.
+
+## Entry 10
+- Date: 2026-03-20
+- Component: Performance & System Architecture (Segmenter Parity)
+- Change Applied: Applied `torch.set_float32_matmul_precision('high')` universally across both `scripts/train.py` and `scripts/train_segmenter.py` and ported the execution syntax of `run_segmenters.sh` to natively adopt the optimized Hydra configs. Verified that the `AdamW` fused kernels are permanently flagged as `fused=True` for both Generator and Segmenter gradient updates.
+- Reasoning & Google-Grade Standard: Standardizing the training wrappers ensures that critical speedup features (TF32 precision, Dataloader prefetching, fused optimizer chains) implicitly broadcast to any newly developed model logic (like Segmentation) without needing sequential pipeline rewrites. 

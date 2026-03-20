@@ -1,897 +1,0 @@
- ______________________________________
-/ You're using slot(s) 3. Only YOU can \
-\ prevent resource overbooking.        /
- --------------------------------------
-      \                    / \  //\
-       \    |\___/|      /   \//  \\
-            /0  0  \__  /    //  | \ \    
-           /     /  \/_/    //   |  \  \  
-           @_^_@'/   \/_   //    |   \   \ 
-           //_^_/     \/_ //     |    \    \
-        ( //) |        \///      |     \     \
-      ( / /) _|_ /   )  //       |      \     _\
-    ( // /) '/,_ _ _/  ( ; -.    |    _ _\.-~        .-~~~^-.
-  (( / / )) ,-{        _      `-.|.-~-.           .~         `.
- (( // / ))  '/\      /                 ~-. _ .-~      .-~^-.  \
- (( /// ))      `.   {            }                   /      \  \
-  (( / ))     .----~-.\        \-'                 .~         \  `. \^-.
-             ///.----..>        \             _ -~             `.  ^-`  ^-_
-               ///-._ _ _ _ _ _ _}^ - - - - ~                     ~-- ,.-~
-                                                                  /.-~
-/usr/local/bin/unattended-upgrades-date
-#================================================================#
- NOTICE: romane *may* reboot for updates at Sat Mar 21 04:25:25 EDT 2026.
-   If your work will be running at that time, please ask for an
-   exception in https://github.com/neuropoly/computers/issues.
-#================================================================#
-<frozen importlib._bootstrap_external>:1297: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
-Seed set to 42
-[34m[1mwandb[0m: [33mWARNING[0m The anonymous setting has no effect and will be removed in a future version.
-[34m[1mwandb[0m: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/ge.polymtl.ca/pahoa/.netrc.
-[34m[1mwandb[0m: Currently logged in as: [33mp-hoareau33[0m ([33mp-hoareau33-centrale-lyon[0m) to [32mhttps://api.wandb.ai[0m. Use [1m`wandb login --relogin`[0m to force relogin
-]11;?[c[34m[1mwandb[0m: [38;5;178m⢿[0m Waiting for wandb.init()...
-[Am[2K[34m[1mwandb[0m: [38;5;178m⣻[0m Waiting for wandb.init()...
-[Am[2K[34m[1mwandb[0m: [38;5;178m⣽[0m Waiting for wandb.init()...
-[Am[2K[34m[1mwandb[0m: [38;5;178m⣾[0m setting up run fqz3i65b (0.3s)
-[Am[2K[34m[1mwandb[0m: [38;5;178m⣷[0m setting up run fqz3i65b (0.3s)
-[Am[2K[34m[1mwandb[0m: [38;5;178m⣯[0m setting up run fqz3i65b (0.3s)
-[Am[2K[34m[1mwandb[0m: [38;5;178m⣟[0m setting up run fqz3i65b (0.3s)
-[Am[2K[34m[1mwandb[0m: [38;5;178m⡿[0m setting up run fqz3i65b (0.3s)
-[Am[2K[34m[1mwandb[0m: Tracking run with wandb version 0.25.1
-[34m[1mwandb[0m: Run data is saved locally in [35m[1m/home/ge.polymtl.ca/pahoa/mri_synthesis_project/wandb/wandb/run-20260319_171734-fqz3i65b[0m
-[34m[1mwandb[0m: Run [1m`wandb offline`[0m to turn off syncing.
-[34m[1mwandb[0m: Syncing run [33mgenerator-v5-t1w[0m
-[34m[1mwandb[0m: ⭐️ View project at [34m[4mhttps://wandb.ai/p-hoareau33-centrale-lyon/mri-synthesis-3d[0m
-[34m[1mwandb[0m: 🚀 View run at [34m[4mhttps://wandb.ai/p-hoareau33-centrale-lyon/mri-synthesis-3d/runs/fqz3i65b[0m
-Using 16bit Automatic Mixed Precision (AMP)
-GPU available: True (cuda), used: True
-TPU available: False, using: 0 TPU cores
-💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
-`Trainer(limit_train_batches=1.0)` was configured so 100% of the batches per epoch will be used..
-monai.transforms.spatial.dictionary Orientationd.__init__:labels: Current default value of argument `labels=(('L', 'R'), ('P', 'A'), ('I', 'S'))` was changed in version None from `labels=(('L', 'R'), ('P', 'A'), ('I', 'S'))` to `labels=None`. Default value changed to None meaning that the transform now uses the 'space' of a meta-tensor, if applicable, to determine appropriate axis labels.
-2026-03-19 17:18:08,044 - INFO - Verified 'Task01_BrainTumour.tar', md5: 240a19d752f0d9e9101544901065d872.
-2026-03-19 17:18:08,044 - INFO - File exists: /home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/Task01_BrainTumour.tar, skipped downloading.
-2026-03-19 17:18:08,045 - INFO - Non-empty folder exists in /home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/Task01_BrainTumour, skipped extracting.
-Loading dataset:   0%|                                   | 0/38 [00:00<?, ?it/s]Loading dataset:   3%|▋                          | 1/38 [00:03<02:20,  3.79s/it]Loading dataset:   5%|█▍                         | 2/38 [00:04<01:09,  1.92s/it]Loading dataset:   8%|██▏                        | 3/38 [00:05<00:46,  1.32s/it]Loading dataset:  13%|███▌                       | 5/38 [00:08<00:52,  1.60s/it]Loading dataset:  18%|████▉                      | 7/38 [00:09<00:31,  1.01s/it]Loading dataset:  21%|█████▋                     | 8/38 [00:09<00:24,  1.21it/s]Loading dataset:  24%|██████▍                    | 9/38 [00:12<00:39,  1.37s/it]Loading dataset:  26%|██████▊                   | 10/38 [00:12<00:31,  1.12s/it]Loading dataset:  29%|███████▌                  | 11/38 [00:13<00:27,  1.02s/it]Loading dataset:  34%|████████▉                 | 13/38 [00:16<00:30,  1.22s/it]Loading dataset:  37%|█████████▌                | 14/38 [00:17<00:25,  1.06s/it]Loading dataset:  39%|██████████▎               | 15/38 [00:17<00:23,  1.00s/it]Loading dataset:  45%|███████████▋              | 17/38 [00:20<00:24,  1.19s/it]Loading dataset:  47%|████████████▎             | 18/38 [00:21<00:20,  1.00s/it]Loading dataset:  50%|█████████████             | 19/38 [00:21<00:16,  1.14it/s]Loading dataset:  53%|█████████████▋            | 20/38 [00:22<00:13,  1.33it/s]Loading dataset:  55%|██████████████▎           | 21/38 [00:24<00:20,  1.23s/it]Loading dataset:  58%|███████████████           | 22/38 [00:25<00:20,  1.28s/it]Loading dataset:  63%|████████████████▍         | 24/38 [00:26<00:10,  1.29it/s]Loading dataset:  66%|█████████████████         | 25/38 [00:28<00:15,  1.19s/it]Loading dataset:  68%|█████████████████▊        | 26/38 [00:30<00:14,  1.20s/it]Loading dataset:  71%|██████████████████▍       | 27/38 [00:30<00:10,  1.01it/s]Loading dataset:  74%|███████████████████▏      | 28/38 [00:30<00:07,  1.26it/s]Loading dataset:  76%|███████████████████▊      | 29/38 [00:33<00:11,  1.30s/it]Loading dataset:  79%|████████████████████▌     | 30/38 [00:35<00:11,  1.47s/it]Loading dataset:  84%|█████████████████████▉    | 32/38 [00:35<00:05,  1.17it/s]Loading dataset:  87%|██████████████████████▌   | 33/38 [00:38<00:06,  1.33s/it]Loading dataset:  89%|███████████████████████▎  | 34/38 [00:38<00:04,  1.18s/it]Loading dataset:  92%|███████████████████████▉  | 35/38 [00:39<00:03,  1.03s/it]Loading dataset:  97%|█████████████████████████▎| 37/38 [00:41<00:01,  1.11s/it]Loading dataset: 100%|██████████████████████████| 38/38 [00:42<00:00,  1.03it/s]Loading dataset: 100%|██████████████████████████| 38/38 [00:42<00:00,  1.12s/it]
-Checkpoint directory /home/ge.polymtl.ca/pahoa/mri_synthesis_project/checkpoints/v5/generator/t1w exists and is not empty.
-LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1,2,3]
-`isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
-[?25l[2KEpoch 0/1  [38;5;237m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m 0/135 [2m0:00:00 • -:--:--[0m [2;4m0.00it/s[0m [2KEpoch 0/1  [38;5;237m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m 0/135 [2m0:00:00 • -:--:--[0m [2;4m0.00it/s[0m [2KEpoch 0/1  [38;5;237m━━━━━━━━━━━━━━━━━[0m 1/135 [2m0:00:15 • -:--:--[0m [2;4m0.00it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m27.881            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;237m━━━━━━━━━━━━━━━━━[0m 2/135 [2m0:00:18 • 0:05:32[0m [2;4m0.40it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m30.181            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;237m━━━━━━━━━━━━━━━━━[0m 3/135 [2m0:00:20 • 0:05:43[0m [2;4m0.38it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m27.814            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━━[0m 4/135 [2m0:00:23 • 0:05:35[0m [2;4m0.39it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m27.814            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━━[0m 5/135 [2m0:00:26 • 0:05:35[0m [2;4m0.39it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m27.357            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━━[0m 6/135 [2m0:00:28 • 0:05:41[0m [2;4m0.38it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m30.099            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━━[0m 7/135 [2m0:00:31 • 0:05:46[0m [2;4m0.37it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m23.653            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━━[0m 8/135 [2m0:00:34 • 0:05:44[0m [2;4m0.37it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m22.115            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━━[0m 9/135 [2m0:00:37 • 0:05:41[0m [2;4m0.37it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m16.288            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━━[0m 10/135 [2m0:00:40 • 0:05:38[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m18.341           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━━[0m 11/135 [2m0:00:42 • 0:05:34[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.743           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━[0m 12/135 [2m0:00:45 • 0:05:30[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.399           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━[0m 13/135 [2m0:00:47 • 0:05:30[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.619           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━[0m 14/135 [2m0:00:50 • 0:05:25[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.869           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━[0m 15/135 [2m0:00:53 • 0:05:26[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.094           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━[0m 16/135 [2m0:00:56 • 0:05:24[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m17.186           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━[0m 17/135 [2m0:00:58 • 0:05:22[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.895           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━[0m 18/135 [2m0:01:01 • 0:05:18[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.765           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━[0m 19/135 [2m0:01:04 • 0:05:14[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.013           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━[0m 20/135 [2m0:01:07 • 0:05:13[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.973           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━[0m 21/135 [2m0:01:09 • 0:05:09[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.645           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━[0m 22/135 [2m0:01:12 • 0:05:06[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.646           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━[0m 23/135 [2m0:01:15 • 0:05:04[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.082           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━[0m 24/135 [2m0:01:17 • 0:04:59[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.751           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━[0m 25/135 [2m0:01:20 • 0:04:59[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.573           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━[0m 26/135 [2m0:01:23 • 0:04:56[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m18.387           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━[0m 27/135 [2m0:01:25 • 0:04:51[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m18.528           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━[0m 28/135 [2m0:01:28 • 0:04:50[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m17.665           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━[0m 29/135 [2m0:01:31 • 0:04:47[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.818           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━[0m 30/135 [2m0:01:33 • 0:04:42[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.750           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━[0m 31/135 [2m0:01:36 • 0:04:36[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.242           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━[0m 32/135 [2m0:01:39 • 0:04:36[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.392           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━[0m 33/135 [2m0:01:41 • 0:04:35[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m17.619           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━[0m 34/135 [2m0:01:44 • 0:04:31[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.795           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━[0m 35/135 [2m0:01:47 • 0:04:30[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.768           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━[0m 36/135 [2m0:01:50 • 0:04:29[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.875           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━[0m 37/135 [2m0:01:52 • 0:04:24[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.672           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━[0m 38/135 [2m0:01:55 • 0:04:21[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.035           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━[0m 39/135 [2m0:01:57 • 0:04:15[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.301           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━[0m 40/135 [2m0:02:00 • 0:04:13[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.834           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━[0m 41/135 [2m0:02:03 • 0:04:13[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.070           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━[0m 42/135 [2m0:02:06 • 0:04:12[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.483           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━[0m 43/135 [2m0:02:08 • 0:04:09[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.746           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━[0m 44/135 [2m0:02:11 • 0:04:04[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.979           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━[0m 45/135 [2m0:02:14 • 0:04:04[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.962           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━[0m 46/135 [2m0:02:16 • 0:03:59[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.101           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━[0m 47/135 [2m0:02:19 • 0:03:56[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.425           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━[0m 48/135 [2m0:02:22 • 0:03:54[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.963           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━[0m 49/135 [2m0:02:24 • 0:03:51[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.494           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━[0m 50/135 [2m0:02:27 • 0:03:48[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.056           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━[0m 51/135 [2m0:02:30 • 0:03:46[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.662           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━[0m 52/135 [2m0:02:32 • 0:03:43[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.085           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━[0m 53/135 [2m0:02:35 • 0:03:40[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.350           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━[0m 54/135 [2m0:02:38 • 0:03:38[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.363           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━[0m 55/135 [2m0:02:41 • 0:03:37[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.857           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━[0m 56/135 [2m0:02:43 • 0:03:33[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.431           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━[0m 57/135 [2m0:02:46 • 0:03:32[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.558           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━[0m 58/135 [2m0:02:49 • 0:03:28[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.409           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━[0m 59/135 [2m0:02:51 • 0:03:26[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.308           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━[0m 60/135 [2m0:02:54 • 0:03:24[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.275           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━[0m 61/135 [2m0:02:57 • 0:03:22[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.057           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━[0m 62/135 [2m0:03:00 • 0:03:19[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.050           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━[0m 63/135 [2m0:03:03 • 0:03:18[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.146           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━[0m 64/135 [2m0:03:05 • 0:03:16[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.747           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━[0m 65/135 [2m0:03:08 • 0:03:13[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.585           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━[0m 66/135 [2m0:03:11 • 0:03:08[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.932           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━[0m 67/135 [2m0:03:13 • 0:03:06[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.339           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━[0m 68/135 [2m0:03:16 • 0:03:03[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.615           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━[0m 69/135 [2m0:03:19 • 0:02:59[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.585           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━[0m 70/135 [2m0:03:21 • 0:02:56[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.142           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━[0m 71/135 [2m0:03:24 • 0:02:53[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.801           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 72/135 [2m0:03:26 • 0:02:49[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.801           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 72/135 [2m0:03:26 • 0:02:49[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.629           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 73/135 [2m0:03:29 • 0:02:45[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.429           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 74/135 [2m0:03:32 • 0:02:42[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.973           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 75/135 [2m0:03:34 • 0:02:37[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.973           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 75/135 [2m0:03:34 • 0:02:37[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.425           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━[0m 76/135 [2m0:03:37 • 0:02:35[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.585           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━[0m 77/135 [2m0:03:40 • 0:02:34[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.230           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━[0m 78/135 [2m0:03:42 • 0:02:31[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.216           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━[0m 79/135 [2m0:03:45 • 0:02:29[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m16.500           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━[0m 80/135 [2m0:03:48 • 0:02:27[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.551           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━[0m 81/135 [2m0:03:51 • 0:02:25[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.910           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━[0m 82/135 [2m0:03:53 • 0:02:21[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.502           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━[0m 83/135 [2m0:03:55 • 0:02:18[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.185           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━[0m 84/135 [2m0:03:58 • 0:02:16[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.040           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━[0m 85/135 [2m0:04:01 • 0:02:12[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.095           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━[0m 86/135 [2m0:04:03 • 0:02:10[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.121           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━[0m 87/135 [2m0:04:06 • 0:02:06[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.894           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━[0m 88/135 [2m0:04:08 • 0:02:02[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.891           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━[0m 89/135 [2m0:04:10 • 0:01:58[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.320           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━[0m 90/135 [2m0:04:13 • 0:01:55[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.140           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━[0m 91/135 [2m0:04:16 • 0:01:52[0m [2;4m0.40it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.151           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━[0m 92/135 [2m0:04:18 • 0:01:48[0m [2;4m0.40it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.274           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━[0m 93/135 [2m0:04:21 • 0:01:46[0m [2;4m0.40it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.363           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━[0m 94/135 [2m0:04:23 • 0:01:44[0m [2;4m0.40it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.987           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━[0m 95/135 [2m0:04:26 • 0:01:41[0m [2;4m0.40it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.958           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━[0m 96/135 [2m0:04:29 • 0:01:39[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.033           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━[0m 97/135 [2m0:04:31 • 0:01:37[0m [2;4m0.40it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.690            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━[0m 98/135 [2m0:04:34 • 0:01:35[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.300            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━[0m 99/135 [2m0:04:36 • 0:01:33[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.899           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━[0m 100/135 [2m0:04:39 • 0:01:31[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.542            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━[0m 101/135 [2m0:04:41 • 0:01:28[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.626           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━[0m 102/135 [2m0:04:44 • 0:01:26[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.462           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━[0m 103/135 [2m0:04:47 • 0:01:24[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.666           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━[0m 104/135 [2m0:04:49 • 0:01:21[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.812           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━[0m 105/135 [2m0:04:52 • 0:01:19[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.165           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━[0m 106/135 [2m0:04:55 • 0:01:17[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.756           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━[0m 107/135 [2m0:04:57 • 0:01:14[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.620           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━[0m 108/135 [2m0:05:00 • 0:01:12[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.997           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━[0m 109/135 [2m0:05:03 • 0:01:09[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.608           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━[0m 110/135 [2m0:05:06 • 0:01:07[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.845           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━[0m 111/135 [2m0:05:08 • 0:01:05[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.869           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━[0m 112/135 [2m0:05:11 • 0:01:03[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.056           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━[0m 113/135 [2m0:05:14 • 0:01:00[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.195           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 114/135 [2m0:05:17 • 0:00:57[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.492           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 115/135 [2m0:05:19 • 0:00:55[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.492           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 116/135 [2m0:05:22 • 0:00:53[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.073           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 117/135 [2m0:05:25 • 0:00:50[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.073           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 118/135 [2m0:05:27 • 0:00:47[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.142           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━[0m 119/135 [2m0:05:30 • 0:00:44[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.727           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━[0m 120/135 [2m0:05:32 • 0:00:41[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.356           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━[0m 121/135 [2m0:05:35 • 0:00:38[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.883           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━[0m 122/135 [2m0:05:38 • 0:00:36[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.463           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━[0m 123/135 [2m0:05:41 • 0:00:33[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.389           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━[0m 124/135 [2m0:05:44 • 0:00:30[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.654           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━[0m 125/135 [2m0:05:46 • 0:00:27[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.558           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━[0m 126/135 [2m0:05:49 • 0:00:25[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.682           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;237m╺[0m 127/135 [2m0:05:51 • 0:00:22[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.978           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;237m╺[0m 128/135 [2m0:05:54 • 0:00:19[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.483           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;237m╺[0m 129/135 [2m0:05:57 • 0:00:16[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.066           [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;237m╺[0m 130/135 [2m0:05:59 • 0:00:14[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m7.696            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;56m╸[0m 131/135 [2m0:06:02 • 0:00:11[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.456            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;56m╸[0m 132/135 [2m0:06:05 • 0:00:09[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.872            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;56m╸[0m 133/135 [2m0:06:07 • 0:00:06[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.443            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;56m╸[0m 134/135 [2m0:06:10 • 0:00:03[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.440            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━━[0m 135/135 [2m0:06:13 • 0:00:00[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.440            [0m[2K[1A[2K[1A[2KEpoch 0/1  [38;5;56m━━━━━━━━━━━━━━━━[0m 135/135 [2m0:06:13 • 0:00:00[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.894            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;237m━━━━━━━━━━━━━━━━━[0m 0/135 [2m0:00:00 • -:--:--[0m [2;4m0.00it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m8.894             [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;237m━━━━━━━━━━━━━━━━━[0m 0/135 [2m0:00:00 • -:--:--[0m [2;4m0.00it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m8.894             [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;237m━━━━━━━━━━━━━━━━━[0m 1/135 [2m0:00:13 • -:--:--[0m [2;4m0.00it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m11.329            [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;237m━━━━━━━━━━━━━━━━━[0m 2/135 [2m0:00:16 • 0:06:37[0m [2;4m0.34it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m11.329            [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;237m━━━━━━━━━━━━━━━━━[0m 3/135 [2m0:00:19 • 0:06:07[0m [2;4m0.36it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m11.413            [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━━[0m 4/135 [2m0:00:21 • 0:06:01[0m [2;4m0.36it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m10.248            [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━━[0m 5/135 [2m0:00:24 • 0:06:00[0m [2;4m0.36it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m7.915             [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━━[0m 6/135 [2m0:00:27 • 0:05:56[0m [2;4m0.36it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m10.446            [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━━[0m 7/135 [2m0:00:29 • 0:05:47[0m [2;4m0.37it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m10.050            [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━━[0m 8/135 [2m0:00:32 • 0:05:44[0m [2;4m0.37it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m10.981            [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━━[0m 9/135 [2m0:00:35 • 0:05:41[0m [2;4m0.37it/s[0m [3mv_num: i65b       [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m9.131             [0m
-                                                              [3mtrain/total_loss_…[0m
-                                                              [3m14.315            [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━━[0m 10/135 [2m0:00:38 • 0:05:39[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.543           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━━[0m 11/135 [2m0:00:40 • 0:05:34[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.266           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━[0m 12/135 [2m0:00:43 • 0:05:34[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.608            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━[0m 13/135 [2m0:00:46 • 0:05:27[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.895            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━[0m 14/135 [2m0:00:48 • 0:05:26[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.441            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━━[0m 15/135 [2m0:00:51 • 0:05:23[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.521            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━[0m 16/135 [2m0:00:54 • 0:05:18[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.727            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━[0m 17/135 [2m0:00:56 • 0:05:15[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.574            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━[0m 18/135 [2m0:00:59 • 0:05:13[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.024           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━━[0m 19/135 [2m0:01:02 • 0:05:11[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.024           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━[0m 20/135 [2m0:01:04 • 0:05:07[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.458           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━[0m 21/135 [2m0:01:07 • 0:05:05[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.613           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━[0m 22/135 [2m0:01:10 • 0:05:05[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.383           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━━[0m 23/135 [2m0:01:12 • 0:04:59[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.841            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━[0m 24/135 [2m0:01:15 • 0:04:55[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.514            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━[0m 25/135 [2m0:01:18 • 0:04:53[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.514            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━[0m 26/135 [2m0:01:20 • 0:04:52[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.584           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━━[0m 27/135 [2m0:01:23 • 0:04:50[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.316           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━[0m 28/135 [2m0:01:26 • 0:04:46[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.557           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━[0m 29/135 [2m0:01:28 • 0:04:46[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.267           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━[0m 30/135 [2m0:01:31 • 0:04:42[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.817           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━━[0m 31/135 [2m0:01:34 • 0:04:41[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.546           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━[0m 32/135 [2m0:01:37 • 0:04:38[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.103           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━[0m 33/135 [2m0:01:39 • 0:04:34[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.756           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━[0m 34/135 [2m0:01:42 • 0:04:31[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.852           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━━[0m 35/135 [2m0:01:45 • 0:04:31[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.012           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━[0m 36/135 [2m0:01:47 • 0:04:29[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.100           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━[0m 37/135 [2m0:01:50 • 0:04:24[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.332            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━[0m 38/135 [2m0:01:53 • 0:04:22[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.032            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━━[0m 39/135 [2m0:01:55 • 0:04:21[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.847            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━[0m 40/135 [2m0:01:58 • 0:04:17[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.139           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━[0m 41/135 [2m0:02:01 • 0:04:16[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.598           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━[0m 42/135 [2m0:02:04 • 0:04:14[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.401           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━━[0m 43/135 [2m0:02:07 • 0:04:13[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.433           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━[0m 44/135 [2m0:02:10 • 0:04:13[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.150           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━[0m 45/135 [2m0:02:12 • 0:04:10[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.678           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━[0m 46/135 [2m0:02:15 • 0:04:07[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.011           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━━[0m 47/135 [2m0:02:18 • 0:04:02[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.114           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━[0m 48/135 [2m0:02:20 • 0:04:01[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.175           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━[0m 49/135 [2m0:02:23 • 0:03:59[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.122           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━[0m 50/135 [2m0:02:26 • 0:03:57[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.365           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━━[0m 51/135 [2m0:02:29 • 0:03:53[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.365           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━[0m 52/135 [2m0:02:31 • 0:03:49[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.050           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━[0m 53/135 [2m0:02:34 • 0:03:45[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.707           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━[0m 54/135 [2m0:02:37 • 0:03:41[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.791            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━━[0m 55/135 [2m0:02:39 • 0:03:36[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.025           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━[0m 56/135 [2m0:02:42 • 0:03:35[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.465           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━[0m 57/135 [2m0:02:45 • 0:03:30[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.025            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━[0m 58/135 [2m0:02:47 • 0:03:29[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.025            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━━[0m 59/135 [2m0:02:50 • 0:03:24[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.272            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━[0m 60/135 [2m0:02:53 • 0:03:21[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.081            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━[0m 61/135 [2m0:02:55 • 0:03:18[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.039           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━[0m 62/135 [2m0:02:58 • 0:03:15[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.519           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━━[0m 63/135 [2m0:03:01 • 0:03:12[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.156           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━[0m 64/135 [2m0:03:03 • 0:03:08[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.373           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━[0m 65/135 [2m0:03:06 • 0:03:08[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.039            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━[0m 66/135 [2m0:03:09 • 0:03:06[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.064           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━━[0m 67/135 [2m0:03:11 • 0:03:00[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.358            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━[0m 68/135 [2m0:03:14 • 0:02:58[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.620            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━[0m 69/135 [2m0:03:16 • 0:02:53[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.886           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━[0m 70/135 [2m0:03:19 • 0:02:50[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.503           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━━[0m 71/135 [2m0:03:21 • 0:02:47[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.641            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 72/135 [2m0:03:24 • 0:02:44[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.911            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 73/135 [2m0:03:27 • 0:02:42[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.332           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 74/135 [2m0:03:29 • 0:02:38[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.385           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━━[0m 75/135 [2m0:03:31 • 0:02:34[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.741           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━[0m 76/135 [2m0:03:34 • 0:02:30[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.749           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━[0m 77/135 [2m0:03:37 • 0:02:28[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.985            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━[0m 78/135 [2m0:03:39 • 0:02:27[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.209            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━━[0m 79/135 [2m0:03:42 • 0:02:25[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m7.862            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━[0m 80/135 [2m0:03:45 • 0:02:22[0m [2;4m0.39it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.558            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━[0m 81/135 [2m0:03:47 • 0:02:21[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.692           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━[0m 82/135 [2m0:03:50 • 0:02:19[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.231           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━━[0m 83/135 [2m0:03:53 • 0:02:17[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.961           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━[0m 84/135 [2m0:03:55 • 0:02:14[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.961           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━[0m 85/135 [2m0:03:58 • 0:02:13[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.422           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━[0m 86/135 [2m0:04:01 • 0:02:10[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.720           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━━[0m 87/135 [2m0:04:03 • 0:02:08[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.673           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━[0m 88/135 [2m0:04:06 • 0:02:06[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.673           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━[0m 89/135 [2m0:04:09 • 0:02:02[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.768           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━[0m 90/135 [2m0:04:11 • 0:02:00[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.822           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━━[0m 91/135 [2m0:04:14 • 0:01:58[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.822           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━[0m 92/135 [2m0:04:17 • 0:01:55[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.458           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━[0m 93/135 [2m0:04:20 • 0:01:53[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.879            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━[0m 94/135 [2m0:04:22 • 0:01:51[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.555            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━━[0m 95/135 [2m0:04:25 • 0:01:48[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.359            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━[0m 96/135 [2m0:04:28 • 0:01:46[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.232            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━[0m 97/135 [2m0:04:30 • 0:01:43[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m6.741            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━[0m 98/135 [2m0:04:33 • 0:01:40[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m7.116            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━━[0m 99/135 [2m0:04:36 • 0:01:38[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m7.472            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━[0m 100/135 [2m0:04:39 • 0:01:36[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.590            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━━[0m 101/135 [2m0:04:41 • 0:01:32[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m7.731            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━[0m 102/135 [2m0:04:44 • 0:01:29[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.374            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━[0m 103/135 [2m0:04:46 • 0:01:26[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m7.963            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━[0m 104/135 [2m0:04:49 • 0:01:23[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m6.938            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━━[0m 105/135 [2m0:04:51 • 0:01:20[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m6.938            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━[0m 106/135 [2m0:04:54 • 0:01:17[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.841           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━[0m 107/135 [2m0:04:57 • 0:01:15[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.673            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━[0m 108/135 [2m0:05:00 • 0:01:13[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.314           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━━[0m 109/135 [2m0:05:02 • 0:01:10[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.516            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━[0m 110/135 [2m0:05:05 • 0:01:07[0m [2;4m0.38it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.635           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━[0m 111/135 [2m0:05:08 • 0:01:05[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.088           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━[0m 112/135 [2m0:05:11 • 0:01:02[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.347            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━━[0m 113/135 [2m0:05:13 • 0:01:00[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.241           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 114/135 [2m0:05:16 • 0:00:57[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.604           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 115/135 [2m0:05:19 • 0:00:56[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.622           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 116/135 [2m0:05:22 • 0:00:54[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.861           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 117/135 [2m0:05:24 • 0:00:50[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.861           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━━[0m 118/135 [2m0:05:27 • 0:00:48[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.586            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━[0m 119/135 [2m0:05:30 • 0:00:45[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.568           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━[0m 120/135 [2m0:05:33 • 0:00:42[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.038           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━[0m 121/135 [2m0:05:35 • 0:00:39[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.996           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;237m╺[0m[38;5;237m━[0m 122/135 [2m0:05:38 • 0:00:36[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m11.356           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━[0m 123/135 [2m0:05:41 • 0:00:33[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m15.119           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━[0m 124/135 [2m0:05:43 • 0:00:31[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.714           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━[0m 125/135 [2m0:05:46 • 0:00:28[0m [2;4m0.36it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.713           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━[0m[38;5;56m╸[0m[38;5;237m━[0m 126/135 [2m0:05:49 • 0:00:25[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.713           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;237m╺[0m 127/135 [2m0:05:52 • 0:00:22[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m13.616           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;237m╺[0m 128/135 [2m0:05:55 • 0:00:20[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m12.422           [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;237m╺[0m 129/135 [2m0:05:57 • 0:00:17[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.186            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;237m╺[0m 130/135 [2m0:06:00 • 0:00:14[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m7.178            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;56m╸[0m 131/135 [2m0:06:02 • 0:00:11[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m7.397            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;56m╸[0m 132/135 [2m0:06:05 • 0:00:09[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.086            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;56m╸[0m 133/135 [2m0:06:08 • 0:00:06[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.980            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━[0m[38;5;56m╸[0m 134/135 [2m0:06:11 • 0:00:03[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m8.063            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━━[0m 135/135 [2m0:06:13 • 0:00:00[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.031            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m14.315           [0m[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━━[0m 135/135 [2m0:06:13 • 0:00:00[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.031            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.388           [0m`Trainer.fit` stopped: `max_epochs=2` reached.
-[2K[1A[2K[1A[2K[1A[2K[1A[2KEpoch 1/1  [38;5;56m━━━━━━━━━━━━━━━━[0m 135/135 [2m0:06:13 • 0:00:00[0m [2;4m0.37it/s[0m [3mv_num: i65b      [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m9.031            [0m
-                                                               [3mtrain/total_loss…[0m
-                                                               [3m10.388           [0m
-[?25h[1;34mwandb[0m: 
-[1;34mwandb[0m: 🚀 View run [33mgenerator-v5-t1w[0m at: [34mhttps://wandb.ai/p-hoareau33-centrale-lyon/mri-synthesis-3d/runs/fqz3i65b[0m
-[1;34mwandb[0m: Find logs at: [1;35mwandb/wandb/run-20260319_171734-fqz3i65b/logs[0m

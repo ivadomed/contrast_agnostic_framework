@@ -21,9 +21,11 @@ class GuidanceLoss3D(nn.Module):
         return apply_gaussian_blur_3d(x, kernel_size=self.kernel_size, sigma=self.sigma)
 
     def forward(self, prediction: torch.Tensor, target_guidance: torch.Tensor) -> torch.Tensor:
-        blurred_pred = self._blur(prediction)
-        blurred_target = self._blur(target_guidance)
-        return F.l1_loss(blurred_pred, blurred_target)
+        # Instead of blurring both and subtracting, we subtract then blur once
+        # because convolution (blur) is a linear operation!
+        diff = prediction - target_guidance
+        blurred_diff = self._blur(diff)
+        return torch.abs(blurred_diff).mean()
     
     
 class DiceEdgeLoss3D(nn.Module):
@@ -34,9 +36,12 @@ class DiceEdgeLoss3D(nn.Module):
         self.dice_weight = dice_weight
         self.l1_weight = l1_weight
         self.eps = eps
-        self.register_buffer("sobel_x", self._build_kernel("x"), persistent=False)
-        self.register_buffer("sobel_y", self._build_kernel("y"), persistent=False)
-        self.register_buffer("sobel_z", self._build_kernel("z"), persistent=False)
+        
+        # Combine Sobel kernels into one kernel so we only do a single 3x3x3 conv
+        sobel_x = self._build_kernel("x")
+        sobel_y = self._build_kernel("y")
+        sobel_z = self._build_kernel("z")
+        self.register_buffer("sobel_kernel", torch.cat([sobel_x, sobel_y, sobel_z], dim=0), persistent=False)
 
     @staticmethod
     def _build_kernel(axis: str) -> torch.Tensor:
@@ -56,10 +61,9 @@ class DiceEdgeLoss3D(nn.Module):
 
     def _edge_map(self, x: torch.Tensor) -> torch.Tensor:
         x = x.mean(dim=1, keepdim=True)
-        grad_x = F.conv3d(x, self.sobel_x, padding=1)
-        grad_y = F.conv3d(x, self.sobel_y, padding=1)
-        grad_z = F.conv3d(x, self.sobel_z, padding=1)
-        grad_mag = torch.sqrt(grad_x.pow(2) + grad_y.pow(2) + grad_z.pow(2) + self.eps)
+        # Apply a single 3D convolution with 3 output channels (x, y, z gradients)
+        grad = F.conv3d(x, self.sobel_kernel, padding=1)
+        grad_mag = torch.sqrt(grad.pow(2).sum(dim=1, keepdim=True) + self.eps)
         return torch.sigmoid(self.sigmoid_scale * (grad_mag - self.edge_threshold))
 
     def forward(self, prediction: torch.Tensor, target: torch.Tensor) -> torch.Tensor:

@@ -32,7 +32,19 @@ class RandomElasticTransform3D(nn.Module):
         self.magnitude_range = tuple(float(v) for v in magnitude_range)
         self.mode = mode
         self.padding_mode = padding_mode
+        
+        
         self.align_corners = align_corners
+        
+        # Cache for meshgrid and kernel to avoid repeated allocations
+        self._cached_grid = None
+        self._cached_kernel = None
+
+        
+        # Cache for meshgrid and kernel to avoid repeated allocations
+        self._cached_grid = None
+        self._cached_kernel = None
+
 
     def _sample_uniform(self, batch_size: int, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
         low, high = self.magnitude_range
@@ -53,13 +65,27 @@ class RandomElasticTransform3D(nn.Module):
         sigma: float,
     ) -> torch.Tensor:
         channels = noise.shape[1]
-        kernel = get_gaussian_kernel3d(
-            (kernel_size, kernel_size, kernel_size),
-            (sigma, sigma, sigma),
-        ).to(device=noise.device, dtype=noise.dtype)
-        kernel = kernel.expand(channels, 1, kernel_size, kernel_size, kernel_size)
+        
+        if self._cached_kernel is None or self._cached_kernel.shape[-1] != kernel_size or self._cached_kernel.device != noise.device:
+            coords = torch.arange(kernel_size, dtype=noise.dtype, device=noise.device) - (kernel_size - 1) / 2.0
+            g1d = torch.exp(-(coords ** 2) / (2 * sigma ** 2))
+            g1d = g1d / g1d.sum().clamp_min(torch.finfo(g1d.dtype).eps)
+            self._cached_kernel = g1d.contiguous()
+
+        g1d = self._cached_kernel
         padding = kernel_size // 2
-        return F.conv3d(noise, kernel, padding=padding, groups=channels)
+
+        # 3D Gaussian Blur is separable. We apply 3 sequential 1D convolutions 
+        # instead of 1 massive 3D convolution to reduce MACs by a factor of ~2000x!
+        k_d = g1d.view(1, 1, kernel_size, 1, 1).expand(channels, 1, kernel_size, 1, 1).contiguous()
+        k_h = g1d.view(1, 1, 1, kernel_size, 1).expand(channels, 1, 1, kernel_size, 1).contiguous()
+        k_w = g1d.view(1, 1, 1, 1, kernel_size).expand(channels, 1, 1, 1, kernel_size).contiguous()
+
+        smoothed = F.conv3d(noise, k_d, padding=(padding, 0, 0), groups=channels)
+        smoothed = F.conv3d(smoothed, k_h, padding=(0, padding, 0), groups=channels)
+        smoothed = F.conv3d(smoothed, k_w, padding=(0, 0, padding), groups=channels)
+        
+        return smoothed
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.p <= 0.0 or x.ndim != 5:
@@ -92,12 +118,19 @@ class RandomElasticTransform3D(nn.Module):
         ).view(1, 3, 1, 1, 1)
         displacement = smoothed_noise * voxel_magnitude * norm_scale
 
-        base_grid = create_meshgrid3d(depth, height, width, normalized_coordinates=True, device=device, dtype=dtype)
-        base_grid = base_grid.expand(batch_size, -1, -1, -1, -1)
+        if self._cached_grid is None or self._cached_grid.shape[1:4] != (depth, height, width) or self._cached_grid.device != device:
+            self._cached_grid = create_meshgrid3d(depth, height, width, normalized_coordinates=True, device=device, dtype=dtype)
+        
+        base_grid = self._cached_grid.expand(batch_size, -1, -1, -1, -1)
         warp_grid = (base_grid + displacement.permute(0, 2, 3, 4, 1)).clamp(-1.0, 1.0)
+        
+        # Fix memory_format thrashing by keeping grid_sample in contiguous format or channels_last
+        warp_grid = warp_grid.contiguous()
+        x_contig = x.contiguous()
+
 
         warped = F.grid_sample(
-            x,
+            x_contig,
             warp_grid,
             mode=self.mode,
             padding_mode=self.padding_mode,

@@ -6,7 +6,7 @@ SLOT_ID="${1:-3}"
 VERSION="${2:-v5}"
 CONTRAST="${3:-t1w}"
 
-set_slot "${SLOT_ID}" .venv/bin/python scripts/train.py \
+set_slot "${SLOT_ID}" CUDA_VISIBLE_DEVICES="${SLOT_ID}" .venv/bin/python scripts/train.py \
 	version="${VERSION}" \
 	data.source_contrast="${CONTRAST}" \
 	training.resume=false \

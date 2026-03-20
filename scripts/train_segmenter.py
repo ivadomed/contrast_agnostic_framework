@@ -14,6 +14,7 @@ from pytorch_lightning.loggers import WandbLogger
 import torch.multiprocessing as mp
 
 mp.set_sharing_strategy("file_system")
+torch.set_float32_matmul_precision("high")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:

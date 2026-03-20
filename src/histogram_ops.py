@@ -22,12 +22,20 @@ def apply_gaussian_blur_3d(
     coords = torch.arange(kernel_size, dtype=tensor.dtype, device=tensor.device) - (kernel_size - 1) / 2.0
     g1d = torch.exp(-(coords ** 2) / (2 * sigma ** 2))
     g1d = g1d / g1d.sum().clamp_min(torch.finfo(g1d.dtype).eps)
-    g3d = torch.einsum("i,j,k->ijk", g1d, g1d, g1d)
 
     channels = tensor.shape[1]
-    kernel = g3d.view(1, 1, kernel_size, kernel_size, kernel_size).repeat(channels, 1, 1, 1, 1)
     padding = kernel_size // 2
-    return F.conv3d(tensor, kernel, padding=padding, groups=channels)
+    
+    # 3D Gaussian Blur is linearly separable into 3 1D convolutions.
+    k_d = g1d.view(1, 1, kernel_size, 1, 1).expand(channels, 1, kernel_size, 1, 1).contiguous()
+    k_h = g1d.view(1, 1, 1, kernel_size, 1).expand(channels, 1, 1, kernel_size, 1).contiguous()
+    k_w = g1d.view(1, 1, 1, 1, kernel_size).expand(channels, 1, 1, 1, kernel_size).contiguous()
+
+    smoothed = F.conv3d(tensor, k_d, padding=(padding, 0, 0), groups=channels)
+    smoothed = F.conv3d(smoothed, k_h, padding=(0, padding, 0), groups=channels)
+    smoothed = F.conv3d(smoothed, k_w, padding=(0, 0, padding), groups=channels)
+    
+    return smoothed
 
 
 class DifferentiableHistogram3D(nn.Module):
@@ -70,83 +78,62 @@ def create_range_translation_guidance_map(
     num_chunks: int,
     dark_threshold: float,
 ) -> torch.Tensor:
-    """
-    Project the chunk permutation back into voxel space to obtain a guidance map.
-    NEW: Uses Percentile/Quantile chunking to group anatomical tissues together
-    based on equal voxel mass rather than uniform intensity widths.
-    """
-    if input_image.ndim != 5:
-        raise ValueError("input_image must be a 5D tensor shaped as (B, C, D, H, W).")
-
-    guidance_map = input_image.clone()
     b = input_image.shape[0]
+    
+    # Flatten spatial dims to compute quantiles
+    flat_img = input_image.view(b, -1)
+    
+    # Mask out background by setting to NaN so nanquantile strictly looks at foreground
+    flat_fg = flat_img.clone()
+    bg_mask_flat = flat_fg <= dark_threshold
+    flat_fg[bg_mask_flat] = float('nan')
 
-    for i in range(b):
-        img = input_image[i]
-        perm = perms[i]
-        
-        fg_mask = img > dark_threshold
-        fg_vals = img[fg_mask]
+    q_probs = torch.linspace(0.0, 1.0, num_chunks + 1, device=input_image.device, dtype=torch.float32)
+    
+    # (num_chunks+1, b) -> (b, num_chunks+1)
+    edges = torch.nanquantile(flat_fg, q_probs, dim=1).to(input_image.dtype).transpose(0, 1)
 
-        if fg_vals.numel() < num_chunks:
-            continue
+    edges[:, -1] = torch.clamp(edges[:, -1], min=1.0)
+    # Ensure background lower bound is at least dark_threshold (or min fg)
+    edges[:, 0] = torch.clamp(edges[:, 0], max=dark_threshold)
 
-        # ---> FIX: SUB-SAMPLE TO SPEED UP GPU SORTING <---
-        max_samples = 100_000
-        if fg_vals.numel() > max_samples:
-            # Grab a random subset of 100k voxels
-            indices = torch.randperm(fg_vals.numel(), device=img.device)[:max_samples]
-            sample_vals = fg_vals[indices]
-        else:
-            sample_vals = fg_vals
+    # Inverse permutation vectorized
+    b_idx = torch.arange(b, device=perms.device).unsqueeze(1)
+    chunk_idx = torch.arange(num_chunks, device=perms.device).expand(b, num_chunks)
+    inverse_perm = torch.empty_like(perms)
+    inverse_perm[b_idx, perms] = chunk_idx
 
-        # 1. Calculate quantile boundaries on the tiny sample
-        q_probs = torch.linspace(0.0, 1.0, num_chunks + 1, device=input_image.device, dtype=torch.float32)
-        edges = torch.quantile(sample_vals.float(), q_probs).to(img.dtype)
-        
-        # Cap limits to prevent out of bounds
-        edges[-1] = max(edges[-1], 1.0)
-        edges[0] = min(edges[0], dark_threshold)
+    # Vectorized bin assignment
+    # Use right=False so that values equal to an edge go to the right bin, except for the max.
+    bin_idx = torch.searchsorted(edges, flat_img, right=False) - 1
+    # clamp to [0, num_chunks - 1] covers edge cases (e.g. max val)
+    bin_idx = torch.clamp(bin_idx, 0, num_chunks - 1)
+    
+    # Source boundaries
+    source_lower = edges[b_idx, bin_idx]
+    source_upper = edges[b_idx, bin_idx + 1]
+    width = torch.clamp(source_upper - source_lower, min=1e-8)
+    
+    # Relative pos
+    rel_pos = (flat_img - source_lower) / width
+    
+    # Destination bins
+    dest_chunk_idx = inverse_perm[b_idx, bin_idx]
+    dest_lower = edges[b_idx, dest_chunk_idx]
+    dest_upper = edges[b_idx, dest_chunk_idx + 1]
+    dest_width = dest_upper - dest_lower
+    
+    mapped_flat = dest_lower + rel_pos * dest_width
+    mapped_flat = mapped_flat.clamp(0.0, 1.0)
+    
+    mapped_img = mapped_flat.view_as(input_image)
+    
+    # Keep background unchanged
+    bg_mask = input_image <= dark_threshold
+    mapped_img = torch.where(bg_mask, input_image, mapped_img)
 
-        inverse_perm = torch.empty_like(perm)
-        inverse_perm[perm] = torch.arange(num_chunks, device=input_image.device)
+    return mapped_img
 
-        mapped_img = img.clone()
-        
-        # 2. Map values chunk by chunk
-        for chunk_idx in range(num_chunks):
-            lower = edges[chunk_idx]
-            upper = edges[chunk_idx + 1]
-            
-            # Create mask for voxels falling into this percentile bucket
-            if chunk_idx == num_chunks - 1:
-                c_mask = fg_mask & (img >= lower) & (img <= upper)
-            else:
-                c_mask = fg_mask & (img >= lower) & (img < upper)
-            
-            c_vals = img[c_mask]
-            if c_vals.numel() == 0:
-                continue
-                
-            # Relative position within the source chunk [0.0 to 1.0]
-            width = upper - lower
-            if width <= 0:
-                width = 1e-8 # Prevent division by zero if many voxels share exact same intensity
-            rel_pos = (c_vals - lower) / width
-            
-            # Find destination chunk bounds
-            dest_idx = inverse_perm[chunk_idx]
-            dest_lower = edges[dest_idx]
-            dest_upper = edges[dest_idx + 1]
-            dest_width = dest_upper - dest_lower
-            
-            # Apply relative position to destination chunk
-            mapped_vals = dest_lower + rel_pos * dest_width
-            mapped_img[c_mask] = mapped_vals.clamp(0.0, 1.0)
-            
-        guidance_map[i] = mapped_img
-
-    return guidance_map
 
 
 def generate_unified_targets(

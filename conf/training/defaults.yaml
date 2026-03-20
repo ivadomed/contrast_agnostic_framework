@@ -28,6 +28,11 @@ enable_model_summary: false
 limit_train_batches: 1.0
 limit_val_batches: 1.0
 
+# Added dataloader optimizations
+num_workers: 4
+prefetch_factor: 2
+pin_memory: true
+
 checkpoint:
   dirpath_generator: null
   dirpath_segmenter: null
