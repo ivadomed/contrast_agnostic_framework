@@ -70,43 +70,10 @@ def get_preprocessing_transforms(
     if mode == "train":
         transforms_list.extend(
             [
-                # RandAffined(
-                #     keys=["image", "label"],
-                #     prob=0.8,
-                #     rotate_range=(0.35, 0.35, 0.35),
-                #     scale_range=(0.2, 0.2, 0.2),
-                #     mode=("bilinear", "nearest"),
-                #     padding_mode="border",
-                # ),
-                # # <-- NEW: Elastic Deformation for Shape Invariance -->
-                # Rand3DElasticd(
-                #     keys=["image", "label"],
-                #     prob=0.5,
-                #     sigma_range=(10, 13),
-                #     magnitude_range=(0, 1000),
-                #     mode=("bilinear", "nearest"),
-                #     padding_mode="border",
-                # ),
-                RandSimulateLowResolutiond(
-                    keys=["image", "label"],
-                    prob=0.3,
-                    zoom_range=(0.5, 1.0),
-                    downsample_mode="nearest",
-                    upsample_mode="trilinear",
-                ),
-                RandGaussianNoised(
-                    keys=["image"],
-                    prob=0.2,
-                    mean=0.0,
-                    std=0.02,
-                ),
-                RandGaussianSmoothd(
-                    keys=["image"],
-                    prob=0.2,
-                    sigma_x=(0.5, 1.0),
-                    sigma_y=(0.5, 1.0),
-                    sigma_z=(0.5, 1.0),
-                ),
+                # We migrated the following CPU augmentations to GPU in src/kornia_augmentations.py:
+                # - RandSimulateLowResolutiond
+                # - RandGaussianNoised
+                # - RandGaussianSmoothd
             ]
         )
 

@@ -83,15 +83,18 @@ def create_range_translation_guidance_map(
     # Flatten spatial dims to compute quantiles
     flat_img = input_image.view(b, -1)
     
+    # 1. Algorithmic Complexity: Strided Spatial Subsampling to avoid O(N log N) on full volume
+    sample_stride = 10
+    flat_sample = flat_img[:, ::sample_stride].clone()
+    
     # Mask out background by setting to NaN so nanquantile strictly looks at foreground
-    flat_fg = flat_img.clone()
-    bg_mask_flat = flat_fg <= dark_threshold
-    flat_fg[bg_mask_flat] = float('nan')
+    bg_mask_sample = flat_sample <= dark_threshold
+    flat_sample[bg_mask_sample] = float('nan')
 
     q_probs = torch.linspace(0.0, 1.0, num_chunks + 1, device=input_image.device, dtype=torch.float32)
     
     # (num_chunks+1, b) -> (b, num_chunks+1)
-    edges = torch.nanquantile(flat_fg, q_probs, dim=1).to(input_image.dtype).transpose(0, 1)
+    edges = torch.nanquantile(flat_sample, q_probs, dim=1).to(input_image.dtype).transpose(0, 1)
 
     edges[:, -1] = torch.clamp(edges[:, -1], min=1.0)
     # Ensure background lower bound is at least dark_threshold (or min fg)

@@ -95,18 +95,38 @@ class RandomElasticTransform3D(nn.Module):
         device = x.device
         dtype = x.dtype
 
-        apply_mask = torch.rand((batch_size,), device=device) < self.p
-        if not bool(apply_mask.any()):
+        import random
+        # No host-device sync: use python random for batch-level probability
+        masks = [random.random() < self.p for _ in range(batch_size)]
+        if not any(masks):
             return x
+            
+        apply_mask = torch.tensor(masks, device=device, dtype=torch.bool)
 
         sigma_low, sigma_high = self.sigma_range
-        sigma_val = sigma_low if sigma_high <= sigma_low else float(torch.empty(1, device=device).uniform_(sigma_low, sigma_high).item())
-        kernel_size = self._gaussian_kernel_size(sigma_val)
+        sigma_val = sigma_low if sigma_high <= sigma_low else random.uniform(sigma_low, sigma_high)
+        
+        # 2. High-Frequency Waste in Low-Frequency Fields: Scale down for noise generation
+        scale_factor = 4
+        lr_depth = max(1, depth // scale_factor)
+        lr_height = max(1, height // scale_factor)
+        lr_width = max(1, width // scale_factor)
+        lr_sigma = sigma_val / scale_factor
+        
+        kernel_size = self._gaussian_kernel_size(lr_sigma)
 
-        noise = (torch.rand((batch_size, 3, depth, height, width), device=device, dtype=dtype) * 2.0) - 1.0
-        smoothed_noise = self._smooth_noise(noise, kernel_size=kernel_size, sigma=sigma_val)
+        # Generate noise at lower resolution
+        noise = (torch.rand((batch_size, 3, lr_depth, lr_height, lr_width), device=device, dtype=dtype) * 2.0) - 1.0
+        smoothed_noise_lr = self._smooth_noise(noise, kernel_size=kernel_size, sigma=lr_sigma)
 
-        voxel_magnitude = self._sample_uniform(batch_size, device, dtype).view(batch_size, 1, 1, 1, 1)
+        # Upsample the smoothed noise back to full resolution
+        smoothed_noise = F.interpolate(smoothed_noise_lr, size=(depth, height, width), mode='trilinear', align_corners=False)
+
+        import random
+        v_low, v_high = self.magnitude_range
+        v_mags = [v_low if v_high <= v_low else random.uniform(v_low, v_high) for _ in range(batch_size)]
+        voxel_magnitude = torch.tensor(v_mags, device=device, dtype=dtype).view(batch_size, 1, 1, 1, 1)
+
         norm_scale = torch.tensor(
             [
                 2.0 / max(width - 1, 1),
@@ -141,6 +161,103 @@ class RandomElasticTransform3D(nn.Module):
         return torch.where(keep_mask, x, warped)
 
 
+
+class RandomLowResolution3D(nn.Module):
+    def __init__(self, p: float = 0.3, zoom_range: tuple[float, float] = (0.5, 1.0)):
+        super().__init__()
+        self.p = p
+        self.zoom_range = zoom_range
+        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.p <= 0.0 or x.ndim != 5:
+            return x
+            
+        b, c, d, h, w = x.shape
+        device = x.device
+        dtype = x.dtype
+        
+        import random
+        # Optimize host-device sync
+        masks = [random.random() < self.p for _ in range(b)]
+        if not any(masks):
+            return x
+            
+        output = x.clone()
+        for i in range(b):
+            if masks[i]:
+                zoom = random.uniform(self.zoom_range[0], self.zoom_range[1])
+                down_size = (max(1, int(d * zoom)), max(1, int(h * zoom)), max(1, int(w * zoom)))
+                down = F.interpolate(x[i:i+1], size=down_size, mode='nearest')
+                output[i:i+1] = F.interpolate(down, size=(d, h, w), mode='trilinear', align_corners=False)
+                
+        return output
+
+class RandomGaussianNoise3D(nn.Module):
+    def __init__(self, p: float = 0.2, mean: float = 0.0, std: float = 0.02):
+        super().__init__()
+        self.p = p
+        self.mean = mean
+        self.std = std
+        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.p <= 0.0 or x.ndim != 5:
+            return x
+            
+        b = x.shape[0]
+        import random
+        masks = [random.random() < self.p for _ in range(b)]
+        if not any(masks):
+            return x
+            
+        apply_mask = torch.tensor(masks, device=x.device, dtype=torch.bool).view(b, 1, 1, 1, 1)
+        noise = torch.randn_like(x) * self.std + self.mean
+        return torch.where(apply_mask, x + noise, x)
+
+class RandomGaussianSmooth3D(nn.Module):
+    def __init__(self, p: float = 0.2, sigma_range: tuple[float, float] = (0.5, 1.0)):
+        super().__init__()
+        self.p = p
+        self.sigma_range = sigma_range
+        
+    def _get_1d_kernel(self, sigma: float, device: torch.device, dtype: torch.dtype):
+        kernel_size = int(max(3, round(sigma * 6)))
+        if kernel_size % 2 == 0: kernel_size += 1
+        
+        coords = torch.arange(kernel_size, dtype=dtype, device=device) - (kernel_size - 1) / 2.0
+        g1d = torch.exp(-(coords ** 2) / (2 * sigma ** 2))
+        g1d = g1d / g1d.sum().clamp_min(torch.finfo(dtype).eps)
+        return g1d.contiguous(), kernel_size
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.p <= 0.0 or x.ndim != 5:
+            return x
+        b, c, d, h, w = x.shape
+        device = x.device
+        dtype = x.dtype
+        
+        apply_mask = torch.rand((b,), device=device) < self.p
+        if not bool(apply_mask.any()):
+            return x
+            
+        output = x.clone()
+        for i in range(b):
+            if apply_mask[i]:
+                sigma = float(torch.empty(1, device=device).uniform_(self.sigma_range[0], self.sigma_range[1]).item())
+                g1d, k = self._get_1d_kernel(sigma, device, dtype)
+                
+                k_d = g1d.view(1, 1, k, 1, 1).expand(c, 1, k, 1, 1).contiguous()
+                k_h = g1d.view(1, 1, 1, k, 1).expand(c, 1, 1, k, 1).contiguous()
+                k_w = g1d.view(1, 1, 1, 1, k).expand(c, 1, 1, 1, k).contiguous()
+                
+                padding = k // 2
+                v = x[i:i+1]
+                v = F.conv3d(v, k_d, padding=(padding, 0, 0), groups=c)
+                v = F.conv3d(v, k_h, padding=(0, padding, 0), groups=c)
+                v = F.conv3d(v, k_w, padding=(0, 0, padding), groups=c)
+                output[i:i+1] = v
+                
+        return output
+
 class KorniaMRIAugmentation3D(nn.Module):
     """Kornia-only 3D augmentation pipeline for MRI volumes."""
 
@@ -164,11 +281,19 @@ class KorniaMRIAugmentation3D(nn.Module):
             padding_mode="border",
             align_corners=False,
         )
+        self.low_res = RandomLowResolution3D(p=0.3, zoom_range=(0.5, 1.0))
+        self.noise = RandomGaussianNoise3D(p=0.2, mean=0.0, std=0.02)
+        self.smooth = RandomGaussianSmooth3D(p=0.2, sigma_range=(0.5, 1.0))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.affine(x)
-        x = self.elastic(x)
-        return x.clamp(0.0, 1.0)
+        # Prevent gradients for data augmentation
+        with torch.no_grad():
+            x = self.affine(x)
+            x = self.elastic(x)
+            x = self.low_res(x)
+            x = self.noise(x)
+            x = self.smooth(x)
+            return x.clamp(0.0, 1.0)
 
 
 def build_kornia_augmentation(cfg: DictConfig) -> nn.Module:

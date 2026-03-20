@@ -58,6 +58,87 @@ def _extract_normalized_state_dict(checkpoint: object) -> OrderedDict[str, torch
     return normalized_state_dict
 
 
+class CompiledLossWrapper(nn.Module):
+    def __init__(self, model, histogram_module, wasserstein_loss_fn, edge_loss_fn, tv_loss_fn, range_loss_fn, guidance_loss_fn):
+        super().__init__()
+        self.model = model
+        self.histogram_module = histogram_module
+        self.wasserstein_loss_fn = wasserstein_loss_fn
+        self.edge_loss_fn = edge_loss_fn
+        self.tv_loss_fn = tv_loss_fn
+        self.range_loss_fn = range_loss_fn
+        self.guidance_loss_fn = guidance_loss_fn
+
+    def forward(self, x: torch.Tensor, 
+                num_bins: int, num_chunks: int, dark_threshold: float,
+                guidance_blur_k: int, guidance_blur_s: float,
+                w_edge: float, w_tv: float, w_range: float, w_wass: float,
+                w_guide_blur: float, w_guide_sharp: float) -> dict[str, torch.Tensor]:
+        
+        target_hist, perms = generate_unified_targets(
+            input_images=x,
+            num_bins=num_bins,
+            num_chunks=num_chunks,
+            dark_threshold=dark_threshold,
+            hist_module=self.histogram_module,
+        )
+        guidance_map = create_range_translation_guidance_map(
+            input_image=x,
+            perms=perms,
+            num_chunks=num_chunks,
+            dark_threshold=dark_threshold,
+        )
+        
+        # Stop propagating gradient through guidance map blur
+        bg_guidance = guidance_map.detach()
+        blurred_guidance = apply_gaussian_blur_3d(
+            bg_guidance,
+            kernel_size=guidance_blur_k,
+            sigma=guidance_blur_s,
+        )
+        # Cannot conditionally branch on config inside compile well if we want static graph,
+        # but x comes in channels_last_3d so simple operations keep it.
+        blurred_guidance = blurred_guidance.contiguous(memory_format=torch.channels_last_3d)
+
+        model_input = torch.cat([x, blurred_guidance], dim=1)
+        synthesized = self.model(model_input)
+
+        synthesized_01 = ((synthesized + 1.0) * 0.5).clamp(0.0, 1.0)
+        generated_hist = self.histogram_module(synthesized_01)
+
+        wasserstein_loss = self.wasserstein_loss_fn(generated_hist, target_hist)
+        edge_loss = self.edge_loss_fn(synthesized_01, x)
+        tv_loss = self.tv_loss_fn(synthesized)
+        range_loss = self.range_loss_fn(synthesized)
+        guidance_loss_blurred = self.guidance_loss_fn(synthesized_01, guidance_map)
+        guidance_loss_sharp = F.l1_loss(synthesized_01, guidance_map)
+
+        total_guidance_loss = (
+            w_guide_blur * guidance_loss_blurred + w_guide_sharp * guidance_loss_sharp
+        )
+        total_loss = (
+            w_wass * wasserstein_loss
+            + w_edge * edge_loss
+            + w_tv * tv_loss
+            + w_range * range_loss
+            + total_guidance_loss
+        )
+        
+        return {
+            "total_loss": total_loss,
+            "wasserstein_loss": wasserstein_loss,
+            "edge_loss": edge_loss,
+            "tv_loss": tv_loss,
+            "range_loss": range_loss,
+            "guidance_loss_blurred": guidance_loss_blurred,
+            "guidance_loss_sharp": guidance_loss_sharp,
+            "blurred_guidance": blurred_guidance,
+            "synthesized_01": synthesized_01,
+            "target_hist": target_hist,
+            "generated_hist": generated_hist
+        }
+
+
 class MRISynthesisLightning(pl.LightningModule):
     """Lightning module for 3D MRI contrast synthesis.
 
@@ -81,11 +162,6 @@ class MRISynthesisLightning(pl.LightningModule):
         )
         if bool(cfg.model.generator.channels_last_3d):
             self.model = self.model.to(memory_format=torch.channels_last_3d)
-        if bool(cfg.training.generator.compile_model) and hasattr(torch, "compile"):
-            try:
-                self.model = torch.compile(self.model)
-            except Exception:
-                pass
 
         self.histogram_module = DifferentiableHistogram3D(
             num_bins=int(cfg.model.generator.num_bins),
@@ -101,6 +177,13 @@ class MRISynthesisLightning(pl.LightningModule):
             kernel_size=int(cfg.model.generator.guidance_blur.kernel_size),
             sigma=float(cfg.model.generator.guidance_blur.sigma),
         )
+        
+        self.compiled_wrapper = CompiledLossWrapper(
+            self.model, self.histogram_module, self.wasserstein_loss_fn,
+            self.edge_loss_fn, self.tv_loss_fn, self.range_loss_fn, self.guidance_loss_fn
+        )
+        if bool(self.cfg.training.generator.compile_model) and hasattr(torch, "compile"):
+            self.compiled_wrapper = torch.compile(self.compiled_wrapper, mode="reduce-overhead")
 
         self._gpu_aug: nn.Module | None = None
 
@@ -163,61 +246,36 @@ class MRISynthesisLightning(pl.LightningModule):
         if bool(self.cfg.model.generator.channels_last_3d):
             x = x.to(memory_format=torch.channels_last_3d)
 
-        target_hist, perms = generate_unified_targets(
-            input_images=x,
-            num_bins=int(self.cfg.model.generator.num_bins),
-            num_chunks=int(self.cfg.model.generator.num_chunks),
-            dark_threshold=float(self.cfg.model.generator.dark_threshold),
-            hist_module=self.histogram_module,
-        )
-        guidance_map = create_range_translation_guidance_map(
-            input_image=x,
-            perms=perms,
-            num_chunks=int(self.cfg.model.generator.num_chunks),
-            dark_threshold=float(self.cfg.model.generator.dark_threshold),
-        )
-        with torch.no_grad():
-            blurred_guidance = apply_gaussian_blur_3d(
-                guidance_map,
-                kernel_size=int(self.cfg.model.generator.guidance_blur.kernel_size),
-                sigma=float(self.cfg.model.generator.guidance_blur.sigma),
-            )
-            if bool(self.cfg.model.generator.channels_last_3d):
-                blurred_guidance = blurred_guidance.to(memory_format=torch.channels_last_3d)
+        # Unpack scalars to avoid graphing dictionary/config lookups
+        num_bins = int(self.cfg.model.generator.num_bins)
+        num_chunks = int(self.cfg.model.generator.num_chunks)
+        dark_threshold=float(self.cfg.model.generator.dark_threshold)
+        guidance_blur_k=int(self.cfg.model.generator.guidance_blur.kernel_size)
+        guidance_blur_s=float(self.cfg.model.generator.guidance_blur.sigma)
+        w_edge=float(self.cfg.model.generator.loss_weights.edge)
+        w_tv=float(self.cfg.model.generator.loss_weights.tv)
+        w_range=float(self.cfg.model.generator.loss_weights.range)
+        w_wass=float(self.cfg.model.generator.loss_weights.wasserstein)
+        w_guide_blur=float(self.cfg.model.generator.loss_weights.guidance_blurred)
+        w_guide_sharp=float(self.cfg.model.generator.loss_weights.guidance_sharp)
 
-        model_input = torch.cat([x, blurred_guidance], dim=1)
-        synthesized = self.model(model_input)
-
-        synthesized_01 = ((synthesized + 1.0) * 0.5).clamp(0.0, 1.0)
-        generated_hist = self.histogram_module(synthesized_01)
-
-        wasserstein_loss = self.wasserstein_loss_fn(generated_hist, target_hist)
-        edge_loss = self.edge_loss_fn(synthesized_01, x)
-        tv_loss = self.tv_loss_fn(synthesized)
-        range_loss = self.range_loss_fn(synthesized)
-        guidance_loss_blurred = self.guidance_loss_fn(synthesized_01, guidance_map)
-        guidance_loss_sharp = F.l1_loss(synthesized_01, guidance_map)
-
-        total_guidance_loss = (
-            float(self.cfg.model.generator.loss_weights.guidance_blurred) * guidance_loss_blurred
-            + float(self.cfg.model.generator.loss_weights.guidance_sharp) * guidance_loss_sharp
-        )
-        total_loss = (
-            float(self.cfg.model.generator.loss_weights.wasserstein) * wasserstein_loss
-            + float(self.cfg.model.generator.loss_weights.edge) * edge_loss
-            + float(self.cfg.model.generator.loss_weights.tv) * tv_loss
-            + float(self.cfg.model.generator.loss_weights.range) * range_loss
-            + total_guidance_loss
+        outs = self.compiled_wrapper(
+            x, num_bins, num_chunks, dark_threshold, 
+            guidance_blur_k, guidance_blur_s,
+            w_edge, w_tv, w_range, w_wass, 
+            w_guide_blur, w_guide_sharp
         )
 
+        total_loss = outs["total_loss"]
+        
         self.log("train/total_loss", total_loss, on_step=True, on_epoch=True, prog_bar=True)
         if batch_idx % int(self.cfg.training.generator.log_aux_every_n_steps) == 0:
-            self.log("train/wasserstein_loss", wasserstein_loss, on_step=True, on_epoch=False)
-            self.log("train/edge_loss", edge_loss, on_step=True, on_epoch=False)
-            self.log("train/tv_loss", tv_loss, on_step=True, on_epoch=False)
-            self.log("train/range_loss", range_loss, on_step=True, on_epoch=False)
-            self.log("train/guidance_loss_blurred", guidance_loss_blurred, on_step=True, on_epoch=False)
-            self.log("train/guidance_loss_sharp", guidance_loss_sharp, on_step=True, on_epoch=False)
+            self.log("train/wasserstein_loss", outs["wasserstein_loss"], on_step=True, on_epoch=False)
+            self.log("train/edge_loss", outs["edge_loss"], on_step=True, on_epoch=False)
+            self.log("train/tv_loss", outs["tv_loss"], on_step=True, on_epoch=False)
+            self.log("train/range_loss", outs["range_loss"], on_step=True, on_epoch=False)
+            self.log("train/guidance_loss_blurred", outs["guidance_loss_blurred"], on_step=True, on_epoch=False)
+            self.log("train/guidance_loss_sharp", outs["guidance_loss_sharp"], on_step=True, on_epoch=False)
 
         if (
             bool(self.cfg.training.generator.enable_image_logging)
@@ -228,10 +286,10 @@ class MRISynthesisLightning(pl.LightningModule):
         ):
             self._log_train_images(
                 x=x,
-                guidance_map=blurred_guidance,
-                synthesized_01=synthesized_01,
-                target_hist=target_hist,
-                generated_hist=generated_hist,
+                guidance_map=outs["blurred_guidance"],
+                synthesized_01=outs["synthesized_01"],
+                target_hist=outs["target_hist"],
+                generated_hist=outs["generated_hist"],
                 batch_idx=batch_idx,
             )
 
