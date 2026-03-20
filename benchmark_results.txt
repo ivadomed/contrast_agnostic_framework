@@ -1,0 +1,10 @@
+==========================================
+SPEED BENCHMARKING - 3 epochs each
+==========================================
+
+Each run: 3 epochs
+
+==========================================
+TEST 1: NO AUG, NO CACHE
+Overrides: training.generator.gpu_aug.enabled=false data.cache_rate=0.0
+==========================================

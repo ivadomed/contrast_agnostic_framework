@@ -59,7 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--num-ensemble",
         type=int,
-        default=0,
+        default=4,
         choices=[0, 1, 2, 3, 4],
         help="For v4 models, number of last_segmenter_X checkpoints to ensemble with best_segmenter.pth.",
     )
@@ -94,13 +94,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=1,
+        default=8,
         help="Evaluation batch size (number of subjects). Increase cautiously to avoid GPU OOM.",
     )
     parser.add_argument(
         "--sw-batch-size",
         type=int,
-        default=4,
+        default=16,
         help="Sliding-window internal batch size. Increase for speed if memory allows.",
     )
     parser.add_argument(
@@ -227,10 +227,6 @@ def maybe_build_segmenter_ensemble(
 
     if num_ensemble > 0:
         ensemble_dir = best_path.parent
-
-        # Legacy baseline convention: best in checkpoints/baseline/, rolling last in baseline_<contrast>/.
-        if family == "baseline" and best_path.name.startswith("best_segmenter_baseline_"):
-            ensemble_dir = best_path.parent / f"baseline_{source_contrast}"
 
         for idx in range(1, num_ensemble + 1):
             candidate = ensemble_dir / f"last_segmenter_{idx}.pth"

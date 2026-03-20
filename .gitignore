@@ -8,3 +8,5 @@ checkpoint_backup/
 data/
 wandb/
 additional_contents/
+outputs/
+logs/

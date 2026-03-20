@@ -1,0 +1,140 @@
+data:
+  task_name: Task01_BrainTumour
+  source_contrast: t1w
+  data_dir: data
+  split_file: splits/brats_subject_split.json
+  patch_size:
+  - 128
+  - 128
+  - 128
+  cache_rate: 0.0
+  num_workers: 4
+  train_ratio: 0.7
+  val_ratio: 0.15
+  batch_size: 2
+  val_batch_size: 4
+  pin_memory: true
+  persistent_workers: false
+  prefetch_factor: 2
+  drop_last_train: true
+model:
+  generator:
+    in_channels: 2
+    out_channels: 1
+    base_filters: 32
+    channels_last_3d: true
+    tf32: true
+    fused_adamw: true
+    num_bins: 128
+    num_chunks: 8
+    dark_threshold: 0.05
+    guidance_blur:
+      kernel_size: 5
+      sigma: 2.0
+    loss_weights:
+      wasserstein: 0.0
+      edge: 20.0
+      tv: 2.0
+      range: 100.0
+      guidance_blurred: 20.0
+      guidance_sharp: 40.0
+  segmenter:
+    in_channels: 1
+    out_channels: 1
+    channels:
+    - 16
+    - 32
+    - 64
+    - 128
+    strides:
+    - 2
+    - 2
+    - 2
+    num_res_units: 2
+    use_generator: false
+    fully_artificial: false
+    gen_version: v2
+    gen_weights: null
+    aug_prob_train: 0.7
+    aug_prob_val: 0.0
+    compile_model: true
+    channels_last_3d: true
+    tf32: true
+    num_bins: 128
+    num_chunks: 8
+    dark_threshold: 0.05
+training:
+  max_epochs:
+    generator: 2
+    segmenter: 700
+  lr:
+    generator: 0.0003
+    segmenter: 0.0001
+  betas:
+    generator:
+    - 0.5
+    - 0.999
+    segmenter:
+    - 0.9
+    - 0.999
+  weight_decay:
+    generator: 0.0
+    segmenter: 0.0
+  eta_min: 1.0e-06
+  precision: 16-mixed
+  deterministic: true
+  benchmark: true
+  accelerator: auto
+  devices: 1
+  num_nodes: 1
+  strategy: auto
+  num_sanity_val_steps: 0
+  log_every_n_steps: 1
+  enable_model_summary: false
+  limit_train_batches: 1.0
+  limit_val_batches: 1.0
+  checkpoint:
+    dirpath_generator: null
+    dirpath_segmenter: null
+    filename_generator: mri_generator_{epoch:03d}
+    filename_segmenter: segmenter_{epoch:03d}_{val_dice:.4f}
+    save_top_k: 3
+    monitor_segmenter: val/dice
+    mode_segmenter: max
+  resume: false
+  generator:
+    image_log_every: 500
+    enable_image_logging: false
+    log_aux_every_n_steps: 100
+    gradient_clip_val: 1.0
+    compile_model: true
+    gpu_aug:
+      enabled: false
+      affine_prob: 1.0
+      affine_rotate_range:
+      - 0.35
+      - 0.35
+      - 0.35
+      affine_scale_range:
+      - 0.2
+      - 0.2
+      - 0.2
+      elastic_prob: 1.0
+      elastic_sigma_range:
+      - 10.0
+      - 13.0
+      elastic_magnitude_range:
+      - 0.0
+      - 1000.0
+  segmenter:
+    val_image_log_every: 1
+logging:
+  project_name_generator: mri-synthesis-3d
+  project_name_segmenter: brats-segmenter
+  run_name: null
+  save_dir: wandb
+  log_model: false
+  offline: false
+task: generator
+seed: 42
+version: v5

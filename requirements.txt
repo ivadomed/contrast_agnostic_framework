@@ -1,8 +1,12 @@
 torch
 torchvision
+pytorch-lightning
+hydra-core
 monai[all]
+kornia
 nibabel
 wandb
 numpy
 scipy
 matplotlib
+pytest
