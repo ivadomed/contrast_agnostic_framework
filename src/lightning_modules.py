@@ -36,6 +36,18 @@ from src.losses import (
 from src.kornia_augmentations import build_kornia_augmentation
 
 
+
+class CompiledSegmenterWrapper(nn.Module):
+    def __init__(self, segmenter, loss_fn):
+        super().__init__()
+        self.segmenter = segmenter
+        self.loss_fn = loss_fn
+
+    def forward(self, x, y):
+        logits = self.segmenter(x)
+        loss = self.loss_fn(logits, y)
+        return loss, logits
+
 def _extract_normalized_state_dict(checkpoint: object) -> OrderedDict[str, torch.Tensor]:
     if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
         raw_state_dict = checkpoint["state_dict"]
@@ -375,21 +387,68 @@ class MRISegmenterLightning(pl.LightningModule):
             self.segmenter = self.segmenter.to(memory_format=torch.channels_last_3d)
 
         self.loss_fn = DiceCELoss(sigmoid=True)
+        self.compiled_segmenter = CompiledSegmenterWrapper(self.segmenter, self.loss_fn)
+        if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile"):
+            self.compiled_segmenter = torch.compile(self.compiled_segmenter, mode="reduce-overhead")
         self.dice_metric = DiceMetric(include_background=False, reduction="mean")
 
         self.generator: MRI_Synthesis_Net | None = None
         self.hist_module: DifferentiableHistogram3D | None = None
         self._generator_is_ready = False
+        self._gpu_aug: nn.Module | None = None
+
+
+    def _ensure_gpu_aug(self) -> None:
+        if self._gpu_aug is not None:
+            return
+        self._gpu_aug = build_kornia_augmentation(self.cfg).to(self.device)
+
+    def on_after_batch_transfer(self, batch: dict[str, Any], dataloader_idx: int) -> dict[str, Any]:
+        if "image" not in batch or "label" not in batch:
+            return batch
+
+        image = batch["image"]
+        label = batch["label"]
+        if hasattr(image, "as_tensor"):
+            image = image.as_tensor()
+        if hasattr(label, "as_tensor"):
+            label = label.as_tensor()
+            
+        image = image.float()
+        label = label.float()
+
+        if image.ndim != 5:
+            image = image.unsqueeze(0) if image.ndim == 4 else image
+        if label.ndim != 5:
+            label = label.unsqueeze(0) if label.ndim == 4 else label
+
+        if bool(self.cfg.model.segmenter.channels_last_3d):
+            image = image.to(memory_format=torch.channels_last_3d)
+
+        # Apply augmentation only during training, same as generator
+        if self.training and bool(self.cfg.training.generator.gpu_aug.enabled):
+            self._ensure_gpu_aug()
+            if self._gpu_aug is not None:
+                with torch.no_grad():
+                    image, label = self._gpu_aug(image.contiguous(), label.contiguous())
+
+                if image.ndim != 5:
+                    image = image.unsqueeze(0) if image.ndim == 4 else image
+                if label.ndim != 5:
+                    label = label.unsqueeze(0) if label.ndim == 4 else label
+
+                if bool(self.cfg.model.segmenter.channels_last_3d):
+                    image = image.to(memory_format=torch.channels_last_3d)
+
+        batch["image"] = image
+        batch["label"] = label
+        return batch
 
     def setup(self, stage: str | None = None) -> None:
         if stage not in (None, "fit"):
             return
 
-        if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile") and self.device.type == "cuda":
-            try:
-                self.segmenter = torch.compile(self.segmenter)
-            except Exception:
-                pass
+# Removed standard compile from setup to use CompiledSegmenterWrapper
 
         if self._generator_is_ready:
             return
@@ -419,6 +478,8 @@ class MRISegmenterLightning(pl.LightningModule):
         self.generator.eval()
         for p in self.generator.parameters():
             p.requires_grad = False
+        if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile"):
+            self.generator = torch.compile(self.generator, mode="max-autotune")
 
         self.hist_module = DifferentiableHistogram3D(
             num_bins=int(self.cfg.model.segmenter.num_bins),
@@ -473,7 +534,7 @@ class MRISegmenterLightning(pl.LightningModule):
         if not use_generator or random.random() >= float(prob):
             return x, False
 
-        with torch.no_grad():
+        with torch.inference_mode():
             guidance_map, _ = self._build_generator_guidance(x=x)
             generator_input = torch.cat([x, guidance_map], dim=1)
             generator_output = self.generator(generator_input)
@@ -506,14 +567,15 @@ class MRISegmenterLightning(pl.LightningModule):
     def training_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
         x = self._to_plain_tensor(batch["image"])
         y = (self._to_plain_tensor(batch["label"]) > 0).float()
+        if bool(self.cfg.model.segmenter.channels_last_3d):
+            y = y.to(memory_format=torch.channels_last_3d)
 
         unet_input, used_generator = self._maybe_apply_generator(
             x,
             prob=float(self.cfg.model.segmenter.aug_prob_train),
         )
 
-        logits = self.segmenter(unet_input)
-        loss = self.loss_fn(logits, y)
+        loss, logits = self.compiled_segmenter(unet_input, y)
 
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         self.log("train/used_generator", float(used_generator), on_step=True, on_epoch=False)
@@ -525,14 +587,15 @@ class MRISegmenterLightning(pl.LightningModule):
     def validation_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
         x = self._to_plain_tensor(batch["image"])
         y = (self._to_plain_tensor(batch["label"]) > 0).float()
+        if bool(self.cfg.model.segmenter.channels_last_3d):
+            y = y.to(memory_format=torch.channels_last_3d)
 
         val_input, _ = self._maybe_apply_generator(
             x,
             prob=float(self.cfg.model.segmenter.aug_prob_val),
         )
 
-        logits = self.segmenter(val_input)
-        val_loss = self.loss_fn(logits, y)
+        val_loss, logits = self.compiled_segmenter(val_input, y)
         val_pred = (torch.sigmoid(logits) > 0.5).float()
         self.dice_metric(y_pred=val_pred, y=y)
 

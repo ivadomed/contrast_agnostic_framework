@@ -87,9 +87,9 @@ class RandomElasticTransform3D(nn.Module):
         
         return smoothed
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         if self.p <= 0.0 or x.ndim != 5:
-            return x
+            return x if mask is None else (x, mask)
 
         batch_size, _, depth, height, width = x.shape
         device = x.device
@@ -99,7 +99,7 @@ class RandomElasticTransform3D(nn.Module):
         # No host-device sync: use python random for batch-level probability
         masks = [random.random() < self.p for _ in range(batch_size)]
         if not any(masks):
-            return x
+            return x if mask is None else (x, mask)
             
         apply_mask = torch.tensor(masks, device=device, dtype=torch.bool)
 
@@ -158,7 +158,21 @@ class RandomElasticTransform3D(nn.Module):
         )
 
         keep_mask = (~apply_mask).view(batch_size, 1, 1, 1, 1)
-        return torch.where(keep_mask, x, warped)
+        res_x = torch.where(keep_mask, x, warped)
+        
+        if mask is not None:
+            mask_contig = mask.contiguous()
+            warped_mask = F.grid_sample(
+                mask_contig,
+                warp_grid,
+                mode="nearest",
+                padding_mode="zeros",
+                align_corners=self.align_corners,
+            )
+            res_mask = torch.where(keep_mask, mask, warped_mask)
+            return res_x, res_mask
+            
+        return res_x
 
 
 
@@ -168,9 +182,9 @@ class RandomLowResolution3D(nn.Module):
         self.p = p
         self.zoom_range = zoom_range
         
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         if self.p <= 0.0 or x.ndim != 5:
-            return x
+            return x if mask is None else (x, mask)
             
         b, c, d, h, w = x.shape
         device = x.device
@@ -180,7 +194,7 @@ class RandomLowResolution3D(nn.Module):
         # Optimize host-device sync
         masks = [random.random() < self.p for _ in range(b)]
         if not any(masks):
-            return x
+            return x if mask is None else (x, mask)
             
         output = x.clone()
         for i in range(b):
@@ -199,15 +213,15 @@ class RandomGaussianNoise3D(nn.Module):
         self.mean = mean
         self.std = std
         
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         if self.p <= 0.0 or x.ndim != 5:
-            return x
+            return x if mask is None else (x, mask)
             
         b = x.shape[0]
         import random
         masks = [random.random() < self.p for _ in range(b)]
         if not any(masks):
-            return x
+            return x if mask is None else (x, mask)
             
         apply_mask = torch.tensor(masks, device=x.device, dtype=torch.bool).view(b, 1, 1, 1, 1)
         noise = torch.randn_like(x) * self.std + self.mean
@@ -228,9 +242,9 @@ class RandomGaussianSmooth3D(nn.Module):
         g1d = g1d / g1d.sum().clamp_min(torch.finfo(dtype).eps)
         return g1d.contiguous(), kernel_size
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         if self.p <= 0.0 or x.ndim != 5:
-            return x
+            return x if mask is None else (x, mask)
         b, c, d, h, w = x.shape
         device = x.device
         dtype = x.dtype
@@ -285,15 +299,30 @@ class KorniaMRIAugmentation3D(nn.Module):
         self.noise = RandomGaussianNoise3D(p=0.2, mean=0.0, std=0.02)
         self.smooth = RandomGaussianSmooth3D(p=0.2, sigma_range=(0.5, 1.0))
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         # Prevent gradients for data augmentation
         with torch.no_grad():
-            x = self.affine(x)
-            x = self.elastic(x)
-            x = self.low_res(x)
-            x = self.noise(x)
-            x = self.smooth(x)
-            return x.clamp(0.0, 1.0)
+            if mask is not None:
+                # apply affine on concatenated tensors, and then threshold the mask to emulate 'nearest'
+                b, cx, d, h, w = x.shape
+                cm = mask.shape[1]
+                cat_xm = torch.cat([x, mask], dim=1)
+                cat_xm = self.affine(cat_xm)
+                x = cat_xm[:, :cx]
+                mask = (cat_xm[:, cx:] > 0.5).float()
+
+                x, mask = self.elastic(x, mask)
+                x, mask = self.low_res(x, mask)
+                x, mask = self.noise(x, mask)
+                x, mask = self.smooth(x, mask)
+                return x.clamp(0.0, 1.0), mask
+            else:
+                x = self.affine(x)
+                x = self.elastic(x)
+                x = self.low_res(x)
+                x = self.noise(x)
+                x = self.smooth(x)
+                return x.clamp(0.0, 1.0)
 
 
 def build_kornia_augmentation(cfg: DictConfig) -> nn.Module:
