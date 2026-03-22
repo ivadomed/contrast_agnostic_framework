@@ -51,6 +51,11 @@ def parse_args() -> argparse.Namespace:
         help="Directory containing checkpoints named like best_segmenter_<family>_<contrast>.pth.",
     )
     parser.add_argument(
+        "--skip-baseline-auto",
+        action="store_true",
+        help="Skip automatic inclusion of checkpoints/baseline.",
+    )
+    parser.add_argument(
         "--model",
         action="append",
         default=[],
@@ -180,7 +185,7 @@ def build_segmenter(device: torch.device, weights_path: str) -> UNet:
         strides=(2, 2, 2),
         num_res_units=2,
     ).to(device)
-    checkpoint = torch.load(weights_path, map_location=device)
+    checkpoint = torch.load(weights_path, map_location=device, weights_only=False)
     if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
         state_dict = checkpoint["state_dict"]
     elif isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
@@ -190,14 +195,30 @@ def build_segmenter(device: torch.device, weights_path: str) -> UNet:
 
     normalized_state_dict = OrderedDict()
     for key, value in state_dict.items():
+        # Mixed Lightning checkpoints may contain generator weights; ignore them for UNet loading.
+        if "generator." in key and "segmenter." not in key:
+            continue
+
         normalized_key = key
-        if normalized_key.startswith("_orig_mod."):
-            normalized_key = normalized_key[len("_orig_mod.") :]
-        if normalized_key.startswith("module."):
-            normalized_key = normalized_key[len("module.") :]
+        # Iteratively strip prefixes added by PyTorch Lightning, wrapping, or compiling
+        hit = True
+        while hit:
+            hit = False
+            for prefix in ["_orig_mod.", "module.", "compiled_wrapper.", "compiled_synthesis.", "compiled_segmenter.", "segmenter."]:
+                if normalized_key.startswith(prefix):
+                    normalized_key = normalized_key[len(prefix) :]
+                    hit = True
+
+        if normalized_key.startswith("model.model."):
+            normalized_key = "model." + normalized_key[len("model.model.") :]
         normalized_state_dict[normalized_key] = value
 
-    model.load_state_dict(normalized_state_dict, strict=True)
+    try:
+        model.load_state_dict(normalized_state_dict, strict=True)
+    except RuntimeError:
+        # Some checkpoints store keys without the top-level "model." prefix.
+        prefixed_state_dict = OrderedDict((f"model.{k}", v) for k, v in normalized_state_dict.items())
+        model.load_state_dict(prefixed_state_dict, strict=True)
     model.eval()
     return model
 
@@ -227,13 +248,23 @@ def maybe_build_segmenter_ensemble(
 
     if num_ensemble > 0:
         ensemble_dir = best_path.parent
-
-        for idx in range(1, num_ensemble + 1):
-            candidate = ensemble_dir / f"last_segmenter_{idx}.pth"
-            if not candidate.exists():
-                print(f"Skipping missing ensemble checkpoint: {candidate}")
-                continue
-            models.append(build_segmenter(device=device, weights_path=str(candidate)))
+        if best_path.suffix == ".ckpt":
+            # v5 layout: segmenter_<epoch>_<metric>.ckpt + last.ckpt
+            candidates = sorted(
+                ensemble_dir.glob("segmenter_*.ckpt"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            for candidate in candidates[:num_ensemble]:
+                models.append(build_segmenter(device=device, weights_path=str(candidate)))
+        else:
+            # v4 and older layout: best_segmenter.pth + last_segmenter_i.pth
+            for idx in range(1, num_ensemble + 1):
+                candidate = ensemble_dir / f"last_segmenter_{idx}.pth"
+                if not candidate.exists():
+                    print(f"Skipping missing ensemble checkpoint: {candidate}")
+                    continue
+                models.append(build_segmenter(device=device, weights_path=str(candidate)))
 
     return models
 
@@ -259,6 +290,8 @@ def _predict_from_ensemble(
 
 def _validate_family(family: str) -> str:
     normalized = family.strip().lower()
+    if normalized == "fully_artificial":
+        normalized = "fullyartificial"
     valid = {"baseline", "generator", "bigaug", "fullyartificial"}
     if normalized not in valid:
         raise ValueError(f"Unsupported family '{family}'. Expected one of: {sorted(valid)}")
@@ -336,7 +369,7 @@ def _discover_models(checkpoint_dir: Path) -> list[dict[str, Any]]:
     v4_model_id_pattern = re.compile(r"^(?:v4_)?(baseline|generator|bigaug|fullyartificial)_([a-zA-Z0-9]+)$")
     specs: list[dict[str, Any]] = []
     
-    # Use rglob to find files in subdirectories (baseline, v1, v2)
+    # Legacy pattern: best_segmenter_<family>_<contrast>.pth
     for checkpoint in sorted(checkpoint_dir.rglob("*.pth")):
         match = pattern.match(checkpoint.name)
         if match:
@@ -382,6 +415,41 @@ def _discover_models(checkpoint_dir: Path) -> list[dict[str, Any]]:
                     }
                 )
             )
+
+    # v5+ and runX pattern:
+    # - checkpoints/<version>/segmenter/<family>/<contrast>/last.ckpt
+    # - checkpoints/segmenter/<family>/<contrast>/runX/last.ckpt
+    latest_segmenter_ckpts: dict[tuple[str, str], Path] = {}
+    for checkpoint in sorted(checkpoint_dir.rglob("last.ckpt")):
+        parts = checkpoint.parts
+        if "segmenter" not in parts:
+            continue
+
+        seg_idx = parts.index("segmenter")
+        if seg_idx + 2 >= len(parts):
+            continue
+
+        family = _validate_family(parts[seg_idx + 1])
+        contrast = normalize_contrast_name(parts[seg_idx + 2])
+        key = (family, contrast)
+
+        prev = latest_segmenter_ckpts.get(key)
+        if prev is None or checkpoint.stat().st_mtime > prev.stat().st_mtime:
+            latest_segmenter_ckpts[key] = checkpoint
+
+    for (family, contrast), checkpoint in sorted(latest_segmenter_ckpts.items()):
+        model_id = f"segmenter_{family}_{contrast}"
+        specs.append(
+            _normalize_model_spec(
+                {
+                    "model_id": model_id,
+                    "family": family,
+                    "source_contrast": contrast,
+                    "checkpoint_path": str(checkpoint),
+                    "enabled": True,
+                }
+            )
+        )
     return specs
 
 
@@ -429,9 +497,16 @@ def _legacy_default_models(args: argparse.Namespace) -> list[dict[str, Any]]:
 def _collect_model_specs(args: argparse.Namespace) -> list[dict[str, Any]]:
     specs: list[dict[str, Any]] = []
 
-    # 1. ALWAYS discover from the baseline folder if it exists
+    # 1. Always include baseline models by default.
     baseline_dir = PROJECT_ROOT / "checkpoints" / "baseline"
-    if baseline_dir.exists():
+    include_baseline_auto = baseline_dir.exists() and not args.skip_baseline_auto
+    if include_baseline_auto and args.discover_checkpoints:
+        discovery_path = Path(args.discover_checkpoints).resolve()
+        baseline_resolved = baseline_dir.resolve()
+        if discovery_path == baseline_resolved or baseline_resolved.is_relative_to(discovery_path):
+            include_baseline_auto = False
+
+    if include_baseline_auto:
         print(f"Automatically including baseline checkpoints from: {baseline_dir}")
         specs.extend(_discover_models(baseline_dir))
 

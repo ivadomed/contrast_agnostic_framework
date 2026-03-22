@@ -37,6 +37,49 @@ from src.kornia_augmentations import build_kornia_augmentation
 
 
 
+
+class CompiledSynthesisWrapper(nn.Module):
+    def __init__(self, generator, hist_module, gen_version):
+        super().__init__()
+        self.generator = generator
+        self.hist_module = hist_module
+        self.gen_version = gen_version
+
+    def forward(self, x: torch.Tensor, 
+                num_bins: int, num_chunks: int, dark_threshold: float):
+        
+        if self.gen_version in ("v3", "v4"):
+            target_hist, _, guidance_map = generate_unified_targets(
+                input_images=x,
+                num_bins=num_bins,
+                num_chunks=num_chunks,
+                dark_threshold=dark_threshold,
+                hist_module=self.hist_module,
+                return_guidance_map=True,
+            )
+        else:
+            target_hist, perms = generate_unified_targets(
+                input_images=x,
+                num_bins=num_bins,
+                num_chunks=num_chunks,
+                dark_threshold=dark_threshold,
+                hist_module=self.hist_module,
+            )
+            guidance_map = create_range_translation_guidance_map(
+                input_image=x,
+                perms=perms,
+                num_chunks=num_chunks,
+                dark_threshold=dark_threshold,
+            )
+
+        if self.gen_version != "v1":
+            guidance_map = apply_gaussian_blur_3d(guidance_map)
+
+        generator_input = torch.cat([x, guidance_map], dim=1)
+        generator_output = self.generator(generator_input)
+        synthesized = ((generator_output + 1.0) * 0.5).clamp(0.0, 1.0)
+        return synthesized
+
 class CompiledSegmenterWrapper(nn.Module):
     def __init__(self, segmenter, loss_fn):
         super().__init__()
@@ -46,7 +89,7 @@ class CompiledSegmenterWrapper(nn.Module):
     def forward(self, x, y):
         logits = self.segmenter(x)
         loss = self.loss_fn(logits, y)
-        return loss, logits
+        return loss
 
 def _extract_normalized_state_dict(checkpoint: object) -> OrderedDict[str, torch.Tensor]:
     if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
@@ -61,10 +104,14 @@ def _extract_normalized_state_dict(checkpoint: object) -> OrderedDict[str, torch
     normalized_state_dict: OrderedDict[str, torch.Tensor] = OrderedDict()
     for key, value in raw_state_dict.items():
         normalized_key = key
-        if normalized_key.startswith("_orig_mod."):
-            normalized_key = normalized_key[len("_orig_mod.") :]
-        if normalized_key.startswith("module."):
-            normalized_key = normalized_key[len("module.") :]
+        # Iteratively strip prefixes added by PyTorch Lightning, wrapping, or compiling
+        hit = True
+        while hit:
+            hit = False
+            for prefix in ["_orig_mod.", "module.", "model.", "compiled_wrapper.", "compiled_synthesis.", "compiled_segmenter."]:
+                if normalized_key.startswith(prefix):
+                    normalized_key = normalized_key[len(prefix) :]
+                    hit = True
         normalized_state_dict[normalized_key] = value
 
     return normalized_state_dict
@@ -389,7 +436,7 @@ class MRISegmenterLightning(pl.LightningModule):
         self.loss_fn = DiceCELoss(sigmoid=True)
         self.compiled_segmenter = CompiledSegmenterWrapper(self.segmenter, self.loss_fn)
         if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile"):
-            self.compiled_segmenter = torch.compile(self.compiled_segmenter, mode="reduce-overhead")
+            self.compiled_segmenter = torch.compile(self.compiled_segmenter, mode="max-autotune-no-cudagraphs")
         self.dice_metric = DiceMetric(include_background=False, reduction="mean")
 
         self.generator: MRI_Synthesis_Net | None = None
@@ -466,25 +513,25 @@ class MRISegmenterLightning(pl.LightningModule):
             project_root = Path(__file__).resolve().parents[1]
             contrast = self.cfg.data.source_contrast
             gen_version = self.cfg.model.segmenter.gen_version
-            generator_weights = str(project_root / "checkpoints" / gen_version / f"mri_generator_{contrast}_epoch_30.pth")
+            generator_weights = str(project_root / "checkpoints" / gen_version / f"generator/{contrast}/last.ckpt")
 
         self.generator = MRI_Synthesis_Net(in_channels=2, out_channels=1)
         if bool(self.cfg.model.segmenter.channels_last_3d):
             self.generator = self.generator.to(memory_format=torch.channels_last_3d)
 
-        checkpoint = torch.load(generator_weights, map_location="cpu")
+        checkpoint = torch.load(generator_weights, map_location="cpu", weights_only=False)
         state_dict = _extract_normalized_state_dict(checkpoint)
         self.generator.load_state_dict(state_dict, strict=True)
         self.generator.eval()
         for p in self.generator.parameters():
             p.requires_grad = False
-        if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile"):
-            self.generator = torch.compile(self.generator, mode="max-autotune")
-
         self.hist_module = DifferentiableHistogram3D(
             num_bins=int(self.cfg.model.segmenter.num_bins),
             value_range=(0.0, 1.0),
         )
+        self.compiled_synthesis = CompiledSynthesisWrapper(self.generator, self.hist_module, str(self.cfg.model.segmenter.gen_version))
+        if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile"):
+            self.compiled_synthesis = torch.compile(self.compiled_synthesis, mode="reduce-overhead")
         self._generator_is_ready = True
 
     def _to_plain_tensor(self, x: torch.Tensor) -> torch.Tensor:
@@ -534,14 +581,21 @@ class MRISegmenterLightning(pl.LightningModule):
         if not use_generator or random.random() >= float(prob):
             return x, False
 
+        # Synthesis pass doesn't need gradients for segmenter
+        if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
+            torch.compiler.cudagraph_mark_step_begin()
+            
         with torch.inference_mode():
-            guidance_map, _ = self._build_generator_guidance(x=x)
-            generator_input = torch.cat([x, guidance_map], dim=1)
-            generator_output = self.generator(generator_input)
-            synthesized = ((generator_output + 1.0) * 0.5).clamp(0.0, 1.0)
-            if bool(self.cfg.model.segmenter.channels_last_3d):
-                synthesized = synthesized.to(memory_format=torch.channels_last_3d)
-            return synthesized.float(), True
+            synthesized = self.compiled_synthesis(
+                x,
+                num_bins=int(self.cfg.model.segmenter.num_bins),
+                num_chunks=int(self.cfg.model.segmenter.num_chunks),
+                dark_threshold=float(self.cfg.model.segmenter.dark_threshold)
+            )
+
+        if bool(self.cfg.model.segmenter.channels_last_3d):
+            synthesized = synthesized.contiguous(memory_format=torch.channels_last_3d)
+        return synthesized.clone().float(), True
 
     def configure_optimizers(self) -> dict[str, Any]:
         optimizer = torch.optim.AdamW(
@@ -553,7 +607,7 @@ class MRISegmenterLightning(pl.LightningModule):
         )
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer,
-            T_max=int(self.cfg.training.max_epochs.segmenter),
+            T_max=int(self.cfg.training.max_epochs.segmenter) if hasattr(self.cfg.training.max_epochs, "segmenter") else int(self.cfg.training.max_epochs),
             eta_min=float(self.cfg.training.eta_min),
         )
         return {
@@ -565,6 +619,9 @@ class MRISegmenterLightning(pl.LightningModule):
         }
 
     def training_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
+        if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
+            torch.compiler.cudagraph_mark_step_begin()
+            
         x = self._to_plain_tensor(batch["image"])
         y = (self._to_plain_tensor(batch["label"]) > 0).float()
         if bool(self.cfg.model.segmenter.channels_last_3d):
@@ -575,7 +632,10 @@ class MRISegmenterLightning(pl.LightningModule):
             prob=float(self.cfg.model.segmenter.aug_prob_train),
         )
 
-        loss, logits = self.compiled_segmenter(unet_input, y)
+        if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
+            torch.compiler.cudagraph_mark_step_begin()
+
+        loss = self.compiled_segmenter(unet_input, y)
 
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         self.log("train/used_generator", float(used_generator), on_step=True, on_epoch=False)
@@ -595,7 +655,12 @@ class MRISegmenterLightning(pl.LightningModule):
             prob=float(self.cfg.model.segmenter.aug_prob_val),
         )
 
-        val_loss, logits = self.compiled_segmenter(val_input, y)
+        if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
+            torch.compiler.cudagraph_mark_step_begin()
+
+        # Keep validation eager to avoid retaining compiled graph outputs for metric state.
+        logits = self.segmenter(val_input)
+        val_loss = self.loss_fn(logits, y)
         val_pred = (torch.sigmoid(logits) > 0.5).float()
         self.dice_metric(y_pred=val_pred, y=y)
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
+import re
 
 import hydra
 import pytorch_lightning as pl
@@ -67,7 +68,24 @@ def _build_checkpoint_dir(cfg: DictConfig) -> Path:
     else:
         mode = "baseline"
 
-    return PROJECT_ROOT / "checkpoints" / str(cfg.version) / "segmenter" / mode / str(cfg.data.source_contrast)
+    base_dir = PROJECT_ROOT / "checkpoints" / "segmenter" / mode / str(cfg.data.source_contrast)
+    base_dir.mkdir(parents=True, exist_ok=True)
+
+    run_pattern = re.compile(r"^run(\d+)$")
+    run_dirs = []
+    for child in base_dir.iterdir():
+        if not child.is_dir():
+            continue
+        match = run_pattern.match(child.name)
+        if match:
+            run_dirs.append((int(match.group(1)), child))
+
+    # Resume into latest run directory; otherwise create next run directory.
+    if bool(cfg.training.resume) and run_dirs:
+        return max(run_dirs, key=lambda item: item[0])[1]
+
+    next_idx = (max((idx for idx, _ in run_dirs), default=0) + 1)
+    return base_dir / f"run{next_idx}"
 
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
@@ -126,7 +144,7 @@ def main(cfg: DictConfig) -> None:
     lr_callback = LearningRateMonitor(logging_interval="epoch")
 
     trainer = pl.Trainer(
-        max_epochs=int(cfg.training.max_epochs.segmenter),
+        max_epochs=int(cfg.training.max_epochs.segmenter) if isinstance(cfg.training.max_epochs, dict) or hasattr(cfg.training.max_epochs, "segmenter") else int(cfg.training.max_epochs),
         logger=wandb_logger,
         callbacks=[checkpoint_callback, lr_callback],
         accelerator=cfg.training.accelerator,
@@ -140,7 +158,9 @@ def main(cfg: DictConfig) -> None:
         log_every_n_steps=int(cfg.training.log_every_n_steps),
     )
 
-    ckpt_path = "last" if bool(cfg.training.resume) else None
+    ckpt_dir = _build_checkpoint_dir(cfg)
+    resume_last = ckpt_dir / "last.ckpt"
+    ckpt_path = "last" if bool(cfg.training.resume) and resume_last.exists() else None
     trainer.fit(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
 
 

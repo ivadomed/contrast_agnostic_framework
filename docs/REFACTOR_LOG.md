@@ -87,3 +87,45 @@
   3. **Target Tensor Memory Alignment:** Addressed silent implicit reallocation overheads triggered deep inside native Loss blocks by asserting `y = y.to(memory_format=torch.channels_last_3d)` contiguous casting.
   4. **Fused Graph Boundaries:** Fully encapsulated `self.segmenter` and standard MONAI `DiceCELoss` inside an untracked outer `CompiledSegmenterWrapper(nn.Module)`. This bridges PyTorch inductor completely across the network boundary, directly collapsing graph serialization nodes on the loss itself.
 - Reasoning & Google-Grade Standard: The previous segmentation system was dropping performance dramatically compared to the generator due to untracked metadata variables halting data-parallelization. Synchronizing identical deformations under pure CUDA execution guarantees dataset scaling. Extending memory allocation channels uniformly up into the label tensor ensures PyTorch doesn't incur massive L1 cache misses attempting to broadcast `contiguous()` variables inside of the `DiceCELoss`. Rather than causing Dynamo Fallbacks, uniting the loss calculation block into the explicit `CompiledSegmenterWrapper` effectively crushed runtime latency, successfully breaking past the ~35s/epoch limit and validating a stable ~8.5 seconds/epoch runtime natively.
+
+## Entry 14
+- Date: 2026-03-20
+- Component: Fused Synthesis Graph, CUDA Graphs Integration, and Persistent CPU Caching
+- Change Applied: Built `CompiledSynthesisWrapper(nn.Module)` to fuse histogram synthesis, guidance blur, and generator forward into one compiled path; aligned compile mode for PyTorch compatibility; raised `data.cache_rate` to 1.0 for persistent caching.
+- Reasoning & Google-Grade Standard: Fusing graph boundaries and removing repeated host-side setup reduced launch overhead and improved steady-state throughput.
+
+## Entry 15
+- Date: 2026-03-20
+- Component: PyTorch Checkpoint Compatibility
+- Change Applied: Set `weights_only=False` explicitly when loading Lightning `.ckpt` files in segmenter training and evaluation.
+- Reasoning & Google-Grade Standard: Newer PyTorch defaults can reject serialized config objects from Lightning checkpoints; explicit loading mode restores compatibility.
+
+## Entry 16
+- Date: 2026-03-21
+- Component: CUDAGraph Stability and Config Robustness
+- Change Applied: Added `.clone()` on synthesized generator outputs before returning to segmenter flow, added `torch.compiler.cudagraph_mark_step_begin()` boundaries in train/validation, and made `max_epochs` handling robust when CLI overrides convert structured config to a scalar.
+- Reasoning & Google-Grade Standard: Prevents stale CUDAGraph tensor reuse and avoids runtime failures from config shape mismatches.
+
+## Entry 17
+- Date: 2026-03-22
+- Component: Segmenter Compile Boundary and Teardown Safety
+- Change Applied: Modified compiled segmenter wrapper to return loss only, switched compile mode to `max-autotune-no-cudagraphs`, and moved validation forward/loss to eager execution.
+- Reasoning & Google-Grade Standard: Restricting compiled outputs to scalar loss avoids teardown-time CUDAGraph lifetime hazards while retaining fast compiled training.
+
+## Entry 18
+- Date: 2026-03-22
+- Component: Evaluation Pipeline and Generator Checkpoint Hygiene
+- Change Applied: Updated evaluation discovery to include v5 `last.ckpt` segmenter checkpoints, normalized family names (including `fully_artificial`), and enabled ensemble loading from v5 `segmenter_*.ckpt` files. Updated generator training checkpoint policy to save only `last.ckpt` and cleaned generator checkpoint folders to keep only the latest `last.ckpt`.
+- Reasoning & Google-Grade Standard: Ensures v5 evaluation logic is consistent with current checkpoint layout, ensembling behavior remains active, and generator storage stays compact and deterministic.
+
+## Entry 19
+- Date: 2026-03-22
+- Component: Evaluation Correctness and Throughput
+- Change Applied: Hardened segmenter checkpoint loading in `scripts/evaluate.py` to support mixed Lightning checkpoints (segmenter + generator state dict keys), preserved robust key-prefix normalization across legacy and v5 formats, and changed default model collection to avoid auto-including baseline runs when an explicit discovery path is provided. Updated `scripts/run_evaluation.sh` to run on slot 3 with higher dataloader throughput defaults.
+- Reasoning & Google-Grade Standard: Correctness-first loading prevents silent evaluation exclusion from state-dict schema drift, while reducing unintended model set expansion and increasing data pipeline throughput cuts end-to-end evaluation latency without changing metric logic.
+
+## Entry 20
+- Date: 2026-03-22
+- Component: Checkpoint Layout Simplification (runX Folders)
+- Change Applied: Replaced version-centered checkpoint output paths with run-indexed folders for active training jobs. Generator checkpoints now save under `checkpoints/generator/<contrast>/runX/`, and segmenter checkpoints now save under `checkpoints/segmenter/<mode>/<contrast>/runX/` where mode is baseline/generator/fully_artificial. Added automatic run index incrementing for new runs and latest-run reuse on resume. Updated `run_segmenters.sh` to resolve generator weights from new `run*/last.ckpt` layout with legacy fallback.
+- Reasoning & Google-Grade Standard: Run-indexed folders preserve chronological experiment history and remove path ambiguity caused by overloaded version directory names, while keeping resume semantics deterministic and operator-friendly.

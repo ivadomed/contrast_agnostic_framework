@@ -80,8 +80,11 @@ def create_range_translation_guidance_map(
 ) -> torch.Tensor:
     b = input_image.shape[0]
     
+    # Ensure inputs are contiguous so torch.compile doesn't fail on PermuteViews
+    input_image = input_image.contiguous()
+    
     # Flatten spatial dims to compute quantiles
-    flat_img = input_image.view(b, -1)
+    flat_img = input_image.contiguous().view(b, -1).clone()
     
     # 1. Algorithmic Complexity: Strided Spatial Subsampling to avoid O(N log N) on full volume
     sample_stride = 10
@@ -92,9 +95,9 @@ def create_range_translation_guidance_map(
     flat_sample[bg_mask_sample] = float('nan')
 
     q_probs = torch.linspace(0.0, 1.0, num_chunks + 1, device=input_image.device, dtype=torch.float32)
-    
+
     # (num_chunks+1, b) -> (b, num_chunks+1)
-    edges = torch.nanquantile(flat_sample, q_probs, dim=1).to(input_image.dtype).transpose(0, 1)
+    edges = torch.nanquantile(flat_sample, q_probs, dim=1).to(input_image.dtype).transpose(0, 1).clone()
 
     edges[:, -1] = torch.clamp(edges[:, -1], min=1.0)
     # Ensure background lower bound is at least dark_threshold (or min fg)
@@ -108,7 +111,8 @@ def create_range_translation_guidance_map(
 
     # Vectorized bin assignment
     # Use right=False so that values equal to an edge go to the right bin, except for the max.
-    bin_idx = torch.searchsorted(edges, flat_img, right=False) - 1
+    # Bypassing Inductor's torch.searchsorted PermuteView crash on 3D data formats via broadcasting equality logic.
+    bin_idx = torch.sum(flat_img.unsqueeze(-1) > edges.unsqueeze(1), dim=-1) - 1
     # clamp to [0, num_chunks - 1] covers edge cases (e.g. max val)
     bin_idx = torch.clamp(bin_idx, 0, num_chunks - 1)
     

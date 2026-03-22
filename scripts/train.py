@@ -3,6 +3,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
+import re
 
 import hydra
 import pytorch_lightning as pl
@@ -52,7 +53,25 @@ def _build_checkpoint_dir(cfg: DictConfig) -> Path:
     configured_dir = cfg.training.checkpoint.dirpath_generator
     if configured_dir is not None:
         return _resolve_path(str(configured_dir))
-    return PROJECT_ROOT / "checkpoints" / str(cfg.version) / "generator" / str(cfg.data.source_contrast)
+
+    base_dir = PROJECT_ROOT / "checkpoints" / "generator" / str(cfg.data.source_contrast)
+    base_dir.mkdir(parents=True, exist_ok=True)
+
+    run_pattern = re.compile(r"^run(\d+)$")
+    run_dirs = []
+    for child in base_dir.iterdir():
+        if not child.is_dir():
+            continue
+        match = run_pattern.match(child.name)
+        if match:
+            run_dirs.append((int(match.group(1)), child))
+
+    # Resume into latest run directory; otherwise create next run directory.
+    if bool(cfg.training.resume) and run_dirs:
+        return max(run_dirs, key=lambda item: item[0])[1]
+
+    next_idx = (max((idx for idx, _ in run_dirs), default=0) + 1)
+    return base_dir / f"run{next_idx}"
 
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
@@ -97,12 +116,8 @@ def main(cfg: DictConfig) -> None:
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=str(_build_checkpoint_dir(cfg)),
-        filename=str(cfg.training.checkpoint.filename_generator),
-        monitor="train/total_loss_epoch",
-        mode="min",
-        save_top_k=int(cfg.training.checkpoint.save_top_k),
+        save_top_k=0,
         save_last=True,
-        auto_insert_metric_name=False,
     )
     lr_callback = LearningRateMonitor(logging_interval="epoch")
 
@@ -128,7 +143,9 @@ def main(cfg: DictConfig) -> None:
     datamodule.setup("fit")
     train_loader = datamodule.train_dataloader()
 
-    ckpt_path = "last" if bool(cfg.training.resume) else None
+    ckpt_dir = _build_checkpoint_dir(cfg)
+    resume_last = ckpt_dir / "last.ckpt"
+    ckpt_path = "last" if bool(cfg.training.resume) and resume_last.exists() else None
     trainer.fit(model=model, train_dataloaders=train_loader, ckpt_path=ckpt_path)
 
 
