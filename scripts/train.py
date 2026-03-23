@@ -54,7 +54,7 @@ def _build_checkpoint_dir(cfg: DictConfig) -> Path:
     if configured_dir is not None:
         return _resolve_path(str(configured_dir))
 
-    base_dir = PROJECT_ROOT / "checkpoints" / "generator" / str(cfg.data.source_contrast)
+    base_dir = PROJECT_ROOT / "checkpoints" / str(cfg.version) / "generator" / str(cfg.data.source_contrast)
     base_dir.mkdir(parents=True, exist_ok=True)
 
     run_pattern = re.compile(r"^run(\d+)$")

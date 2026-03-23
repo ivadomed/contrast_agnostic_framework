@@ -10,6 +10,7 @@ CONTRAST="${3:-t2w}"
 # If no specific weight provided, default to the newest generator last.ckpt.
 # Prefer new run layout, then fall back to legacy versioned folders.
 DEFAULT_CKPT=$(ls -t \
+    checkpoints/${VERSION}/generator/${CONTRAST}/run*/last.ckpt \
     checkpoints/generator/${CONTRAST}/run*/last.ckpt \
     checkpoints/${VERSION}/generator/${CONTRAST}/last.ckpt \
     checkpoints/${VERSION}/generator/${CONTRAST}/*.ckpt \

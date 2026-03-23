@@ -68,7 +68,7 @@ def _build_checkpoint_dir(cfg: DictConfig) -> Path:
     else:
         mode = "baseline"
 
-    base_dir = PROJECT_ROOT / "checkpoints" / "segmenter" / mode / str(cfg.data.source_contrast)
+    base_dir = PROJECT_ROOT / "checkpoints" / str(cfg.version) / "segmenter" / mode / str(cfg.data.source_contrast)
     base_dir.mkdir(parents=True, exist_ok=True)
 
     run_pattern = re.compile(r"^run(\d+)$")

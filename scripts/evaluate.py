@@ -417,10 +417,15 @@ def _discover_models(checkpoint_dir: Path) -> list[dict[str, Any]]:
             )
 
     # v5+ and runX pattern:
-    # - checkpoints/<version>/segmenter/<family>/<contrast>/last.ckpt
-    # - checkpoints/segmenter/<family>/<contrast>/runX/last.ckpt
+    # - checkpoints/<version>/segmenter/<family>/<contrast>/runX/{last,checkpoint,checkpoints}.ckpt
+    # - checkpoints/<version>/segmenter/<family>/<contrast>/last.ckpt (legacy compatibility)
+    # - checkpoints/segmenter/<family>/<contrast>/runX/{last,checkpoint,checkpoints}.ckpt
     latest_segmenter_ckpts: dict[tuple[str, str], Path] = {}
-    for checkpoint in sorted(checkpoint_dir.rglob("last.ckpt")):
+    candidate_ckpts: list[Path] = []
+    for marker_name in ("last.ckpt", "checkpoint.ckpt", "checkpoints.ckpt"):
+        candidate_ckpts.extend(checkpoint_dir.rglob(marker_name))
+
+    for checkpoint in sorted(candidate_ckpts):
         parts = checkpoint.parts
         if "segmenter" not in parts:
             continue

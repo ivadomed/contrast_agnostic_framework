@@ -129,3 +129,46 @@
 - Component: Checkpoint Layout Simplification (runX Folders)
 - Change Applied: Replaced version-centered checkpoint output paths with run-indexed folders for active training jobs. Generator checkpoints now save under `checkpoints/generator/<contrast>/runX/`, and segmenter checkpoints now save under `checkpoints/segmenter/<mode>/<contrast>/runX/` where mode is baseline/generator/fully_artificial. Added automatic run index incrementing for new runs and latest-run reuse on resume. Updated `run_segmenters.sh` to resolve generator weights from new `run*/last.ckpt` layout with legacy fallback.
 - Reasoning & Google-Grade Standard: Run-indexed folders preserve chronological experiment history and remove path ambiguity caused by overloaded version directory names, while keeping resume semantics deterministic and operator-friendly.
+
+## Entry 21
+- Date: 2026-03-22
+- Component: Checkpoint Migration Execution (v5 to run5)
+- Change Applied: Physically migrated existing v5 generator checkpoints (`checkpoints/v5/generator/<contrast>/*`) into `checkpoints/generator/<contrast>/run5/` and migrated v5 segmenter baseline checkpoints (`checkpoints/v5/segmenter/baseline/<contrast>/*`) into `checkpoints/segmenter/baseline/<contrast>/run5/`. Removed empty source directories after migration. Explicitly excluded `checkpoints/v5/segmenter/fully_artificial/*` from any move because those trainings are still running.
+- Reasoning & Google-Grade Standard: Controlled one-way migration preserves checkpoint lineage, prevents active-write collisions for in-progress runs, and aligns historical artifacts to the new run-indexed convention without touching ongoing experiments.
+
+## Entry 22
+- Date: 2026-03-22
+- Component: Segmenter Baseline Stability (GPU Augmentations)
+- Change Applied: Fixed inconsistent return signatures in `src/kornia_augmentations.py` for `RandomLowResolution3D`, `RandomGaussianNoise3D`, and `RandomGaussianSmooth3D` so they return `(x, mask)` whenever a mask is provided.
+- Reasoning & Google-Grade Standard: Segmenter training passes both image and label through the same augmentation pipeline. Mixed return types (tensor-only vs tuple) caused runtime unpack failures (`ValueError: too many values to unpack`). Consistent tuple contracts eliminate the crash and keep synchronized image-mask augmentation semantics.
+
+## Entry 23
+- Date: 2026-03-22
+- Component: Checkpoint Organization Follow-up (Baseline + Fully Artificial)
+- Change Applied: Verified run-indexed baseline segmenter outputs are being written under `checkpoints/segmenter/baseline/<contrast>/runX/` (including active runs). Migrated `checkpoints/v5/segmenter/fully_artificial/{t1w,t2w}` flat files into explicit run subfolders (`run1`, `run2`, `run3`) using `last-vN` markers and epoch group continuity.
+- Reasoning & Google-Grade Standard: Making run boundaries explicit removes ambiguity in checkpoint provenance, improves resume/debug ergonomics, and keeps evaluation/discovery logic deterministic.
+
+## Entry 24
+- Date: 2026-03-22
+- Component: Version-Scoped Checkpoint Isolation
+- Change Applied: Updated generator and segmenter checkpoint directory builders so run-indexed folders are nested under the experiment version root (`checkpoints/<version>/.../runX`) instead of global shared roots. Updated `run_segmenters.sh` to resolve generator defaults from version-scoped run folders first.
+- Reasoning & Google-Grade Standard: Version isolation is required to compare architecture/loss/guidance changes over time without mixing artifacts across incompatible experiment generations.
+
+## Entry 25
+- Date: 2026-03-22
+- Component: Segmenter Validation Image Logging
+- Change Applied: Added validation image logging in `MRISegmenterLightning.validation_step` with an explicit `_log_segmenter_val_images` helper that logs input/target/prediction middle slices (`val/slice_grid`) to WandB. The logger now respects `training.segmenter.val_image_log_every` and logs once per configured epoch interval on the first validation batch.
+- Reasoning & Google-Grade Standard: Segmenter training previously had no image logging path despite config support, which reduced observability and made qualitative debugging difficult. Adding a gated, deterministic logging path restores visual QA without adding significant runtime overhead.
+
+## Entry 26
+- Date: 2026-03-22
+- Component: Segmenter Convergence Parity (v5 Baseline)
+- Change Applied: Restored `data.batch_size_segmenter` default from 32 to 8 in `conf/data/brats.yaml` after comparing runs at commit `80b4305` and finding that convergent runs used effective batch size 8 while collapsed white-mask runs used batch size 32. Also fixed an indentation regression in `RandomGaussianSmooth3D` (`src/kornia_augmentations.py`) where the function returned from inside the batch loop, causing premature exit after the first sample.
+- Reasoning & Google-Grade Standard: Matching known-good hyperparameter regime is the fastest path to isolate true regressions. Large batch-size shifts changed optimization dynamics enough to collapse validation behavior; the augmentation early-return bug was a correctness defect and is fixed to prevent hidden per-batch inconsistency.
+
+## Entry 27
+- Date: 2026-03-22
+- Component: Temporary Segmenter Train Visualization
+- Change Applied: Added train-time segmenter visualization logging in `MRISegmenterLightning.training_step` with a new helper `_log_segmenter_train_images`. The train log now records a 4-column grid (raw input, model input, target, prediction) under `train/slice_grid_raw_model_target_pred`, controlled by `training.segmenter.enable_train_image_logging` and `training.segmenter.train_image_log_every`.
+- Reasoning & Google-Grade Standard: Direct train-time visibility is needed to diagnose white-mask collapse and confirm whether failure appears before or only during validation. Controls keep this temporary diagnostic inexpensive and easy to disable.
+

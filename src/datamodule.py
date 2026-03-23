@@ -179,8 +179,16 @@ class BraTSDataModule(pl.LightningDataModule):
         Returns:
             DataLoader: Training dataloader with drop_last=True for stable graph shapes.
         """
+        explicit_batch_size = getattr(self.cfg.data, "batch_size", None)
+        if explicit_batch_size is not None:
+            train_batch_size = int(explicit_batch_size)
+        elif str(self.cfg.task) == "segmenter":
+            train_batch_size = int(self.cfg.data.batch_size_segmenter)
+        else:
+            train_batch_size = int(self.cfg.data.batch_size_generator)
+
         loader_kwargs: dict[str, Any] = {
-            "batch_size": int(self.cfg.data.batch_size),
+            "batch_size": train_batch_size,
             "shuffle": True,
             "num_workers": int(self.cfg.data.num_workers),
             "pin_memory": bool(self.cfg.data.pin_memory),

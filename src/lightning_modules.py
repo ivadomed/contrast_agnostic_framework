@@ -637,9 +637,71 @@ class MRISegmenterLightning(pl.LightningModule):
 
         loss = self.compiled_segmenter(unet_input, y)
 
+        if (
+            self.trainer.is_global_zero
+            and self.logger is not None
+            and isinstance(self.logger.experiment, wandb.sdk.wandb_run.Run)
+            and bool(self.cfg.training.segmenter.enable_train_image_logging)
+            and int(self.cfg.training.segmenter.train_image_log_every) > 0
+            and (self.global_step % int(self.cfg.training.segmenter.train_image_log_every) == 0)
+        ):
+            with torch.no_grad():
+                train_logits = self.segmenter(unet_input)
+                train_pred = (torch.sigmoid(train_logits) > 0.5).float()
+            self._log_segmenter_train_images(
+                raw_input=x,
+                train_input=unet_input,
+                y=y,
+                train_pred=train_pred,
+                batch_idx=batch_idx,
+            )
+
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         self.log("train/used_generator", float(used_generator), on_step=True, on_epoch=False)
         return loss
+
+    def _log_segmenter_train_images(
+        self,
+        *,
+        raw_input: torch.Tensor,
+        train_input: torch.Tensor,
+        y: torch.Tensor,
+        train_pred: torch.Tensor,
+        batch_idx: int,
+    ) -> None:
+        with torch.no_grad():
+            max_items = min(4, train_input.shape[0])
+            depth_idx = train_input.shape[2] // 2
+
+            raw_input_slices = raw_input[:max_items, :1, depth_idx].detach().float().cpu().clamp(0.0, 1.0)
+            train_input_slices = train_input[:max_items, :1, depth_idx].detach().float().cpu().clamp(0.0, 1.0)
+            target_slices = y[:max_items, :1, depth_idx].detach().float().cpu().clamp(0.0, 1.0)
+            pred_slices = train_pred[:max_items, :1, depth_idx].detach().float().cpu().clamp(0.0, 1.0)
+
+            rows = []
+            for idx in range(max_items):
+                rows.extend([
+                    raw_input_slices[idx],
+                    train_input_slices[idx],
+                    target_slices[idx],
+                    pred_slices[idx],
+                ])
+
+            grid_tensor = torch.stack(rows, dim=0)
+            grid = make_grid(grid_tensor, nrow=4, padding=2)
+            grid_np = grid.permute(1, 2, 0).numpy()
+            if grid_np.shape[-1] == 1:
+                grid_np = grid_np[..., 0]
+
+            self.logger.experiment.log(
+                {
+                    "train/slice_grid_raw_model_target_pred": wandb.Image(grid_np),
+                    "train/epoch": int(self.current_epoch) + 1,
+                    "global_step": self.global_step,
+                    "batch_idx": batch_idx,
+                },
+                step=self.global_step,
+            )
 
     def on_validation_epoch_start(self) -> None:
         self.dice_metric.reset()
@@ -664,8 +726,53 @@ class MRISegmenterLightning(pl.LightningModule):
         val_pred = (torch.sigmoid(logits) > 0.5).float()
         self.dice_metric(y_pred=val_pred, y=y)
 
+        if (
+            self.trainer.is_global_zero
+            and self.logger is not None
+            and isinstance(self.logger.experiment, wandb.sdk.wandb_run.Run)
+            and batch_idx == 0
+            and int(self.cfg.training.segmenter.val_image_log_every) > 0
+            and ((int(self.current_epoch) + 1) % int(self.cfg.training.segmenter.val_image_log_every) == 0)
+        ):
+            self._log_segmenter_val_images(val_input=val_input, y=y, val_pred=val_pred, batch_idx=batch_idx)
+
         self.log("val/loss", val_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
         return val_loss
+
+    def _log_segmenter_val_images(
+        self,
+        *,
+        val_input: torch.Tensor,
+        y: torch.Tensor,
+        val_pred: torch.Tensor,
+        batch_idx: int,
+    ) -> None:
+        with torch.no_grad():
+            max_items = min(4, val_input.shape[0])
+            depth_idx = val_input.shape[2] // 2
+
+            input_slices = val_input[:max_items, :1, depth_idx].detach().float().cpu().clamp(0.0, 1.0)
+            target_slices = y[:max_items, :1, depth_idx].detach().float().cpu().clamp(0.0, 1.0)
+            pred_slices = val_pred[:max_items, :1, depth_idx].detach().float().cpu().clamp(0.0, 1.0)
+
+            triplets = []
+            for idx in range(max_items):
+                triplets.extend([input_slices[idx], target_slices[idx], pred_slices[idx]])
+            grid_tensor = torch.stack(triplets, dim=0)
+            grid = make_grid(grid_tensor, nrow=3, padding=2)
+            grid_np = grid.permute(1, 2, 0).numpy()
+            if grid_np.shape[-1] == 1:
+                grid_np = grid_np[..., 0]
+
+            self.logger.experiment.log(
+                {
+                    "val/slice_grid": wandb.Image(grid_np),
+                    "val/epoch": int(self.current_epoch) + 1,
+                    "global_step": self.global_step,
+                    "batch_idx": batch_idx,
+                },
+                step=self.global_step,
+            )
 
     def on_validation_epoch_end(self) -> None:
         mean_val_dice = float(self.dice_metric.aggregate().item())

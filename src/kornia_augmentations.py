@@ -203,8 +203,8 @@ class RandomLowResolution3D(nn.Module):
                 down_size = (max(1, int(d * zoom)), max(1, int(h * zoom)), max(1, int(w * zoom)))
                 down = F.interpolate(x[i:i+1], size=down_size, mode='nearest')
                 output[i:i+1] = F.interpolate(down, size=(d, h, w), mode='trilinear', align_corners=False)
-                
-        return output
+
+        return output if mask is None else (output, mask)
 
 class RandomGaussianNoise3D(nn.Module):
     def __init__(self, p: float = 0.2, mean: float = 0.0, std: float = 0.02):
@@ -225,7 +225,8 @@ class RandomGaussianNoise3D(nn.Module):
             
         apply_mask = torch.tensor(masks, device=x.device, dtype=torch.bool).view(b, 1, 1, 1, 1)
         noise = torch.randn_like(x) * self.std + self.mean
-        return torch.where(apply_mask, x + noise, x)
+        output = torch.where(apply_mask, x + noise, x)
+        return output if mask is None else (output, mask)
 
 class RandomGaussianSmooth3D(nn.Module):
     def __init__(self, p: float = 0.2, sigma_range: tuple[float, float] = (0.5, 1.0)):
@@ -251,26 +252,26 @@ class RandomGaussianSmooth3D(nn.Module):
         
         apply_mask = torch.rand((b,), device=device) < self.p
         if not bool(apply_mask.any()):
-            return x
+            return x if mask is None else (x, mask)
             
         output = x.clone()
         for i in range(b):
             if apply_mask[i]:
                 sigma = float(torch.empty(1, device=device).uniform_(self.sigma_range[0], self.sigma_range[1]).item())
                 g1d, k = self._get_1d_kernel(sigma, device, dtype)
-                
+
                 k_d = g1d.view(1, 1, k, 1, 1).expand(c, 1, k, 1, 1).contiguous()
                 k_h = g1d.view(1, 1, 1, k, 1).expand(c, 1, 1, k, 1).contiguous()
                 k_w = g1d.view(1, 1, 1, 1, k).expand(c, 1, 1, 1, k).contiguous()
-                
+
                 padding = k // 2
                 v = x[i:i+1]
                 v = F.conv3d(v, k_d, padding=(padding, 0, 0), groups=c)
                 v = F.conv3d(v, k_h, padding=(0, padding, 0), groups=c)
                 v = F.conv3d(v, k_w, padding=(0, 0, padding), groups=c)
                 output[i:i+1] = v
-                
-        return output
+
+        return output if mask is None else (output, mask)
 
 class KorniaMRIAugmentation3D(nn.Module):
     """Kornia-only 3D augmentation pipeline for MRI volumes."""
