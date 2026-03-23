@@ -67,6 +67,9 @@ def test_kornia_pipeline_identity_when_all_probs_zero() -> None:
     x = torch.rand(2, 1, 16, 16, 16, dtype=torch.float32)
     cfg = _base_cfg(affine_prob=0.0, elastic_prob=0.0)
     aug = build_kornia_augmentation(cfg)
+    aug.low_res.p = 0.0
+    aug.noise.p = 0.0
+    aug.smooth.p = 0.0
 
     y = aug(x)
 

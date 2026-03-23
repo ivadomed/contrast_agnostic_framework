@@ -116,7 +116,10 @@ def main(cfg: DictConfig) -> None:
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=str(_build_checkpoint_dir(cfg)),
-        save_top_k=0,
+        filename="best_loss-{epoch:03d}-{train_loss:.4f}",
+        monitor="train/total_loss",
+        mode="min",
+        save_top_k=1,
         save_last=True,
     )
     lr_callback = LearningRateMonitor(logging_interval="epoch")

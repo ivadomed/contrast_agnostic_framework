@@ -31,7 +31,7 @@ segmenter:
 
   use_generator: false
   fully_artificial: false
-  gen_version: v2
+  gen_version: null
   gen_weights: null
   aug_prob_train: 0.7
   aug_prob_val: 0.0

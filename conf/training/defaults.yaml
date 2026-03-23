@@ -58,8 +58,31 @@ generator:
     elastic_prob: 0.5
     elastic_sigma_range: [10.0, 13.0]
     elastic_magnitude_range: [0.0, 1000.0]
+    low_res_prob: 0.3
+    low_res_zoom_range: [0.5, 1.0]
+    noise_prob: 0.2
+    noise_mean: 0.0
+    noise_std: 0.02
+    smooth_prob: 0.2
+    smooth_sigma_range: [0.5, 1.0]
 
 segmenter:
   val_image_log_every: 1
   enable_train_image_logging: true
   train_image_log_every: 200
+  gpu_aug:
+    enabled: true
+    # v4 parity default for baseline segmenter: disable affine/elastic geometry warps.
+    affine_prob: 0.0
+    affine_rotate_range: [0.0, 0.0, 0.0]
+    affine_scale_range: [0.0, 0.0, 0.0]
+    elastic_prob: 0.0
+    elastic_sigma_range: [10.0, 13.0]
+    elastic_magnitude_range: [0.0, 1000.0]
+    low_res_prob: 0.3
+    low_res_zoom_range: [0.5, 1.0]
+    noise_prob: 0.2
+    noise_mean: 0.0
+    noise_std: 0.02
+    smooth_prob: 0.2
+    smooth_sigma_range: [0.5, 1.0]

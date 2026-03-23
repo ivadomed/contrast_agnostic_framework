@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from pathlib import Path
-import random
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -249,7 +248,7 @@ class MRISynthesisLightning(pl.LightningModule):
     def _ensure_gpu_aug(self) -> None:
         if self._gpu_aug is not None:
             return
-        self._gpu_aug = build_kornia_augmentation(self.cfg).to(self.device)
+        self._gpu_aug = build_kornia_augmentation(self.cfg, task="generator").to(self.device)
 
     def on_after_batch_transfer(self, batch: dict[str, Any], dataloader_idx: int) -> dict[str, Any]:
         if "image" not in batch:
@@ -448,7 +447,12 @@ class MRISegmenterLightning(pl.LightningModule):
     def _ensure_gpu_aug(self) -> None:
         if self._gpu_aug is not None:
             return
-        self._gpu_aug = build_kornia_augmentation(self.cfg).to(self.device)
+        self._gpu_aug = build_kornia_augmentation(self.cfg, task="segmenter").to(self.device)
+
+    def _segmenter_gpu_aug_enabled(self) -> bool:
+        if hasattr(self.cfg.training, "segmenter") and hasattr(self.cfg.training.segmenter, "gpu_aug"):
+            return bool(self.cfg.training.segmenter.gpu_aug.enabled)
+        return bool(self.cfg.training.generator.gpu_aug.enabled)
 
     def on_after_batch_transfer(self, batch: dict[str, Any], dataloader_idx: int) -> dict[str, Any]:
         if "image" not in batch or "label" not in batch:
@@ -473,7 +477,7 @@ class MRISegmenterLightning(pl.LightningModule):
             image = image.to(memory_format=torch.channels_last_3d)
 
         # Apply augmentation only during training, same as generator
-        if self.training and bool(self.cfg.training.generator.gpu_aug.enabled):
+        if self.training and self._segmenter_gpu_aug_enabled():
             self._ensure_gpu_aug()
             if self._gpu_aug is not None:
                 with torch.no_grad():
@@ -512,8 +516,13 @@ class MRISegmenterLightning(pl.LightningModule):
         if generator_weights is None:
             project_root = Path(__file__).resolve().parents[1]
             contrast = self.cfg.data.source_contrast
+            # If gen_version is not specified, use the current segmenter version
             gen_version = self.cfg.model.segmenter.gen_version
+            if gen_version is None:
+                gen_version = self.cfg.version
+                print(f"gen_version not specified, defaulting to current version: {gen_version}")
             generator_weights = str(project_root / "checkpoints" / gen_version / f"generator/{contrast}/last.ckpt")
+            print(f"Loading generator from: {generator_weights}")
 
         self.generator = MRI_Synthesis_Net(in_channels=2, out_channels=1)
         if bool(self.cfg.model.segmenter.channels_last_3d):
@@ -578,7 +587,8 @@ class MRISegmenterLightning(pl.LightningModule):
 
     def _maybe_apply_generator(self, x: torch.Tensor, prob: float) -> tuple[torch.Tensor, bool]:
         use_generator = bool(self.cfg.model.segmenter.use_generator) and self.generator is not None
-        if not use_generator or random.random() >= float(prob):
+        apply_generator = bool(torch.rand((), device=x.device) < float(prob))
+        if not use_generator or not apply_generator:
             return x, False
 
         # Synthesis pass doesn't need gradients for segmenter

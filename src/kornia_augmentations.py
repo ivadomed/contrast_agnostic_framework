@@ -4,9 +4,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from kornia.augmentation import RandomAffine3D
-from kornia.filters import get_gaussian_kernel3d
 from kornia.utils import create_meshgrid3d
 from omegaconf import DictConfig
+
+
+def _resolve_aug_cfg(cfg: DictConfig, *, task: str) -> DictConfig:
+    if task == "segmenter" and hasattr(cfg.training, "segmenter") and hasattr(cfg.training.segmenter, "gpu_aug"):
+        return cfg.training.segmenter.gpu_aug
+    return cfg.training.generator.gpu_aug
 
 
 class RandomElasticTransform3D(nn.Module):
@@ -95,16 +100,15 @@ class RandomElasticTransform3D(nn.Module):
         device = x.device
         dtype = x.dtype
 
-        import random
-        # No host-device sync: use python random for batch-level probability
-        masks = [random.random() < self.p for _ in range(batch_size)]
-        if not any(masks):
+        apply_mask = torch.rand((batch_size,), device=device) < self.p
+        if not bool(apply_mask.any()):
             return x if mask is None else (x, mask)
-            
-        apply_mask = torch.tensor(masks, device=device, dtype=torch.bool)
 
         sigma_low, sigma_high = self.sigma_range
-        sigma_val = sigma_low if sigma_high <= sigma_low else random.uniform(sigma_low, sigma_high)
+        if sigma_high <= sigma_low:
+            sigma_val = sigma_low
+        else:
+            sigma_val = float(torch.empty(1, device=device).uniform_(sigma_low, sigma_high).item())
         
         # 2. High-Frequency Waste in Low-Frequency Fields: Scale down for noise generation
         scale_factor = 4
@@ -122,10 +126,11 @@ class RandomElasticTransform3D(nn.Module):
         # Upsample the smoothed noise back to full resolution
         smoothed_noise = F.interpolate(smoothed_noise_lr, size=(depth, height, width), mode='trilinear', align_corners=False)
 
-        import random
         v_low, v_high = self.magnitude_range
-        v_mags = [v_low if v_high <= v_low else random.uniform(v_low, v_high) for _ in range(batch_size)]
-        voxel_magnitude = torch.tensor(v_mags, device=device, dtype=dtype).view(batch_size, 1, 1, 1, 1)
+        if v_high <= v_low:
+            voxel_magnitude = torch.full((batch_size, 1, 1, 1, 1), v_low, device=device, dtype=dtype)
+        else:
+            voxel_magnitude = torch.empty((batch_size, 1, 1, 1, 1), device=device, dtype=dtype).uniform_(v_low, v_high)
 
         norm_scale = torch.tensor(
             [
@@ -186,20 +191,23 @@ class RandomLowResolution3D(nn.Module):
         if self.p <= 0.0 or x.ndim != 5:
             return x if mask is None else (x, mask)
             
-        b, c, d, h, w = x.shape
+        b, _, d, h, w = x.shape
         device = x.device
-        dtype = x.dtype
-        
-        import random
-        # Optimize host-device sync
-        masks = [random.random() < self.p for _ in range(b)]
-        if not any(masks):
+
+        apply_mask = torch.rand((b,), device=device) < self.p
+        if not bool(apply_mask.any()):
             return x if mask is None else (x, mask)
+
+        zoom_low, zoom_high = self.zoom_range
+        if zoom_high <= zoom_low:
+            zooms = torch.full((b,), zoom_low, device=device)
+        else:
+            zooms = torch.empty((b,), device=device).uniform_(zoom_low, zoom_high)
             
         output = x.clone()
         for i in range(b):
-            if masks[i]:
-                zoom = random.uniform(self.zoom_range[0], self.zoom_range[1])
+            if bool(apply_mask[i]):
+                zoom = float(zooms[i].item())
                 down_size = (max(1, int(d * zoom)), max(1, int(h * zoom)), max(1, int(w * zoom)))
                 down = F.interpolate(x[i:i+1], size=down_size, mode='nearest')
                 output[i:i+1] = F.interpolate(down, size=(d, h, w), mode='trilinear', align_corners=False)
@@ -218,12 +226,10 @@ class RandomGaussianNoise3D(nn.Module):
             return x if mask is None else (x, mask)
             
         b = x.shape[0]
-        import random
-        masks = [random.random() < self.p for _ in range(b)]
-        if not any(masks):
+        apply_mask = (torch.rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
+        if not bool(apply_mask.any()):
             return x if mask is None else (x, mask)
-            
-        apply_mask = torch.tensor(masks, device=x.device, dtype=torch.bool).view(b, 1, 1, 1, 1)
+
         noise = torch.randn_like(x) * self.std + self.mean
         output = torch.where(apply_mask, x + noise, x)
         return output if mask is None else (output, mask)
@@ -276,16 +282,23 @@ class RandomGaussianSmooth3D(nn.Module):
 class KorniaMRIAugmentation3D(nn.Module):
     """Kornia-only 3D augmentation pipeline for MRI volumes."""
 
-    def __init__(self, cfg: DictConfig):
+    def __init__(self, cfg: DictConfig, *, task: str = "generator"):
         super().__init__()
-        aug_cfg = cfg.training.generator.gpu_aug
+        aug_cfg = _resolve_aug_cfg(cfg, task=task)
         scale_delta = tuple(float(v) for v in aug_cfg.affine_scale_range)
         scale = tuple((1.0 - delta, 1.0 + delta) for delta in scale_delta)
-        self.affine = RandomAffine3D(
+        self.affine_image = RandomAffine3D(
             p=float(aug_cfg.affine_prob),
             degrees=tuple(float(v) for v in aug_cfg.affine_rotate_range),
             scale=scale,
             resample="BILINEAR",
+            same_on_batch=False,
+        )
+        self.affine_mask = RandomAffine3D(
+            p=1.0,
+            degrees=tuple(float(v) for v in aug_cfg.affine_rotate_range),
+            scale=scale,
+            resample="NEAREST",
             same_on_batch=False,
         )
         self.elastic = RandomElasticTransform3D(
@@ -296,21 +309,27 @@ class KorniaMRIAugmentation3D(nn.Module):
             padding_mode="border",
             align_corners=False,
         )
-        self.low_res = RandomLowResolution3D(p=0.3, zoom_range=(0.5, 1.0))
-        self.noise = RandomGaussianNoise3D(p=0.2, mean=0.0, std=0.02)
-        self.smooth = RandomGaussianSmooth3D(p=0.2, sigma_range=(0.5, 1.0))
+        self.low_res = RandomLowResolution3D(
+            p=float(aug_cfg.low_res_prob),
+            zoom_range=tuple(float(v) for v in aug_cfg.low_res_zoom_range),
+        )
+        self.noise = RandomGaussianNoise3D(
+            p=float(aug_cfg.noise_prob),
+            mean=float(aug_cfg.noise_mean),
+            std=float(aug_cfg.noise_std),
+        )
+        self.smooth = RandomGaussianSmooth3D(
+            p=float(aug_cfg.smooth_prob),
+            sigma_range=tuple(float(v) for v in aug_cfg.smooth_sigma_range),
+        )
 
     def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         # Prevent gradients for data augmentation
         with torch.no_grad():
             if mask is not None:
-                # apply affine on concatenated tensors, and then threshold the mask to emulate 'nearest'
-                b, cx, d, h, w = x.shape
-                cm = mask.shape[1]
-                cat_xm = torch.cat([x, mask], dim=1)
-                cat_xm = self.affine(cat_xm)
-                x = cat_xm[:, :cx]
-                mask = (cat_xm[:, cx:] > 0.5).float()
+                x = self.affine_image(x)
+                affine_params = self.affine_image._params
+                mask = self.affine_mask(mask, params=affine_params)
 
                 x, mask = self.elastic(x, mask)
                 x, mask = self.low_res(x, mask)
@@ -318,7 +337,7 @@ class KorniaMRIAugmentation3D(nn.Module):
                 x, mask = self.smooth(x, mask)
                 return x.clamp(0.0, 1.0), mask
             else:
-                x = self.affine(x)
+                x = self.affine_image(x)
                 x = self.elastic(x)
                 x = self.low_res(x)
                 x = self.noise(x)
@@ -326,5 +345,5 @@ class KorniaMRIAugmentation3D(nn.Module):
                 return x.clamp(0.0, 1.0)
 
 
-def build_kornia_augmentation(cfg: DictConfig) -> nn.Module:
-    return KorniaMRIAugmentation3D(cfg)
+def build_kornia_augmentation(cfg: DictConfig, *, task: str = "generator") -> nn.Module:
+    return KorniaMRIAugmentation3D(cfg, task=task)

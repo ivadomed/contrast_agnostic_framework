@@ -3,11 +3,11 @@
 set -euo pipefail
 
 
-GPU_ID=3
+GPU_ID=0
 set_slot $GPU_ID CUDA_VISIBLE_DEVICES=$GPU_ID .venv/bin/python scripts/evaluate.py \
-	--discover-checkpoints checkpoints/v5 \
+	--discover-checkpoints checkpoints/v6 \
 	--skip-baseline-auto \
-	--output-dir results/eval/v5 \
+	--output-dir results/eval/v6 \
 	--num-workers 12 \
 	--batch-size 8 \
 	--sw-batch-size 24 \
