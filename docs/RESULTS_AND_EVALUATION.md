@@ -19,9 +19,46 @@ Interpretation:
 - ood_mean_dice measures average robustness.
 - ood_worst_dice measures tail-risk behavior (worst-case transfer).
 
-## 3. Cross-Version Performance Snapshot (v7-v15, ens1)
+## 3. The Fully Supervised Baseline (The 10% Gap)
 
-### 3.1 T1w-source branch trajectory
+To quantify the remaining headroom, we extracted fully supervised baseline models from early runs (v1-v6 window, baseline family without generator guidance).
+
+### 3.1 Baseline in-domain references (v1-v6)
+| Version | Model ID | Source | In-domain Dice |
+|---|---|---|---:|
+| v2 | baseline_baseline_t1w | t1w | 0.730849 |
+| v2 | baseline_baseline_t2w | t2w | 0.827574 |
+| v3 | baseline_baseline_t1w | t1w | 0.730730 |
+| v3 | baseline_baseline_t2w | t2w | 0.827594 |
+| v4 | baseline_t1w | t1w | 0.698661 |
+| v4 | baseline_t2w | t2w | 0.812824 |
+| v6 | segmenter_baseline_t1w | t1w | 0.716500 |
+| v6 | segmenter_baseline_t2w | t2w | 0.816966 |
+
+### 3.2 Ceiling vs v15 artificial models
+Using best observed supervised ceilings in v1-v6:
+- T1w supervised ceiling: 0.730849 (v2 baseline_baseline_t1w)
+- T2w supervised ceiling: 0.827594 (v3 baseline_baseline_t2w)
+
+Compared against v15 artificial models (ens1):
+- T1w artificial (segmenter_generator_t1w): 0.705975
+- T2w artificial (segmenter_generator_t2w): 0.813113
+
+Absolute gap to supervised ceiling:
+- T1w gap: 0.730849 - 0.705975 = 0.024874
+- T2w gap: 0.827594 - 0.813113 = 0.014481
+- Mean absolute gap across the two source branches: 0.019678
+
+Relative gap:
+- T1w: 3.40%
+- T2w: 1.75%
+
+Interpretation:
+- The historical "10% gap" label is now mostly a framing target; on in-domain Dice the remaining gap to early fully supervised ceilings is approximately 1.5-2.5 Dice points for v15 ens1.
+
+## 4. Cross-Version Performance Snapshot (v7-v15, ens1)
+
+### 4.1 T1w-source branch trajectory
 | Version | Model ID | In-domain Dice | OOD Mean Dice | OOD Worst Dice |
 |---|---|---:|---:|---:|
 | v7 | segmenter_fullyartificial_t1w | 0.637627 | 0.599461 | 0.556681 |
@@ -37,7 +74,7 @@ Interpretation:
 Key signal:
 - v15 currently leads this branch on in-domain Dice (0.7060) while also restoring strong OOD robustness after the v14 collapse.
 
-### 3.2 T2w-source branch trajectory
+### 4.2 T2w-source branch trajectory
 | Version | Model ID | In-domain Dice | OOD Mean Dice | OOD Worst Dice |
 |---|---|---:|---:|---:|
 | v7 | segmenter_fullyartificial_t2w | 0.714178 | 0.434658 | 0.199491 |
@@ -54,9 +91,9 @@ Key signal:
 - v13 remains the strongest observed T2w-source robustness point in the current exported metrics.
 - v15 keeps strong in-domain quality but OOD robustness is lower than v13 on this branch.
 
-## 4. Current SOTA Candidate (v15) Summary
+## 5. Current SOTA Candidate (v15) Summary
 
-### 4.1 v15 ens1 results
+### 5.1 v15 ens1 results
 | Model ID | flair | t1w | t1gd | t2w | In-domain | OOD Mean | OOD Worst |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | segmenter_generator_t1w | 0.567725 | 0.705975 | 0.678534 | 0.630924 | 0.705975 | 0.625728 | 0.567725 |
@@ -66,9 +103,9 @@ Interpretation:
 - The T1w-source model is the best-balanced v15 profile.
 - The T2w-source model remains asymmetry-constrained, with clear weakest transfer on T1w.
 
-## 5. Ensembling Analysis
+## 6. Ensembling Analysis
 
-## 5.1 v6 ensemble sweep (ens1 to ens5)
+## 6.1 v6 ensemble sweep (ens1 to ens5)
 This is the only complete 1-to-5 ensemble sweep in the current evaluation tree.
 
 ### Volatile family: segmenter_fullyartificial_t2w (v6)
@@ -114,7 +151,7 @@ Range across ens1-ens5:
 Conclusion:
 - Ensembling acts mostly as mild smoothing in already-stable regimes.
 
-## 5.2 v15 ens1 vs ens5 comparison
+## 6.2 v15 ens1 vs ens5 comparison
 | Model ID | Ensemble | In-domain | OOD Mean | OOD Worst |
 |---|---|---:|---:|---:|
 | segmenter_generator_t1w | ens1 | 0.705975 | 0.625728 | 0.567725 |
@@ -129,10 +166,10 @@ Delta (ens5 - ens1):
 Conclusion:
 - In current v15 exports, 5-model averaging does not improve robustness relative to ens1.
 
-## 6. Overall Evaluation Conclusions
+## 7. Overall Evaluation Conclusions
 1. The project consistently confirms contrast asymmetry: T1w-source models are more robust than T2w-source models for worst-case transfer.
 2. v15 is a strong candidate for balanced T1w-source performance, but v13 remains a high-water mark for T2w-source OOD robustness in this evaluation snapshot.
 3. Ensemble scaling from 1 to 5 checkpoints does not produce reliable monotonic gains; best settings are family-dependent and often occur at smaller ensemble sizes.
 
-## 7. Reporting Guidance
+## 8. Reporting Guidance
 When presenting new results, report all three metrics together (in-domain, OOD mean, OOD worst), and treat OOD worst as a first-class safety metric for deployment decisions.

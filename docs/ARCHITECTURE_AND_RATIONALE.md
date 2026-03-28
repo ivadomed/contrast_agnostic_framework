@@ -33,6 +33,36 @@ For each batch:
 
 This allows non-monotonic mappings where intensity order can invert, while still respecting local spatial anatomy.
 
+Formal mapping used by the v15 operator:
+
+Given a voxel intensity x_i in [0,1], define spatially varying quantile edges
+{q_k(i)}_{k=0..K} from interpolated grid-local quantiles, with q_0(i)=0 and q_K(i)=1.
+The chunk assignment is
+
+$$
+c_i = \sum_{k=1}^{K} k \cdot \mathbf{1}\big[q_{k-1}(i) < x_i \le q_k(i)\big].
+$$
+
+For each chunk k, draw an independent random target
+
+$$
+\mu_k \sim \mathcal{U}(0,1), \quad k=1,\dots,K,
+$$
+
+and synthesize
+
+$$
+x_i^{\text{synth}} = \mu_{c_i}.
+$$
+
+Background is preserved by a tissue mask m_i = 1[x_i > \tau] (with \tau about 0.01):
+
+$$
+\widetilde{x}_i^{\text{synth}} = m_i \cdot x_i^{\text{synth}}.
+$$
+
+Because {\mu_k} is unsorted, the mapping is explicitly non-monotonic and permits contrast inversion.
+
 ### 3.3 Generator path
 The generator is a 3D synthesis network optimized with a composite objective:
 - histogram/distribution alignment,
@@ -67,6 +97,34 @@ the system uses one concatenated forward:
 4. supervised segmentation loss on synthetic branch
 5. consistency KL-style penalty between detached raw predictions and synthetic predictions
 6. total_loss = supervised + lambda_consistency * consistency
+
+Formal consistency objective (v13 inherited by v15):
+
+Let p_i = sigma(z_i^{raw}) and q_i = sigma(z_i^{synth}) be Bernoulli probabilities from raw and synthetic logits at voxel i.
+The memory-lean Bernoulli KL term is
+
+$$
+\mathrm{KL}(p_i\|q_i) = p_i\log\frac{p_i}{q_i} + (1-p_i)\log\frac{1-p_i}{1-q_i}.
+$$
+
+Aggregated consistency loss:
+
+$$
+\mathcal{L}_{cons} = \frac{1}{N}\sum_{i=1}^{N} \mathrm{KL}(\mathrm{stopgrad}(p_i)\|q_i).
+$$
+
+Optional Jensen-Shannon form (symmetric variant):
+
+$$
+\mathrm{JS}(p_i,q_i) = \frac{1}{2}\mathrm{KL}(p_i\|m_i) + \frac{1}{2}\mathrm{KL}(q_i\|m_i),
+\quad m_i = \frac{1}{2}(p_i+q_i).
+$$
+
+Total segmenter objective in consistency mode:
+
+$$
+\mathcal{L}_{total} = \mathcal{L}_{sup}(q, y) + \lambda_{cons}\,\mathcal{L}_{cons}.
+$$
 
 ### 4.3 Why this matters
 - Preserves mathematical intent (invariance to contrast perturbation).
