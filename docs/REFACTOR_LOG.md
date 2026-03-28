@@ -1,5 +1,51 @@
 # Refactor Log
 
+## [2026-03-28] v16_bigaug: BigAug Baseline Implementation
+
+- Component: Supervised segmenter baseline augmentation path (`use_generator=false`) for Zhang et al.-style deep stacked transformations.
+- Core Additions:
+  - Added `src/bigaug_augmentations.py` implementing 9 stacked transforms with independent `p=0.5` gates:
+    1. Sharpness (unsharp masking form),
+    2. Gaussian blurring,
+    3. Gaussian noise,
+    4. Brightness shift,
+    5. Contrast gamma warp,
+    6. Intensity perturb (scale+shift),
+    7. Rotation,
+    8. Scaling,
+    9. Elastic deformation.
+  - Appearance transforms are image-only; spatial transforms are image+label.
+- Spatial Fusion Optimization:
+  - Rotation, scale, and elastic deformation are fused into one spatial grid and executed via a single `grid_sample` call per tensor (`bilinear` for image, `nearest` for label).
+  - This avoids sequential multi-interpolation artifacts and reduces launch overhead.
+- Additional Throughput Optimizations:
+  - Version-gated BigAug path in `MRISegmenterLightning._ensure_gpu_aug` for `version == "v16_bigaug"` only.
+  - Active-subset spatial execution and deformation short-circuiting.
+  - Half-resolution appearance stack with trilinear upsample back to full volume.
+  - `v16_bigaug` launcher default batch size set to `8` to reduce epoch step count (`33` train batches).
+- Configuration and Wiring:
+  - Added `conf/model/bigaug.yaml` inheriting `model/defaults.yaml` and setting:
+    - `segmenter.use_generator: false`
+    - `segmenter.fully_artificial: false`
+    - `segmenter.gen_version: null`
+  - Updated `scripts/run_segmenters.sh` so `v16_bigaug` launches with `model=bigaug` and does not pass `model.generator.gen_version`.
+  - Wired datamodule train mode selection for `v16_bigaug` via `train_bigaug` branch.
+- Validation Snapshot (tmux-monitored):
+  - Both parallel sessions launched successfully:
+    - `bigaug_t1w` on slot 1,
+    - `bigaug_t2w` on slot 2.
+  - MONAI cache loading completed and training entered steady-state.
+  - Observed steady-state epoch progress indicators around `6.9-7.4 it/s` over `33` train batches (approximately `4.5-4.8 s/epoch`), satisfying `<14 s/epoch` SLO.
+- Files Touched:
+  - `src/bigaug_augmentations.py`
+  - `src/lightning_modules.py`
+  - `src/datamodule.py`
+  - `src/dataset.py`
+  - `conf/model/bigaug.yaml`
+  - `scripts/run_segmenters.sh`
+  - `docs/REFACTOR_LOG.md`
+  - `docs/POST_MORTEMS.md`
+
 ## [2026-03-28] v15: Non-Monotonic Grid Chunking & Background Masking
 
 - Component: v15 guidance synthesis replacement after v14 rollback.

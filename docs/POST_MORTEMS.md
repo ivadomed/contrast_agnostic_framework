@@ -110,3 +110,42 @@ Any new regression must be recorded with:
 5. Go/no-go decision and follow-up action.
 
 This preserves scientific memory and prevents repeated dead-end cycles.
+
+## 9. v16_bigaug Restart Post-Mortem: Throughput SLO Violation on First Launch
+
+### Hypothesis
+Implementing Zhang-style deep stacked augmentations with all nine transforms and fused spatial resampling would preserve robustness while remaining below the segmenter throughput SLO.
+
+### Reproduction conditions
+- Version: `v16_bigaug`
+- Task: segmenter baseline (`use_generator=false`)
+- Launch pattern: dual tmux sessions via `bash scripts/run_segmenters.sh 1 v16_bigaug t1w` and `bash scripts/run_segmenters.sh 2 v16_bigaug t2w`
+- Initial default batch size: 4
+
+### Failure signature
+- First training launch exceeded SLO during early epoch timing (approximately 33s/epoch observed in startup epoch progress), above the `<14s/epoch` requirement.
+
+### Root cause
+The initial BigAug implementation executed several dense transforms over the full batch regardless of per-transform Bernoulli activation masks. This created avoidable compute pressure:
+- appearance transforms were computed for inactive samples,
+- elastic field synthesis was computed even when deformation mask was inactive,
+- spatial warp executed over full batch rather than active subset.
+
+### Tensor-level optimizations applied before restart
+1. Converted appearance transforms to active-subset execution (`x[mask]`) so compute scales with expected active fraction rather than full batch.
+2. Added deformation short-circuit: skip elastic field generation entirely when no samples activate deformation.
+3. Switched fused spatial warp to operate on active spatial subset only, then scatter results back.
+4. Reduced elastic field generation resolution from factor 4 to factor 8 before trilinear upsampling, preserving smooth deformation while reducing kernel workload.
+5. Enabled compile for the BigAug augmentation module (`torch.compile(..., mode="reduce-overhead")`) under segmenter compile mode.
+6. Set `v16_bigaug` launcher default batch size to 8 (unless explicitly overridden) to reduce per-epoch step count and improve wall-clock throughput.
+
+### Classification and decision
+- Classification: implementation/performance engineering bottleneck (not objective mismatch).
+- Decision: hard restart mandated and executed under strict policy with optimized BigAug path.
+
+### Second restart note (same version window)
+- A subsequent relaunch exposed severe startup throughput collapse tied to `torch.compile` graph partitioning/cudagraph skips in the BigAug module due dynamic masked mutation paths.
+- Remediation applied:
+	1. Removed compile wrapping for BigAug augmentation path.
+	2. Reworked intensity stack to run at half spatial resolution and upsample back, preserving transform contract with substantially lower blur compute.
+- Decision: second hard restart required under strict SLO policy.

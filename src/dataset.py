@@ -67,7 +67,7 @@ def get_preprocessing_transforms(
     ]
     
     # 2. Add robust train-only augmentations before intensity normalization
-    if mode == "train":
+    if mode in ("train", "train_bigaug"):
         transforms_list.extend(
             [
                 # We migrated the following CPU augmentations to GPU in src/kornia_augmentations.py:

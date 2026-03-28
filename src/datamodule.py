@@ -120,12 +120,15 @@ class BraTSDataModule(pl.LightningDataModule):
         patch_size = tuple(self.cfg.data.patch_size)
         data_dir = self._resolve_path(self.cfg.data.data_dir)
         split_file = self._resolve_path(self.cfg.data.split_file)
+        train_mode = "train"
+        if str(self.cfg.task) == "segmenter" and str(self.cfg.version) == "v16_bigaug":
+            train_mode = "train_bigaug"
 
         train_dataset_full = DecathlonDataset(
             root_dir=str(data_dir),
             task=self.cfg.data.task_name,
             transform=get_preprocessing_transforms(
-                mode="train",
+                mode=train_mode,
                 patch_size=patch_size,
                 source_contrast=source_contrast,
             ),

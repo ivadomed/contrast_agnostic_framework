@@ -25,6 +25,7 @@ from src.histogram_ops import (
     apply_gaussian_blur_3d,
     generate_unified_targets,
 )
+from src.bigaug_augmentations import build_bigaug_augmentation
 from src.losses import (
     DiceEdgeLoss3D,
     DifferentiableWassersteinLoss,
@@ -547,6 +548,9 @@ class MRISegmenterLightning(pl.LightningModule):
 
     def _ensure_gpu_aug(self) -> None:
         if self._gpu_aug is not None:
+            return
+        if str(self.cfg.task) == "segmenter" and str(self.cfg.version) == "v16_bigaug":
+            self._gpu_aug = build_bigaug_augmentation().to(self.device)
             return
         self._gpu_aug = build_kornia_augmentation(self.cfg, task="segmenter").to(self.device)
 
