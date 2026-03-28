@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any
+import re
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,7 +23,6 @@ from src.generator import MRI_Synthesis_Net
 from src.histogram_ops import (
     DifferentiableHistogram3D,
     apply_gaussian_blur_3d,
-    create_range_translation_guidance_map,
     generate_unified_targets,
 )
 from src.losses import (
@@ -32,7 +32,15 @@ from src.losses import (
     RangeLoss,
     TotalVariationLoss3D,
 )
-from src.kornia_augmentations import build_kornia_augmentation
+from src.kornia_augmentations import RandomFourierAmplitude3D, build_kornia_augmentation
+from src.filters import AnatomicalUnsharpMask3D
+from src.intensity_ops import (
+    RandomAnisotropicDegradation3D,
+    RandomBezierIntensityWarp,
+    RandomGMMHistogramMatching,
+    RandomSoftQuantileShuffling,
+)
+from src.noise_ops import generate_fractal_noise_3d
 
 
 
@@ -43,6 +51,10 @@ class CompiledSynthesisWrapper(nn.Module):
         self.generator = generator
         self.hist_module = hist_module
         self.gen_version = gen_version
+        self.noise_strength = 0.2
+        self.bezier_warp = RandomBezierIntensityWarp(p=1.0)
+        self.gmm_hist_match = RandomGMMHistogramMatching(p=1.0)
+        self.soft_quantile_shuffle = RandomSoftQuantileShuffling(p=1.0)
 
     def forward(self, x: torch.Tensor, 
                 num_bins: int, num_chunks: int, dark_threshold: float):
@@ -55,21 +67,32 @@ class CompiledSynthesisWrapper(nn.Module):
                 dark_threshold=dark_threshold,
                 hist_module=self.hist_module,
                 return_guidance_map=True,
+                gen_version=self.gen_version,
             )
         else:
-            target_hist, perms = generate_unified_targets(
+            target_hist, _, guidance_map = generate_unified_targets(
                 input_images=x,
                 num_bins=num_bins,
                 num_chunks=num_chunks,
                 dark_threshold=dark_threshold,
                 hist_module=self.hist_module,
+                gen_version=self.gen_version,
             )
-            guidance_map = create_range_translation_guidance_map(
-                input_image=x,
-                perms=perms,
-                num_chunks=num_chunks,
-                dark_threshold=dark_threshold,
-            )
+
+        if self.gen_version == "v9":
+            with torch.no_grad():
+                procedural_noise = generate_fractal_noise_3d(
+                    guidance_map.detach(),
+                    noise_dtype=torch.float16,
+                )
+            guidance_map = (guidance_map + self.noise_strength * procedural_noise).clamp(0.0, 1.0)
+
+        if self.gen_version == "v11":
+            guidance_map = self.bezier_warp(guidance_map)
+        if self.gen_version == "v12":
+            guidance_map = self.gmm_hist_match(guidance_map)
+        if self.gen_version == "v13":
+            guidance_map = self.soft_quantile_shuffle(guidance_map)
 
         if self.gen_version != "v1":
             guidance_map = apply_gaussian_blur_3d(guidance_map)
@@ -117,7 +140,7 @@ def _extract_normalized_state_dict(checkpoint: object) -> OrderedDict[str, torch
 
 
 class CompiledLossWrapper(nn.Module):
-    def __init__(self, model, histogram_module, wasserstein_loss_fn, edge_loss_fn, tv_loss_fn, range_loss_fn, guidance_loss_fn):
+    def __init__(self, model, histogram_module, wasserstein_loss_fn, edge_loss_fn, tv_loss_fn, range_loss_fn, guidance_loss_fn, gen_version: str):
         super().__init__()
         self.model = model
         self.histogram_module = histogram_module
@@ -126,6 +149,11 @@ class CompiledLossWrapper(nn.Module):
         self.tv_loss_fn = tv_loss_fn
         self.range_loss_fn = range_loss_fn
         self.guidance_loss_fn = guidance_loss_fn
+        self.gen_version = gen_version
+        self.noise_strength = 0.2
+        self.bezier_warp = RandomBezierIntensityWarp(p=1.0)
+        self.gmm_hist_match = RandomGMMHistogramMatching(p=1.0)
+        self.soft_quantile_shuffle = RandomSoftQuantileShuffling(p=1.0)
 
     def forward(self, x: torch.Tensor, 
                 num_bins: int, num_chunks: int, dark_threshold: float,
@@ -133,22 +161,34 @@ class CompiledLossWrapper(nn.Module):
                 w_edge: float, w_tv: float, w_range: float, w_wass: float,
                 w_guide_blur: float, w_guide_sharp: float) -> dict[str, torch.Tensor]:
         
-        target_hist, perms = generate_unified_targets(
+        # Generate targets once - reuses guidance_map internally
+        target_hist, perms, guidance_map = generate_unified_targets(
             input_images=x,
             num_bins=num_bins,
             num_chunks=num_chunks,
             dark_threshold=dark_threshold,
             hist_module=self.histogram_module,
-        )
-        guidance_map = create_range_translation_guidance_map(
-            input_image=x,
-            perms=perms,
-            num_chunks=num_chunks,
-            dark_threshold=dark_threshold,
+            gen_version=self.gen_version,
         )
         
+        guidance_for_generator = guidance_map
+        if self.gen_version == "v9":
+            with torch.no_grad():
+                procedural_noise = generate_fractal_noise_3d(
+                    guidance_map.detach(),
+                    noise_dtype=torch.float16,
+                )
+            guidance_for_generator = (guidance_for_generator + self.noise_strength * procedural_noise).clamp(0.0, 1.0)
+
+        if self.gen_version == "v11":
+            guidance_for_generator = self.bezier_warp(guidance_for_generator)
+        if self.gen_version == "v12":
+            guidance_for_generator = self.gmm_hist_match(guidance_for_generator)
+        if self.gen_version == "v13":
+            guidance_for_generator = self.soft_quantile_shuffle(guidance_for_generator)
+
         # Stop propagating gradient through guidance map blur
-        bg_guidance = guidance_map.detach()
+        bg_guidance = guidance_for_generator.detach()
         blurred_guidance = apply_gaussian_blur_3d(
             bg_guidance,
             kernel_size=guidance_blur_k,
@@ -168,8 +208,8 @@ class CompiledLossWrapper(nn.Module):
         edge_loss = self.edge_loss_fn(synthesized_01, x)
         tv_loss = self.tv_loss_fn(synthesized)
         range_loss = self.range_loss_fn(synthesized)
-        guidance_loss_blurred = self.guidance_loss_fn(synthesized_01, guidance_map)
-        guidance_loss_sharp = F.l1_loss(synthesized_01, guidance_map)
+        guidance_loss_blurred = self.guidance_loss_fn(synthesized_01, guidance_for_generator)
+        guidance_loss_sharp = F.l1_loss(synthesized_01, guidance_for_generator)
 
         total_guidance_loss = (
             w_guide_blur * guidance_loss_blurred + w_guide_sharp * guidance_loss_sharp
@@ -238,17 +278,63 @@ class MRISynthesisLightning(pl.LightningModule):
         
         self.compiled_wrapper = CompiledLossWrapper(
             self.model, self.histogram_module, self.wasserstein_loss_fn,
-            self.edge_loss_fn, self.tv_loss_fn, self.range_loss_fn, self.guidance_loss_fn
+            self.edge_loss_fn, self.tv_loss_fn, self.range_loss_fn, self.guidance_loss_fn,
+            self._resolved_generator_version(),
         )
         if bool(self.cfg.training.generator.compile_model) and hasattr(torch, "compile"):
             self.compiled_wrapper = torch.compile(self.compiled_wrapper, mode="reduce-overhead")
 
         self._gpu_aug: nn.Module | None = None
+        self._fourier_aug: nn.Module | None = None
+        self._anatomical_unsharp: nn.Module | None = None
 
     def _ensure_gpu_aug(self) -> None:
         if self._gpu_aug is not None:
             return
         self._gpu_aug = build_kornia_augmentation(self.cfg, task="generator").to(self.device)
+
+    def _resolved_generator_version(self) -> str:
+        configured = None
+        if hasattr(self.cfg.model, "generator") and hasattr(self.cfg.model.generator, "gen_version"):
+            configured = self.cfg.model.generator.gen_version
+        if configured is None:
+            return str(self.cfg.version)
+        return str(configured)
+
+    def _uses_fourier_generator(self) -> bool:
+        return self._resolved_generator_version() in ("v7", "v8", "v9", "v10", "v11")
+
+    def _uses_unsharp_generator(self) -> bool:
+        return self._resolved_generator_version() == "v10"
+
+    def _ensure_unsharp_generator(self) -> None:
+        if self._anatomical_unsharp is not None:
+            return
+        self._anatomical_unsharp = AnatomicalUnsharpMask3D(alpha=2.0, sigma=1.0).to(self.device)
+
+    def _ensure_fourier_aug(self) -> None:
+        if self._fourier_aug is not None:
+            return
+        p = 1.0
+        low_freq_ratio = 0.15
+        scale_range = (0.5, 1.5)
+        version = self._resolved_generator_version()
+        if version in ("v8", "v9", "v10", "v11"):
+            # v8 keeps Fourier as an occasional regularizer.
+            p = 0.3
+        if hasattr(self.cfg.model.generator, "fourier"):
+            fourier_cfg = self.cfg.model.generator.fourier
+            if hasattr(fourier_cfg, "p") and version not in ("v8", "v9", "v10", "v11"):
+                p = float(fourier_cfg.p)
+            if hasattr(fourier_cfg, "low_freq_ratio"):
+                low_freq_ratio = float(fourier_cfg.low_freq_ratio)
+            if hasattr(fourier_cfg, "scale_range"):
+                scale_range = tuple(float(v) for v in fourier_cfg.scale_range)
+        self._fourier_aug = RandomFourierAmplitude3D(
+            p=p,
+            low_freq_ratio=low_freq_ratio,
+            scale_range=scale_range,
+        ).to(self.device)
 
     def on_after_batch_transfer(self, batch: dict[str, Any], dataloader_idx: int) -> dict[str, Any]:
         if "image" not in batch:
@@ -265,8 +351,10 @@ class MRISynthesisLightning(pl.LightningModule):
             self._ensure_gpu_aug()
             if self._gpu_aug is not None:
                 with torch.no_grad():
-                    image = self._gpu_aug(image.contiguous())
+                    # Avoid forcing contiguous here - let Kornia handle the memory format
+                    image = self._gpu_aug(image)
 
+                # Ensure output is in desired memory format if it changed
                 if bool(self.cfg.model.generator.channels_last_3d):
                     image = image.to(memory_format=torch.channels_last_3d)
 
@@ -303,6 +391,16 @@ class MRISynthesisLightning(pl.LightningModule):
         x = batch["image"]
         if bool(self.cfg.model.generator.channels_last_3d):
             x = x.to(memory_format=torch.channels_last_3d)
+
+        if self._uses_fourier_generator():
+            self._ensure_fourier_aug()
+            if self._fourier_aug is not None:
+                x = self._fourier_aug(x)
+
+        if self._uses_unsharp_generator():
+            self._ensure_unsharp_generator()
+            if self._anatomical_unsharp is not None:
+                x = self._anatomical_unsharp(x)
 
         # Unpack scalars to avoid graphing dictionary/config lookups
         num_bins = int(self.cfg.model.generator.num_bins)
@@ -442,6 +540,9 @@ class MRISegmenterLightning(pl.LightningModule):
         self.hist_module: DifferentiableHistogram3D | None = None
         self._generator_is_ready = False
         self._gpu_aug: nn.Module | None = None
+        self._fourier_aug: nn.Module | None = None
+        self._anatomical_unsharp: nn.Module | None = None
+        self._anisotropic_degradation: nn.Module | None = None
 
 
     def _ensure_gpu_aug(self) -> None:
@@ -516,12 +617,31 @@ class MRISegmenterLightning(pl.LightningModule):
         if generator_weights is None:
             project_root = Path(__file__).resolve().parents[1]
             contrast = self.cfg.data.source_contrast
-            # If gen_version is not specified, use the current segmenter version
-            gen_version = self.cfg.model.segmenter.gen_version
-            if gen_version is None:
-                gen_version = self.cfg.version
-                print(f"gen_version not specified, defaulting to current version: {gen_version}")
-            generator_weights = str(project_root / "checkpoints" / gen_version / f"generator/{contrast}/last.ckpt")
+            gen_version = self._resolved_segmenter_gen_version()
+            generator_root = project_root / "checkpoints" / str(gen_version) / "generator" / str(contrast)
+
+            run_pattern = re.compile(r"^run(\d+)$")
+            latest_ckpt: Path | None = None
+            if generator_root.exists():
+                run_dirs = []
+                for child in generator_root.iterdir():
+                    if not child.is_dir():
+                        continue
+                    match = run_pattern.match(child.name)
+                    if match is None:
+                        continue
+                    run_dirs.append((int(match.group(1)), child))
+                if run_dirs:
+                    latest_run_dir = max(run_dirs, key=lambda item: item[0])[1]
+                    candidate = latest_run_dir / "last.ckpt"
+                    if candidate.exists():
+                        latest_ckpt = candidate
+
+            if latest_ckpt is None:
+                legacy_candidate = generator_root / "last.ckpt"
+                latest_ckpt = legacy_candidate
+
+            generator_weights = str(latest_ckpt)
             print(f"Loading generator from: {generator_weights}")
 
         self.generator = MRI_Synthesis_Net(in_channels=2, out_channels=1)
@@ -538,10 +658,73 @@ class MRISegmenterLightning(pl.LightningModule):
             num_bins=int(self.cfg.model.segmenter.num_bins),
             value_range=(0.0, 1.0),
         )
-        self.compiled_synthesis = CompiledSynthesisWrapper(self.generator, self.hist_module, str(self.cfg.model.segmenter.gen_version))
+        self.compiled_synthesis = CompiledSynthesisWrapper(
+            self.generator,
+            self.hist_module,
+            self._resolved_segmenter_gen_version(),
+        )
         if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile"):
             self.compiled_synthesis = torch.compile(self.compiled_synthesis, mode="reduce-overhead")
         self._generator_is_ready = True
+
+    def _resolved_segmenter_gen_version(self) -> str:
+        configured = self.cfg.model.segmenter.gen_version
+        if configured is None and hasattr(self.cfg.model, "generator") and hasattr(self.cfg.model.generator, "gen_version"):
+            if self.cfg.model.generator.gen_version is not None:
+                configured = self.cfg.model.generator.gen_version
+        if configured is None:
+            return str(self.cfg.version)
+        return str(configured)
+
+    def _segmenter_uses_fourier_generator(self) -> bool:
+        return self._resolved_segmenter_gen_version() in ("v7", "v8", "v9", "v10", "v11")
+
+    def _segmenter_uses_unsharp_generator(self) -> bool:
+        return self._resolved_segmenter_gen_version() == "v10"
+
+    def _segmenter_uses_anisotropic_degradation(self) -> bool:
+        return self._resolved_segmenter_gen_version() in ("v11", "v12", "v13", "v14", "v15")
+
+    def _segmenter_uses_consistency_regularization(self) -> bool:
+        return self._resolved_segmenter_gen_version() in ("v13", "v14", "v15")
+
+    def _ensure_segmenter_unsharp(self) -> None:
+        if self._anatomical_unsharp is not None:
+            return
+        self._anatomical_unsharp = AnatomicalUnsharpMask3D(alpha=2.0, sigma=1.0).to(self.device)
+
+    def _ensure_segmenter_anisotropic_degradation(self) -> None:
+        if self._anisotropic_degradation is not None:
+            return
+        self._anisotropic_degradation = RandomAnisotropicDegradation3D(
+            p=0.5,
+            min_factor=4,
+            max_factor=8,
+        ).to(self.device)
+
+    def _ensure_segmenter_fourier_aug(self) -> None:
+        if self._fourier_aug is not None:
+            return
+        p = 1.0
+        low_freq_ratio = 0.15
+        scale_range = (0.5, 1.5)
+        resolved_version = self._resolved_segmenter_gen_version()
+        if resolved_version in ("v8", "v9", "v10", "v11"):
+            # v8 keeps Fourier as an occasional regularizer.
+            p = 0.3
+        if hasattr(self.cfg.model.segmenter, "fourier"):
+            fourier_cfg = self.cfg.model.segmenter.fourier
+            if hasattr(fourier_cfg, "p") and resolved_version not in ("v8", "v9", "v10", "v11"):
+                p = float(fourier_cfg.p)
+            if hasattr(fourier_cfg, "low_freq_ratio"):
+                low_freq_ratio = float(fourier_cfg.low_freq_ratio)
+            if hasattr(fourier_cfg, "scale_range"):
+                scale_range = tuple(float(v) for v in fourier_cfg.scale_range)
+        self._fourier_aug = RandomFourierAmplitude3D(
+            p=p,
+            low_freq_ratio=low_freq_ratio,
+            scale_range=scale_range,
+        ).to(self.device)
 
     def _to_plain_tensor(self, x: torch.Tensor) -> torch.Tensor:
         if hasattr(x, "as_tensor"):
@@ -554,7 +737,7 @@ class MRISegmenterLightning(pl.LightningModule):
     def _build_generator_guidance(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
         assert self.hist_module is not None
         target_hist: torch.Tensor | None = None
-        gen_version = str(self.cfg.model.segmenter.gen_version)
+        gen_version = self._resolved_segmenter_gen_version()
 
         if gen_version in ("v3", "v4"):
             target_hist, _, guidance_map = generate_unified_targets(
@@ -564,20 +747,17 @@ class MRISegmenterLightning(pl.LightningModule):
                 dark_threshold=float(self.cfg.model.segmenter.dark_threshold),
                 hist_module=self.hist_module,
                 return_guidance_map=True,
+                gen_version=gen_version,
             )
         else:
-            target_hist, perms = generate_unified_targets(
+            # Now generate_unified_targets always returns guidance_map
+            target_hist, perms, guidance_map = generate_unified_targets(
                 input_images=x,
                 num_bins=int(self.cfg.model.segmenter.num_bins),
                 num_chunks=int(self.cfg.model.segmenter.num_chunks),
                 dark_threshold=float(self.cfg.model.segmenter.dark_threshold),
                 hist_module=self.hist_module,
-            )
-            guidance_map = create_range_translation_guidance_map(
-                input_image=x,
-                perms=perms,
-                num_chunks=int(self.cfg.model.segmenter.num_chunks),
-                dark_threshold=float(self.cfg.model.segmenter.dark_threshold),
+                gen_version=gen_version,
             )
 
         if gen_version != "v1":
@@ -591,6 +771,16 @@ class MRISegmenterLightning(pl.LightningModule):
         if not use_generator or not apply_generator:
             return x, False
 
+        if self._segmenter_uses_fourier_generator():
+            self._ensure_segmenter_fourier_aug()
+            if self._fourier_aug is not None:
+                x = self._fourier_aug(x)
+
+        if self._segmenter_uses_unsharp_generator():
+            self._ensure_segmenter_unsharp()
+            if self._anatomical_unsharp is not None:
+                x = self._anatomical_unsharp(x)
+
         # Synthesis pass doesn't need gradients for segmenter
         if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
             torch.compiler.cudagraph_mark_step_begin()
@@ -602,6 +792,11 @@ class MRISegmenterLightning(pl.LightningModule):
                 num_chunks=int(self.cfg.model.segmenter.num_chunks),
                 dark_threshold=float(self.cfg.model.segmenter.dark_threshold)
             )
+
+        if self._segmenter_uses_anisotropic_degradation():
+            self._ensure_segmenter_anisotropic_degradation()
+            if self._anisotropic_degradation is not None:
+                synthesized = self._anisotropic_degradation(synthesized)
 
         if bool(self.cfg.model.segmenter.channels_last_3d):
             synthesized = synthesized.contiguous(memory_format=torch.channels_last_3d)
@@ -645,7 +840,31 @@ class MRISegmenterLightning(pl.LightningModule):
         if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
             torch.compiler.cudagraph_mark_step_begin()
 
-        loss = self.compiled_segmenter(unet_input, y)
+        train_logits_for_logging: torch.Tensor | None = None
+        if self._segmenter_uses_consistency_regularization() and used_generator:
+            x_combined = torch.cat([x, unet_input], dim=0)
+            logits_combined = self.segmenter(x_combined)
+            logits_raw, logits_synth = torch.chunk(logits_combined, 2, dim=0)
+
+            supervised_loss = self.loss_fn(logits_synth, y)
+
+            eps = torch.finfo(logits_synth.dtype).eps
+            raw_prob = torch.sigmoid(logits_raw.detach()).clamp(min=eps, max=1.0 - eps)
+            synth_prob = torch.sigmoid(logits_synth).clamp(min=eps, max=1.0 - eps)
+
+            # Memory-lean Bernoulli KL: KL(p_raw || p_synth) without channel concatenation.
+            consistency_map = raw_prob * (torch.log(raw_prob) - torch.log(synth_prob))
+            consistency_map = consistency_map + (1.0 - raw_prob) * (
+                torch.log(1.0 - raw_prob) - torch.log(1.0 - synth_prob)
+            )
+            consistency_loss = consistency_map.mean()
+            consistency_weight = float(self.cfg.training.segmenter.get("consistency_loss_weight", 0.1))
+            loss = supervised_loss + consistency_weight * consistency_loss
+            self.log("train/loss_supervised", supervised_loss, on_step=True, on_epoch=False)
+            self.log("train/loss_consistency", consistency_loss, on_step=True, on_epoch=False)
+            train_logits_for_logging = logits_synth.detach()
+        else:
+            loss = self.compiled_segmenter(unet_input, y)
 
         if (
             self.trainer.is_global_zero
@@ -656,7 +875,10 @@ class MRISegmenterLightning(pl.LightningModule):
             and (self.global_step % int(self.cfg.training.segmenter.train_image_log_every) == 0)
         ):
             with torch.no_grad():
-                train_logits = self.segmenter(unet_input)
+                if train_logits_for_logging is None:
+                    train_logits = self.segmenter(unet_input)
+                else:
+                    train_logits = train_logits_for_logging
                 train_pred = (torch.sigmoid(train_logits) > 0.5).float()
             self._log_segmenter_train_images(
                 raw_input=x,

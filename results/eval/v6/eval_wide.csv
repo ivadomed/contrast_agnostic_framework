@@ -1,4 +1,5 @@
 model_id,family,source_contrast,checkpoint_path,ckpt_exists,flair,t1w,t1gd,t2w,in_domain_dice,ood_mean_dice,ood_worst_dice
-segmenter_baseline_t1w,baseline,t1w,checkpoints/v6/segmenter/baseline/t1w/run1/last.ckpt,1,0.182541,0.669806,0.499547,0.082309,0.669806,0.254799,0.082309
-segmenter_baseline_t2w,baseline,t2w,checkpoints/v6/segmenter/baseline/t2w/run1/last.ckpt,1,0.336840,0.098576,0.098018,0.456212,0.456212,0.177811,0.098018
-segmenter_fullyartificial_t1w,fullyartificial,t1w,checkpoints/v6/segmenter/fully_artificial/t1w/run1/last.ckpt,1,0.047037,0.142370,0.164679,0.036316,0.142370,0.082677,0.036316
+segmenter_baseline_t1w,baseline,t1w,checkpoints/v6/segmenter/baseline/t1w/run2/last.ckpt,1,0.214418,0.716500,0.589732,0.118737,0.716500,0.307629,0.118737
+segmenter_baseline_t2w,baseline,t2w,checkpoints/v6/segmenter/baseline/t2w/run2/last.ckpt,1,0.513345,0.086878,0.090846,0.816966,0.816966,0.230357,0.086878
+segmenter_fullyartificial_t1w,fullyartificial,t1w,checkpoints/v6/segmenter/fully_artificial/t1w/run2/last.ckpt,1,0.548685,0.618855,0.615599,0.600759,0.618855,0.588348,0.548685
+segmenter_fullyartificial_t2w,fullyartificial,t2w,checkpoints/v6/segmenter/fully_artificial/t2w/run1/last.ckpt,1,0.489796,0.267799,0.352244,0.580110,0.580110,0.369946,0.267799

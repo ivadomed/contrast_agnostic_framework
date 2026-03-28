@@ -1,0 +1,9 @@
+model_id,family,source_contrast,target_contrast,dice,ckpt_exists,checkpoint_path
+segmenter_fullyartificial_t1w,fullyartificial,t1w,flair,0.603758,1,checkpoints/v12/segmenter/fully_artificial/t1w/run1/last.ckpt
+segmenter_fullyartificial_t1w,fullyartificial,t1w,t1w,0.631167,1,checkpoints/v12/segmenter/fully_artificial/t1w/run1/last.ckpt
+segmenter_fullyartificial_t1w,fullyartificial,t1w,t1gd,0.635790,1,checkpoints/v12/segmenter/fully_artificial/t1w/run1/last.ckpt
+segmenter_fullyartificial_t1w,fullyartificial,t1w,t2w,0.625763,1,checkpoints/v12/segmenter/fully_artificial/t1w/run1/last.ckpt
+segmenter_fullyartificial_t2w,fullyartificial,t2w,flair,0.587173,1,checkpoints/v12/segmenter/fully_artificial/t2w/run1/last.ckpt
+segmenter_fullyartificial_t2w,fullyartificial,t2w,t1w,0.490346,1,checkpoints/v12/segmenter/fully_artificial/t2w/run1/last.ckpt
+segmenter_fullyartificial_t2w,fullyartificial,t2w,t1gd,0.554141,1,checkpoints/v12/segmenter/fully_artificial/t2w/run1/last.ckpt
+segmenter_fullyartificial_t2w,fullyartificial,t2w,t2w,0.656380,1,checkpoints/v12/segmenter/fully_artificial/t2w/run1/last.ckpt

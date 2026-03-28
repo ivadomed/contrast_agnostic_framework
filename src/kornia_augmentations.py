@@ -14,6 +14,76 @@ def _resolve_aug_cfg(cfg: DictConfig, *, task: str) -> DictConfig:
     return cfg.training.generator.gpu_aug
 
 
+class RandomFourierAmplitude3D(nn.Module):
+    """Randomly perturbs high-frequency FFT amplitudes while preserving phase."""
+
+    def __init__(
+        self,
+        p: float = 0.5,
+        low_freq_ratio: float = 0.15,
+        scale_range: tuple[float, float] = (0.5, 1.5),
+    ) -> None:
+        super().__init__()
+        self.p = float(p)
+        self.low_freq_ratio = float(low_freq_ratio)
+        self.scale_range = tuple(float(v) for v in scale_range)
+
+    def _build_low_frequency_mask(self, x: torch.Tensor) -> torch.Tensor:
+        _, _, depth, height, width = x.shape
+        device = x.device
+
+        dz = max(1, int(round(depth * self.low_freq_ratio)))
+        dy = max(1, int(round(height * self.low_freq_ratio)))
+        dx = max(1, int(round(width * self.low_freq_ratio)))
+
+        cz = depth // 2
+        cy = height // 2
+        cx = width // 2
+
+        z0 = max(0, cz - dz // 2)
+        z1 = min(depth, z0 + dz)
+        y0 = max(0, cy - dy // 2)
+        y1 = min(height, y0 + dy)
+        x0 = max(0, cx - dx // 2)
+        x1 = min(width, x0 + dx)
+
+        low_freq_mask = torch.zeros((1, 1, depth, height, width), device=device, dtype=torch.bool)
+        low_freq_mask[:, :, z0:z1, y0:y1, x0:x1] = True
+        return low_freq_mask
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.p <= 0.0 or x.ndim != 5:
+            return x
+
+        batch_size = x.shape[0]
+        apply_mask = (torch.rand((batch_size,), device=x.device) < self.p).view(batch_size, 1, 1, 1, 1)
+        if not bool(apply_mask.any()):
+            return x
+
+        fft = torch.fft.fftn(x, dim=(-3, -2, -1))
+        amp = torch.abs(fft)
+        phase = torch.angle(fft)
+
+        shifted_amp = torch.fft.fftshift(amp, dim=(-3, -2, -1))
+        low_freq_mask = self._build_low_frequency_mask(x)
+
+        scale_min, scale_max = self.scale_range
+        if scale_max <= scale_min:
+            random_scales = torch.full_like(shifted_amp, scale_min)
+        else:
+            random_scales = torch.empty_like(shifted_amp).uniform_(scale_min, scale_max)
+
+        high_freq_scale = torch.where(low_freq_mask, torch.ones_like(random_scales), random_scales)
+        perturbed_shifted_amp = shifted_amp * high_freq_scale
+        perturbed_amp = torch.fft.ifftshift(perturbed_shifted_amp, dim=(-3, -2, -1))
+
+        complex_tensor = perturbed_amp * torch.exp(1j * phase)
+        transformed = torch.fft.ifftn(complex_tensor, dim=(-3, -2, -1)).real
+
+        output = transformed.clamp(0.0, 1.0)
+        return torch.where(apply_mask, output, x)
+
+
 class RandomElasticTransform3D(nn.Module):
     """Batched 3D elastic deformation implemented with Kornia/Torch ops.
 
@@ -287,20 +357,29 @@ class KorniaMRIAugmentation3D(nn.Module):
         aug_cfg = _resolve_aug_cfg(cfg, task=task)
         scale_delta = tuple(float(v) for v in aug_cfg.affine_scale_range)
         scale = tuple((1.0 - delta, 1.0 + delta) for delta in scale_delta)
-        self.affine_image = RandomAffine3D(
-            p=float(aug_cfg.affine_prob),
-            degrees=tuple(float(v) for v in aug_cfg.affine_rotate_range),
-            scale=scale,
-            resample="BILINEAR",
-            same_on_batch=False,
-        )
-        self.affine_mask = RandomAffine3D(
-            p=1.0,
-            degrees=tuple(float(v) for v in aug_cfg.affine_rotate_range),
-            scale=scale,
-            resample="NEAREST",
-            same_on_batch=False,
-        )
+        affine_prob = float(aug_cfg.affine_prob)
+        if task == "generator" and str(cfg.version) == "v8":
+            # v8 robustness hotfix: avoid Kornia affine path that can trigger cuSOLVER failures
+            # in warp_affine3d homography inversion on some driver/runtime combinations.
+            affine_prob = 0.0
+
+        self.affine_image = None
+        self.affine_mask = None
+        if affine_prob > 0.0:
+            self.affine_image = RandomAffine3D(
+                p=affine_prob,
+                degrees=tuple(float(v) for v in aug_cfg.affine_rotate_range),
+                scale=scale,
+                resample="BILINEAR",
+                same_on_batch=False,
+            )
+            self.affine_mask = RandomAffine3D(
+                p=1.0,
+                degrees=tuple(float(v) for v in aug_cfg.affine_rotate_range),
+                scale=scale,
+                resample="NEAREST",
+                same_on_batch=False,
+            )
         self.elastic = RandomElasticTransform3D(
             p=float(aug_cfg.elastic_prob),
             sigma_range=tuple(float(v) for v in aug_cfg.elastic_sigma_range),
@@ -327,9 +406,10 @@ class KorniaMRIAugmentation3D(nn.Module):
         # Prevent gradients for data augmentation
         with torch.no_grad():
             if mask is not None:
-                x = self.affine_image(x)
-                affine_params = self.affine_image._params
-                mask = self.affine_mask(mask, params=affine_params)
+                if self.affine_image is not None and self.affine_mask is not None:
+                    x = self.affine_image(x)
+                    affine_params = self.affine_image._params
+                    mask = self.affine_mask(mask, params=affine_params)
 
                 x, mask = self.elastic(x, mask)
                 x, mask = self.low_res(x, mask)
@@ -337,7 +417,8 @@ class KorniaMRIAugmentation3D(nn.Module):
                 x, mask = self.smooth(x, mask)
                 return x.clamp(0.0, 1.0), mask
             else:
-                x = self.affine_image(x)
+                if self.affine_image is not None:
+                    x = self.affine_image(x)
                 x = self.elastic(x)
                 x = self.low_res(x)
                 x = self.noise(x)

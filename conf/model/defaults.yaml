@@ -2,6 +2,7 @@ generator:
   in_channels: 2
   out_channels: 1
   base_filters: 32
+  gen_version: null
   channels_last_3d: true
   tf32: true
   fused_adamw: true

@@ -70,6 +70,7 @@ segmenter:
   val_image_log_every: 1
   enable_train_image_logging: true
   train_image_log_every: 200
+  consistency_loss_weight: 0.1  # Weight for v13 consistency regularization
   gpu_aug:
     enabled: true
     # v4 parity default for baseline segmenter: disable affine/elastic geometry warps.

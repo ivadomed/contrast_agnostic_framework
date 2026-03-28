@@ -65,8 +65,10 @@ def parse_args() -> argparse.Namespace:
         "--num-ensemble",
         type=int,
         default=4,
-        choices=[0, 1, 2, 3, 4],
-        help="For v4 models, number of last_segmenter_X checkpoints to ensemble with best_segmenter.pth.",
+        help=(
+            "Total number of models to use in the ensemble, including the best checkpoint. "
+            "Use 1 for single-model inference, or 1..5 for standard ensemble sweeps."
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -246,7 +248,10 @@ def maybe_build_segmenter_ensemble(
     models: list[UNet] = []
     models.append(build_segmenter(device=device, weights_path=str(best_path)))
 
-    if num_ensemble > 0:
+    # num_ensemble is the TOTAL model count including the best checkpoint.
+    extras_to_load = max(0, num_ensemble - 1)
+
+    if extras_to_load > 0:
         ensemble_dir = best_path.parent
         if best_path.suffix == ".ckpt":
             # v5 layout: segmenter_<epoch>_<metric>.ckpt + last.ckpt
@@ -255,11 +260,11 @@ def maybe_build_segmenter_ensemble(
                 key=lambda p: p.stat().st_mtime,
                 reverse=True,
             )
-            for candidate in candidates[:num_ensemble]:
+            for candidate in candidates[:extras_to_load]:
                 models.append(build_segmenter(device=device, weights_path=str(candidate)))
         else:
             # v4 and older layout: best_segmenter.pth + last_segmenter_i.pth
-            for idx in range(1, num_ensemble + 1):
+            for idx in range(1, extras_to_load + 1):
                 candidate = ensemble_dir / f"last_segmenter_{idx}.pth"
                 if not candidate.exists():
                     print(f"Skipping missing ensemble checkpoint: {candidate}")
@@ -639,6 +644,9 @@ def _write_summary_markdown(path: Path, rows: list[dict[str, Any]]) -> None:
 
 def main() -> None:
     args = parse_args()
+    if args.num_ensemble < 1:
+        raise ValueError("--num-ensemble must be >= 1.")
+
     args.baseline_contrast = normalize_contrast_name(args.baseline_contrast)
     args.generator_contrast = normalize_contrast_name(args.generator_contrast)
     args.bigaug_contrast = normalize_contrast_name(args.bigaug_contrast)

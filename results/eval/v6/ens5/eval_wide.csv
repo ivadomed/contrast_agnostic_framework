@@ -1,0 +1,5 @@
+model_id,family,source_contrast,checkpoint_path,ckpt_exists,flair,t1w,t1gd,t2w,in_domain_dice,ood_mean_dice,ood_worst_dice
+segmenter_baseline_t1w,baseline,t1w,checkpoints/v6/segmenter/baseline/t1w/run2/last.ckpt,1,0.214419,0.716499,0.589732,0.118737,0.716499,0.307629,0.118737
+segmenter_baseline_t2w,baseline,t2w,checkpoints/v6/segmenter/baseline/t2w/run2/last.ckpt,1,0.513344,0.086879,0.090847,0.816966,0.816966,0.230357,0.086879
+segmenter_fullyartificial_t1w,fullyartificial,t1w,checkpoints/v6/segmenter/fully_artificial/t1w/run2/last.ckpt,1,0.548686,0.618857,0.615598,0.600759,0.618857,0.588348,0.548686
+segmenter_fullyartificial_t2w,fullyartificial,t2w,checkpoints/v6/segmenter/fully_artificial/t2w/run1/last.ckpt,1,0.504163,0.244604,0.348235,0.603059,0.603059,0.365667,0.244604

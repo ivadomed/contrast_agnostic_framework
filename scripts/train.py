@@ -22,7 +22,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.datamodule import BraTSDataModule
-from src.lightning_modules import MRISynthesisLightning
+from src.lightning_modules import MRISegmenterLightning, MRISynthesisLightning
 
 
 def _resolve_path(path_like: str) -> Path:
@@ -46,15 +46,63 @@ def _get_git_commit_hash() -> str:
 def _build_run_name(cfg: DictConfig) -> str:
     if cfg.logging.run_name is not None:
         return str(cfg.logging.run_name)
-    return f"generator-{cfg.version}-{cfg.data.source_contrast}"
+
+    task = str(cfg.task)
+    if task == "generator":
+        gen_version = cfg.model.generator.gen_version
+        if gen_version is None:
+            gen_version = cfg.version
+        return f"generator-{gen_version}-{cfg.data.source_contrast}"
+
+    seg_version = cfg.version
+    resolved_gen_version = cfg.model.segmenter.gen_version
+    if resolved_gen_version is None and hasattr(cfg.model, "generator") and hasattr(cfg.model.generator, "gen_version"):
+        if cfg.model.generator.gen_version is not None:
+            resolved_gen_version = cfg.model.generator.gen_version
+    if resolved_gen_version is None:
+        resolved_gen_version = seg_version
+
+    if bool(cfg.model.segmenter.fully_artificial):
+        return f"fully-artificial-{resolved_gen_version}-{cfg.data.source_contrast}-segmenter"
+    if bool(cfg.model.segmenter.use_generator):
+        return f"generator-{resolved_gen_version}-{cfg.data.source_contrast}-segmenter"
+    return f"baseline-{seg_version}-{cfg.data.source_contrast}-segmenter"
 
 
 def _build_checkpoint_dir(cfg: DictConfig) -> Path:
-    configured_dir = cfg.training.checkpoint.dirpath_generator
-    if configured_dir is not None:
-        return _resolve_path(str(configured_dir))
+    task = str(cfg.task)
+    if task == "generator":
+        configured_dir = cfg.training.checkpoint.dirpath_generator
+        if configured_dir is not None:
+            return _resolve_path(str(configured_dir))
 
-    base_dir = PROJECT_ROOT / "checkpoints" / str(cfg.version) / "generator" / str(cfg.data.source_contrast)
+        gen_version = cfg.model.generator.gen_version
+        if gen_version is None:
+            gen_version = cfg.version
+
+        base_dir = PROJECT_ROOT / "checkpoints" / str(gen_version) / "generator" / str(cfg.data.source_contrast)
+    else:
+        configured_dir = cfg.training.checkpoint.dirpath_segmenter
+        if configured_dir is not None:
+            return _resolve_path(str(configured_dir))
+
+        resolved_version = cfg.model.segmenter.gen_version
+        if resolved_version is None and hasattr(cfg.model, "generator") and hasattr(cfg.model.generator, "gen_version"):
+            if cfg.model.generator.gen_version is not None:
+                resolved_version = cfg.model.generator.gen_version
+        if resolved_version is None:
+            resolved_version = cfg.version
+
+        if bool(cfg.model.segmenter.fully_artificial):
+            mode = "fully_artificial"
+        elif bool(cfg.model.segmenter.use_generator):
+            mode = "generator"
+        else:
+            mode = "baseline"
+
+        version_for_segmenter = resolved_version if bool(cfg.model.segmenter.use_generator) else cfg.version
+        base_dir = PROJECT_ROOT / "checkpoints" / str(version_for_segmenter) / "segmenter" / mode / str(cfg.data.source_contrast)
+
     base_dir.mkdir(parents=True, exist_ok=True)
 
     run_pattern = re.compile(r"^run(\d+)$")
@@ -76,14 +124,28 @@ def _build_checkpoint_dir(cfg: DictConfig) -> Path:
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig) -> None:
-    cfg.task = "generator"
+    if cfg.task not in ("generator", "segmenter"):
+        raise ValueError(f"Unsupported task '{cfg.task}'. Expected 'generator' or 'segmenter'.")
+
+    if str(cfg.task) == "segmenter":
+        if cfg.model.segmenter.gen_version is None and hasattr(cfg.model, "generator") and hasattr(cfg.model.generator, "gen_version"):
+            if cfg.model.generator.gen_version is not None:
+                cfg.model.segmenter.gen_version = cfg.model.generator.gen_version
+        if cfg.model.segmenter.gen_version is not None and not bool(cfg.model.segmenter.use_generator):
+            cfg.model.segmenter.use_generator = True
+
     pl.seed_everything(int(cfg.seed), workers=True)
 
     datamodule = BraTSDataModule(cfg)
-    model = MRISynthesisLightning(cfg)
+    if str(cfg.task) == "generator":
+        model = MRISynthesisLightning(cfg)
+        project_name = str(cfg.logging.project_name_generator)
+    else:
+        model = MRISegmenterLightning(cfg)
+        project_name = str(cfg.logging.project_name_segmenter)
 
     wandb_logger = WandbLogger(
-        project=str(cfg.logging.project_name_generator),
+        project=project_name,
         name=_build_run_name(cfg),
         save_dir=str(_resolve_path(str(cfg.logging.save_dir))),
         log_model=bool(cfg.logging.log_model),
@@ -114,18 +176,36 @@ def main(cfg: DictConfig) -> None:
             }
         )
 
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=str(_build_checkpoint_dir(cfg)),
-        filename="best_loss-{epoch:03d}-{train_loss:.4f}",
-        monitor="train/total_loss",
-        mode="min",
-        save_top_k=1,
-        save_last=True,
-    )
+    if str(cfg.task) == "generator":
+        checkpoint_callback = ModelCheckpoint(
+            dirpath=str(_build_checkpoint_dir(cfg)),
+            filename="best_loss-{epoch:03d}-{train_loss:.4f}",
+            monitor="train/total_loss",
+            mode="min",
+            save_top_k=1,
+            save_last=True,
+        )
+        max_epochs = int(cfg.training.max_epochs.generator)
+        limit_val_batches = 0
+        gradient_clip_val = float(cfg.training.generator.gradient_clip_val)
+    else:
+        checkpoint_callback = ModelCheckpoint(
+            dirpath=str(_build_checkpoint_dir(cfg)),
+            filename=str(cfg.training.checkpoint.filename_segmenter),
+            monitor=str(cfg.training.checkpoint.monitor_segmenter),
+            mode=str(cfg.training.checkpoint.mode_segmenter),
+            save_top_k=int(cfg.training.checkpoint.save_top_k),
+            save_last=True,
+            auto_insert_metric_name=False,
+        )
+        max_epochs = int(cfg.training.max_epochs.segmenter)
+        limit_val_batches = cfg.training.limit_val_batches
+        gradient_clip_val = 0.0
+
     lr_callback = LearningRateMonitor(logging_interval="epoch")
 
     trainer = pl.Trainer(
-        max_epochs=int(cfg.training.max_epochs.generator),
+        max_epochs=max_epochs,
         logger=wandb_logger,
         callbacks=[checkpoint_callback, lr_callback],
         accelerator=cfg.training.accelerator,
@@ -139,17 +219,20 @@ def main(cfg: DictConfig) -> None:
         log_every_n_steps=int(cfg.training.log_every_n_steps),
         enable_model_summary=bool(cfg.training.enable_model_summary),
         limit_train_batches=cfg.training.limit_train_batches,
-        limit_val_batches=0,
-        gradient_clip_val=float(cfg.training.generator.gradient_clip_val),
+        limit_val_batches=limit_val_batches,
+        gradient_clip_val=gradient_clip_val,
     )
-
-    datamodule.setup("fit")
-    train_loader = datamodule.train_dataloader()
 
     ckpt_dir = _build_checkpoint_dir(cfg)
     resume_last = ckpt_dir / "last.ckpt"
     ckpt_path = "last" if bool(cfg.training.resume) and resume_last.exists() else None
-    trainer.fit(model=model, train_dataloaders=train_loader, ckpt_path=ckpt_path)
+
+    if str(cfg.task) == "generator":
+        datamodule.setup("fit")
+        train_loader = datamodule.train_dataloader()
+        trainer.fit(model=model, train_dataloaders=train_loader, ckpt_path=ckpt_path)
+    else:
+        trainer.fit(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
 
 
 if __name__ == "__main__":

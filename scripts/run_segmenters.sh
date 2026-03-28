@@ -2,39 +2,24 @@
 
 set -euo pipefail
 
-# Ensure we're using the optimized TF32 precision under the hood via the training script.
+# Usage:
+#   bash scripts/run_segmenters.sh [slot] [contrast] [version] [batch_size_segmenter]
+# Example:
+#   bash scripts/run_segmenters.sh 1 t1w v13 4
+
 SLOT_ID="${1:-3}"
-VERSION="${2:-v5}"
-CONTRAST="${3:-t2w}"
+CONTRAST="${2:-t2w}"
+VERSION="${3:-v13}"
+BATCH_SIZE_SEGMENTER="${4:-4}"
 
-# If no specific weight provided, default to the newest generator last.ckpt.
-# Prefer new run layout, then fall back to legacy versioned folders.
-DEFAULT_CKPT=$(ls -t \
-    checkpoints/${VERSION}/generator/${CONTRAST}/run*/last.ckpt \
-    checkpoints/generator/${CONTRAST}/run*/last.ckpt \
-    checkpoints/${VERSION}/generator/${CONTRAST}/last.ckpt \
-    checkpoints/${VERSION}/generator/${CONTRAST}/*.ckpt \
-    2>/dev/null | head -n 1 || echo "")
-CKPT_PATH="${4:-$DEFAULT_CKPT}"
+cd "$(dirname "$0")/.."
 
-# Example Baseline segmenter run
-# set_slot "${SLOT_ID}" CUDA_VISIBLE_DEVICES="${SLOT_ID}" .venv/bin/python scripts/train_segmenter.py \
-#     version="${VERSION}" \
-#     data.source_contrast="${CONTRAST}" \
-#     model.segmenter.use_generator=false \
-#     training.resume=false \
-#     training.devices=1 \
-#     training.precision=16-mixed
-
-# Example Generator-augmented segmenter run
-set_slot "${SLOT_ID}" CUDA_VISIBLE_DEVICES="${SLOT_ID}" .venv/bin/python scripts/train_segmenter.py \
-    version="${VERSION}" \
+set_slot "${SLOT_ID}" CUDA_VISIBLE_DEVICES="${SLOT_ID}" .venv/bin/python scripts/train.py \
+    task=segmenter \
     data.source_contrast="${CONTRAST}" \
-    model.segmenter.use_generator=true \
-    model.segmenter.gen_version="${VERSION}" \
-    model.segmenter.gen_weights="${CKPT_PATH}" \
-    model.segmenter.fully_artificial=true \
-    training.resume=false \
-    training.devices=1 \
-    training.precision=16-mixed
+    model.generator.gen_version="${VERSION}" \
+    data.batch_size_segmenter="${BATCH_SIZE_SEGMENTER}" \
+    training.limit_val_batches=1.0 \
+    training.segmenter.enable_train_image_logging=false \
+    training.segmenter.val_image_log_every=1
 

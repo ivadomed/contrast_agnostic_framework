@@ -1,0 +1,3 @@
+model_id,family,source_contrast,checkpoint_path,ckpt_exists,flair,t1w,t1gd,t2w,in_domain_dice,ood_mean_dice,ood_worst_dice
+segmenter_fullyartificial_t1w,fullyartificial,t1w,checkpoints/v10/segmenter/fully_artificial/t1w/run1/last.ckpt,1,0.539194,0.631018,0.615729,0.594850,0.631018,0.583257,0.539194
+segmenter_fullyartificial_t2w,fullyartificial,t2w,checkpoints/v10/segmenter/fully_artificial/t2w/run1/last.ckpt,1,0.707867,0.187782,0.394097,0.736840,0.736840,0.429915,0.187782
