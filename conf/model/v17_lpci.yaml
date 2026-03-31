@@ -1,0 +1,10 @@
+defaults:
+  - defaults
+  - _self_
+
+generator:
+  gen_version: v17_lpci
+
+segmenter:
+  use_generator: true
+  gen_version: v17_lpci

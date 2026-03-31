@@ -1,0 +1,2 @@
+model_id,family,source_contrast,checkpoint_path,ckpt_exists,flair,t1w,t1gd,t2w,in_domain_dice,ood_mean_dice,ood_worst_dice
+finetuned-v15-t1w,baseline,t1w,checkpoints/v15/segmenter/finetuned_from-v15_t1w_freeze-true/t1w/run1/finetuned_from-v15_t1w_freeze-true_last.ckpt,1,0.533929,0.700802,0.666862,0.584557,0.700802,0.595116,0.533929

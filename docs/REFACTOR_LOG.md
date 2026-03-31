@@ -1,5 +1,140 @@
 # Refactor Log
 
+## [2026-03-29] Pipeline Upgrade: Transfer Learning & Fine-Tuning
+
+- Scope: Added fine-tuning support for 3D segmenters initialized from pretrained contrast-agnostic checkpoints and adapted on real target-contrast data.
+- Transfer Learning Logic (`MRISegmenterLightning`):
+  - Added segmenter config wiring for:
+    - `model.segmenter.pretrained_ckpt_path`
+    - `model.segmenter.freeze_encoder`
+  - Implemented checkpoint loading before compilation to preserve compile graph stability.
+  - Added robust state-dict normalization for Lightning checkpoints with mixed prefixes.
+  - Implemented encoder freezing for MONAI UNet down path using parameter-name routing:
+    - freeze `model.0.*` and recursive `*.submodule.0.*`
+    - keep bottleneck/decoder trainable.
+  - Added parameter summary logging in optimizer setup:
+    - `total`, `trainable`, `frozen` parameter counts.
+- Configuration Updates:
+  - Updated `conf/model/defaults.yaml` segmenter block with defaults:
+    - `pretrained_ckpt_path: null`
+    - `freeze_encoder: false`
+- Launch Script:
+  - Added `scripts/run_finetuning.sh` with signature:
+    - `bash scripts/run_finetuning.sh <SLOT_ID> <VERSION> <TARGET_CONTRAST> <CKPT_PATH> <FREEZE_BOOL> [BATCH_SIZE]`
+  - Enforces real-data fine-tuning path (`model.segmenter.use_generator=false`) and passes transfer-learning overrides.
+- Evaluation Routing Protection (`scripts/evaluate.py`):
+  - Added fine-tuned model detection from checkpoint hyperparameters via:
+    - `model.segmenter.pretrained_ckpt_path != null`
+  - Added extraction of `freeze_encoder`, `data.source_contrast`, and `version` metadata from checkpoint config.
+  - Added protected routing so fine-tuned artifacts are written to:
+    - `results/eval/<version>/finetuned/<target_contrast>_freeze_<bool>/`
+  - Preserved standard zero-shot outputs in existing non-finetuned directories to avoid overwrite.
+- GPU-3 Validation Snapshot (tmux monitored):
+  - Launch used:
+    - `tmux new -s finetune_test -d "bash scripts/run_finetuning.sh 3 v15 t1w /home/ge.polymtl.ca/pahoa/mri_synthesis_project/checkpoints/v15/segmenter/generator/t1w/run3/last.ckpt true"`
+  - Startup checks:
+    - Pretrained checkpoint loaded successfully.
+    - Encoder freezing active: `Froze 24 encoder parameters`.
+    - Optimizer summary confirms reduced trainable set:
+      - `total=1,188,821`, `trainable=904,223`, `frozen=284,598`.
+    - No CUDA OOM observed through cache warm-up and multi-epoch progression.
+  - Throughput observed after warm-up:
+    - `9.37 it/s` at `67` train batches, approximately `~7.15 s/epoch` (below `<14 s/epoch` SLO).
+
+## [2026-03-29] Architectural Upgrade: Multi-Class Segmentation
+
+- Scope: Segmenter pipeline refactor from binary whole-tumor to BraTS multi-class labels.
+- Label Contract Update:
+  - Removed binary squashing (`label > 0`) from the training/validation path.
+  - Added explicit BraTS label remap in preprocessing: ET id `4 -> 3`.
+  - Preserved standard class indexing:
+    - `0`: Background
+    - `1`: Necrotic Tumor Core (NCR)
+    - `2`: Peritumoral Edema (ED)
+    - `3`: Enhancing Tumor (ET)
+- Model/Loss Update:
+  - Updated `conf/model/defaults.yaml` to `segmenter.out_channels: 4`.
+  - Updated `MRISegmenterLightning` loss to multiclass MONAI DiceCE configuration:
+    - `to_onehot_y=True`
+    - `softmax=True`
+    - `include_background=False`
+  - Kept binary-compatible fallback path for legacy `out_channels=1` checkpoints.
+- Metric Update:
+  - Validation now computes Dice per foreground class (NCR/ED/ET) and logs mean foreground Dice (`val/dice`) excluding background.
+  - Added per-class metric logging keys: `val/dice_ncr`, `val/dice_ed`, `val/dice_et`.
+- Evaluation Routing Update:
+  - `scripts/evaluate.py` now auto-detects segmentation mode from checkpoint output channels (`out_channels=4` vs `1`) or accepts explicit `--task-mode`.
+  - Multiclass evaluation artifacts now route to:
+    - `results/eval/<version>/multiclass/eval_wide.csv`
+    - `results/eval/<version>/multiclass/eval_long.csv`
+    - `results/eval/<version>/multiclass/eval_summary.md`
+  - This prevents overwriting legacy binary outputs in `results/eval/<version>/`.
+- Launch Script Updates:
+  - `scripts/run_segmenters.sh` defaults non-special versions to supervised baseline mode (`use_generator=false`) with an opt-in env toggle:
+    - `SEGMENTER_USE_GENERATOR=true` to explicitly re-enable generator-based training.
+  - `scripts/run_evaluation.sh` now uses version-root output and `--task-mode auto` for multiclass-safe artifact routing.
+- Validation Snapshot (tmux monitored):
+  - Command launched: `tmux new -s test_multiclass -d "bash scripts/run_segmenters.sh 1 v15 t1w"`.
+  - Observations:
+    - No CUDA OOM.
+    - No shape mismatch between logits and labels in multiclass path.
+    - Training progressed across epochs successfully after initial cache/compile warm-up.
+    - Steady-state training throughput observed around `~9.0-9.7 it/s` on `67` batches, approximately `~6.9-7.4 s/epoch`, satisfying `<14 s/epoch` SLO.
+  - Session cleanup: `tmux kill-session -t test_multiclass`.
+
+## [2026-03-28] v17_lpci: Differentiable Laplacian Pyramid Contrast Inversion
+
+- Component: v17 guidance synthesis for generator/segmenter generator-path with explicit version gating.
+- LPCI Formulation Implemented:
+  1. Dynamic sigma from runtime tensor shape `(B,C,D,H,W)`:
+     - `max_dim = max(D, H, W)`
+     - `sigma_1 = max_dim / 32`
+     - `sigma_2 = max_dim / 16`
+  2. Pyramid build with separable 1D Gaussian passes only (depth/height/width):
+     - `g0 = X`
+     - `g1 = G_sigma1(g0)`
+     - `g2 = G_sigma2(g1)`
+  3. Laplacian band isolation:
+     - `L0 = g0 - g1` (high frequency)
+     - `L1 = g1 - g2` (mid frequency)
+     - `L2 = g2` (low frequency)
+  4. Targeted perturbation:
+     - `L2' = F_v15(L2)` using non-monotonic grid chunking only on the low-frequency base.
+     - `L0' = alpha * L0`, `alpha ~ U(0.8, 1.2)`.
+  5. Reconstruction:
+     - `X_synth = L0' + L1 + L2'`, clamped to `[0,1]`.
+- Band-Pass Strategy:
+  - High-frequency boundaries are modulated with bounded scalar jitter.
+  - Mid-band textures are preserved.
+  - Contrast inversion pressure is restricted to low-frequency macro-intensity through v15 chunk remapping.
+- Performance/Correctness Engineering:
+  - All Gaussian smoothing is implemented with separable 1D convolutions (no dense 3D kernels).
+  - Added AMP-safe dtype bridge for v15 remapping (`L2` cast to FP32 before `nanquantile`, cast back afterward).
+  - Version isolation:
+    - `v17_lpci` branch added in both compiled synthesis wrappers.
+    - Existing v1-v16 behavior remains unchanged.
+  - Segmenter consistency inheritance extended to include `v17_lpci`.
+- Configuration and Launch Wiring:
+  - Added `conf/model/v17_lpci.yaml`:
+    - `generator.gen_version: v17_lpci`
+    - `segmenter.use_generator: true`
+    - `segmenter.gen_version: v17_lpci`
+  - Updated launch scripts so `v17_lpci` uses `model=v17_lpci` for both generator and segmenter runs.
+  - Added datamodule route for `train_lpci` mode.
+- Startup Validation Snapshot (tmux monitored):
+  - Phase A generators launched in parallel (`gen_t1w`, `gen_t2w`) and passed cache loading + epoch start without OOM after dtype fix.
+  - Observed epoch progress around `~0.86 it/s` on `67` batches (approximately `~78s/epoch`), meeting `< 1.5 mins/epoch` SLO.
+- Files Touched:
+  - `src/filters.py`
+  - `src/lightning_modules.py`
+  - `src/datamodule.py`
+  - `src/dataset.py`
+  - `scripts/run_generators.sh`
+  - `scripts/run_segmenters.sh`
+  - `conf/model/v17_lpci.yaml`
+  - `docs/REFACTOR_LOG.md`
+  - `docs/POST_MORTEMS.md`
+
 ## [2026-03-28] v16_bigaug: BigAug Baseline Implementation
 
 - Component: Supervised segmenter baseline augmentation path (`use_generator=false`) for Zhang et al.-style deep stacked transformations.

@@ -61,14 +61,28 @@ def _build_checkpoint_dir(cfg: DictConfig) -> Path:
     if configured_dir is not None:
         return _resolve_path(str(configured_dir))
 
-    if bool(cfg.model.segmenter.fully_artificial):
-        mode = "fully_artificial"
-    elif bool(cfg.model.segmenter.use_generator):
-        mode = "generator"
-    else:
-        mode = "baseline"
 
-    base_dir = PROJECT_ROOT / "checkpoints" / str(cfg.version) / "segmenter" / mode / str(cfg.data.source_contrast)
+    # Custom: If fine-tuning, encode source and freeze status in path
+    pretrained_ckpt = getattr(cfg.model.segmenter, 'pretrained_ckpt_path', None)
+    freeze_encoder = getattr(cfg.model.segmenter, 'freeze_encoder', False)
+    if pretrained_ckpt not in (None, '', 'null'):
+        # Try to extract source version and contrast from path
+        import re
+        src_version = 'unknownsrc'
+        src_contrast = 'unknownctr'
+        m = re.search(r'/checkpoints/(v\d+)/segmenter/\w+/([a-zA-Z0-9]+)/', str(pretrained_ckpt))
+        if m:
+            src_version, src_contrast = m.group(1), m.group(2)
+        freeze_str = 'true' if freeze_encoder else 'false'
+        base_dir = PROJECT_ROOT / "checkpoints" / str(cfg.version) / "segmenter" / f"finetuned_from-{src_version}_{src_contrast}_freeze-{freeze_str}" / str(cfg.data.source_contrast)
+    else:
+        if bool(cfg.model.segmenter.fully_artificial):
+            mode = "fully_artificial"
+        elif bool(cfg.model.segmenter.use_generator):
+            mode = "generator"
+        else:
+            mode = "baseline"
+        base_dir = PROJECT_ROOT / "checkpoints" / str(cfg.version) / "segmenter" / mode / str(cfg.data.source_contrast)
     base_dir.mkdir(parents=True, exist_ok=True)
 
     run_pattern = re.compile(r"^run(\d+)$")
@@ -132,9 +146,23 @@ def main(cfg: DictConfig) -> None:
             }
         )
 
+    # Custom: If fine-tuning, encode source and freeze status in filename
+    pretrained_ckpt = getattr(cfg.model.segmenter, 'pretrained_ckpt_path', None)
+    freeze_encoder = getattr(cfg.model.segmenter, 'freeze_encoder', False)
+    if pretrained_ckpt not in (None, '', 'null'):
+        import re
+        src_version = 'unknownsrc'
+        src_contrast = 'unknownctr'
+        m = re.search(r'/checkpoints/(v\d+)/segmenter/\w+/([a-zA-Z0-9]+)/', str(pretrained_ckpt))
+        if m:
+            src_version, src_contrast = m.group(1), m.group(2)
+        freeze_str = 'true' if freeze_encoder else 'false'
+        ckpt_filename = f"finetuned_from-{src_version}_{src_contrast}_freeze-{freeze_str}_last"
+    else:
+        ckpt_filename = str(cfg.training.checkpoint.filename_segmenter)
     checkpoint_callback = ModelCheckpoint(
         dirpath=str(_build_checkpoint_dir(cfg)),
-        filename=str(cfg.training.checkpoint.filename_segmenter),
+        filename=ckpt_filename,
         monitor=str(cfg.training.checkpoint.monitor_segmenter),
         mode=str(cfg.training.checkpoint.mode_segmenter),
         save_top_k=int(cfg.training.checkpoint.save_top_k),

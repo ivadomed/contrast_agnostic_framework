@@ -327,6 +327,71 @@ def generate_non_monotonic_grid_targets(
     return target_hist, random_targets, guidance_map
 
 
+def generate_micro_anchored_targets(
+    input_images: torch.Tensor,
+    hist_module: DifferentiableHistogram3D,
+    tau: float = 0.05,
+    num_peaks: int = 4,
+    background_threshold: float = 0.01,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Create v17 micro-anchor guidance via 1D tissue peak clustering and RBF mapping."""
+    if input_images.ndim != 5:
+        raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
+
+    b, c, d, h, w = input_images.shape
+    x_scalar = input_images.mean(dim=1, keepdim=True).float()
+
+    # 1) Differentiable 1D soft histogram over 128 bins using existing optimized path.
+    hist_1d = hist_module(x_scalar)[:, 0, :]
+
+    # Smooth histogram with 1D Gaussian kernel (vectorized over batch).
+    sigma = 1.0
+    kernel_size = 7
+    coords = torch.arange(kernel_size, device=hist_1d.device, dtype=hist_1d.dtype) - (kernel_size - 1) / 2.0
+    g = torch.exp(-(coords ** 2) / (2.0 * sigma ** 2))
+    g = g / g.sum().clamp_min(torch.finfo(g.dtype).eps)
+    h_smooth = F.conv1d(
+        hist_1d.unsqueeze(1),
+        g.view(1, 1, kernel_size),
+        padding=kernel_size // 2,
+    ).squeeze(1)
+
+    # 2) Local maxima extraction + top-K peaks per sample.
+    left = F.pad(h_smooth[:, :-1], (1, 0), mode="replicate")
+    right = F.pad(h_smooth[:, 1:], (0, 1), mode="replicate")
+    is_local_max = (h_smooth >= left) & (h_smooth >= right)
+    neg_inf = torch.full_like(h_smooth, torch.finfo(h_smooth.dtype).min)
+    peak_scores = torch.where(is_local_max, h_smooth, neg_inf)
+    peak_indices = torch.topk(peak_scores, k=int(num_peaks), dim=1).indices
+
+    # Convert peak indices to intensity anchors in [0, 1] using histogram range.
+    min_v = float(hist_module.min_value)
+    max_v = float(hist_module.max_value)
+    bins_minus_one = max(int(hist_module.num_bins) - 1, 1)
+    centers = min_v + (peak_indices.to(h_smooth.dtype) / float(bins_minus_one)) * (max_v - min_v)
+
+    # 3) RBF soft assignment for every voxel to K anchors.
+    x_flat = x_scalar.reshape(b, -1)
+    diff = x_flat.unsqueeze(-1) - centers.unsqueeze(1)
+    logits = -((diff * diff) / float(tau))
+    weights = torch.softmax(logits, dim=-1)
+
+    # 4) Independent, unsorted random targets.
+    mu = torch.rand((b, int(num_peaks)), device=input_images.device, dtype=x_flat.dtype)
+
+    # 5) Synthesis.
+    synth_flat = torch.sum(weights * mu.unsqueeze(1), dim=-1)
+    synth_scalar = synth_flat.reshape(b, 1, d, h, w)
+    mapped_img = synth_scalar.expand(-1, c, -1, -1, -1)
+
+    # 6) Strict background masking (v15 inheritance).
+    guidance_map = torch.where(input_images > float(background_threshold), mapped_img, torch.zeros_like(mapped_img))
+    guidance_map = guidance_map.clamp(0.0, 1.0).to(dtype=input_images.dtype)
+
+    target_hist = hist_module(guidance_map)
+    return target_hist, mu.to(dtype=input_images.dtype), guidance_map
+
+
 
 def generate_unified_targets(
     input_images: torch.Tensor,
@@ -362,6 +427,15 @@ def generate_unified_targets(
             dark_threshold=dark_threshold,
             hist_module=hist_module,
             grid_size=grid_size,
+            background_threshold=0.01,
+        )
+
+    if str(gen_version) == "v17_micro_anchor":
+        return generate_micro_anchored_targets(
+            input_images=input_images,
+            hist_module=hist_module,
+            tau=0.05,
+            num_peaks=4,
             background_threshold=0.01,
         )
 

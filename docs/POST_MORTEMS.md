@@ -111,6 +111,61 @@ Any new regression must be recorded with:
 
 This preserves scientific memory and prevents repeated dead-end cycles.
 
+## 10. v17_lpci Startup Failure: AMP Quantile Dtype Mismatch
+
+### Hypothesis
+The v17_lpci low-frequency remapping could directly reuse v15 non-monotonic grid chunking in mixed precision generator training.
+
+### Reproduction conditions
+- Version: `v17_lpci`
+- Task: generator (`t1w` and `t2w`, dual-slot tmux)
+- Launch path: `bash scripts/run_generators.sh <slot> v17_lpci <contrast>`
+- Precision: `16-mixed`
+
+### Failure signature
+- Both generator runs crashed at startup with:
+	- `RuntimeError: quantile() input tensor must be either float or double dtype`
+	- stack entering `generate_non_monotonic_grid_targets(...)` from `DifferentiableLPCI3D.forward(...)`.
+
+### Root cause
+Under AMP, LPCI pyramid tensors were FP16. `torch.nanquantile` in the v15 remapping path requires float/double input, so directly feeding FP16 low-frequency tensors caused a hard runtime failure.
+
+### Tensor-level fix applied
+1. In `DifferentiableLPCI3D.forward`, cast low-frequency branch `L2` to FP32 before calling v15 non-monotonic remapping.
+2. Cast remapped `L2'` back to the original input dtype after remapping to preserve mixed-precision flow.
+
+### Classification and decision
+- Classification: implementation/runtime compatibility bug under mixed precision.
+- Decision: mandatory hard restart performed after applying dtype-safe remapping.
+
+## 11. v17_micro_anchor Validation Failure: Half-Precision Peak Mask Overflow
+
+### Hypothesis
+The new 1D micro-anchor peak extraction could mask non-max bins using a large negative sentinel and remain stable under mixed precision.
+
+### Reproduction conditions
+- Version: `v17_micro_anchor`
+- Task: generator validation (`test_gen`, slot 1)
+- Launch: `tmux new -s test_gen -d "bash scripts/run_generators.sh 1 v17_micro_anchor t1w"`
+- Precision: `16-mixed`
+
+### Failure signature
+- Run exited at first epoch start with:
+	- `RuntimeError: value cannot be converted to type c10::Half without overflow`
+	- source: `generate_micro_anchored_targets(...)` local-max masking sentinel.
+
+### Root cause
+The local-maximum masking used a hardcoded `-1e12` sentinel. In FP16, this value overflows representable range and crashes during tensor materialization.
+
+### Tensor-level fix applied
+1. Replaced hardcoded sentinel with dtype-safe minimum:
+	 - `torch.finfo(h_smooth.dtype).min`
+2. Preserved fully vectorized peak extraction path and AMP compatibility.
+
+### Classification and decision
+- Classification: mixed-precision numeric stability bug.
+- Decision: apply fix and repeat validation protocol (Steps 1-3).
+
 ## 9. v16_bigaug Restart Post-Mortem: Throughput SLO Violation on First Launch
 
 ### Hypothesis

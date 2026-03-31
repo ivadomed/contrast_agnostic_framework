@@ -37,6 +37,10 @@ segmenter:
   aug_prob_train: 0.7
   aug_prob_val: 0.0
 
+  # Transfer learning parameters
+  pretrained_ckpt_path: null
+  freeze_encoder: false
+
   compile_model: true
   channels_last_3d: true
   tf32: true

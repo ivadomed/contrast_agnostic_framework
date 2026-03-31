@@ -27,6 +27,14 @@ from src.generator import MRI_Synthesis_Net
 from src.histogram_ops import DifferentiableHistogram3D
 from src.lightning_modules import CompiledSynthesisWrapper, _extract_normalized_state_dict
 
+from monai.transforms import (
+    Compose,
+    LoadImaged,
+    EnsureChannelFirstd,
+    NormalizeIntensityd,
+)
+
+
 def _resolve_path(path_like: str) -> Path:
     """Resolve path relative to PROJECT_ROOT if not absolute."""
     path = Path(path_like)
@@ -35,8 +43,8 @@ def _resolve_path(path_like: str) -> Path:
     return PROJECT_ROOT / path
 
 
-def _parse_checkpoint_metadata(checkpoint_path: Path) -> tuple[str, str]:
-    """Parse gen_version and model_id from checkpoint directory path."""
+def _parse_checkpoint_metadata(checkpoint_path: Path) -> tuple[str, str, str]:
+    """Parse gen_version, model_id, and contrast from checkpoint directory path."""
     checkpoint_path = checkpoint_path.resolve()
     
     try:
@@ -49,7 +57,7 @@ def _parse_checkpoint_metadata(checkpoint_path: Path) -> tuple[str, str]:
             contrast = parts[contrast_idx]
             run_dir = checkpoint_path.parent.name
             model_id = f"{contrast}_{run_dir}"
-            return gen_version, model_id
+            return gen_version, model_id, contrast  # <-- Added contrast here
         
         # Fallback to old structure
         filename = checkpoint_path.stem
@@ -60,7 +68,7 @@ def _parse_checkpoint_metadata(checkpoint_path: Path) -> tuple[str, str]:
             contrast = parts_split[2]
             epoch = parts_split[-1]
             model_id = f"{contrast}_epoch{epoch}"
-            return version, model_id
+            return version, model_id, contrast  # <-- Added contrast here
             
         raise ValueError(f"Cannot parse filename: {filename}")
     except Exception as e:
@@ -73,7 +81,7 @@ def _load_generator(checkpoint_path: Path, cfg: DictConfig) -> tuple[MRI_Synthes
     if not checkpoint_path.exists():
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
     
-    gen_version, _ = _parse_checkpoint_metadata(checkpoint_path)
+    gen_version, _, _ = _parse_checkpoint_metadata(checkpoint_path)
     
     generator = MRI_Synthesis_Net(
         in_channels=int(cfg.model.generator.in_channels),
@@ -124,8 +132,20 @@ def main(args: argparse.Namespace) -> None:
         cfg.data.val_batch_size = 1      # Process one by one for clean saving
     
     generator, gen_version = _load_generator(checkpoint_path, cfg)
-    _, model_id = _parse_checkpoint_metadata(checkpoint_path)
+    _, model_id, checkpoint_contrast = _parse_checkpoint_metadata(checkpoint_path)
     
+    # =====================================================================
+    # THE FIX: Override config to force val set creation and KILL caching
+    # =====================================================================
+    with open_dict(cfg):
+        cfg.task = "segmenter"           
+        cfg.data.cache_rate = 0.0        
+        cfg.data.num_workers = 0         
+        cfg.data.val_batch_size = 1      
+        # FORCE the dataset to use the contrast the model was trained on!
+        cfg.data.source_contrast = checkpoint_contrast
+        
+        
     base_output_dir = PROJECT_ROOT / "results" / "visualizations" / gen_version / model_id
     base_output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -135,6 +155,24 @@ def main(args: argparse.Namespace) -> None:
     # Instantiate datamodule with the overridden config
     datamodule = BraTSDataModule(cfg)
     datamodule.setup(stage="fit")
+    
+    from monai.transforms import Compose
+
+    underlying_dataset = datamodule.val_dataset.dataset
+    
+    # Grab the original list of transforms from the validation pipeline
+    original_transforms = underlying_dataset.transform.transforms
+    
+    inference_transforms = []
+    for t in original_transforms:
+        t_name = type(t).__name__
+        # Keep everything EXCEPT spatial manipulators
+        if not any(keyword in t_name for keyword in ["Crop", "Pad", "Resize"]):
+            inference_transforms.append(t)
+            
+    # Apply the filtered pipeline back to the dataset
+    underlying_dataset.transform = Compose(inference_transforms)
+    
     val_dataloader = datamodule.val_dataloader()
     
     histogram_module = DifferentiableHistogram3D(

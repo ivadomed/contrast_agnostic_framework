@@ -123,6 +123,8 @@ class BraTSDataModule(pl.LightningDataModule):
         train_mode = "train"
         if str(self.cfg.task) == "segmenter" and str(self.cfg.version) == "v16_bigaug":
             train_mode = "train_bigaug"
+        if str(self.cfg.version) == "v17_lpci":
+            train_mode = "train_lpci"
 
         train_dataset_full = DecathlonDataset(
             root_dir=str(data_dir),

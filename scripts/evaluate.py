@@ -64,7 +64,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--num-ensemble",
         type=int,
-        default=4,
+        default=1,
         help=(
             "Total number of models to use in the ensemble, including the best checkpoint. "
             "Use 1 for single-model inference, or 1..5 for standard ensemble sweeps."
@@ -75,6 +75,13 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=str(PROJECT_ROOT / "results" / "eval"),
         help="Directory for eval_long.csv, eval_wide.csv, and eval_summary.md.",
+    )
+    parser.add_argument(
+        "--task-mode",
+        type=str,
+        choices=["auto", "binary", "multiclass"],
+        default="auto",
+        help="Evaluation mode routing. 'auto' infers from loaded segmenter output channels.",
     )
 
     # Legacy fallback flags (kept for backward compatibility).
@@ -178,15 +185,18 @@ def build_eval_transforms() -> Compose:
     )
 
 
-def build_segmenter(device: torch.device, weights_path: str) -> UNet:
-    model = UNet(
+def _build_unet(device: torch.device, out_channels: int) -> UNet:
+    return UNet(
         spatial_dims=3,
         in_channels=1,
-        out_channels=1,
+        out_channels=out_channels,
         channels=(16, 32, 64, 128),
         strides=(2, 2, 2),
         num_res_units=2,
     ).to(device)
+
+
+def build_segmenter(device: torch.device, weights_path: str) -> tuple[UNet, int]:
     checkpoint = torch.load(weights_path, map_location=device, weights_only=False)
     if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
         state_dict = checkpoint["state_dict"]
@@ -215,17 +225,51 @@ def build_segmenter(device: torch.device, weights_path: str) -> UNet:
             normalized_key = "model." + normalized_key[len("model.model.") :]
         normalized_state_dict[normalized_key] = value
 
-    try:
-        model.load_state_dict(normalized_state_dict, strict=True)
-    except RuntimeError:
-        # Some checkpoints store keys without the top-level "model." prefix.
-        prefixed_state_dict = OrderedDict((f"model.{k}", v) for k, v in normalized_state_dict.items())
-        model.load_state_dict(prefixed_state_dict, strict=True)
-    model.eval()
-    return model
+    last_error: RuntimeError | None = None
+    # If the checkpoint contains hyperparameters, prefer its declared out_channels
+    declared_out: int | None = None
+    if isinstance(checkpoint, dict):
+        hyper = checkpoint.get("hyper_parameters") or checkpoint.get("hparams") or None
+        if isinstance(hyper, dict):
+            try:
+                declared = hyper
+                for key in ["model", "segmenter", "out_channels"]:
+                    declared = declared.get(key) if isinstance(declared, dict) else None
+                if declared is not None:
+                    declared_out = int(declared)
+            except Exception:
+                declared_out = None
+
+    probe_order = []
+    if declared_out is not None:
+        # Ensure we probe declared first, then fall back to common options
+        probe_order = [declared_out] + [c for c in (4, 1) if c != declared_out]
+    else:
+        probe_order = [4, 1]
+
+    for out_channels in probe_order:
+        model = _build_unet(device=device, out_channels=out_channels)
+        try:
+            model.load_state_dict(normalized_state_dict, strict=True)
+            model.eval()
+            return model, out_channels
+        except RuntimeError as err:
+            last_error = err
+
+        try:
+            prefixed_state_dict = OrderedDict((f"model.{k}", v) for k, v in normalized_state_dict.items())
+            model.load_state_dict(prefixed_state_dict, strict=True)
+            model.eval()
+            return model, out_channels
+        except RuntimeError as err:
+            last_error = err
+
+    if last_error is None:
+        raise RuntimeError(f"Failed to load checkpoint: {weights_path}")
+    raise last_error
 
 
-def maybe_build_segmenter(device: torch.device, weights_path: str) -> UNet | None:
+def maybe_build_segmenter(device: torch.device, weights_path: str) -> tuple[UNet, int] | None:
     checkpoint_path = Path(weights_path)
     if not checkpoint_path.exists():
         print(f"Skipping missing checkpoint: {checkpoint_path}")
@@ -239,14 +283,15 @@ def maybe_build_segmenter_ensemble(
     family: str,
     source_contrast: str,
     num_ensemble: int,
-) -> list[UNet]:
+) -> tuple[list[UNet], int | None]:
     best_path = Path(best_weights_path)
     if not best_path.exists():
         print(f"Skipping missing checkpoint: {best_path}")
-        return []
+        return [], None
 
     models: list[UNet] = []
-    models.append(build_segmenter(device=device, weights_path=str(best_path)))
+    best_model, out_channels = build_segmenter(device=device, weights_path=str(best_path))
+    models.append(best_model)
 
     # num_ensemble is the TOTAL model count including the best checkpoint.
     extras_to_load = max(0, num_ensemble - 1)
@@ -261,7 +306,13 @@ def maybe_build_segmenter_ensemble(
                 reverse=True,
             )
             for candidate in candidates[:extras_to_load]:
-                models.append(build_segmenter(device=device, weights_path=str(candidate)))
+                candidate_model, candidate_out = build_segmenter(device=device, weights_path=str(candidate))
+                if candidate_out != out_channels:
+                    print(
+                        f"Skipping ensemble checkpoint with mismatched out_channels ({candidate_out}): {candidate}"
+                    )
+                    continue
+                models.append(candidate_model)
         else:
             # v4 and older layout: best_segmenter.pth + last_segmenter_i.pth
             for idx in range(1, extras_to_load + 1):
@@ -269,9 +320,15 @@ def maybe_build_segmenter_ensemble(
                 if not candidate.exists():
                     print(f"Skipping missing ensemble checkpoint: {candidate}")
                     continue
-                models.append(build_segmenter(device=device, weights_path=str(candidate)))
+                candidate_model, candidate_out = build_segmenter(device=device, weights_path=str(candidate))
+                if candidate_out != out_channels:
+                    print(
+                        f"Skipping ensemble checkpoint with mismatched out_channels ({candidate_out}): {candidate}"
+                    )
+                    continue
+                models.append(candidate_model)
 
-    return models
+    return models, out_channels
 
 
 def _predict_from_ensemble(
@@ -290,7 +347,7 @@ def _predict_from_ensemble(
         probabilities.append(torch.softmax(logits, dim=1))
 
     mean_probabilities = torch.mean(torch.stack(probabilities, dim=0), dim=0)
-    return torch.argmax(mean_probabilities, dim=1, keepdim=True).float()
+    return torch.argmax(mean_probabilities, dim=1, keepdim=True).long()
 
 
 def _validate_family(family: str) -> str:
@@ -314,13 +371,92 @@ def _parse_enabled(value: Any) -> bool:
     raise ValueError(f"Invalid enabled value '{value}'. Use 0/1 or true/false.")
 
 
+def _parse_bool_for_freezing(value: Any) -> str | None:
+    """Parse and canonicalize freeze_encoder bool for output routing."""
+    if value is None or value == "":
+        return None
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y"}:
+        return "true"
+    if text in {"0", "false", "no", "n"}:
+        return "false"
+    raise ValueError(f"Invalid freeze_encoder value '{value}'. Use 0/1 or true/false.")
+
+
+def _nested_get(mapping: Any, keys: list[str], default: Any = None) -> Any:
+    cur = mapping
+    for key in keys:
+        if cur is None:
+            return default
+        if isinstance(cur, dict):
+            cur = cur.get(key)
+            continue
+        if hasattr(cur, key):
+            cur = getattr(cur, key)
+            continue
+        try:
+            cur = cur[key]
+        except Exception:
+            return default
+    return cur if cur is not None else default
+
+
+def _checkpoint_finetune_info(checkpoint_path: str) -> dict[str, Any]:
+    path = Path(checkpoint_path)
+    info: dict[str, Any] = {
+        "is_finetuned": False,
+        "freeze_encoder": None,
+        "finetune_target_contrast": None,
+        "version": None,
+    }
+
+    if not path.exists() or path.suffix != ".ckpt":
+        return info
+
+    try:
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    except Exception:
+        return info
+
+    hyper = checkpoint.get("hyper_parameters") if isinstance(checkpoint, dict) else None
+    if hyper is None:
+        return info
+
+    pretrained_ckpt_path = _nested_get(hyper, ["model", "segmenter", "pretrained_ckpt_path"], default=None)
+    freeze_encoder = _nested_get(hyper, ["model", "segmenter", "freeze_encoder"], default=None)
+    target_contrast = _nested_get(hyper, ["data", "source_contrast"], default=None)
+    version = _nested_get(hyper, ["version"], default=None)
+
+    is_finetuned = pretrained_ckpt_path not in (None, "", "null")
+    freeze_encoder_str = None
+    if freeze_encoder is not None:
+        freeze_encoder_str = "true" if bool(freeze_encoder) else "false"
+
+    info["is_finetuned"] = bool(is_finetuned)
+    info["freeze_encoder"] = freeze_encoder_str
+    if target_contrast is not None:
+        info["finetune_target_contrast"] = normalize_contrast_name(str(target_contrast))
+    if version is not None:
+        info["version"] = str(version)
+
+    return info
+
+
 def _normalize_model_spec(raw: dict[str, Any]) -> dict[str, Any]:
+    # Check if this is a fine-tuned model
+    is_finetuned = _parse_enabled(raw.get("is_finetuned", False))
+    freeze_encoder = None
+    if is_finetuned:
+        freeze_encoder = _parse_bool_for_freezing(raw.get("freeze_encoder", None))
+    
     return {
         "model_id": str(raw["model_id"]).strip(),
         "family": _validate_family(str(raw["family"])),
         "source_contrast": normalize_contrast_name(str(raw["source_contrast"])),
         "checkpoint_path": str(raw["checkpoint_path"]).strip(),
         "enabled": _parse_enabled(raw.get("enabled", True)),
+        "is_finetuned": is_finetuned,
+        "freeze_encoder": freeze_encoder,
     }
 
 
@@ -657,7 +793,6 @@ def main() -> None:
         raise ValueError("No model specifications were provided.")
 
     output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
 
     transforms = build_eval_transforms()
     full_dataset = DecathlonDataset(
@@ -715,6 +850,7 @@ def main() -> None:
     )
 
     model_instances: dict[str, list[UNet]] = {}
+    model_out_channels: dict[str, int | None] = {}
     metrics: dict[str, dict[str, DiceMetric]] = {}
     exists_map: dict[str, int] = {}
     for spec in model_specs:
@@ -723,7 +859,7 @@ def main() -> None:
         print(
             f"Model {model_id}: family={spec['family']} source={spec['source_contrast']} checkpoint={checkpoint_path}"
         )
-        models = maybe_build_segmenter_ensemble(
+        models, out_channels = maybe_build_segmenter_ensemble(
             device=device,
             best_weights_path=checkpoint_path,
             family=spec["family"],
@@ -731,20 +867,48 @@ def main() -> None:
             num_ensemble=args.num_ensemble,
         )
         model_instances[model_id] = models
+        model_out_channels[model_id] = out_channels
         exists_map[model_id] = 1 if len(models) > 0 else 0
         print(f"Loaded checkpoints for {model_id}: {len(models)}")
+
+        is_multiclass_model = (out_channels or 1) > 1
         metrics[model_id] = {
-            contrast: DiceMetric(include_background=False, reduction="mean")
+            contrast: DiceMetric(
+                include_background=False,
+                reduction="mean_batch" if is_multiclass_model else "mean",
+            )
             for contrast in TARGET_CONTRASTS
         }
+
+    loaded_channels = [channels for channels in model_out_channels.values() if channels is not None]
+    inferred_mode = "multiclass" if any(channels > 1 for channels in loaded_channels) else "binary"
+    task_mode = inferred_mode if args.task_mode == "auto" else args.task_mode
+
+    effective_output_dir = output_dir / "multiclass" if task_mode == "multiclass" else output_dir
+    effective_output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Evaluation task mode: {task_mode}")
+    print(f"Saving artifacts under: {effective_output_dir}")
+
+    # Derive fine-tuning metadata directly from checkpoint configs.
+    for spec in model_specs:
+        ckpt_info = _checkpoint_finetune_info(spec["checkpoint_path"])
+        spec["is_finetuned"] = bool(spec.get("is_finetuned", False) or ckpt_info["is_finetuned"])
+        if spec.get("freeze_encoder") is None:
+            spec["freeze_encoder"] = ckpt_info["freeze_encoder"]
+        if spec.get("finetune_target_contrast") is None:
+            spec["finetune_target_contrast"] = ckpt_info["finetune_target_contrast"]
+        if spec.get("version") is None:
+            spec["version"] = ckpt_info["version"]
 
     amp_enabled = device.type == "cuda" and not args.disable_amp
     autocast_dtype = torch.float16
 
     with torch.inference_mode():
+        _debug_done = False
         for batch in dataloader:
             x = batch["image"].to(device, non_blocking=True).float()
-            y = (batch["label"].to(device, non_blocking=True) > 0).float()
+            y_raw = batch["label"].to(device, non_blocking=True).long()
+            y_raw = torch.where(y_raw == 4, torch.full_like(y_raw, 3), y_raw)
 
             x_stacked, batch_size = _stack_target_contrasts(x)
 
@@ -754,13 +918,56 @@ def main() -> None:
                 if not models:
                     continue
 
+                out_channels = model_out_channels[model_id] or (4 if task_mode == "multiclass" else 1)
+                if out_channels == 1:
+                    y_target = (y_raw > 0).float()
+                else:
+                    y_target = y_raw.clamp(min=0, max=out_channels - 1).long()
+
                 with torch.autocast(device_type=device.type, dtype=autocast_dtype, enabled=amp_enabled):
                     pred = _predict_from_ensemble(models=models, inferer=inferer, x_input=x_stacked)
+
+                # Debug: for first batch, print basic label/pred stats to diagnose zero scores
+                if not _debug_done:
+                    try:
+                        print('DEBUG: y_raw unique:', torch.unique(y_raw).cpu().numpy())
+                        print('DEBUG: y_raw min/max:', y_raw.min().item(), y_raw.max().item())
+                        # y_target computed below; reproduce for first model's out_channels
+                        sample_out = out_channels
+                        if sample_out == 1:
+                            y_target_dbg = (y_raw > 0).float()
+                        else:
+                            y_target_dbg = y_raw.clamp(min=0, max=sample_out - 1).long()
+                        print('DEBUG: y_target unique (sample):', torch.unique(y_target_dbg).cpu().numpy())
+                        # For each model instance, show prediction unique and sums for first contrast
+                        for mid, m in enumerate(models[:3]):
+                            # Predict only for first stacked subject
+                            try:
+                                single_pred = _predict_from_ensemble(models=[m], inferer=inferer, x_input=x_stacked[:batch_size])
+                                print(f'DEBUG: model {model_id} instance {mid} pred unique:', torch.unique(single_pred).cpu().numpy())
+                                print(f'DEBUG: model {model_id} instance {mid} pred sum:', int((single_pred>0).sum().item()))
+                            except Exception as e:
+                                print('DEBUG: prediction error for model instance', mid, e)
+                    except Exception as e:
+                        print('DEBUG: error printing debug info', e)
+                    _debug_done = True
 
                 for idx, contrast in enumerate(TARGET_CONTRASTS):
                     start = idx * batch_size
                     end = (idx + 1) * batch_size
-                    metrics[model_id][contrast](y_pred=pred[start:end], y=y)
+                    pred_chunk = pred[start:end]
+                    if out_channels > 1:
+                        pred_onehot = torch.nn.functional.one_hot(
+                            pred_chunk[:, 0].long(),
+                            num_classes=out_channels,
+                        ).permute(0, 4, 1, 2, 3).float()
+                        y_onehot = torch.nn.functional.one_hot(
+                            y_target[:, 0].long(),
+                            num_classes=out_channels,
+                        ).permute(0, 4, 1, 2, 3).float()
+                        metrics[model_id][contrast](y_pred=pred_onehot, y=y_onehot)
+                    else:
+                        metrics[model_id][contrast](y_pred=pred_chunk.float(), y=y_target)
 
     long_rows: list[dict[str, Any]] = []
     wide_rows: list[dict[str, Any]] = []
@@ -773,7 +980,15 @@ def main() -> None:
         for target_contrast in TARGET_CONTRASTS:
             dice_value: float | None
             if has_ckpt:
-                dice_value = float(metrics[model_id][target_contrast].aggregate().item())
+                aggregated = metrics[model_id][target_contrast].aggregate()
+                out_channels = model_out_channels[model_id] or (4 if task_mode == "multiclass" else 1)
+                if out_channels > 1:
+                    per_class = aggregated
+                    if per_class.ndim > 1:
+                        per_class = per_class.mean(dim=0)
+                    dice_value = float(per_class.mean().item())
+                else:
+                    dice_value = float(aggregated.item())
             else:
                 dice_value = None
 
@@ -832,16 +1047,64 @@ def main() -> None:
 
     _print_results_table(table_rows)
 
-    long_csv = output_dir / "eval_long.csv"
-    wide_csv = output_dir / "eval_wide.csv"
-    summary_md = output_dir / "eval_summary.md"
-    _write_long_csv(long_csv, long_rows)
-    _write_wide_csv(wide_csv, wide_rows)
-    _write_summary_markdown(summary_md, wide_rows)
+    # Separate rows into fine-tuned and non-fine-tuned groups.
+    spec_map = {spec["model_id"]: spec for spec in model_specs}
+    finetuned_model_ids = {
+        spec["model_id"] for spec in model_specs if bool(spec.get("is_finetuned", False))
+    }
 
-    print(f"Saved long-form metrics to: {long_csv}")
-    print(f"Saved wide metrics to: {wide_csv}")
-    print(f"Saved markdown summary to: {summary_md}")
+    nonfinetuned_long_rows = [row for row in long_rows if row["model_id"] not in finetuned_model_ids]
+    nonfinetuned_wide_rows = [row for row in wide_rows if row["model_id"] not in finetuned_model_ids]
+
+    # Standard zero-shot output remains unchanged and protected.
+    if nonfinetuned_wide_rows:
+        effective_output_dir.mkdir(parents=True, exist_ok=True)
+        long_csv = effective_output_dir / "eval_long.csv"
+        wide_csv = effective_output_dir / "eval_wide.csv"
+        summary_md = effective_output_dir / "eval_summary.md"
+
+        _write_long_csv(long_csv, nonfinetuned_long_rows)
+        _write_wide_csv(wide_csv, nonfinetuned_wide_rows)
+        _write_summary_markdown(summary_md, nonfinetuned_wide_rows)
+
+        print(f"Saved long-form metrics to: {long_csv}")
+        print(f"Saved wide metrics to: {wide_csv}")
+        print(f"Saved markdown summary to: {summary_md}")
+
+    # Route fine-tuned models to results/eval/<version>/finetuned/<target_contrast>_freeze_<bool>/
+    if finetuned_model_ids:
+        grouped_ids: dict[tuple[str, str, str], set[str]] = {}
+        for model_id in finetuned_model_ids:
+            spec = spec_map[model_id]
+            version = str(spec.get("version") or output_dir.name)
+            target_contrast = str(spec.get("finetune_target_contrast") or spec.get("source_contrast") or "unknown")
+            freeze_encoder = str(spec.get("freeze_encoder") or "unknown")
+            key = (version, target_contrast, freeze_encoder)
+            grouped_ids.setdefault(key, set()).add(model_id)
+
+        for (version, target_contrast, freeze_encoder), model_ids in grouped_ids.items():
+            # If the caller already included the version component in the output path,
+            # avoid adding it again (prevents nested `.../v15/.../v15/...`).
+            if version in output_dir.parts or output_dir.name == version:
+                version_root = output_dir
+            else:
+                version_root = output_dir / version
+
+            finetuned_dir = version_root / "finetuned" / f"{target_contrast}_freeze_{freeze_encoder}"
+            finetuned_dir.mkdir(parents=True, exist_ok=True)
+
+            ft_long_rows = [row for row in long_rows if row["model_id"] in model_ids]
+            ft_wide_rows = [row for row in wide_rows if row["model_id"] in model_ids]
+
+            long_csv = finetuned_dir / "eval_long.csv"
+            wide_csv = finetuned_dir / "eval_wide.csv"
+            summary_md = finetuned_dir / "eval_summary.md"
+
+            _write_long_csv(long_csv, ft_long_rows)
+            _write_wide_csv(wide_csv, ft_wide_rows)
+            _write_summary_markdown(summary_md, ft_wide_rows)
+
+            print(f"Saved fine-tuned metrics to: {finetuned_dir}")
 
 
 if __name__ == "__main__":

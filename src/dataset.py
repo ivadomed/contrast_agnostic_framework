@@ -1,4 +1,6 @@
 import os
+import numpy as np
+import torch
 from monai.apps import DecathlonDataset
 from monai.transforms import (
     Compose,
@@ -36,6 +38,17 @@ def normalize_contrast_name(contrast: str) -> str:
         raise ValueError(f"Unsupported contrast '{contrast}'. Expected one of: {valid}")
     return normalized
 
+
+def remap_brats_labels(label):
+    """Map BraTS ET label 4 -> 3 while preserving 0/1/2 labels."""
+    if isinstance(label, torch.Tensor):
+        remapped = label.long()
+        return torch.where(remapped == 4, torch.full_like(remapped, 3), remapped)
+
+    remapped = np.asarray(label).copy()
+    remapped[remapped == 4] = 3
+    return remapped
+
 def get_preprocessing_transforms(
     mode: str = "train",
     patch_size=(128, 128, 128),
@@ -60,6 +73,9 @@ def get_preprocessing_transforms(
         
         # Standardize orientation
         Orientationd(keys=["image", "label"], axcodes="RAS"),
+
+        # Preserve BraTS multiclass labels and map ET id 4 to contiguous id 3.
+        Lambdad(keys=["label"], func=remap_brats_labels),
         
         # Extract only the selected source contrast for the single-source framework
         # We keep the shape as (1, H, W, D)
@@ -67,7 +83,7 @@ def get_preprocessing_transforms(
     ]
     
     # 2. Add robust train-only augmentations before intensity normalization
-    if mode in ("train", "train_bigaug"):
+    if mode in ("train", "train_bigaug", "train_lpci"):
         transforms_list.extend(
             [
                 # We migrated the following CPU augmentations to GPU in src/kornia_augmentations.py:
