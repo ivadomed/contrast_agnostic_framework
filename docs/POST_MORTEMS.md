@@ -166,6 +166,51 @@ The local-maximum masking used a hardcoded `-1e12` sentinel. In FP16, this value
 - Classification: mixed-precision numeric stability bug.
 - Decision: apply fix and repeat validation protocol (Steps 1-3).
 
+## 12. v18.0 Post-Mortem: Unconstrained Spatial Bezier on Raw Intensities
+
+### Hypothesis
+A fully spatially varying cubic Bezier field sampled from unconstrained random control grids could unlock high intra-tissue contrast diversity without quantization artifacts.
+
+### What was implemented
+- Coarse control point grids sampled from `U(0,1)` and trilinearly upsampled to dense 3D fields.
+- Cubic Bezier mapping applied directly to raw MRI intensities.
+
+### What failed
+- Catastrophic macro-contrast loss with pervasive gray-mush appearance.
+- Tissue separation collapsed despite nominal nonlinear remapping.
+
+### Root cause 1: Regression to the Mean
+Trilinear interpolation of sparse `U(0,1)` control grids drives interior voxels toward the expected central value (`~0.5`). This mean-attractor effect dominates broad tissue regions and produces uniform mid-gray outputs.
+
+### Root cause 2: Missing Histogram Equalization
+Applying the Bezier mapping directly to raw intensities bypassed empirical CDF/quantile rank normalization. Because brain tissue often occupies a narrow intensity peak, the Bezier polynomial was effectively evaluated on only a tiny, near-linear local sliver, collapsing macro-contrast.
+
+### Scientific conclusion
+Spatial Bezier fields must operate on rank-equalized (quantile/CDF) coordinates and should anchor endpoint semantics explicitly. Unconstrained Bezier-on-raw-intensity mappings are a no-go path.
+
+## 13. v18.1 Post-Mortem: Quantile-Anchored Global Bezier Over-Regularized OOD Structure
+
+### Hypothesis
+Anchoring cubic Bezier endpoints on empirical CDF rank space would fix v18.0 gray-mush collapse while retaining strong cross-contrast robustness.
+
+### What was implemented
+- Empirical CDF rank mapping (`torch.searchsorted` over sampled quantiles) to move synthesis from raw-intensity to rank coordinates.
+- Endpoint anchoring with global inversion coin flip (`P0/P3` fixed to `{0,1}` or `{1,0}`).
+- Global cubic Bezier mapping with spatially varying interior controls.
+
+### What worked
+- Gray-mush failure mode was largely resolved; contrast dynamic range and tissue separation looked materially better than v18.0.
+
+### What failed
+- OOD generalization degraded sharply despite improved visual realism.
+- In particular, transfer from T1w to T2w/FLAIR dropped significantly relative to the stronger v15 lineage.
+
+### Root cause
+The mapping was still constrained by a single global Bezier polynomial over rank space. Even with spatial interior variation, the operator enforced a continuous monotonic trajectory across tissue bands at each voxel. This prevented independent tissue decoupling/inversion behaviors that v15 could express via non-monotonic chunk remapping. As a result, synthetic supervision became anatomically too regular, and the segmenter overfit canonical anatomical boundaries rather than learning robust OOD-invariant cues.
+
+### Scientific conclusion
+Empirical CDF anchoring fixed intensity-collapse pathology but introduced an expressivity bottleneck for OOD robustness. Future versions must preserve rank-space stability while breaking global monotonic coupling between tissue bands.
+
 ## 9. v16_bigaug Restart Post-Mortem: Throughput SLO Violation on First Launch
 
 ### Hypothesis

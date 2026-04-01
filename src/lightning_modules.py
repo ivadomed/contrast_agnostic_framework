@@ -745,7 +745,11 @@ class MRISegmenterLightning(pl.LightningModule):
             generator_weights = str(latest_ckpt)
             print(f"Loading generator from: {generator_weights}")
 
-        self.generator = MRI_Synthesis_Net(in_channels=2, out_channels=1)
+        self.generator = MRI_Synthesis_Net(
+            in_channels=2,
+            out_channels=1,
+            base_filters=int(self.cfg.model.generator.base_filters),
+        )
         if bool(self.cfg.model.segmenter.channels_last_3d):
             self.generator = self.generator.to(memory_format=torch.channels_last_3d)
 

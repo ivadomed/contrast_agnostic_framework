@@ -7,7 +7,7 @@ from typing import Any
 
 import pytorch_lightning as pl
 from monai.apps import DecathlonDataset
-from monai.data import DataLoader, PersistentDataset
+from monai.data import DataLoader, CacheDataset
 from omegaconf import DictConfig
 from torch.utils.data import Subset
 
@@ -123,8 +123,6 @@ class BraTSDataModule(pl.LightningDataModule):
         patch_size = tuple(self.cfg.data.patch_size)
         data_dir = self._resolve_path(self.cfg.data.data_dir)
         split_file = self._resolve_path(self.cfg.data.split_file)
-        cache_dir = self._resolve_path(getattr(self.cfg.data, "cache_dir", "data/cache/persistent"))
-        cache_dir.mkdir(parents=True, exist_ok=True)
         train_mode = "train"
         if str(self.cfg.task) == "segmenter" and str(self.cfg.version) == "v16_bigaug":
             train_mode = "train_bigaug"
@@ -161,7 +159,7 @@ class BraTSDataModule(pl.LightningDataModule):
             raise ValueError(f"No train indices found in split file: {split_file}")
 
         train_samples = [train_dataset_full.data[i] for i in train_indices]
-        self.train_dataset = PersistentDataset(
+        self.train_dataset = CacheDataset(
             data=train_samples,
             transform=get_preprocessing_transforms(
                 mode=train_mode,
@@ -170,7 +168,8 @@ class BraTSDataModule(pl.LightningDataModule):
                 contrasts=available_contrasts,
                 label_mapping=label_mapping,
             ),
-            cache_dir=str(cache_dir / "train"),
+            cache_rate=float(self.cfg.data.cache_rate),
+            num_workers=int(self.cfg.data.num_workers),
         )
 
         # Generator training has no validation loop; avoid building val dataset to cut startup/caching overhead.
@@ -182,7 +181,7 @@ class BraTSDataModule(pl.LightningDataModule):
             raise ValueError(f"No validation indices found in split file: {split_file}")
 
         val_samples = [train_dataset_full.data[i] for i in val_indices]
-        self.val_dataset = PersistentDataset(
+        self.val_dataset = CacheDataset(
             data=val_samples,
             transform=get_preprocessing_transforms(
                 mode="val",
@@ -191,7 +190,8 @@ class BraTSDataModule(pl.LightningDataModule):
                 contrasts=available_contrasts,
                 label_mapping=label_mapping,
             ),
-            cache_dir=str(cache_dir / "val"),
+            cache_rate=float(self.cfg.data.cache_rate),
+            num_workers=int(self.cfg.data.num_workers),
         )
 
     def train_dataloader(self) -> DataLoader:

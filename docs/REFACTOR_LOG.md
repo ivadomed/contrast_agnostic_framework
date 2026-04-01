@@ -1,5 +1,117 @@
 # Refactor Log
 
+## [2026-04-01] v18_2: Spatially-Varying Piecewise Spline Targeting (8x8x8)
+
+- Scope: Replaced v18_1 global cubic polynomial coupling with piecewise independent spline targets to restore aggressive tissue decoupling while keeping empirical-CDF rank stability.
+- Core Operator (`V18_2PiecewiseSplineTargetGenerator` in `src/target_generators.py`):
+  - Step A (Empirical CDF Rank):
+    - Subsamples non-background voxels (`x > 0.01`) via stride targeting `~100k` samples.
+    - Computes 100 quantiles and maps dense voxels to rank `r in [0,1]` with `torch.searchsorted`.
+  - Step B (Spline Knots):
+    - Uses `K=6` knot positions at `q_k = k/5`.
+  - Step C (Anchored Extremes):
+    - DDP-safe `_shared_rand` coin flip per sample anchors global endpoints:
+      - standard: `Y0=0`, `Y5=1`
+      - inverted: `Y0=1`, `Y5=0`
+  - Step D/E (Spatial Interior Fields):
+    - Samples 4 independent coarse interior target grids with shape `(B,1,8,8,8)`.
+    - Upsamples to full `(D,H,W)` via trilinear interpolation (`align_corners=True`) and stacks with anchored extremes into `(B,6,D,H,W)`.
+  - Step F (AMP-safe Piecewise Interpolation):
+    - Executes interpolation inside `autocast(enabled=False)` with FP32 math.
+    - Computes local spline bin index from `r`, local weight `t`, and voxelwise linear interpolation between adjacent knot targets.
+  - Step G (Strict Masking):
+    - Applies hard background masking (`x < 0.01 -> 0.0`) and casts back to original dtype.
+- Why this shift matters:
+  - v18_1 fixed gray-mush but retained global monotonic polynomial coupling across tissues.
+  - v18_2 increases spatial control resolution to `8x8x8` and replaces the global polynomial with piecewise independent spline fields, explicitly forcing tissue-band decoupling/inversion opportunities needed for stronger OOD invariance.
+- Hydra Wiring:
+  - Added `conf/model/v18_2.yaml` inheriting defaults and routing both generator and segmenter target strategies to `V18_2PiecewiseSplineTargetGenerator`.
+  - Explicitly sets `generator.gen_version: v18_2` and `segmenter.gen_version: v18_2`.
+- Launcher Wiring:
+  - Added dedicated `v18_2` model branches to:
+    - `scripts/run_generators.sh` (`model=v18_2`)
+    - `scripts/run_segmenters.sh` (`model=v18_2`)
+
+## [2026-03-31] v18.1: Quantile-Anchored Spatial Bezier Targeting
+
+- Scope: Replaced v18.0 raw-intensity spatial Bezier mapping with quantile-anchored spatial Bezier targeting to prevent gray-mush collapse while preserving infinite intra-tissue variability.
+- Core Operator (`V18_1QuantileAnchoredBezierTargetGenerator` in `src/target_generators.py`):
+  - Step A (Empirical CDF Rank):
+    - Subsamples non-background voxels (`x > 0.01`) with stride targeting `~100k` samples.
+    - Builds 100 empirical quantiles and maps dense voxels to rank coordinates `r in [0,1]` via `torch.searchsorted`.
+  - Step B (Anchored Endpoints):
+    - Uses DDP-safe `_shared_rand` coin flip per sample to choose standard vs inverted contrast mode.
+    - Enforces endpoint anchors:
+      - standard: `P0=0`, `P3=1`
+      - inverted: `P0=1`, `P3=0`
+  - Step C (Spatial Interior Controls):
+    - Samples `P1`, `P2` coarse grids `(B,1,4,4,4)` via shared RNG and upsamples with trilinear interpolation (`align_corners=True`).
+  - Step D (AMP Safety):
+    - Computes cubic Bezier polynomial inside `with torch.autocast(device_type="cuda", enabled=False):`
+    - Casts `r`, `P0..P3` to FP32 before polynomial math and casts outputs back afterward.
+  - Step E (Masking):
+    - Applies strict background masking (`x < 0.01 -> 0.0`) before histogram generation.
+- Why this resolves v18.0 gray mush:
+  - Rank-space mapping removes narrow raw-intensity support collapse by spreading tissue values across `[0,1]`.
+  - Endpoint anchoring prevents uncontrolled regression toward mid-gray while preserving controlled inversion behavior.
+- Hydra Wiring:
+  - Added `conf/model/v18_1.yaml` and routed generator/segmenter strategy instantiation to `V18_1QuantileAnchoredBezierTargetGenerator`.
+  - Explicitly sets `generator.gen_version: v18_1` and `segmenter.gen_version: v18_1`.
+- Launcher Wiring:
+  - Added dedicated `v18_1` model branches to:
+    - `scripts/run_generators.sh` (`model=v18_1`)
+    - `scripts/run_segmenters.sh` (`model=v18_1`)
+- 8-minute Generator Validation (tmux, active monitoring):
+  - Validation launch: `bash scripts/run_generators.sh 2 v18_1 t1w`
+  - Monitoring window: full 8 minutes with per-minute log sampling.
+  - Checks passed:
+    - MONAI cache loading completed.
+    - Epoch 1 completed without CUDA OOM/fatal runtime errors.
+    - Throughput observed around `1.69-1.71 it/s` over `67` batches (`~39-40 s/epoch`), satisfying `<1.5 min/epoch` SLO.
+  - Validation session terminated after confirmation.
+- Queued Production Launch (dependency-safe `&&` chaining):
+  - Slot 2 tmux session (`v18_1_slot2_chain`):
+    - `bash scripts/run_generators.sh 2 v18_1 t1w && bash scripts/run_segmenters.sh 2 v18_1 t1w`
+  - Slot 3 tmux session (`v18_1_slot3_chain`):
+    - `bash scripts/run_generators.sh 3 v18_1 t2w && bash scripts/run_segmenters.sh 3 v18_1 t2w`
+  - Both sessions started successfully and are running in fire-and-forget mode.
+
+## [2026-03-31] v18: Spatially-Varying Non-Monotonic Bezier Field ("T1w is All You Need")
+
+- Scope: Replaced v15 discrete chunk-target sampling with a continuous spatial Bezier intensity field to increase intra-tissue variability while preserving structured control.
+- Core Operator (`V18SpatialBezierTargetGenerator` in `src/target_generators.py`):
+  - Added strategy class gated behind model config (`conf/model/v18.yaml`).
+  - Generates four DDP-safe coarse control grids `P0..P3` with shape `(B, 1, 4, 4, 4)` using `_shared_rand` imported from `src/intensity_ops.py`.
+  - Upsamples control grids to full volume `(D, H, W)` using trilinear interpolation with `align_corners=True`.
+  - Applies cubic Bezier polynomial per voxel:
+    - `y = (1-x)^3*P0 + 3(1-x)^2*x*P1 + 3(1-x)*x^2*P2 + x^3*P3`
+  - Added AMP safety guard for the polynomial path:
+    - wrapped in `with torch.autocast(device_type="cuda", enabled=False):`
+    - cast `x` and control grids to FP32 before polynomial math
+    - cast synthesized output back to original dtype after computation.
+  - Enforced strict background masking: voxels where `images < 0.01` are set to `0.0`.
+- Hydra Wiring:
+  - Added `conf/model/v18.yaml` inheriting `defaults` and routing both generator and segmenter target strategies to `V18SpatialBezierTargetGenerator`.
+  - Explicitly sets `generator.gen_version: v18`, `segmenter.use_generator: true`, and `segmenter.gen_version: v18`.
+- Launch Script Wiring:
+  - Updated `scripts/run_generators.sh` and `scripts/run_segmenters.sh` with dedicated `v18` branches (`model=v18`) so version-driven launcher calls correctly resolve the new strategy config.
+- Stability/Compatibility Fixes discovered during v18 bring-up:
+  - Fixed YAML parsing blocker in `conf/data/brats.yaml` (`label_mapping` tab indentation).
+  - Fixed segmenter-side frozen generator loading in `src/lightning_modules.py` by instantiating `MRI_Synthesis_Net` with configured `base_filters`, eliminating v18 checkpoint shape mismatches.
+- 7-minute SLO Validation Protocol (tmux, active monitoring):
+  - Generator test: `bash scripts/run_generators.sh 3 v18 t1w`
+    - Passed MONAI cache load, epoch progression, and no CUDA OOM.
+    - Observed throughput around `1.69-1.71 it/s` over `67` batches (`~39-40 s/epoch`), satisfying `<1.5 min/epoch` SLO.
+  - Segmenter test: `bash scripts/run_segmenters.sh 3 v18 t1w`
+    - Passed startup, generator checkpoint load, and no CUDA OOM.
+    - Warm-up epoch observed at `~61 s` during initial compile/cache effects.
+    - Steady-state observed at `~8.9-9.6 it/s` over `67` batches (`~7.0-7.5 s/epoch`), satisfying `<14 s/epoch` steady-state target.
+  - Both validation tmux sessions were terminated after confirmation.
+- Queued Production Launch (dependency-safe chaining with `&&`):
+  - Slot 2 session: `bash scripts/run_generators.sh 2 v18 t1w && bash scripts/run_segmenters.sh 2 v18 t1w`
+  - Slot 3 session: `bash scripts/run_generators.sh 3 v18 t2w && bash scripts/run_segmenters.sh 3 v18 t2w`
+  - Both sessions were started in tmux (`v18_slot2_chain`, `v18_slot3_chain`) to enforce generator-complete-before-segmenter ordering natively.
+
 ## [2026-03-31] Comprehensive Architectural & Stability Refactor (Phases 1-7)
 
 - Scope: Removed version-gated generator routing from compiled wrappers, introduced Hydra IoC strategy components, decoupled dataset assumptions, hardened AMP-sensitive ops, reduced default memory footprint, and improved checkpoint metadata reliability.

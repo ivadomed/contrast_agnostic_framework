@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-GPU_ID=3
-VERSION="v15"
+GPU_ID=1
+VERSION="v18_2"
 
 
 BASE_OUTPUT_DIR="results/eval/${VERSION}"

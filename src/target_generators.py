@@ -7,6 +7,8 @@ import torch.distributed as dist
 import torch.nn.functional as F
 from torch import nn
 
+from src.intensity_ops import _shared_rand as _shared_rand_intensity
+
 
 _SHARED_RNG_COUNTER = 0
 
@@ -355,6 +357,280 @@ class V17MicroAnchorTargetGenerator(BaseTargetGenerator):
 
         target_hist = hist_module(guidance_map)
         return target_hist, mu.to(dtype=input_images.dtype), guidance_map
+
+
+class V18SpatialBezierTargetGenerator(BaseTargetGenerator):
+    """Spatially varying non-monotonic Bezier intensity field for v18 guidance."""
+
+    def __init__(
+        self,
+        coarse_grid_size: tuple[int, int, int] = (4, 4, 4),
+        background_threshold: float = 0.01,
+    ):
+        super().__init__()
+        self.coarse_grid_size = tuple(int(v) for v in coarse_grid_size)
+        self.background_threshold = float(background_threshold)
+
+    def forward(
+        self,
+        input_images: torch.Tensor,
+        num_bins: int,
+        num_chunks: int,
+        dark_threshold: float,
+        hist_module: HistogramModuleLike,
+        return_guidance_map: bool = True,
+        masks: torch.Tensor | None = None,
+        **kwargs: object,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        del num_bins, num_chunks, dark_threshold, masks
+
+        if "images" in kwargs and kwargs["images"] is not None:
+            input_images = kwargs["images"]  # supports __call__(images=..., masks=...)
+
+        if input_images.ndim != 5:
+            raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
+
+        b, c, d, h, w = input_images.shape
+        gz, gy, gx = self.coarse_grid_size
+        if (gz, gy, gx) != (4, 4, 4):
+            raise ValueError("V18SpatialBezierTargetGenerator requires coarse_grid_size=(4, 4, 4).")
+
+        coarse_shape = (b, 1, gz, gy, gx)
+        p0_coarse = _shared_rand_intensity(coarse_shape, device=input_images.device, dtype=input_images.dtype)
+        p1_coarse = _shared_rand_intensity(coarse_shape, device=input_images.device, dtype=input_images.dtype)
+        p2_coarse = _shared_rand_intensity(coarse_shape, device=input_images.device, dtype=input_images.dtype)
+        p3_coarse = _shared_rand_intensity(coarse_shape, device=input_images.device, dtype=input_images.dtype)
+
+        interp_size = (d, h, w)
+        p0 = F.interpolate(p0_coarse, size=interp_size, mode="trilinear", align_corners=True)
+        p1 = F.interpolate(p1_coarse, size=interp_size, mode="trilinear", align_corners=True)
+        p2 = F.interpolate(p2_coarse, size=interp_size, mode="trilinear", align_corners=True)
+        p3 = F.interpolate(p3_coarse, size=interp_size, mode="trilinear", align_corners=True)
+
+        x = input_images.mean(dim=1, keepdim=True).clamp(0.0, 1.0)
+        original_dtype = input_images.dtype
+        with torch.autocast(device_type="cuda", enabled=False):
+            x32 = x.to(torch.float32)
+            p032 = p0.to(torch.float32)
+            p132 = p1.to(torch.float32)
+            p232 = p2.to(torch.float32)
+            p332 = p3.to(torch.float32)
+
+            one_minus = 1.0 - x32
+            y32 = (
+                (one_minus ** 3) * p032
+                + 3.0 * (one_minus ** 2) * x32 * p132
+                + 3.0 * one_minus * (x32 ** 2) * p232
+                + (x32 ** 3) * p332
+            )
+
+        y = y32.clamp(0.0, 1.0).to(dtype=original_dtype)
+        synthesized_targets = y.expand(-1, c, -1, -1, -1).clone()
+        synthesized_targets[input_images < self.background_threshold] = 0.0
+
+        target_hist = hist_module(synthesized_targets)
+        control_points = torch.stack([p0_coarse, p1_coarse, p2_coarse, p3_coarse], dim=1)
+        return target_hist, control_points, synthesized_targets
+
+
+class V18_1QuantileAnchoredBezierTargetGenerator(BaseTargetGenerator):
+    """Quantile-anchored spatial Bezier mapping over empirical CDF ranks for v18.1."""
+
+    def __init__(
+        self,
+        coarse_grid_size: tuple[int, int, int] = (4, 4, 4),
+        background_threshold: float = 0.01,
+        num_quantiles: int = 100,
+        max_sample_size: int = 100000,
+    ):
+        super().__init__()
+        self.coarse_grid_size = tuple(int(v) for v in coarse_grid_size)
+        self.background_threshold = float(background_threshold)
+        self.num_quantiles = int(num_quantiles)
+        self.max_sample_size = int(max_sample_size)
+
+    def forward(
+        self,
+        input_images: torch.Tensor,
+        num_bins: int,
+        num_chunks: int,
+        dark_threshold: float,
+        hist_module: HistogramModuleLike,
+        return_guidance_map: bool = True,
+        masks: torch.Tensor | None = None,
+        **kwargs: object,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        del num_bins, num_chunks, dark_threshold, masks
+
+        if "images" in kwargs and kwargs["images"] is not None:
+            input_images = kwargs["images"]  # supports __call__(images=..., masks=...)
+
+        if input_images.ndim != 5:
+            raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
+        if self.num_quantiles < 2:
+            raise ValueError("num_quantiles must be >= 2 for rank mapping.")
+
+        b, c, d, h, w = input_images.shape
+        gz, gy, gx = self.coarse_grid_size
+        if (gz, gy, gx) != (4, 4, 4):
+            raise ValueError("V18_1QuantileAnchoredBezierTargetGenerator requires coarse_grid_size=(4, 4, 4).")
+
+        x = input_images.mean(dim=1, keepdim=True).clamp(0.0, 1.0)
+        x_flat = x.view(b, -1)
+
+        total_voxels = x_flat.shape[1]
+        sample_stride = max(1, total_voxels // self.max_sample_size) if total_voxels > self.max_sample_size else 1
+        sampled = x_flat[:, ::sample_stride].clone()
+        sampled[sampled <= self.background_threshold] = float("nan")
+
+        q_probs = torch.linspace(0.0, 1.0, self.num_quantiles, device=input_images.device, dtype=torch.float32)
+        quantiles = torch.nanquantile(sampled, q_probs, dim=1).transpose(0, 1)
+        quantiles = torch.nan_to_num(quantiles, nan=float(self.background_threshold))
+        quantiles[:, 0] = torch.clamp(quantiles[:, 0], max=self.background_threshold)
+        quantiles[:, -1] = torch.clamp(quantiles[:, -1], min=1.0)
+
+        rank_idx = torch.searchsorted(quantiles, x_flat, right=True)
+        rank_idx = rank_idx.clamp(min=0, max=self.num_quantiles - 1)
+        r = rank_idx.to(dtype=x.dtype) / float(self.num_quantiles - 1)
+        r = r.view(b, 1, d, h, w)
+
+        invert_mask = (_shared_rand_intensity((b, 1, 1, 1, 1), device=input_images.device, dtype=x.dtype) < 0.5)
+        p0 = torch.where(invert_mask, torch.ones_like(r[:, :, :1, :1, :1]), torch.zeros_like(r[:, :, :1, :1, :1]))
+        p3 = torch.where(invert_mask, torch.zeros_like(r[:, :, :1, :1, :1]), torch.ones_like(r[:, :, :1, :1, :1]))
+
+        coarse_shape = (b, 1, gz, gy, gx)
+        p1_coarse = _shared_rand_intensity(coarse_shape, device=input_images.device, dtype=x.dtype)
+        p2_coarse = _shared_rand_intensity(coarse_shape, device=input_images.device, dtype=x.dtype)
+        p1 = F.interpolate(p1_coarse, size=(d, h, w), mode="trilinear", align_corners=True)
+        p2 = F.interpolate(p2_coarse, size=(d, h, w), mode="trilinear", align_corners=True)
+
+        original_dtype = input_images.dtype
+        with torch.autocast(device_type="cuda", enabled=False):
+            r32 = r.to(torch.float32)
+            p032 = p0.to(torch.float32)
+            p132 = p1.to(torch.float32)
+            p232 = p2.to(torch.float32)
+            p332 = p3.to(torch.float32)
+
+            one_minus = 1.0 - r32
+            y32 = (
+                (one_minus ** 3) * p032
+                + 3.0 * (one_minus ** 2) * r32 * p132
+                + 3.0 * one_minus * (r32 ** 2) * p232
+                + (r32 ** 3) * p332
+            )
+
+        y = y32.clamp(0.0, 1.0).to(dtype=original_dtype)
+        y[input_images.mean(dim=1, keepdim=True) < self.background_threshold] = 0.0
+        synthesized_targets = y.expand(-1, c, -1, -1, -1).clone()
+
+        target_hist = hist_module(synthesized_targets)
+        anchor_state = invert_mask.to(dtype=input_images.dtype).view(b, 1)
+        return target_hist, anchor_state, synthesized_targets
+
+
+class V18_2PiecewiseSplineTargetGenerator(BaseTargetGenerator):
+    """Spatially varying piecewise spline mapping over empirical CDF ranks for v18_2."""
+
+    def __init__(
+        self,
+        coarse_grid_size: tuple[int, int, int] = (8, 8, 8),
+        background_threshold: float = 0.01,
+        num_quantiles: int = 100,
+        max_sample_size: int = 100000,
+    ):
+        super().__init__()
+        self.coarse_grid_size = tuple(int(v) for v in coarse_grid_size)
+        self.background_threshold = float(background_threshold)
+        self.num_quantiles = int(num_quantiles)
+        self.max_sample_size = int(max_sample_size)
+
+    def forward(
+        self,
+        input_images: torch.Tensor,
+        num_bins: int,
+        num_chunks: int,
+        dark_threshold: float,
+        hist_module: HistogramModuleLike,
+        return_guidance_map: bool = True,
+        masks: torch.Tensor | None = None,
+        **kwargs: object,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        del num_bins, num_chunks, dark_threshold, masks, return_guidance_map
+
+        if "images" in kwargs and kwargs["images"] is not None:
+            input_images = kwargs["images"]
+
+        if input_images.ndim != 5:
+            raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
+        if self.num_quantiles < 2:
+            raise ValueError("num_quantiles must be >= 2 for rank mapping.")
+        if self.coarse_grid_size != (8, 8, 8):
+            raise ValueError("V18_2PiecewiseSplineTargetGenerator requires coarse_grid_size=(8, 8, 8).")
+
+        b, c, d, h, w = input_images.shape
+        x = input_images.mean(dim=1, keepdim=True).clamp(0.0, 1.0)
+        x_flat = x.view(b, -1)
+
+        total_voxels = x_flat.shape[1]
+        sample_stride = max(1, total_voxels // self.max_sample_size) if total_voxels > self.max_sample_size else 1
+        sampled = x_flat[:, ::sample_stride].clone()
+        sampled[sampled <= self.background_threshold] = float("nan")
+
+        q_probs = torch.linspace(0.0, 1.0, self.num_quantiles, device=input_images.device, dtype=torch.float32)
+        quantiles = torch.nanquantile(sampled, q_probs, dim=1).transpose(0, 1)
+        quantiles = torch.nan_to_num(quantiles, nan=float(self.background_threshold))
+        quantiles[:, 0] = torch.clamp(quantiles[:, 0], max=self.background_threshold)
+        quantiles[:, -1] = torch.clamp(quantiles[:, -1], min=1.0)
+
+        rank_idx = torch.searchsorted(quantiles, x_flat, right=True)
+        rank_idx = rank_idx.clamp(min=0, max=self.num_quantiles - 1)
+        r = (rank_idx.to(dtype=x.dtype) / float(self.num_quantiles - 1)).view(b, 1, d, h, w)
+
+        invert_mask = (_shared_rand_intensity((b, 1, 1, 1, 1), device=input_images.device, dtype=x.dtype) < 0.5)
+        y0 = torch.where(invert_mask, torch.ones_like(r[:, :, :1, :1, :1]), torch.zeros_like(r[:, :, :1, :1, :1]))
+        y5 = torch.where(invert_mask, torch.zeros_like(r[:, :, :1, :1, :1]), torch.ones_like(r[:, :, :1, :1, :1]))
+
+        coarse_shape = (b, 1, 8, 8, 8)
+        interior_coarse = [
+            _shared_rand_intensity(coarse_shape, device=input_images.device, dtype=x.dtype)
+            for _ in range(4)
+        ]
+        interior_dense = [
+            F.interpolate(grid, size=(d, h, w), mode="trilinear", align_corners=True)
+            for grid in interior_coarse
+        ]
+
+        y0_dense = y0.expand(-1, -1, d, h, w)
+        y5_dense = y5.expand(-1, -1, d, h, w)
+        knot_targets = torch.cat([y0_dense, *interior_dense, y5_dense], dim=1)
+
+        knot_positions = torch.linspace(0.0, 1.0, 6, device=input_images.device, dtype=torch.float32)
+        orig_dtype = input_images.dtype
+        with torch.autocast(device_type="cuda", enabled=False):
+            r32 = r.to(torch.float32)
+            target32 = knot_targets.to(torch.float32)
+
+            scaled = torch.clamp(r32 * 5.0, 0.0, 5.0 - 1e-6)
+            left_idx = torch.floor(scaled).to(torch.long)
+            right_idx = torch.clamp(left_idx + 1, max=5)
+
+            q_left = knot_positions[left_idx]
+            q_right = knot_positions[right_idx]
+            t = (r32 - q_left) / (q_right - q_left)
+
+            y_left = torch.gather(target32, dim=1, index=left_idx)
+            y_right = torch.gather(target32, dim=1, index=right_idx)
+            y32 = (1.0 - t) * y_left + t * y_right
+
+        y = y32.to(dtype=orig_dtype)
+        y[x < self.background_threshold] = 0.0
+        synthesized_targets = y.expand(-1, c, -1, -1, -1).clone()
+        synthesized_targets = synthesized_targets.clamp(0.0, 1.0)
+
+        target_hist = hist_module(synthesized_targets)
+        anchor_state = invert_mask.to(dtype=input_images.dtype).view(b, 1)
+        return target_hist, anchor_state, synthesized_targets
 
 
 def _create_range_translation_guidance_map(
