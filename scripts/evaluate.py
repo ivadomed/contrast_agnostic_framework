@@ -25,14 +25,13 @@ from monai.transforms import (
     Spacingd,
 )
 from torch.utils.data import Subset
+from omegaconf import OmegaConf
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.dataset import CONTRAST_TO_INDEX, normalize_contrast_name
-
-TARGET_CONTRASTS = ["flair", "t1w", "t1gd", "t2w"]
+from src.dataset import DEFAULT_CONTRASTS, build_contrast_to_index, normalize_contrast_name
 
 
 def parse_args() -> argparse.Namespace:
@@ -90,19 +89,19 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
     )
-    parser.add_argument("--baseline-contrast", type=str, default="t1w", choices=sorted(CONTRAST_TO_INDEX))
+    parser.add_argument("--baseline-contrast", type=str, default="t1w")
     parser.add_argument(
         "--generator-ckpt",
         type=str,
         default=None,
     )
-    parser.add_argument("--generator-contrast", type=str, default="t1w", choices=sorted(CONTRAST_TO_INDEX))
+    parser.add_argument("--generator-contrast", type=str, default="t1w")
     parser.add_argument(
         "--bigaug-ckpt",
         type=str,
         default=None,
     )
-    parser.add_argument("--bigaug-contrast", type=str, default="t1w", choices=sorted(CONTRAST_TO_INDEX))
+    parser.add_argument("--bigaug-contrast", type=str, default="t1w")
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--cache-rate", type=float, default=0.0)
     parser.add_argument(
@@ -133,16 +132,81 @@ def _default_checkpoint_path(tag: str, contrast: str) -> str:
     return str(PROJECT_ROOT / "checkpoints" / f"best_segmenter_{tag}_{contrast}.pth")
 
 
-def _extract_contrast(image: torch.Tensor, contrast: str) -> torch.Tensor:
-    index = CONTRAST_TO_INDEX[normalize_contrast_name(contrast)]
+def _extract_contrast(image: torch.Tensor, contrast: str, contrast_to_index: dict[str, int]) -> torch.Tensor:
+    index = contrast_to_index[normalize_contrast_name(contrast, list(contrast_to_index.keys()))]
     return image[:, index : index + 1, ...]
 
 
-def _stack_target_contrasts(image: torch.Tensor) -> tuple[torch.Tensor, int]:
-    # Convert [B, C, ...] multi-contrast input to [B*4, 1, ...] in TARGET_CONTRASTS order.
+def _stack_target_contrasts(
+    image: torch.Tensor,
+    target_contrasts: list[str],
+    contrast_to_index: dict[str, int],
+) -> tuple[torch.Tensor, int]:
+    # Convert [B, C, ...] multi-contrast input to [B*N, 1, ...] in target contrast order.
     batch_size = image.shape[0]
-    stacked = torch.cat([_extract_contrast(image, contrast) for contrast in TARGET_CONTRASTS], dim=0)
+    stacked = torch.cat(
+        [_extract_contrast(image, contrast, contrast_to_index) for contrast in target_contrasts],
+        dim=0,
+    )
     return stacked, batch_size
+
+
+def _load_hyper_parameters(checkpoint_path: str) -> dict[str, Any] | None:
+    path = Path(checkpoint_path)
+    if not path.exists():
+        return None
+    try:
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    except Exception:
+        return None
+    if not isinstance(checkpoint, dict):
+        return None
+    hyper = checkpoint.get("hyper_parameters") or checkpoint.get("hparams")
+    return hyper if isinstance(hyper, dict) else None
+
+
+def _contrasts_from_hyper_parameters(hyper: dict[str, Any] | None) -> list[str] | None:
+    if hyper is None:
+        return None
+    contrasts = _nested_get(hyper, ["data", "contrasts"], default=None)
+    if not isinstance(contrasts, (list, tuple)) or len(contrasts) == 0:
+        return None
+    return [str(c).strip().lower() for c in contrasts]
+
+
+def _load_contrasts_from_default_config() -> list[str]:
+    cfg_path = PROJECT_ROOT / "conf" / "data" / "brats.yaml"
+    if cfg_path.exists():
+        try:
+            cfg = OmegaConf.load(cfg_path)
+            contrasts = cfg.get("contrasts")
+            if isinstance(contrasts, (list, tuple)) and len(contrasts) > 0:
+                return [str(c).strip().lower() for c in contrasts]
+        except Exception:
+            pass
+    return [str(c) for c in DEFAULT_CONTRASTS]
+
+
+def _resolve_target_contrasts(model_specs: list[dict[str, Any]]) -> list[str]:
+    for spec in model_specs:
+        hyper = _load_hyper_parameters(spec["checkpoint_path"])
+        contrasts = _contrasts_from_hyper_parameters(hyper)
+        if contrasts:
+            return contrasts
+    return _load_contrasts_from_default_config()
+
+
+def _load_label_mapping_from_default_config() -> dict[int, int]:
+    cfg_path = PROJECT_ROOT / "conf" / "data" / "brats.yaml"
+    if cfg_path.exists():
+        try:
+            cfg = OmegaConf.load(cfg_path)
+            mapping = cfg.get("label_mapping")
+            if isinstance(mapping, dict):
+                return {int(k): int(v) for k, v in mapping.items()}
+        except Exception:
+            pass
+    return {}
 
 
 def _format_metric(value: Any) -> str:
@@ -457,6 +521,8 @@ def _normalize_model_spec(raw: dict[str, Any]) -> dict[str, Any]:
         "enabled": _parse_enabled(raw.get("enabled", True)),
         "is_finetuned": is_finetuned,
         "freeze_encoder": freeze_encoder,
+        "finetune_target_contrast": raw.get("finetune_target_contrast"),
+        "version": raw.get("version"),
     }
 
 
@@ -576,7 +642,10 @@ def _discover_models(checkpoint_dir: Path) -> list[dict[str, Any]]:
             continue
 
         family = _validate_family(parts[seg_idx + 1])
-        contrast = normalize_contrast_name(parts[seg_idx + 2])
+        hyper = _load_hyper_parameters(str(checkpoint))
+        hyper_contrast = _nested_get(hyper, ["data", "source_contrast"], default=None)
+        contrast_raw = hyper_contrast if hyper_contrast is not None else parts[seg_idx + 2]
+        contrast = normalize_contrast_name(str(contrast_raw))
         key = (family, contrast)
 
         prev = latest_segmenter_ckpts.get(key)
@@ -585,6 +654,8 @@ def _discover_models(checkpoint_dir: Path) -> list[dict[str, Any]]:
 
     for (family, contrast), checkpoint in sorted(latest_segmenter_ckpts.items()):
         model_id = f"segmenter_{family}_{contrast}"
+        hyper = _load_hyper_parameters(str(checkpoint))
+        version = _nested_get(hyper, ["version"], default=None)
         specs.append(
             _normalize_model_spec(
                 {
@@ -593,6 +664,7 @@ def _discover_models(checkpoint_dir: Path) -> list[dict[str, Any]]:
                     "source_contrast": contrast,
                     "checkpoint_path": str(checkpoint),
                     "enabled": True,
+                    "version": version,
                 }
             )
         )
@@ -694,16 +766,17 @@ def _collect_model_specs(args: argparse.Namespace) -> list[dict[str, Any]]:
     return unique_specs
 
 
-def _print_results_table(results: list[dict[str, Any]]) -> None:
-    line = "+----------------------+-----------+---------+-----------+-----------+-----------+-----------+"
+def _print_results_table(results: list[dict[str, Any]], target_contrasts: list[str]) -> None:
+    contrast_header = " | ".join(f"{c:<9}" for c in target_contrasts)
+    line = "+----------------------+-----------+---------+" + "-----------+" * len(target_contrasts)
     print("\nSegmentation Dice on Held-Out Test Subjects")
     print(line)
-    print("| Model ID             | Family    | Source  | FLAIR     | T1w       | T1gd      | T2w       |")
+    print(f"| Model ID             | Family    | Source  | {contrast_header} |")
     print(line)
     for row in results:
+        contrast_values = " | ".join(f"{_format_metric(row[c]):>9}" for c in target_contrasts)
         print(
-            f"| {row['model_id']:<20} | {row['family']:<9} | {row['source_contrast']:<7} | "
-            f"{_format_metric(row['flair']):>9} | {_format_metric(row['t1w']):>9} | {_format_metric(row['t1gd']):>9} | {_format_metric(row['t2w']):>9} |"
+            f"| {row['model_id']:<20} | {row['family']:<9} | {row['source_contrast']:<7} | {contrast_values} |"
         )
     print(line)
 
@@ -725,17 +798,14 @@ def _write_long_csv(path: Path, rows: list[dict[str, Any]]) -> None:
             writer.writerow(row)
 
 
-def _write_wide_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+def _write_wide_csv(path: Path, rows: list[dict[str, Any]], target_contrasts: list[str]) -> None:
     fields = [
         "model_id",
         "family",
         "source_contrast",
         "checkpoint_path",
         "ckpt_exists",
-        "flair",
-        "t1w",
-        "t1gd",
-        "t2w",
+        *target_contrasts,
         "in_domain_dice",
         "ood_mean_dice",
         "ood_worst_dice",
@@ -747,10 +817,12 @@ def _write_wide_csv(path: Path, rows: list[dict[str, Any]]) -> None:
             writer.writerow(row)
 
 
-def _write_summary_markdown(path: Path, rows: list[dict[str, Any]]) -> None:
+def _write_summary_markdown(path: Path, rows: list[dict[str, Any]], target_contrasts: list[str]) -> None:
+    contrast_header = " | ".join(target_contrasts)
+    contrast_rule = " | ".join(["---:"] * len(target_contrasts))
     header = [
-        "| model_id | family | source_contrast | ckpt_exists | flair | t1w | t1gd | t2w | in_domain_dice | ood_mean_dice | ood_worst_dice |",
-        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        f"| model_id | family | source_contrast | ckpt_exists | {contrast_header} | in_domain_dice | ood_mean_dice | ood_worst_dice |",
+        f"|---|---|---|---:| {contrast_rule} |---:|---:|---:|",
     ]
     body = []
     for row in rows:
@@ -762,10 +834,7 @@ def _write_summary_markdown(path: Path, rows: list[dict[str, Any]]) -> None:
                     str(row["family"]),
                     str(row["source_contrast"]),
                     str(row["ckpt_exists"]),
-                    _format_metric(row["flair"]),
-                    _format_metric(row["t1w"]),
-                    _format_metric(row["t1gd"]),
-                    _format_metric(row["t2w"]),
+                    *[_format_metric(row[c]) for c in target_contrasts],
                     _format_metric(row["in_domain_dice"]),
                     _format_metric(row["ood_mean_dice"]),
                     _format_metric(row["ood_worst_dice"]),
@@ -783,14 +852,17 @@ def main() -> None:
     if args.num_ensemble < 1:
         raise ValueError("--num-ensemble must be >= 1.")
 
-    args.baseline_contrast = normalize_contrast_name(args.baseline_contrast)
-    args.generator_contrast = normalize_contrast_name(args.generator_contrast)
-    args.bigaug_contrast = normalize_contrast_name(args.bigaug_contrast)
-    device = torch.device(args.device)
-
     model_specs = _collect_model_specs(args)
     if not model_specs:
         raise ValueError("No model specifications were provided.")
+
+    target_contrasts = _resolve_target_contrasts(model_specs)
+    contrast_to_index = build_contrast_to_index(target_contrasts)
+    label_mapping = _load_label_mapping_from_default_config()
+    args.baseline_contrast = normalize_contrast_name(args.baseline_contrast, target_contrasts)
+    args.generator_contrast = normalize_contrast_name(args.generator_contrast, target_contrasts)
+    args.bigaug_contrast = normalize_contrast_name(args.bigaug_contrast, target_contrasts)
+    device = torch.device(args.device)
 
     output_dir = Path(args.output_dir)
 
@@ -877,7 +949,7 @@ def main() -> None:
                 include_background=False,
                 reduction="mean_batch" if is_multiclass_model else "mean",
             )
-            for contrast in TARGET_CONTRASTS
+            for contrast in target_contrasts
         }
 
     loaded_channels = [channels for channels in model_out_channels.values() if channels is not None]
@@ -908,9 +980,14 @@ def main() -> None:
         for batch in dataloader:
             x = batch["image"].to(device, non_blocking=True).float()
             y_raw = batch["label"].to(device, non_blocking=True).long()
-            y_raw = torch.where(y_raw == 4, torch.full_like(y_raw, 3), y_raw)
+            for src, dst in label_mapping.items():
+                y_raw = torch.where(y_raw == int(src), torch.full_like(y_raw, int(dst)), y_raw)
 
-            x_stacked, batch_size = _stack_target_contrasts(x)
+            x_stacked, batch_size = _stack_target_contrasts(
+                x,
+                target_contrasts=target_contrasts,
+                contrast_to_index=contrast_to_index,
+            )
 
             for spec in model_specs:
                 model_id = spec["model_id"]
@@ -952,7 +1029,7 @@ def main() -> None:
                         print('DEBUG: error printing debug info', e)
                     _debug_done = True
 
-                for idx, contrast in enumerate(TARGET_CONTRASTS):
+                for idx, contrast in enumerate(target_contrasts):
                     start = idx * batch_size
                     end = (idx + 1) * batch_size
                     pred_chunk = pred[start:end]
@@ -977,7 +1054,7 @@ def main() -> None:
         has_ckpt = exists_map[model_id] == 1
 
         contrast_scores: dict[str, float | None] = {}
-        for target_contrast in TARGET_CONTRASTS:
+        for target_contrast in target_contrasts:
             dice_value: float | None
             if has_ckpt:
                 aggregated = metrics[model_id][target_contrast].aggregate()
@@ -1014,38 +1091,34 @@ def main() -> None:
         ood_mean = _safe_mean(ood_values)
         ood_worst = min(ood_values) if ood_values else None
 
-        wide_rows.append(
-            {
-                "model_id": model_id,
-                "family": spec["family"],
-                "source_contrast": source_contrast,
-                "checkpoint_path": spec["checkpoint_path"],
-                "ckpt_exists": exists_map[model_id],
-                "flair": "" if contrast_scores["flair"] is None else f"{contrast_scores['flair']:.6f}",
-                "t1w": "" if contrast_scores["t1w"] is None else f"{contrast_scores['t1w']:.6f}",
-                "t1gd": "" if contrast_scores["t1gd"] is None else f"{contrast_scores['t1gd']:.6f}",
-                "t2w": "" if contrast_scores["t2w"] is None else f"{contrast_scores['t2w']:.6f}",
-                "in_domain_dice": "" if in_domain_dice is None else f"{in_domain_dice:.6f}",
-                "ood_mean_dice": "" if ood_mean is None else f"{ood_mean:.6f}",
-                "ood_worst_dice": "" if ood_worst is None else f"{ood_worst:.6f}",
-            }
-        )
+        wide_row = {
+            "model_id": model_id,
+            "family": spec["family"],
+            "source_contrast": source_contrast,
+            "checkpoint_path": spec["checkpoint_path"],
+            "ckpt_exists": exists_map[model_id],
+            "in_domain_dice": "" if in_domain_dice is None else f"{in_domain_dice:.6f}",
+            "ood_mean_dice": "" if ood_mean is None else f"{ood_mean:.6f}",
+            "ood_worst_dice": "" if ood_worst is None else f"{ood_worst:.6f}",
+        }
+        for contrast in target_contrasts:
+            score = contrast_scores.get(contrast)
+            wide_row[contrast] = "" if score is None else f"{score:.6f}"
+        wide_rows.append(wide_row)
 
     table_rows = []
     for row in wide_rows:
-        table_rows.append(
-            {
-                "model_id": row["model_id"],
-                "family": row["family"],
-                "source_contrast": row["source_contrast"],
-                "flair": None if row["flair"] == "" else float(row["flair"]),
-                "t1w": None if row["t1w"] == "" else float(row["t1w"]),
-                "t1gd": None if row["t1gd"] == "" else float(row["t1gd"]),
-                "t2w": None if row["t2w"] == "" else float(row["t2w"]),
-            }
-        )
+        row_for_table = {
+            "model_id": row["model_id"],
+            "family": row["family"],
+            "source_contrast": row["source_contrast"],
+        }
+        for contrast in target_contrasts:
+            value = row.get(contrast, "")
+            row_for_table[contrast] = None if value == "" else float(value)
+        table_rows.append(row_for_table)
 
-    _print_results_table(table_rows)
+    _print_results_table(table_rows, target_contrasts)
 
     # Separate rows into fine-tuned and non-fine-tuned groups.
     spec_map = {spec["model_id"]: spec for spec in model_specs}
@@ -1064,8 +1137,8 @@ def main() -> None:
         summary_md = effective_output_dir / "eval_summary.md"
 
         _write_long_csv(long_csv, nonfinetuned_long_rows)
-        _write_wide_csv(wide_csv, nonfinetuned_wide_rows)
-        _write_summary_markdown(summary_md, nonfinetuned_wide_rows)
+        _write_wide_csv(wide_csv, nonfinetuned_wide_rows, target_contrasts)
+        _write_summary_markdown(summary_md, nonfinetuned_wide_rows, target_contrasts)
 
         print(f"Saved long-form metrics to: {long_csv}")
         print(f"Saved wide metrics to: {wide_csv}")
@@ -1101,8 +1174,8 @@ def main() -> None:
             summary_md = finetuned_dir / "eval_summary.md"
 
             _write_long_csv(long_csv, ft_long_rows)
-            _write_wide_csv(wide_csv, ft_wide_rows)
-            _write_summary_markdown(summary_md, ft_wide_rows)
+            _write_wide_csv(wide_csv, ft_wide_rows, target_contrasts)
+            _write_summary_markdown(summary_md, ft_wide_rows, target_contrasts)
 
             print(f"Saved fine-tuned metrics to: {finetuned_dir}")
 

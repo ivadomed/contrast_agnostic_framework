@@ -1,15 +1,20 @@
 generator:
   in_channels: 2
   out_channels: 1
-  base_filters: 32
+  base_filters: 16
   gen_version: null
   channels_last_3d: true
   tf32: true
   fused_adamw: true
 
-  num_bins: 128
+  num_bins: 64
   num_chunks: 8
   dark_threshold: 0.05
+  apply_guidance_blur: true
+
+  target_generator:
+    _target_: src.target_generators.LegacyChunkTargetGenerator
+  guidance_perturber: null
 
   guidance_blur:
     kernel_size: 5
@@ -48,3 +53,8 @@ segmenter:
   num_bins: 128
   num_chunks: 8
   dark_threshold: 0.05
+  apply_guidance_blur: true
+
+  target_generator:
+    _target_: src.target_generators.LegacyChunkTargetGenerator
+  guidance_perturber: null

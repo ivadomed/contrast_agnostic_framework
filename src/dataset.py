@@ -19,40 +19,53 @@ from monai.transforms import (
     EnsureTyped
 )
 
-CONTRAST_TO_INDEX = {
-    "flair": 0,
-    "t1w": 1,
-    "t1gd": 2,
-    "t2w": 3,
-}
+DEFAULT_CONTRASTS = ("flair", "t1w", "t1gd", "t2w")
 
-def normalize_contrast_name(contrast: str) -> str:
+
+def build_contrast_to_index(contrasts: list[str] | tuple[str, ...] | None) -> dict[str, int]:
+    ordered = list(contrasts) if contrasts else list(DEFAULT_CONTRASTS)
+    return {str(name).strip().lower(): idx for idx, name in enumerate(ordered)}
+
+
+def normalize_contrast_name(
+    contrast: str,
+    available_contrasts: list[str] | tuple[str, ...] | None = None,
+) -> str:
     normalized = contrast.strip().lower()
     aliases = {
         "t1": "t1w",
         "t2": "t2w",
     }
     normalized = aliases.get(normalized, normalized)
-    if normalized not in CONTRAST_TO_INDEX:
-        valid = ", ".join(sorted(CONTRAST_TO_INDEX))
+    contrast_to_index = build_contrast_to_index(available_contrasts)
+    if normalized not in contrast_to_index:
+        valid = ", ".join(sorted(contrast_to_index))
         raise ValueError(f"Unsupported contrast '{contrast}'. Expected one of: {valid}")
     return normalized
 
 
-def remap_brats_labels(label):
-    """Map BraTS ET label 4 -> 3 while preserving 0/1/2 labels."""
+def remap_labels(label, label_mapping: dict[int, int] | None = None):
+    if not label_mapping:
+        return label
+
+    mapping = {int(k): int(v) for k, v in label_mapping.items()}
     if isinstance(label, torch.Tensor):
         remapped = label.long()
-        return torch.where(remapped == 4, torch.full_like(remapped, 3), remapped)
+        for src, dst in mapping.items():
+            remapped = torch.where(remapped == src, torch.full_like(remapped, dst), remapped)
+        return remapped
 
     remapped = np.asarray(label).copy()
-    remapped[remapped == 4] = 3
+    for src, dst in mapping.items():
+        remapped[remapped == src] = dst
     return remapped
 
 def get_preprocessing_transforms(
     mode: str = "train",
     patch_size=(128, 128, 128),
     source_contrast: str = "t1w",
+    contrasts: list[str] | tuple[str, ...] | None = None,
+    label_mapping: dict[int, int] | None = None,
 ):
     """
     Builds the MONAI transform pipeline.
@@ -60,8 +73,9 @@ def get_preprocessing_transforms(
     Channel 0: FLAIR, Channel 1: T1w, Channel 2: T1gd, Channel 3: T2w
     """
     
-    source_contrast = normalize_contrast_name(source_contrast)
-    source_index = CONTRAST_TO_INDEX[source_contrast]
+    contrast_to_index = build_contrast_to_index(contrasts)
+    source_contrast = normalize_contrast_name(source_contrast, list(contrast_to_index.keys()))
+    source_index = contrast_to_index[source_contrast]
 
     # 1. Base transforms for all modes
     transforms_list = [
@@ -74,8 +88,7 @@ def get_preprocessing_transforms(
         # Standardize orientation
         Orientationd(keys=["image", "label"], axcodes="RAS"),
 
-        # Preserve BraTS multiclass labels and map ET id 4 to contiguous id 3.
-        Lambdad(keys=["label"], func=remap_brats_labels),
+        Lambdad(keys=["label"], func=lambda y: remap_labels(y, label_mapping=label_mapping)),
         
         # Extract only the selected source contrast for the single-source framework
         # We keep the shape as (1, H, W, D)
@@ -112,6 +125,8 @@ def build_train_dataset(
     cache_rate: float = 0.0,
     num_workers: int = 4,
     source_contrast: str = "t1w",
+    contrasts: list[str] | tuple[str, ...] | None = None,
+    label_mapping: dict[int, int] | None = None,
 ):
     """
     Automatically downloads and loads the Decathlon Brain Tumour dataset.
@@ -123,6 +138,8 @@ def build_train_dataset(
         mode="train",
         patch_size=patch_size,
         source_contrast=source_contrast,
+        contrasts=contrasts,
+        label_mapping=label_mapping,
     )
     
     dataset = DecathlonDataset(

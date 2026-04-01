@@ -6,6 +6,7 @@ from typing import Any
 import re
 
 import matplotlib.pyplot as plt
+from hydra.utils import instantiate
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -37,65 +38,43 @@ from src.kornia_augmentations import RandomFourierAmplitude3D, build_kornia_augm
 from src.filters import AnatomicalUnsharpMask3D
 from src.intensity_ops import (
     RandomAnisotropicDegradation3D,
-    RandomBezierIntensityWarp,
-    RandomGMMHistogramMatching,
-    RandomSoftQuantileShuffling,
 )
-from src.noise_ops import generate_fractal_noise_3d
+from src.guidance_perturbers import BaseGuidancePerturber, IdentityGuidancePerturber
+from src.target_generators import BaseTargetGenerator
 
 
 
 
 class CompiledSynthesisWrapper(nn.Module):
-    def __init__(self, generator, hist_module, gen_version):
+    def __init__(
+        self,
+        generator: nn.Module,
+        hist_module: DifferentiableHistogram3D,
+        target_generator: BaseTargetGenerator,
+        guidance_perturber: BaseGuidancePerturber | None,
+        apply_guidance_blur: bool,
+    ):
         super().__init__()
         self.generator = generator
         self.hist_module = hist_module
-        self.gen_version = gen_version
-        self.noise_strength = 0.2
-        self.bezier_warp = RandomBezierIntensityWarp(p=1.0)
-        self.gmm_hist_match = RandomGMMHistogramMatching(p=1.0)
-        self.soft_quantile_shuffle = RandomSoftQuantileShuffling(p=1.0)
+        self.target_generator = target_generator
+        self.guidance_perturber = guidance_perturber or IdentityGuidancePerturber()
+        self.apply_guidance_blur = bool(apply_guidance_blur)
 
     def forward(self, x: torch.Tensor, 
                 num_bins: int, num_chunks: int, dark_threshold: float):
-        
-        if self.gen_version in ("v3", "v4"):
-            target_hist, _, guidance_map = generate_unified_targets(
-                input_images=x,
-                num_bins=num_bins,
-                num_chunks=num_chunks,
-                dark_threshold=dark_threshold,
-                hist_module=self.hist_module,
-                return_guidance_map=True,
-                gen_version=self.gen_version,
-            )
-        else:
-            target_hist, _, guidance_map = generate_unified_targets(
-                input_images=x,
-                num_bins=num_bins,
-                num_chunks=num_chunks,
-                dark_threshold=dark_threshold,
-                hist_module=self.hist_module,
-                gen_version=self.gen_version,
-            )
+        _, _, guidance_map = self.target_generator(
+            input_images=x,
+            num_bins=num_bins,
+            num_chunks=num_chunks,
+            dark_threshold=dark_threshold,
+            hist_module=self.hist_module,
+            return_guidance_map=True,
+        )
 
-        if self.gen_version == "v9":
-            with torch.no_grad():
-                procedural_noise = generate_fractal_noise_3d(
-                    guidance_map.detach(),
-                    noise_dtype=torch.float16,
-                )
-            guidance_map = (guidance_map + self.noise_strength * procedural_noise).clamp(0.0, 1.0)
+        guidance_map = self.guidance_perturber(guidance_map)
 
-        if self.gen_version == "v11":
-            guidance_map = self.bezier_warp(guidance_map)
-        if self.gen_version == "v12":
-            guidance_map = self.gmm_hist_match(guidance_map)
-        if self.gen_version == "v13":
-            guidance_map = self.soft_quantile_shuffle(guidance_map)
-
-        if self.gen_version not in ("v1", "v17_micro_anchor"):
+        if self.apply_guidance_blur:
             guidance_map = apply_gaussian_blur_3d(guidance_map)
 
         generator_input = torch.cat([x, guidance_map], dim=1)
@@ -141,7 +120,19 @@ def _extract_normalized_state_dict(checkpoint: object) -> OrderedDict[str, torch
 
 
 class CompiledLossWrapper(nn.Module):
-    def __init__(self, model, histogram_module, wasserstein_loss_fn, edge_loss_fn, tv_loss_fn, range_loss_fn, guidance_loss_fn, gen_version: str):
+    def __init__(
+        self,
+        model,
+        histogram_module,
+        wasserstein_loss_fn,
+        edge_loss_fn,
+        tv_loss_fn,
+        range_loss_fn,
+        guidance_loss_fn,
+        target_generator: BaseTargetGenerator,
+        guidance_perturber: BaseGuidancePerturber | None,
+        apply_guidance_blur: bool,
+    ):
         super().__init__()
         self.model = model
         self.histogram_module = histogram_module
@@ -150,11 +141,9 @@ class CompiledLossWrapper(nn.Module):
         self.tv_loss_fn = tv_loss_fn
         self.range_loss_fn = range_loss_fn
         self.guidance_loss_fn = guidance_loss_fn
-        self.gen_version = gen_version
-        self.noise_strength = 0.2
-        self.bezier_warp = RandomBezierIntensityWarp(p=1.0)
-        self.gmm_hist_match = RandomGMMHistogramMatching(p=1.0)
-        self.soft_quantile_shuffle = RandomSoftQuantileShuffling(p=1.0)
+        self.target_generator = target_generator
+        self.guidance_perturber = guidance_perturber or IdentityGuidancePerturber()
+        self.apply_guidance_blur = bool(apply_guidance_blur)
 
     def forward(self, x: torch.Tensor, 
                 num_bins: int, num_chunks: int, dark_threshold: float,
@@ -162,52 +151,27 @@ class CompiledLossWrapper(nn.Module):
                 w_edge: float, w_tv: float, w_range: float, w_wass: float,
                 w_guide_blur: float, w_guide_sharp: float) -> dict[str, torch.Tensor]:
         
-        # Generate targets once - reuses guidance_map internally
-        if self.gen_version == "v17_micro_anchor":
-            target_hist, perms, guidance_map = generate_unified_targets(
-                input_images=x,
-                num_bins=num_bins,
-                num_chunks=num_chunks,
-                dark_threshold=dark_threshold,
-                hist_module=self.histogram_module,
-                gen_version=self.gen_version,
-            )
-        else:
-            target_hist, perms, guidance_map = generate_unified_targets(
-                input_images=x,
-                num_bins=num_bins,
-                num_chunks=num_chunks,
-                dark_threshold=dark_threshold,
-                hist_module=self.histogram_module,
-                gen_version=self.gen_version,
-            )
-        
-        guidance_for_generator = guidance_map
-        if self.gen_version == "v9":
-            with torch.no_grad():
-                procedural_noise = generate_fractal_noise_3d(
-                    guidance_map.detach(),
-                    noise_dtype=torch.float16,
-                )
-            guidance_for_generator = (guidance_for_generator + self.noise_strength * procedural_noise).clamp(0.0, 1.0)
+        target_hist, perms, guidance_map = self.target_generator(
+            input_images=x,
+            num_bins=num_bins,
+            num_chunks=num_chunks,
+            dark_threshold=dark_threshold,
+            hist_module=self.histogram_module,
+            return_guidance_map=True,
+        )
 
-        if self.gen_version == "v11":
-            guidance_for_generator = self.bezier_warp(guidance_for_generator)
-        if self.gen_version == "v12":
-            guidance_for_generator = self.gmm_hist_match(guidance_for_generator)
-        if self.gen_version == "v13":
-            guidance_for_generator = self.soft_quantile_shuffle(guidance_for_generator)
+        guidance_for_generator = self.guidance_perturber(guidance_map)
 
         # Stop propagating gradient through guidance map blur
         bg_guidance = guidance_for_generator.detach()
-        if self.gen_version == "v17_micro_anchor":
-            blurred_guidance = bg_guidance
-        else:
+        if self.apply_guidance_blur:
             blurred_guidance = apply_gaussian_blur_3d(
                 bg_guidance,
                 kernel_size=guidance_blur_k,
                 sigma=guidance_blur_s,
             )
+        else:
+            blurred_guidance = bg_guidance
         # Cannot conditionally branch on config inside compile well if we want static graph,
         # but x comes in channels_last_3d so simple operations keep it.
         blurred_guidance = blurred_guidance.contiguous(memory_format=torch.channels_last_3d)
@@ -289,11 +253,16 @@ class MRISynthesisLightning(pl.LightningModule):
             kernel_size=int(cfg.model.generator.guidance_blur.kernel_size),
             sigma=float(cfg.model.generator.guidance_blur.sigma),
         )
+
+        target_generator = instantiate(self._generator_target_generator_cfg())
+        guidance_perturber = instantiate(self._generator_guidance_perturber_cfg())
         
         self.compiled_wrapper = CompiledLossWrapper(
             self.model, self.histogram_module, self.wasserstein_loss_fn,
             self.edge_loss_fn, self.tv_loss_fn, self.range_loss_fn, self.guidance_loss_fn,
-            self._resolved_generator_version(),
+            target_generator,
+            guidance_perturber,
+            self._generator_apply_guidance_blur(),
         )
         if bool(self.cfg.training.generator.compile_model) and hasattr(torch, "compile"):
             self.compiled_wrapper = torch.compile(self.compiled_wrapper, mode="reduce-overhead")
@@ -314,6 +283,40 @@ class MRISynthesisLightning(pl.LightningModule):
         if configured is None:
             return str(self.cfg.version)
         return str(configured)
+
+    def _default_target_generator_cfg(self, version: str) -> dict[str, Any]:
+        version = str(version)
+        if version in ("v8", "v9", "v10", "v11"):
+            return {"_target_": "src.target_generators.V8GridTargetGenerator", "grid_size": [4, 4, 4]}
+        if version == "v15":
+            return {
+                "_target_": "src.target_generators.V15GridTargetGenerator",
+                "grid_size": [4, 4, 4],
+                "background_threshold": 0.01,
+            }
+        if version == "v17_micro_anchor":
+            return {
+                "_target_": "src.target_generators.V17MicroAnchorTargetGenerator",
+                "tau": 0.05,
+                "num_peaks": 4,
+                "background_threshold": 0.01,
+            }
+        return {"_target_": "src.target_generators.LegacyChunkTargetGenerator"}
+
+    def _generator_target_generator_cfg(self) -> Any:
+        if hasattr(self.cfg.model.generator, "target_generator") and self.cfg.model.generator.target_generator is not None:
+            return self.cfg.model.generator.target_generator
+        return self._default_target_generator_cfg(self._resolved_generator_version())
+
+    def _generator_guidance_perturber_cfg(self) -> Any:
+        if hasattr(self.cfg.model.generator, "guidance_perturber"):
+            return self.cfg.model.generator.guidance_perturber
+        return None
+
+    def _generator_apply_guidance_blur(self) -> bool:
+        if hasattr(self.cfg.model.generator, "apply_guidance_blur"):
+            return bool(self.cfg.model.generator.apply_guidance_blur)
+        return self._resolved_generator_version() not in ("v1", "v17_micro_anchor")
 
     def _uses_fourier_generator(self) -> bool:
         return self._resolved_generator_version() in ("v7", "v8", "v9", "v10", "v11")
@@ -759,7 +762,9 @@ class MRISegmenterLightning(pl.LightningModule):
         self.compiled_synthesis = CompiledSynthesisWrapper(
             self.generator,
             self.hist_module,
-            self._resolved_segmenter_gen_version(),
+            instantiate(self._segmenter_target_generator_cfg()),
+            instantiate(self._segmenter_guidance_perturber_cfg()),
+            bool(self._segmenter_apply_guidance_blur()),
         )
         if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile"):
             self.compiled_synthesis = torch.compile(self.compiled_synthesis, mode="reduce-overhead")
@@ -773,6 +778,27 @@ class MRISegmenterLightning(pl.LightningModule):
         if configured is None:
             return str(self.cfg.version)
         return str(configured)
+
+    def _segmenter_target_generator_cfg(self) -> Any:
+        if hasattr(self.cfg.model.segmenter, "target_generator") and self.cfg.model.segmenter.target_generator is not None:
+            return self.cfg.model.segmenter.target_generator
+        if hasattr(self.cfg.model.generator, "target_generator") and self.cfg.model.generator.target_generator is not None:
+            return self.cfg.model.generator.target_generator
+        return self._default_target_generator_cfg(self._resolved_segmenter_gen_version())
+
+    def _segmenter_guidance_perturber_cfg(self) -> Any:
+        if hasattr(self.cfg.model.segmenter, "guidance_perturber"):
+            return self.cfg.model.segmenter.guidance_perturber
+        if hasattr(self.cfg.model.generator, "guidance_perturber"):
+            return self.cfg.model.generator.guidance_perturber
+        return None
+
+    def _segmenter_apply_guidance_blur(self) -> bool:
+        if hasattr(self.cfg.model.segmenter, "apply_guidance_blur"):
+            return bool(self.cfg.model.segmenter.apply_guidance_blur)
+        if hasattr(self.cfg.model.generator, "apply_guidance_blur"):
+            return bool(self.cfg.model.generator.apply_guidance_blur)
+        return self._resolved_segmenter_gen_version() not in ("v1", "v17_micro_anchor")
 
     def _segmenter_uses_fourier_generator(self) -> bool:
         return self._resolved_segmenter_gen_version() in ("v7", "v8", "v9", "v10", "v11")
@@ -834,7 +860,10 @@ class MRISegmenterLightning(pl.LightningModule):
 
     def _prepare_segmentation_target(self, label: torch.Tensor) -> torch.Tensor:
         y = self._to_plain_tensor(label).long()
-        y = torch.where(y == 4, torch.full_like(y, 3), y)
+        label_mapping = getattr(self.cfg.data, "label_mapping", None)
+        if label_mapping is not None:
+            for src, dst in dict(label_mapping).items():
+                y = torch.where(y == int(src), torch.full_like(y, int(dst)), y)
         if self._is_multiclass:
             y = y.clamp(min=0, max=self._num_seg_classes - 1)
             return y

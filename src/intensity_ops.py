@@ -1,8 +1,51 @@
 from __future__ import annotations
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+_SHARED_RNG_COUNTER = 0
+
+
+def _next_shared_seed() -> int:
+    global _SHARED_RNG_COUNTER
+    _SHARED_RNG_COUNTER += 1
+    seed = (int(torch.initial_seed()) + _SHARED_RNG_COUNTER) % (2**63 - 1)
+    if dist.is_available() and dist.is_initialized():
+        seed_tensor = torch.tensor([seed], dtype=torch.long)
+        dist.broadcast(seed_tensor, src=0)
+        seed = int(seed_tensor.item())
+    return seed
+
+
+def _shared_cpu_generator() -> torch.Generator:
+    generator = torch.Generator(device="cpu")
+    generator.manual_seed(_next_shared_seed())
+    return generator
+
+
+def _shared_rand(shape: tuple[int, ...], device: torch.device, dtype: torch.dtype | None = None) -> torch.Tensor:
+    dtype = dtype or torch.float32
+    if not (dist.is_available() and dist.is_initialized()):
+        return torch.rand(shape, device=device, dtype=dtype)
+    rand_cpu = torch.rand(shape, generator=_shared_cpu_generator(), device="cpu", dtype=dtype)
+    return rand_cpu.to(device=device, dtype=dtype)
+
+
+def _shared_randint(low: int, high: int, size: tuple[int, ...], device: torch.device) -> torch.Tensor:
+    if not (dist.is_available() and dist.is_initialized()):
+        return torch.randint(low=low, high=high, size=size, device=device)
+    randint_cpu = torch.randint(low=low, high=high, size=size, generator=_shared_cpu_generator(), device="cpu")
+    return randint_cpu.to(device=device)
+
+
+def _shared_randn_like(x: torch.Tensor) -> torch.Tensor:
+    if not (dist.is_available() and dist.is_initialized()):
+        return torch.randn_like(x)
+    noise_cpu = torch.randn(x.shape, generator=_shared_cpu_generator(), device="cpu", dtype=x.dtype)
+    return noise_cpu.to(device=x.device, dtype=x.dtype)
 
 
 def _compute_quantile_centroids(sampled: torch.Tensor, q_probs: torch.Tensor) -> torch.Tensor:
@@ -58,12 +101,12 @@ class RandomBezierIntensityWarp(nn.Module):
             return x
 
         b = x.shape[0]
-        apply_mask = (torch.rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
+        apply_mask = (_shared_rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
         if not bool(apply_mask.any()):
             return x
 
-        p1 = torch.rand((b, 1, 1, 1, 1), device=x.device, dtype=x.dtype)
-        p2 = torch.rand((b, 1, 1, 1, 1), device=x.device, dtype=x.dtype)
+        p1 = _shared_rand((b, 1, 1, 1, 1), device=x.device, dtype=x.dtype)
+        p2 = _shared_rand((b, 1, 1, 1, 1), device=x.device, dtype=x.dtype)
 
         x_clamped = x.clamp(0.0, 1.0)
         one_minus = 1.0 - x_clamped
@@ -94,7 +137,7 @@ class RandomAnisotropicDegradation3D(nn.Module):
             return x
 
         b, _, d, h, w = x.shape
-        apply_mask = torch.rand((b,), device=x.device) < self.p
+        apply_mask = _shared_rand((b,), device=x.device) < self.p
         if not bool(apply_mask.any()):
             return x
 
@@ -103,7 +146,7 @@ class RandomAnisotropicDegradation3D(nn.Module):
             if not bool(apply_mask[i]):
                 continue
 
-            factor = int(torch.randint(self.min_factor, self.max_factor + 1, (1,), device=x.device).item())
+            factor = int(_shared_randint(self.min_factor, self.max_factor + 1, (1,), device=x.device).item())
             d_low = max(1, d // factor)
 
             low = F.interpolate(
@@ -158,7 +201,7 @@ class RandomGMMHistogramMatching(nn.Module):
             return x.clamp(0.0, 1.0)
 
         b = x.shape[0]
-        apply_mask = (torch.rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
+        apply_mask = (_shared_rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
         if not bool(apply_mask.any()):
             return x.clamp(0.0, 1.0)
 
@@ -186,7 +229,7 @@ class RandomGMMHistogramMatching(nn.Module):
         source_quantiles = torch.stack(source_quantiles_list, dim=0)  # (bc, num_quantiles)
 
         bin_centers = torch.linspace(0.0, 1.0, self.num_bins, device=x.device, dtype=x.dtype)
-        peak_count = torch.randint(
+        peak_count = _shared_randint(
             low=self.min_peaks,
             high=self.max_peaks + 1,
             size=(bc, 1),
@@ -195,9 +238,9 @@ class RandomGMMHistogramMatching(nn.Module):
         peak_ids = torch.arange(self.max_peaks, device=x.device).view(1, -1)
         active = (peak_ids < peak_count).to(x.dtype)
 
-        means = torch.rand((bc, self.max_peaks), device=x.device, dtype=x.dtype)
-        sigmas = 0.02 + 0.08 * torch.rand((bc, self.max_peaks), device=x.device, dtype=x.dtype)
-        weights = (0.1 + 0.9 * torch.rand((bc, self.max_peaks), device=x.device, dtype=x.dtype)) * active
+        means = _shared_rand((bc, self.max_peaks), device=x.device, dtype=x.dtype)
+        sigmas = 0.02 + 0.08 * _shared_rand((bc, self.max_peaks), device=x.device, dtype=x.dtype)
+        weights = (0.1 + 0.9 * _shared_rand((bc, self.max_peaks), device=x.device, dtype=x.dtype)) * active
         weights = weights / weights.sum(dim=1, keepdim=True).clamp_min(torch.finfo(x.dtype).eps)
 
         gauss_input = (bin_centers.view(1, 1, self.num_bins) - means.unsqueeze(-1)) / sigmas.unsqueeze(-1)
@@ -263,7 +306,7 @@ class RandomSoftQuantileShuffling(nn.Module):
             return x.clamp(0.0, 1.0)
 
         b = x.shape[0]
-        apply_mask = (torch.rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
+        apply_mask = (_shared_rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
         if not bool(apply_mask.any()):
             return x.clamp(0.0, 1.0)
 
@@ -273,7 +316,7 @@ class RandomSoftQuantileShuffling(nn.Module):
         total_voxels = flat.shape[1]
 
         sample_size = min(self.sample_size, total_voxels)
-        sample_idx = torch.randint(
+        sample_idx = _shared_randint(
             low=0,
             high=total_voxels,
             size=(sample_size,),
@@ -294,15 +337,19 @@ class RandomSoftQuantileShuffling(nn.Module):
         # Run this small step in eager mode, then continue with vectorized tensor ops.
         centroids = _compute_quantile_centroids(sampled, q_probs)
 
-        diffs = flat.unsqueeze(-1) - centroids.unsqueeze(1)
-        logits = -diffs.square() / self.temperature
-        weights = torch.softmax(logits, dim=-1)
+        with torch.autocast(device_type=x.device.type, enabled=False):
+            flat_fp32 = flat.to(torch.float32)
+            centroids_fp32 = centroids.to(torch.float32)
+            diffs = flat_fp32.unsqueeze(-1) - centroids_fp32.unsqueeze(1)
+            logits = -diffs.square() / float(self.temperature)
+            weights = torch.softmax(logits, dim=-1)
+        weights = weights.to(x.dtype)
 
-        targets = torch.rand((bc, self.num_centroids), device=x.device, dtype=x.dtype)
+        targets = _shared_rand((bc, self.num_centroids), device=x.device, dtype=x.dtype)
         mapped_flat = torch.sum(weights * targets.unsqueeze(1), dim=-1)
 
         if self.noise_std > 0.0:
-            mapped_flat = mapped_flat + self.noise_std * torch.randn_like(mapped_flat)
+            mapped_flat = mapped_flat + self.noise_std * _shared_randn_like(mapped_flat)
 
         if self.preserve_background:
             bg_mask = flat <= self.background_threshold
@@ -354,7 +401,7 @@ class RandomSpatialSoftQuantile(nn.Module):
             return x.clamp(0.0, 1.0)
 
         b = x.shape[0]
-        apply_mask = (torch.rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
+        apply_mask = (_shared_rand((b,), device=x.device) < self.p).view(b, 1, 1, 1, 1)
         if not bool(apply_mask.any()):
             return x.clamp(0.0, 1.0)
 
@@ -365,7 +412,7 @@ class RandomSpatialSoftQuantile(nn.Module):
         total_voxels = flat.shape[1]
 
         sample_size = min(self.sample_size, total_voxels)
-        sample_idx = torch.randint(
+        sample_idx = _shared_randint(
             low=0,
             high=total_voxels,
             size=(sample_size,),
@@ -384,12 +431,16 @@ class RandomSpatialSoftQuantile(nn.Module):
         )
         centroids = _compute_quantile_centroids(sampled, q_probs)
 
-        diffs = flat.unsqueeze(-1) - centroids.unsqueeze(1)
-        logits = -diffs.square() / self.temperature
-        weights = torch.softmax(logits, dim=-1)
+        with torch.autocast(device_type=x.device.type, enabled=False):
+            flat_fp32 = flat.to(torch.float32)
+            centroids_fp32 = centroids.to(torch.float32)
+            diffs = flat_fp32.unsqueeze(-1) - centroids_fp32.unsqueeze(1)
+            logits = -diffs.square() / float(self.temperature)
+            weights = torch.softmax(logits, dim=-1)
+        weights = weights.to(x.dtype)
         weights_spatial = weights.transpose(1, 2).reshape(bc, self.num_centroids, d, h, w)
 
-        coarse_targets = torch.rand(
+        coarse_targets = _shared_rand(
             (bc, self.num_centroids, self.coarse_size[0], self.coarse_size[1], self.coarse_size[2]),
             device=x.device,
             dtype=x.dtype,
@@ -405,7 +456,7 @@ class RandomSpatialSoftQuantile(nn.Module):
         mapped_flat = mapped.reshape(bc, -1)
 
         if self.noise_std > 0.0:
-            mapped_flat = mapped_flat + self.noise_std * torch.randn_like(mapped_flat)
+            mapped_flat = mapped_flat + self.noise_std * _shared_randn_like(mapped_flat)
 
         if self.preserve_background:
             bg_mask = flat <= self.background_threshold

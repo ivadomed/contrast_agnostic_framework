@@ -1,5 +1,79 @@
 # Refactor Log
 
+## [2026-03-31] Comprehensive Architectural & Stability Refactor (Phases 1-7)
+
+- Scope: Removed version-gated generator routing from compiled wrappers, introduced Hydra IoC strategy components, decoupled dataset assumptions, hardened AMP-sensitive ops, reduced default memory footprint, and improved checkpoint metadata reliability.
+- Phase 1 (Hydra IoC + Strategy Pattern):
+  - Added target-generator strategies in `src/target_generators.py`:
+    - `BaseTargetGenerator`
+    - `LegacyChunkTargetGenerator`
+    - `V8GridTargetGenerator`
+    - `V15GridTargetGenerator`
+    - `V17MicroAnchorTargetGenerator`
+  - Added guidance-perturber strategies in `src/guidance_perturbers.py`:
+    - `BaseGuidancePerturber`
+    - `IdentityGuidancePerturber`
+    - `ProceduralNoiseGuidancePerturber`
+    - `BezierWarpGuidancePerturber`
+    - `GMMMatchingGuidancePerturber`
+    - `SoftQuantileShuffleGuidancePerturber`
+  - Updated `src/histogram_ops.py` target generation functions to delegate to strategy classes.
+  - Updated `src/lightning_modules.py`:
+    - `CompiledSynthesisWrapper` and `CompiledLossWrapper` now consume instantiated strategy objects instead of internal `gen_version` conditionals.
+    - Added `hydra.utils.instantiate` initialization path with backward-compatible strategy fallback resolution.
+  - Updated model config wiring:
+    - `conf/model/defaults.yaml`
+    - `conf/model/v17.yaml`
+    - `conf/model/v17_lpci.yaml`
+
+- Phase 2 (Dataset Decoupling):
+  - Added explicit dataset metadata in `conf/data/brats.yaml`:
+    - `contrasts`, `num_classes`, `label_mapping`, `cache_dir`.
+  - Refactored `src/dataset.py`:
+    - Removed hardcoded contrast index constant from transform routing.
+    - Replaced BraTS-specific fixed remap with dynamic `label_mapping` support.
+    - Added `build_contrast_to_index` and contrast-aware normalization helpers.
+  - Updated `src/datamodule.py` to pass `contrasts` and `label_mapping` into preprocessing.
+  - Updated `scripts/evaluate.py` to resolve target contrasts dynamically from checkpoint hyperparameters (`hyper_parameters.data.contrasts`) or Hydra data config fallback.
+
+- Phase 3 (Numeric Stability / FP16 AMP Safeguards):
+  - Updated `src/intensity_ops.py` in:
+    - `RandomSoftQuantileShuffling`
+    - `RandomSpatialSoftQuantile`
+  - Wrapped temperature-scaled distance/logit/softmax path in explicit FP32 autocast-disabled regions and cast weights back to working dtype afterward.
+
+- Phase 4 (Memory Optimizations):
+  - Reduced default generator footprint in `conf/model/defaults.yaml`:
+    - `generator.base_filters: 32 -> 16`
+    - `generator.num_bins: 128 -> 64`
+  - Replaced in-memory dataset usage with on-disk persistent caching in `src/datamodule.py`:
+    - training/validation now use MONAI `PersistentDataset` with configurable `cache_dir`.
+
+- Phase 5 (Evaluation & Metadata Hardening):
+  - `scripts/evaluate.py`:
+    - Added checkpoint hyperparameter loading utilities.
+    - For `.ckpt` model discovery, now prefers metadata from serialized `hyper_parameters` (`data.source_contrast`, `version`) with path fallback only when metadata is missing.
+    - Generalized reporting/output paths to dynamic contrast sets (no fixed target-contrast constant).
+  - `tools/generate_visualizations.py`:
+    - Removed path/regex-first metadata parsing function.
+    - Added hyperparameter-first metadata resolution with legacy path fallback.
+    - Updated `CompiledSynthesisWrapper` construction to strategy-based signature.
+
+- Phase 6 (DDP RNG Safety):
+  - Added shared-seed RNG helpers in:
+    - `src/intensity_ops.py`
+    - `src/target_generators.py`
+  - Stochastic tensors now use DDP-safe CPU-seeded generation when distributed is initialized, then transfer to target device.
+  - Non-DDP path preserves native device RNG for throughput.
+
+- Additional Decoupling Follow-through:
+  - `src/lightning_modules.py` segmenter target remap now reads `cfg.data.label_mapping` instead of hardcoded `4 -> 3`.
+  - `scripts/evaluate.py` label remap path now uses config-provided `label_mapping`.
+
+- Validation Notes:
+  - Static diagnostics on touched files report no editor/type errors.
+  - Targeted `tests/test_histogram_ops.py` execution still fails two pre-existing speed-threshold assertions in this environment (functional assertions pass; failures are runtime ceiling checks).
+
 ## [2026-03-29] Pipeline Upgrade: Transfer Learning & Fine-Tuning
 
 - Scope: Added fine-tuning support for 3D segmenters initialized from pretrained contrast-agnostic checkpoints and adapted on real target-contrast data.

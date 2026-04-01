@@ -7,7 +7,7 @@ from typing import Any
 
 import pytorch_lightning as pl
 from monai.apps import DecathlonDataset
-from monai.data import DataLoader
+from monai.data import DataLoader, PersistentDataset
 from omegaconf import DictConfig
 from torch.utils.data import Subset
 
@@ -117,9 +117,14 @@ class BraTSDataModule(pl.LightningDataModule):
             return
 
         source_contrast = normalize_contrast_name(self.cfg.data.source_contrast)
+        available_contrasts = [str(c) for c in getattr(self.cfg.data, "contrasts", [])]
+        label_mapping_cfg = getattr(self.cfg.data, "label_mapping", None)
+        label_mapping = dict(label_mapping_cfg) if label_mapping_cfg is not None else None
         patch_size = tuple(self.cfg.data.patch_size)
         data_dir = self._resolve_path(self.cfg.data.data_dir)
         split_file = self._resolve_path(self.cfg.data.split_file)
+        cache_dir = self._resolve_path(getattr(self.cfg.data, "cache_dir", "data/cache/persistent"))
+        cache_dir.mkdir(parents=True, exist_ok=True)
         train_mode = "train"
         if str(self.cfg.task) == "segmenter" and str(self.cfg.version) == "v16_bigaug":
             train_mode = "train_bigaug"
@@ -133,10 +138,12 @@ class BraTSDataModule(pl.LightningDataModule):
                 mode=train_mode,
                 patch_size=patch_size,
                 source_contrast=source_contrast,
+                contrasts=available_contrasts,
+                label_mapping=label_mapping,
             ),
             section="training",
             download=True,
-            cache_rate=float(self.cfg.data.cache_rate),
+            cache_rate=0.0,
             num_workers=int(self.cfg.data.num_workers),
         )
 
@@ -153,7 +160,18 @@ class BraTSDataModule(pl.LightningDataModule):
         if not train_indices:
             raise ValueError(f"No train indices found in split file: {split_file}")
 
-        self.train_dataset = Subset(train_dataset_full, train_indices)
+        train_samples = [train_dataset_full.data[i] for i in train_indices]
+        self.train_dataset = PersistentDataset(
+            data=train_samples,
+            transform=get_preprocessing_transforms(
+                mode=train_mode,
+                patch_size=patch_size,
+                source_contrast=source_contrast,
+                contrasts=available_contrasts,
+                label_mapping=label_mapping,
+            ),
+            cache_dir=str(cache_dir / "train"),
+        )
 
         # Generator training has no validation loop; avoid building val dataset to cut startup/caching overhead.
         if str(self.cfg.task) == "generator":
@@ -163,20 +181,18 @@ class BraTSDataModule(pl.LightningDataModule):
         if not val_indices:
             raise ValueError(f"No validation indices found in split file: {split_file}")
 
-        val_dataset_full = DecathlonDataset(
-            root_dir=str(data_dir),
-            task=self.cfg.data.task_name,
+        val_samples = [train_dataset_full.data[i] for i in val_indices]
+        self.val_dataset = PersistentDataset(
+            data=val_samples,
             transform=get_preprocessing_transforms(
                 mode="val",
                 patch_size=patch_size,
                 source_contrast=source_contrast,
+                contrasts=available_contrasts,
+                label_mapping=label_mapping,
             ),
-            section="training",
-            download=True,
-            cache_rate=float(self.cfg.data.cache_rate),
-            num_workers=int(self.cfg.data.num_workers),
+            cache_dir=str(cache_dir / "val"),
         )
-        self.val_dataset = Subset(val_dataset_full, val_indices)
 
     def train_dataloader(self) -> DataLoader:
         """Return training DataLoader.

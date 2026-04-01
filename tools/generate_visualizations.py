@@ -16,6 +16,7 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 from hydra import initialize_config_dir, compose
+from hydra.utils import instantiate
 from omegaconf import DictConfig, open_dict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -43,59 +44,62 @@ def _resolve_path(path_like: str) -> Path:
     return PROJECT_ROOT / path
 
 
-def _parse_checkpoint_metadata(checkpoint_path: Path) -> tuple[str, str, str]:
-    """Parse gen_version, model_id, and contrast from checkpoint directory path."""
-    checkpoint_path = checkpoint_path.resolve()
-    
-    try:
-        parts = list(checkpoint_path.parts)
+def _nested_get(mapping: dict | None, keys: list[str], default=None):
+    cur = mapping
+    for key in keys:
+        if not isinstance(cur, dict):
+            return default
+        cur = cur.get(key)
+    return cur if cur is not None else default
+
+
+def _checkpoint_metadata(checkpoint_path: Path, checkpoint: dict | None) -> tuple[str, str, str]:
+    hyper = checkpoint.get("hyper_parameters") if isinstance(checkpoint, dict) else None
+    if not isinstance(hyper, dict):
+        hyper = checkpoint.get("hparams") if isinstance(checkpoint, dict) else None
+
+    version = _nested_get(hyper, ["version"], default=None)
+    contrast = _nested_get(hyper, ["data", "source_contrast"], default=None)
+
+    if version is None or contrast is None:
+        parts = list(checkpoint_path.resolve().parts)
         if "generator" in parts:
             gen_idx = parts.index("generator")
-            version_idx = gen_idx - 2
-            gen_version = parts[version_idx]
-            contrast_idx = gen_idx + 1
-            contrast = parts[contrast_idx]
-            run_dir = checkpoint_path.parent.name
-            model_id = f"{contrast}_{run_dir}"
-            return gen_version, model_id, contrast  # <-- Added contrast here
-        
-        # Fallback to old structure
-        filename = checkpoint_path.stem
-        version = next((p for p in parts if p.startswith("v") and p[1:].isdigit()), None)
-        
-        if version and filename.startswith("mri_generator_"):
-            parts_split = filename.split("_")
-            contrast = parts_split[2]
-            epoch = parts_split[-1]
-            model_id = f"{contrast}_epoch{epoch}"
-            return version, model_id, contrast  # <-- Added contrast here
-            
-        raise ValueError(f"Cannot parse filename: {filename}")
-    except Exception as e:
-        raise ValueError(f"Failed to parse checkpoint path: {checkpoint_path}\nError: {e}")
+            if version is None and gen_idx >= 2:
+                version = parts[gen_idx - 2]
+            if contrast is None and gen_idx + 1 < len(parts):
+                contrast = parts[gen_idx + 1]
+
+    if version is None:
+        version = "unknown_version"
+    if contrast is None:
+        contrast = "t1w"
+
+    run_dir = checkpoint_path.parent.name
+    model_id = f"{contrast}_{run_dir}"
+    return str(version), str(model_id), str(contrast)
 
 
-def _load_generator(checkpoint_path: Path, cfg: DictConfig) -> tuple[MRI_Synthesis_Net, str]:
+def _load_generator(checkpoint_path: Path, cfg: DictConfig) -> tuple[MRI_Synthesis_Net, str, str, dict | None]:
     """Load the generator model from checkpoint."""
     checkpoint_path = _resolve_path(str(checkpoint_path))
     if not checkpoint_path.exists():
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
-    
-    gen_version, _, _ = _parse_checkpoint_metadata(checkpoint_path)
-    
+
     generator = MRI_Synthesis_Net(
         in_channels=int(cfg.model.generator.in_channels),
         out_channels=int(cfg.model.generator.out_channels),
         base_filters=int(cfg.model.generator.base_filters),
     )
-    
+
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    gen_version, _, checkpoint_contrast = _checkpoint_metadata(checkpoint_path, checkpoint)
     state_dict = _extract_normalized_state_dict(checkpoint)
     generator.load_state_dict(state_dict, strict=True)
-    
+
     print(f"Loaded generator from: {checkpoint_path}")
     print(f"Detected gen_version: {gen_version}")
-    return generator, gen_version
+    return generator, gen_version, checkpoint_contrast, checkpoint
 
 def _save_volume(volume: torch.Tensor, output_path: Path, affine: torch.Tensor | None = None) -> None:
     """Saves a 3D tensor to NIfTI format properly using nibabel."""
@@ -131,8 +135,8 @@ def main(args: argparse.Namespace) -> None:
         cfg.data.num_workers = 0         # Prevents multiprocess hanging for small jobs
         cfg.data.val_batch_size = 1      # Process one by one for clean saving
     
-    generator, gen_version = _load_generator(checkpoint_path, cfg)
-    _, model_id, checkpoint_contrast = _parse_checkpoint_metadata(checkpoint_path)
+    generator, gen_version, checkpoint_contrast, checkpoint = _load_generator(checkpoint_path, cfg)
+    _, model_id, _ = _checkpoint_metadata(checkpoint_path, checkpoint)
     
     # =====================================================================
     # THE FIX: Override config to force val set creation and KILL caching
@@ -179,11 +183,23 @@ def main(args: argparse.Namespace) -> None:
         num_bins=int(cfg.model.generator.num_bins),
         value_range=(0.0, 1.0),
     ).to(device).eval()
+
+    target_generator_cfg = cfg.model.generator.get(
+        "target_generator",
+        {"_target_": "src.target_generators.LegacyChunkTargetGenerator"},
+    )
+    guidance_perturber_cfg = cfg.model.generator.get("guidance_perturber", None)
+    apply_guidance_blur = bool(cfg.model.generator.get("apply_guidance_blur", True))
+
+    target_generator = instantiate(target_generator_cfg)
+    guidance_perturber = instantiate(guidance_perturber_cfg)
     
     synthesis_wrapper = CompiledSynthesisWrapper(
         generator=generator,
         hist_module=histogram_module,
-        gen_version=gen_version,
+        target_generator=target_generator,
+        guidance_perturber=guidance_perturber,
+        apply_guidance_blur=apply_guidance_blur,
     ).to(device).eval()
     
     sample_count = 0
