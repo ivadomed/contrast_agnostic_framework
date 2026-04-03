@@ -11,6 +11,12 @@ If a change violates SLOs, treat it as a regression until profiler evidence prov
 
 ## 2. Non-Negotiable Rules
 
+### Priority Rule 0: Allocate generator compute to T1w-source runs
+- Treat T1w-source generator training as the default compute path.
+- Do not spend routine generator slots on T2w-source training unless explicitly approved for a narrowly scoped experiment.
+
+Rationale: this maximizes return on limited slots and aligns with the established T1w-first strategy.
+
 ### Rule 1: Keep histogram and guidance paths vectorized
 - No Python loops over batch or chunk dimensions in hotspot operators.
 - Use batched tensor operations (searchsorted, quantiles, indexing, interpolation).
@@ -21,6 +27,9 @@ Rationale: host loops and scalar extraction stall GPU dispatch and destroy throu
 - Replace dense 3D kernels with depth-height-width 1D separable passes where equivalent.
 
 Rationale: reduces effective complexity from O(N^3) style kernel growth to O(3N) style passes.
+
+Hard requirement:
+- Any new 3D blur implementation must preserve the separable O(3N) formulation unless profiler evidence justifies an exception.
 
 ### Rule 3: Avoid forced memory-format thrashing
 - Do not add gratuitous clone() or contiguous() in critical paths.

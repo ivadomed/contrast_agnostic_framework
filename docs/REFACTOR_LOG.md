@@ -1,5 +1,182 @@
 # Refactor Log
 
+## [2026-04-03] Evaluation TTA/Synth-Only Routing: Generator-Driven Probability Accumulation
+
+- Scope: Added generative test-time augmentation and synth-only evaluation modes to `scripts/evaluate.py` while preserving binary vs. multiclass checkpoint auto-detection.
+- Output Routing:
+  - Evaluation artifacts now route through a task-mode directory suffix that includes TTA state, e.g. `multiclass_tta_n5_synth_only`.
+  - This keeps zero-shot outputs isolated from synth-only and TTA sweeps so reruns cannot overwrite baseline artifacts.
+- Generator Loading:
+  - When `--tta-samples > 0`, the evaluator resolves the latest generator checkpoint from `checkpoints/generator/<source_contrast>/run*/last.ckpt` using the segmenter checkpoint's saved hyperparameters.
+  - Generator state is loaded onto the same device as the segmenter and set to `eval()` with gradients disabled.
+- Forward Path:
+  - The inference loop now accumulates probabilities sequentially with `probs_sum` and `num_passes` instead of materializing a larger combined batch.
+  - Binary checkpoints use `sigmoid`; multiclass checkpoints use `softmax`, keeping the activation contract consistent across legacy and multiclass models.
+  - Synthetic passes are built from `generate_unified_targets(...)` plus the loaded generator forward path, then averaged with the original pass unless `--exclude-original` is set.
+- Launcher Wiring:
+  - `scripts/run_evaluation.sh` now forwards optional `--tta-samples` and `--exclude-original` flags directly to the evaluator while preserving zero-shot defaults when omitted.
+
+## [2026-04-03] Visualization Export Hotfix: CacheDataset Compatibility + Checkpoint Version Parsing
+
+- Scope: Fixed `tools/generate_visualizations.py` crash during validation sample export and corrected model version detection for run-scoped checkpoint paths.
+- Issue 1 (Crash on datamodule validation dataset access):
+  - Symptom: `AttributeError: 'CacheDataset' object has no attribute 'dataset'`.
+  - Root cause: visualization script assumed `val_dataset` always exposed a nested `.dataset`, but current `BraTSDataModule` returns MONAI `CacheDataset` directly.
+  - Fix: replaced direct `.dataset` access with wrapper-safe unwrapping logic that starts from `datamodule.val_dataset` and only unwraps when `.dataset` exists; added explicit guard for missing validation dataset.
+- Issue 2 (Wrong version string in visualization output path):
+  - Symptom: `Detected gen_version: checkpoints` for checkpoint paths like `checkpoints/v18_6/generator/t1w/run4/...`.
+  - Root cause: fallback parser read `parts[gen_idx - 2]` instead of the version segment immediately before `generator`.
+  - Fix: corrected fallback extraction to `parts[gen_idx - 1]` and added hyperparameter fallback lookup for `model.generator.gen_version`.
+- Additional cleanup:
+  - Removed duplicate config override block in `main()` and kept a single coherent override pass.
+  - Kept transform filtering behavior while making it resilient across dataset container types.
+
+## [2026-04-02] v18_6 Loss Landscape Hotfix: Remove Double Blur and Unblock High-Frequency Edge Recovery
+
+- Scope: Rebalanced v18_6 optimization to align with the blurred-guidance strategy while restoring pressure for crisp anatomical boundary extraction.
+- Routing Hotfix (double-blur removal):
+  - Updated `conf/model/v18_6.yaml` to set `apply_guidance_blur: false` for both generator and segmenter.
+  - `MildGaussianGuidancePerturber` already performs the intended low-pass perturbation; reapplying framework blur caused a second smoothing pass that erased structural hints.
+- Loss Geometry Hotfix (generator):
+  - Updated v18_6 generator `loss_weights` override to:
+    - `edge: 30.0`
+    - `tv: 0.5`
+    - `range: 100.0`
+    - `guidance_blurred: 10.0`
+    - `guidance_sharp: 0.0`
+- Why zero `guidance_sharp`:
+  - The guidance map is intentionally blurred by the perturber.
+  - A sharp voxelwise L1 penalty against that blurred target was mathematically contradictory: it punished the generator for introducing valid high-frequency boundaries that must be recovered from raw source anatomy.
+  - Setting `guidance_sharp` to zero removes this anti-edge penalty while preserving low-frequency structure control through `guidance_blurred`.
+
+## [2026-04-02] v18_6: Texture-Preserving Non-Monotonic Discontinuous Chunk Mapping
+
+- Scope: Replaced spline/rank-family target generation with a discontinuous raw-intensity chunk operator to eliminate metallic CDF-stretch artifacts while preserving aggressive inter-band inversions.
+- Core Operator (`V18_6TexturePreservingChunkTargetGenerator` in `src/target_generators.py`):
+  - Step A (Quantile Edges):
+    - Subsamples non-background voxels (`x > 0.01`) up to `~100k` samples.
+    - Computes `K=8` chunk boundaries from empirical quantiles and enforces padded bounds `q_0=0`, `q_8=1`.
+  - Step B (Random Targets & Scales):
+    - Samples independent chunk means `mu ~ U(0,1)` with shape `(B,8)` via DDP-safe `_shared_rand`.
+    - Samples independent chunk scales `alpha ~ U(0.5,2.0)` with shape `(B,8)` via DDP-safe `_shared_rand`.
+  - Step C (Chunk Assignment):
+    - Uses vectorized `torch.searchsorted` to assign each voxel to chunk index `c_i in {0..7}`.
+  - Step D (AMP-safe Synthesis):
+    - Runs mapping path in `autocast(enabled=False)` with FP32 tensors.
+    - Gathers voxelwise `mu_{c_i}`, `alpha_{c_i}`, and `q_{c_i}`.
+    - Applies texture-preserving affine residual mapping:
+      - `y = mu_{c_i} + alpha_{c_i} * (x - q_{c_i})`
+    - Clamps output strictly to `[0,1]`.
+  - Step E (Masking):
+    - Enforces strict background semantics (`x < 0.01 -> 0.0`) and restores original dtype.
+- Why this shift matters:
+  - v18_1..v18_5 spline-family mappings over CDF rank space systematically stretched tight tissue clusters into uniform ramps, producing non-biological metallic/plastic shading.
+  - v18_6 preserves local residual texture inside each chunk while still enabling discontinuous, non-monotonic cross-band inversions that destroy shortcut boundaries.
+- Hydra Wiring:
+  - Added `conf/model/v18_6.yaml` inheriting defaults.
+  - Routed generator/segmenter target strategy to `V18_6TexturePreservingChunkTargetGenerator`.
+  - Explicitly disabled guidance perturbers (`guidance_perturber: null`) to keep raw discontinuous behavior.
+- Launcher Wiring:
+  - Added dedicated `v18_6` branches to:
+    - `scripts/run_generators.sh` (`model=v18_6`)
+    - `scripts/run_segmenters.sh` (`model=v18_6`)
+
+## [2026-04-02] v18_6 Hotfix: Mild Guidance Blur with Strict Post-Blur Background Masking
+
+- Scope: Added a mild guidance blur to reduce generator edge-copying while preserving the discontinuous v18_6 target mapping.
+- Core Operator (`MildGaussianGuidancePerturber` in `src/guidance_perturbers.py`):
+  - Applies a mild 3D Gaussian blur with separable 1D depthwise convolutions across depth, height, and width.
+  - Uses `sigma=1.0` and `kernel_size=9` to keep the blur light enough to expose high-frequency edge structure without collapsing the guidance field.
+  - Preserves the performance contract by staying in $O(3N)$-style separable passes rather than a dense $O(N^3)$ 3D kernel.
+  - Re-applies a stricter background mask after blur (`guidance < 0.02 -> 0.0`) to eliminate bleed into empty space.
+  - Clamps output to `[0,1]` and returns in the original dtype.
+- Hydra Wiring:
+  - Updated `conf/model/v18_6.yaml` so both generator and segmenter instantiate `MildGaussianGuidancePerturber`.
+  - Kept `V18_6TexturePreservingChunkTargetGenerator` unchanged.
+- Why this shift matters:
+  - The v18_6 chunk remapper was still too sharp and allowed near-identity copy behavior.
+  - Mild blur forces the generator to synthesize edge structure from source anatomy rather than copying a crisp guidance field.
+  - Post-blur background masking prevents intensity bleed from reintroducing foreground signal into the void.
+
+## [2026-04-02] v18_5: Heavy Separable Gaussian Guidance Perturbation over v18_3 Targets
+
+- Scope: Pivoted from `v18_4` knot coalescence back to `v18_3` unanchored spline target generation, while adding a heavy low-pass guidance perturbation to suppress edge-copy shortcuts.
+- Core Operator (`HeavyGaussianGuidancePerturber` in `src/guidance_perturbers.py`):
+  - Implements strong 3D Gaussian blur with `sigma=3.0` and `kernel_size=21`.
+  - Uses three separable 1D depthwise passes (D/H/W) via `conv3d` with 1D kernels, not dense 3D kernels.
+  - Applies replicate-padding before each axis pass to avoid boundary darkening.
+  - Preserves strict background semantics by reapplying mask (`guidance < 0.01 -> 0.0`) and clamping output to `[0,1]`.
+- Performance rationale:
+  - Separable 1D convolutions preserve the required $O(3N)$ behavior instead of dense-kernel $O(N^3)$ complexity.
+  - This enables heavy smoothing without violating generator throughput SLO constraints.
+- Hydra Wiring:
+  - Added `conf/model/v18_5.yaml` inheriting `defaults`.
+  - Generator/segmenter target strategy set to `V18_3UnanchoredSplineTargetGenerator`.
+  - Generator/segmenter guidance perturber set to `HeavyGaussianGuidancePerturber` with `sigma=3.0`, `kernel_size=21`.
+- Launcher Wiring:
+  - Added dedicated `v18_5` branches to:
+    - `scripts/run_generators.sh` (`model=v18_5`)
+    - `scripts/run_segmenters.sh` (`model=v18_5`)
+
+## [2026-04-01] v18_4: Coalescing Spatial Splines with Vectorized cummax Forward-Fill
+
+- Scope: Introduced `V18_4CoalescingSplineTargetGenerator` to explicitly destroy healthy tissue boundaries by forcing random adjacent quantile bands to share identical spline targets.
+- Core Operator (`V18_4CoalescingSplineTargetGenerator` in `src/target_generators.py`):
+  - Step A (Empirical CDF Rank):
+    - Subsamples non-background voxels (`x > 0.01`) with stride targeting `~100k` samples.
+    - Computes 100 quantiles and maps dense voxels to rank `r in [0,1]` using `torch.searchsorted`.
+  - Step B (Base Spatial Knots):
+    - Samples `K=8` independent coarse knot target fields with shape `(B,8,8,8,8)` via shared DDP-safe RNG.
+  - Step C (Spline Knot Coalescence):
+    - Builds knot index tensor `idx` and Bernoulli keep mask (`keep > 0.4`) with first knot forced kept.
+    - Uses fully vectorized `torch.cummax(idx * keep, dim=1)` to forward-fill prior kept knot indices.
+    - Applies `torch.gather` on knot channel dimension to coalesce adjacent bands onto shared targets.
+  - Step D/E (Dense AMP-Safe Spline Evaluation):
+    - Trilinearly upsamples coalesced knots to full resolution `(D,H,W)`.
+    - Performs FP32 interpolation math inside `autocast(enabled=False)` with vectorized lower/upper gather:
+      - `k_idx = clamp((r*7).long(), 0, 6)`
+      - `t = r*7 - k_idx`
+      - `y = (1-t)*Y_lower + t*Y_upper`
+  - Step F (Strict Masking):
+    - Enforces `x < 0.01 -> 0.0` and casts back to original dtype.
+- Why this shift matters:
+  - v18_3 improved OOD mean but preserved boundaries too faithfully because adjacent quantile bands still received distinct target trajectories.
+  - v18_4 mathematically annihilates random inter-band gradients via knot coalescence, explicitly simulating missing boundary topology in T2w/FLAIR-like domains.
+- Hydra Wiring:
+  - Added `conf/model/v18_4.yaml` inheriting `defaults` and routing generator/segmenter target strategies to `V18_4CoalescingSplineTargetGenerator`.
+  - Explicitly sets `generator.gen_version: v18_4` and `segmenter.gen_version: v18_4`.
+- Launcher Wiring:
+  - Added dedicated `v18_4` branches to:
+    - `scripts/run_generators.sh` (`model=v18_4`)
+    - `scripts/run_segmenters.sh` (`model=v18_4`)
+
+## [2026-04-01] v18_3: Fully Unanchored Free-Knot Spatial Splines (K=8)
+
+- Scope: Replaced anchored endpoint spline targets from v18_2 with fully unanchored free-knot spatial targets to maximize contrast-domain coverage while preserving empirical-CDF rank stability.
+- Core Operator (`V18_3UnanchoredSplineTargetGenerator` in `src/target_generators.py`):
+  - Step A (Empirical CDF Rank):
+    - Subsamples non-background voxels (`x > 0.01`) with stride targeting `~100k` samples.
+    - Computes 100 quantiles and maps dense voxels to rank `r in [0,1]` using `torch.searchsorted`.
+  - Step B/C (Free Spatial Knots):
+    - Uses `K=8` knot channels sampled as fully independent coarse spatial fields.
+    - Samples coarse targets with shape `(B,8,8,8,8)` and upsamples to `(B,8,D,H,W)` using trilinear interpolation (`align_corners=True`).
+  - Step D (AMP-Safe Vectorized Interpolation):
+    - Runs interpolation path inside `with torch.autocast(device_type="cuda", enabled=False):` with FP32 casts.
+    - Computes spline neighborhood index and local interpolation weights from rank space.
+    - Uses pure `torch.gather` interpolation between adjacent knot channels with no Python loops over batch or spatial dimensions.
+  - Step E (Masking):
+    - Applies strict background masking (`x < 0.01 -> 0.0`) and restores original dtype.
+- Why this shift matters:
+  - v18_2 improved OOD robustness but endpoint anchoring restricted dynamic range exploration.
+  - v18_3 removes global endpoint constraints, enabling dynamic range collapse and aggressive non-monotonic inversions when sampled, while retaining smooth intra-tissue spatial behavior.
+- Hydra Wiring:
+  - Added `conf/model/v18_3.yaml` inheriting defaults and routing generator/segmenter target strategies to `V18_3UnanchoredSplineTargetGenerator`.
+  - Explicitly sets `generator.gen_version: v18_3` and `segmenter.gen_version: v18_3`.
+- Launcher Wiring:
+  - Added dedicated `v18_3` branches to:
+    - `scripts/run_generators.sh` (`model=v18_3`)
+    - `scripts/run_segmenters.sh` (`model=v18_3`)
+
 ## [2026-04-01] v18_2: Spatially-Varying Piecewise Spline Targeting (8x8x8)
 
 - Scope: Replaced v18_1 global cubic polynomial coupling with piecewise independent spline targets to restore aggressive tissue decoupling while keeping empirical-CDF rank stability.

@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Any
 
 import torch
+import torch.multiprocessing as mp
+import torch.nn.functional as F
 from monai.apps import DecathlonDataset
 from monai.data import DataLoader
 from monai.inferers import SlidingWindowInferer
@@ -32,6 +34,14 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.dataset import DEFAULT_CONTRASTS, build_contrast_to_index, normalize_contrast_name
+from src.generator import MRI_Synthesis_Net
+from src.histogram_ops import DifferentiableHistogram3D, generate_unified_targets
+
+try:
+    mp.set_sharing_strategy("file_system")
+except (RuntimeError, ValueError):
+    # Strategy can be preconfigured by the runtime; keep the current one if setting fails.
+    pass
 
 
 def parse_args() -> argparse.Namespace:
@@ -82,6 +92,17 @@ def parse_args() -> argparse.Namespace:
         default="auto",
         help="Evaluation mode routing. 'auto' infers from loaded segmenter output channels.",
     )
+    parser.add_argument(
+        "--tta-samples",
+        type=int,
+        default=0,
+        help="Number of synthetic TTA passes to average per batch.",
+    )
+    parser.add_argument(
+        "--exclude-original",
+        action="store_true",
+        help="Evaluate using synthetic TTA passes only, without the original contrast pass.",
+    )
 
     # Legacy fallback flags (kept for backward compatibility).
     parser.add_argument(
@@ -103,6 +124,16 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--bigaug-contrast", type=str, default="t1w")
     parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument(
+        "--disable-pin-memory",
+        action="store_true",
+        help="Disable DataLoader pin_memory to avoid host IPC/pin thread crashes on some systems.",
+    )
+    parser.add_argument(
+        "--disable-persistent-workers",
+        action="store_true",
+        help="Disable DataLoader persistent workers for safer worker lifecycle handling.",
+    )
     parser.add_argument("--cache-rate", type=float, default=0.0)
     parser.add_argument(
         "--batch-size",
@@ -120,6 +151,12 @@ def parse_args() -> argparse.Namespace:
         "--disable-amp",
         action="store_true",
         help="Disable mixed precision during evaluation (AMP is enabled by default on CUDA).",
+    )
+    parser.add_argument(
+        "--min-sw-batch-size",
+        type=int,
+        default=4,
+        help="Lower bound for adaptive sliding-window batch size fallback on CUDA OOM.",
     )
     parser.add_argument("--split-file", type=str, default=str(PROJECT_ROOT / "splits" / "brats_subject_split.json"))
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
@@ -163,6 +200,176 @@ def _load_hyper_parameters(checkpoint_path: str) -> dict[str, Any] | None:
         return None
     hyper = checkpoint.get("hyper_parameters") or checkpoint.get("hparams")
     return hyper if isinstance(hyper, dict) else None
+
+
+def _normalize_checkpoint_state_dict(checkpoint: object) -> OrderedDict[str, torch.Tensor]:
+    if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
+        state_dict = checkpoint["state_dict"]
+    elif isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        state_dict = checkpoint["model_state_dict"]
+    elif isinstance(checkpoint, dict):
+        state_dict = checkpoint
+    else:
+        raise ValueError("Unsupported checkpoint format: expected a dict-like state dict.")
+
+    normalized_state_dict: OrderedDict[str, torch.Tensor] = OrderedDict()
+    for key, value in state_dict.items():
+        normalized_key = key
+        hit = True
+        while hit:
+            hit = False
+            for prefix in ["_orig_mod.", "module.", "model.", "compiled_wrapper.", "compiled_synthesis.", "compiled_segmenter.", "segmenter."]:
+                if normalized_key.startswith(prefix):
+                    normalized_key = normalized_key[len(prefix) :]
+                    hit = True
+        normalized_state_dict[normalized_key] = value
+
+    return normalized_state_dict
+
+
+def _segmenter_runtime_info(checkpoint_path: str) -> dict[str, Any]:
+    hyper = _load_hyper_parameters(checkpoint_path)
+    source_contrast = _nested_get(hyper, ["data", "source_contrast"], default=None)
+    version = _nested_get(hyper, ["version"], default=None)
+    gen_version = _nested_get(hyper, ["model", "segmenter", "gen_version"], default=None)
+    if gen_version is None:
+        gen_version = _nested_get(hyper, ["model", "generator", "gen_version"], default=version)
+
+    num_bins = _nested_get(hyper, ["model", "segmenter", "num_bins"], default=_nested_get(hyper, ["model", "generator", "num_bins"], default=128))
+    num_chunks = _nested_get(hyper, ["model", "segmenter", "num_chunks"], default=_nested_get(hyper, ["model", "generator", "num_chunks"], default=8))
+    dark_threshold = _nested_get(hyper, ["model", "segmenter", "dark_threshold"], default=_nested_get(hyper, ["model", "generator", "dark_threshold"], default=0.05))
+
+    return {
+        "source_contrast": normalize_contrast_name(str(source_contrast)) if source_contrast is not None else None,
+        "version": str(version) if version is not None else None,
+        "gen_version": str(gen_version) if gen_version is not None else None,
+        "num_bins": int(num_bins),
+        "num_chunks": int(num_chunks),
+        "dark_threshold": float(dark_threshold),
+        "generator_in_channels": int(_nested_get(hyper, ["model", "generator", "in_channels"], default=2)),
+        "generator_out_channels": int(_nested_get(hyper, ["model", "generator", "out_channels"], default=1)),
+        "generator_base_filters": int(_nested_get(hyper, ["model", "generator", "base_filters"], default=32)),
+        "generator_channels_last_3d": bool(_nested_get(hyper, ["model", "generator", "channels_last_3d"], default=True)),
+    }
+
+
+def _build_eval_mode_name(task_mode: str, tta_samples: int, exclude_original: bool) -> str:
+    mode_name = "multiclass" if task_mode == "multiclass" else "binary"
+    if tta_samples > 0:
+        mode_name = f"{mode_name}_tta_n{tta_samples}"
+        if exclude_original:
+            mode_name += "_synth_only"
+    elif exclude_original:
+        raise ValueError("--exclude-original requires --tta-samples > 0.")
+    return mode_name
+
+
+def _resolve_latest_generator_checkpoint(source_contrast: str) -> Path:
+    generator_root = PROJECT_ROOT / "checkpoints" / "generator" / normalize_contrast_name(source_contrast)
+    if not generator_root.exists():
+        raise FileNotFoundError(f"Generator checkpoint directory not found: {generator_root}")
+
+    run_pattern = re.compile(r"^run(\d+)$")
+    run_dirs: list[tuple[int, Path]] = []
+    for child in generator_root.iterdir():
+        if not child.is_dir():
+            continue
+        match = run_pattern.match(child.name)
+        if match is not None:
+            run_dirs.append((int(match.group(1)), child))
+
+    for _, run_dir in sorted(run_dirs, key=lambda item: item[0], reverse=True):
+        candidate = run_dir / "last.ckpt"
+        if candidate.exists():
+            return candidate
+
+    legacy_candidate = generator_root / "last.ckpt"
+    if legacy_candidate.exists():
+        return legacy_candidate
+
+    raise FileNotFoundError(f"No generator checkpoint found under: {generator_root}")
+
+
+def _load_generator_model(device: torch.device, checkpoint_path: Path, runtime_info: dict[str, Any]) -> MRI_Synthesis_Net:
+    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    state_dict = _normalize_checkpoint_state_dict(checkpoint)
+
+    generator = MRI_Synthesis_Net(
+        in_channels=int(runtime_info["generator_in_channels"]),
+        out_channels=int(runtime_info["generator_out_channels"]),
+        base_filters=int(runtime_info["generator_base_filters"]),
+    )
+    if runtime_info["generator_channels_last_3d"]:
+        generator = generator.to(memory_format=torch.channels_last_3d)
+    generator.load_state_dict(state_dict, strict=True)
+    generator = generator.to(device)
+    generator.eval()
+    for parameter in generator.parameters():
+        parameter.requires_grad = False
+    return generator
+
+
+def _predict_probs_from_ensemble(models: list[UNet], inferer: SlidingWindowInferer, x_input: torch.Tensor) -> torch.Tensor:
+    probabilities: list[torch.Tensor] = []
+    for model in models:
+        logits = _infer_logits_with_oom_retry(inferer=inferer, x_input=x_input, model=model)
+        if logits.shape[1] == 1:
+            probabilities.append(torch.sigmoid(logits))
+        else:
+            probabilities.append(F.softmax(logits, dim=1))
+
+    return torch.mean(torch.stack(probabilities, dim=0), dim=0)
+
+
+def _generate_synth_input(
+    generator: MRI_Synthesis_Net,
+    hist_module: DifferentiableHistogram3D,
+    x_input: torch.Tensor,
+    runtime_info: dict[str, Any],
+) -> torch.Tensor:
+    _, _, guidance_map = generate_unified_targets(
+        input_images=x_input,
+        num_bins=int(runtime_info["num_bins"]),
+        num_chunks=int(runtime_info["num_chunks"]),
+        dark_threshold=float(runtime_info["dark_threshold"]),
+        hist_module=hist_module,
+        gen_version=str(runtime_info["gen_version"] or runtime_info["version"] or ""),
+    )
+
+    generator_input = torch.cat([x_input, guidance_map], dim=1)
+    synthesized = generator(generator_input)
+    return ((synthesized + 1.0) * 0.5).clamp(0.0, 1.0)
+
+
+_GLOBAL_MIN_SW_BATCH_SIZE = 1
+
+
+def _is_cuda_oom(exc: RuntimeError) -> bool:
+    message = str(exc).lower()
+    return "out of memory" in message or "cuda error: out of memory" in message
+
+
+def _infer_logits_with_oom_retry(inferer: SlidingWindowInferer, x_input: torch.Tensor, model: UNet) -> torch.Tensor:
+    min_sw = max(1, int(_GLOBAL_MIN_SW_BATCH_SIZE))
+    while True:
+        try:
+            return inferer(x_input, model)
+        except RuntimeError as exc:
+            if not _is_cuda_oom(exc):
+                raise
+
+            current_sw = int(getattr(inferer, "sw_batch_size", 1))
+            if current_sw <= min_sw:
+                raise
+
+            next_sw = max(min_sw, current_sw // 2)
+            if next_sw >= current_sw:
+                raise
+
+            print(f"CUDA OOM in sliding-window inference. Reducing sw_batch_size: {current_sw} -> {next_sw}")
+            setattr(inferer, "sw_batch_size", next_sw)
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
 
 def _contrasts_from_hyper_parameters(hyper: dict[str, Any] | None) -> list[str] | None:
@@ -851,6 +1058,13 @@ def main() -> None:
     args = parse_args()
     if args.num_ensemble < 1:
         raise ValueError("--num-ensemble must be >= 1.")
+    if args.tta_samples < 0:
+        raise ValueError("--tta-samples must be >= 0.")
+    if args.min_sw_batch_size < 1:
+        raise ValueError("--min-sw-batch-size must be >= 1.")
+
+    global _GLOBAL_MIN_SW_BATCH_SIZE
+    _GLOBAL_MIN_SW_BATCH_SIZE = int(args.min_sw_batch_size)
 
     model_specs = _collect_model_specs(args)
     if not model_specs:
@@ -862,6 +1076,15 @@ def main() -> None:
     args.baseline_contrast = normalize_contrast_name(args.baseline_contrast, target_contrasts)
     args.generator_contrast = normalize_contrast_name(args.generator_contrast, target_contrasts)
     args.bigaug_contrast = normalize_contrast_name(args.bigaug_contrast, target_contrasts)
+
+    for spec in model_specs:
+        runtime_info = _segmenter_runtime_info(spec["checkpoint_path"])
+        if runtime_info["source_contrast"] is not None:
+            spec["source_contrast"] = normalize_contrast_name(str(runtime_info["source_contrast"]), target_contrasts)
+        if runtime_info["version"] is not None:
+            spec["version"] = runtime_info["version"]
+        spec["_runtime_info"] = runtime_info
+
     device = torch.device(args.device)
 
     output_dir = Path(args.output_dir)
@@ -902,10 +1125,11 @@ def main() -> None:
         "batch_size": args.batch_size,
         "shuffle": False,
         "num_workers": args.num_workers,
-        "pin_memory": torch.cuda.is_available(),
+        "pin_memory": torch.cuda.is_available() and not args.disable_pin_memory,
     }
     if args.num_workers > 0:
-        loader_kwargs["persistent_workers"] = True
+        if not args.disable_persistent_workers:
+            loader_kwargs["persistent_workers"] = True
         loader_kwargs["prefetch_factor"] = 2
     dataloader = DataLoader(dataset, **loader_kwargs)
 
@@ -956,7 +1180,8 @@ def main() -> None:
     inferred_mode = "multiclass" if any(channels > 1 for channels in loaded_channels) else "binary"
     task_mode = inferred_mode if args.task_mode == "auto" else args.task_mode
 
-    effective_output_dir = output_dir / "multiclass" if task_mode == "multiclass" else output_dir
+    route_name = _build_eval_mode_name(task_mode=task_mode, tta_samples=int(args.tta_samples), exclude_original=bool(args.exclude_original))
+    effective_output_dir = output_dir if route_name == "binary" else output_dir / route_name
     effective_output_dir.mkdir(parents=True, exist_ok=True)
     print(f"Evaluation task mode: {task_mode}")
     print(f"Saving artifacts under: {effective_output_dir}")
@@ -974,20 +1199,49 @@ def main() -> None:
 
     amp_enabled = device.type == "cuda" and not args.disable_amp
     autocast_dtype = torch.float16
+    generator_cache: dict[str, MRI_Synthesis_Net] = {}
+    hist_module_cache: dict[str, DifferentiableHistogram3D] = {}
+
+    def _get_generator_for_spec(spec: dict[str, Any]) -> MRI_Synthesis_Net:
+        runtime_info = spec["_runtime_info"]
+        source_contrast = str(runtime_info["source_contrast"] or spec["source_contrast"])
+        cached = generator_cache.get(source_contrast)
+        if cached is not None:
+            return cached
+
+        checkpoint_path = _resolve_latest_generator_checkpoint(source_contrast)
+        generator = _load_generator_model(device=device, checkpoint_path=checkpoint_path, runtime_info=runtime_info)
+        generator_cache[source_contrast] = generator
+        print(f"Loaded TTA generator for {source_contrast}: {checkpoint_path}")
+        return generator
+
+    def _get_hist_module_for_spec(spec: dict[str, Any]) -> DifferentiableHistogram3D:
+        runtime_info = spec["_runtime_info"]
+        source_contrast = str(runtime_info["source_contrast"] or spec["source_contrast"])
+        cache_key = f"{source_contrast}:{int(runtime_info['num_bins'])}"
+        cached = hist_module_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        hist_module = DifferentiableHistogram3D(
+            num_bins=int(runtime_info["num_bins"]),
+            value_range=(0.0, 1.0),
+        ).to(device)
+        hist_module_cache[cache_key] = hist_module
+        return hist_module
 
     with torch.inference_mode():
-        _debug_done = False
         for batch in dataloader:
             x = batch["image"].to(device, non_blocking=True).float()
             y_raw = batch["label"].to(device, non_blocking=True).long()
             for src, dst in label_mapping.items():
                 y_raw = torch.where(y_raw == int(src), torch.full_like(y_raw, int(dst)), y_raw)
 
-            x_stacked, batch_size = _stack_target_contrasts(
-                x,
-                target_contrasts=target_contrasts,
-                contrast_to_index=contrast_to_index,
-            )
+            batch_size = x.shape[0]
+            x_by_contrast = {
+                contrast: _extract_contrast(x, contrast, contrast_to_index)
+                for contrast in target_contrasts
+            }
 
             for spec in model_specs:
                 model_id = spec["model_id"]
@@ -1001,38 +1255,50 @@ def main() -> None:
                 else:
                     y_target = y_raw.clamp(min=0, max=out_channels - 1).long()
 
-                with torch.autocast(device_type=device.type, dtype=autocast_dtype, enabled=amp_enabled):
-                    pred = _predict_from_ensemble(models=models, inferer=inferer, x_input=x_stacked)
+                runtime_info = spec["_runtime_info"]
+                generator = _get_generator_for_spec(spec) if int(args.tta_samples) > 0 else None
+                hist_module = _get_hist_module_for_spec(spec) if int(args.tta_samples) > 0 else None
 
-                # Debug: for first batch, print basic label/pred stats to diagnose zero scores
-                if not _debug_done:
-                    try:
-                        print('DEBUG: y_raw unique:', torch.unique(y_raw).cpu().numpy())
-                        print('DEBUG: y_raw min/max:', y_raw.min().item(), y_raw.max().item())
-                        # y_target computed below; reproduce for first model's out_channels
-                        sample_out = out_channels
-                        if sample_out == 1:
-                            y_target_dbg = (y_raw > 0).float()
-                        else:
-                            y_target_dbg = y_raw.clamp(min=0, max=sample_out - 1).long()
-                        print('DEBUG: y_target unique (sample):', torch.unique(y_target_dbg).cpu().numpy())
-                        # For each model instance, show prediction unique and sums for first contrast
-                        for mid, m in enumerate(models[:3]):
-                            # Predict only for first stacked subject
-                            try:
-                                single_pred = _predict_from_ensemble(models=[m], inferer=inferer, x_input=x_stacked[:batch_size])
-                                print(f'DEBUG: model {model_id} instance {mid} pred unique:', torch.unique(single_pred).cpu().numpy())
-                                print(f'DEBUG: model {model_id} instance {mid} pred sum:', int((single_pred>0).sum().item()))
-                            except Exception as e:
-                                print('DEBUG: prediction error for model instance', mid, e)
-                    except Exception as e:
-                        print('DEBUG: error printing debug info', e)
-                    _debug_done = True
+                for contrast in target_contrasts:
+                    x_input = x_by_contrast[contrast]
+                    probs_sum: torch.Tensor | None = None
+                    num_passes = 0
 
-                for idx, contrast in enumerate(target_contrasts):
-                    start = idx * batch_size
-                    end = (idx + 1) * batch_size
-                    pred_chunk = pred[start:end]
+                    if not bool(args.exclude_original):
+                        with torch.autocast(device_type=device.type, dtype=autocast_dtype, enabled=amp_enabled):
+                            probs = _predict_probs_from_ensemble(models=models, inferer=inferer, x_input=x_input)
+                        probs_sum = probs
+                        num_passes += 1
+
+                    if int(args.tta_samples) > 0:
+                        assert generator is not None
+                        assert hist_module is not None
+                        for _ in range(int(args.tta_samples)):
+                            with torch.autocast(device_type=device.type, dtype=autocast_dtype, enabled=amp_enabled):
+                                x_synth = _generate_synth_input(
+                                    generator=generator,
+                                    hist_module=hist_module,
+                                    x_input=x_input,
+                                    runtime_info=runtime_info,
+                                )
+                            with torch.autocast(device_type=device.type, dtype=autocast_dtype, enabled=amp_enabled):
+                                probs = _predict_probs_from_ensemble(models=models, inferer=inferer, x_input=x_synth)
+                            if probs_sum is None:
+                                probs_sum = probs
+                            else:
+                                probs_sum = probs_sum + probs
+                            num_passes += 1
+                            del x_synth
+
+                    if num_passes == 0 or probs_sum is None:
+                        raise ValueError("No evaluation passes were executed. Set --tta-samples > 0 when using --exclude-original.")
+
+                    avg_probs = probs_sum / float(num_passes)
+                    if out_channels > 1:
+                        pred_chunk = torch.argmax(avg_probs, dim=1, keepdim=True).long()
+                    else:
+                        pred_chunk = (avg_probs > 0.5).float()
+
                     if out_channels > 1:
                         pred_onehot = torch.nn.functional.one_hot(
                             pred_chunk[:, 0].long(),
@@ -1158,10 +1424,10 @@ def main() -> None:
         for (version, target_contrast, freeze_encoder), model_ids in grouped_ids.items():
             # If the caller already included the version component in the output path,
             # avoid adding it again (prevents nested `.../v15/.../v15/...`).
-            if version in output_dir.parts or output_dir.name == version:
-                version_root = output_dir
+            if version in effective_output_dir.parts or effective_output_dir.name == version:
+                version_root = effective_output_dir
             else:
-                version_root = output_dir / version
+                version_root = effective_output_dir / version
 
             finetuned_dir = version_root / "finetuned" / f"{target_contrast}_freeze_{freeze_encoder}"
             finetuned_dir.mkdir(parents=True, exist_ok=True)

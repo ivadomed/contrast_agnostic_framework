@@ -1,0 +1,9 @@
+model_id,family,source_contrast,target_contrast,dice,ckpt_exists,checkpoint_path
+segmenter_generator_t1w,generator,t1w,flair,0.639650,1,checkpoints/v18_6/segmenter/generator/t1w/run3/last.ckpt
+segmenter_generator_t1w,generator,t1w,t1w,0.619273,1,checkpoints/v18_6/segmenter/generator/t1w/run3/last.ckpt
+segmenter_generator_t1w,generator,t1w,t1gd,0.615817,1,checkpoints/v18_6/segmenter/generator/t1w/run3/last.ckpt
+segmenter_generator_t1w,generator,t1w,t2w,0.650149,1,checkpoints/v18_6/segmenter/generator/t1w/run3/last.ckpt
+segmenter_generator_t2w,generator,t2w,flair,0.690191,1,checkpoints/v18_6/segmenter/generator/t2w/run3/last.ckpt
+segmenter_generator_t2w,generator,t2w,t1w,0.432625,1,checkpoints/v18_6/segmenter/generator/t2w/run3/last.ckpt
+segmenter_generator_t2w,generator,t2w,t1gd,0.514071,1,checkpoints/v18_6/segmenter/generator/t2w/run3/last.ckpt
+segmenter_generator_t2w,generator,t2w,t2w,0.697324,1,checkpoints/v18_6/segmenter/generator/t2w/run3/last.ckpt

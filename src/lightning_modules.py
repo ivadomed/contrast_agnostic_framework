@@ -745,6 +745,21 @@ class MRISegmenterLightning(pl.LightningModule):
             generator_weights = str(latest_ckpt)
             print(f"Loading generator from: {generator_weights}")
 
+        if not Path(generator_weights).exists():
+            project_root = Path(__file__).resolve().parents[1]
+            gen_version = self._resolved_segmenter_gen_version()
+            generator_base = project_root / "checkpoints" / str(gen_version) / "generator"
+            available_contrasts: list[str] = []
+            if generator_base.exists():
+                available_contrasts = sorted([p.name for p in generator_base.iterdir() if p.is_dir()])
+            raise FileNotFoundError(
+                "Missing generator checkpoint for segmenter synthesis path. "
+                f"Expected checkpoint: {generator_weights}. "
+                f"Requested source contrast: {self.cfg.data.source_contrast}. "
+                f"Available generator contrasts for {gen_version}: {available_contrasts}. "
+                "Either run generator training first for the requested contrast or switch to an available contrast/version."
+            )
+
         self.generator = MRI_Synthesis_Net(
             in_channels=2,
             out_channels=1,
@@ -770,7 +785,8 @@ class MRISegmenterLightning(pl.LightningModule):
             instantiate(self._segmenter_guidance_perturber_cfg()),
             bool(self._segmenter_apply_guidance_blur()),
         )
-        if bool(self.cfg.model.segmenter.compile_model) and hasattr(torch, "compile"):
+        compile_synthesis = bool(getattr(self.cfg.model.segmenter, "compile_synthesis", self.cfg.model.segmenter.compile_model))
+        if compile_synthesis and hasattr(torch, "compile"):
             self.compiled_synthesis = torch.compile(self.compiled_synthesis, mode="reduce-overhead")
         self._generator_is_ready = True
 

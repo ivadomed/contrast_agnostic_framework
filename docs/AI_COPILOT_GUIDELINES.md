@@ -24,6 +24,10 @@ Approved usage patterns:
 - bash scripts/run_generators.sh <SLOT_ID> <VERSION> <CONTRAST>
 - bash scripts/run_segmenters.sh <SLOT_ID> <VERSION> <CONTRAST>
 
+Default contrast policy:
+- For routine generator runs, use <CONTRAST>=t1w.
+- Do not schedule routine generator jobs with <CONTRAST>=t2w.
+
 - [ ] **Rule 5 - Active Monitoring Protocol (First 8 Minutes Minimum)**
 After starting a training script, actively monitor terminal output for approximately 8 minutes.
 Do not mark the task complete until:
@@ -35,6 +39,14 @@ Do not mark the task complete until:
 For every new version:
 1. Finish generator training to 100% completion first.
 2. Only then launch the corresponding segmenter training for that same version.
+
+- [ ] **Rule 7 - Generator Source Policy (T1w-Only)**
+Generator training launches are T1w-only by default.
+Do not launch new T2w-source generator trainings unless an explicit, pre-approved experiment plan says otherwise.
+
+Rationale:
+- Saves compute slots for the highest-yield branch.
+- Reflects established physics asymmetry and the project pivot to T1w-first generation.
 
 ## Required Operational Workflow
 

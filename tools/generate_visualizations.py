@@ -28,12 +28,7 @@ from src.generator import MRI_Synthesis_Net
 from src.histogram_ops import DifferentiableHistogram3D
 from src.lightning_modules import CompiledSynthesisWrapper, _extract_normalized_state_dict
 
-from monai.transforms import (
-    Compose,
-    LoadImaged,
-    EnsureChannelFirstd,
-    NormalizeIntensityd,
-)
+from monai.transforms import Compose
 
 
 def _resolve_path(path_like: str) -> Path:
@@ -59,14 +54,16 @@ def _checkpoint_metadata(checkpoint_path: Path, checkpoint: dict | None) -> tupl
         hyper = checkpoint.get("hparams") if isinstance(checkpoint, dict) else None
 
     version = _nested_get(hyper, ["version"], default=None)
+    if version is None:
+        version = _nested_get(hyper, ["model", "generator", "gen_version"], default=None)
     contrast = _nested_get(hyper, ["data", "source_contrast"], default=None)
 
     if version is None or contrast is None:
         parts = list(checkpoint_path.resolve().parts)
         if "generator" in parts:
             gen_idx = parts.index("generator")
-            if version is None and gen_idx >= 2:
-                version = parts[gen_idx - 2]
+            if version is None and gen_idx >= 1:
+                version = parts[gen_idx - 1]
             if contrast is None and gen_idx + 1 < len(parts):
                 contrast = parts[gen_idx + 1]
 
@@ -126,27 +123,18 @@ def main(args: argparse.Namespace) -> None:
     with initialize_config_dir(version_base=None, config_dir=config_dir, job_name="visualize"):
         cfg = compose(config_name=config_name)
 
-    # =====================================================================
-    # THE FIX: Override config to force val set creation and KILL caching
-    # =====================================================================
+    # Force val dataset creation with lightweight loader settings for local visualization.
     with open_dict(cfg):
-        cfg.task = "segmenter"           # Forces datamodule to build val_dataset
-        cfg.data.cache_rate = 0.0        # Prevents loading the whole dataset into RAM
-        cfg.data.num_workers = 0         # Prevents multiprocess hanging for small jobs
-        cfg.data.val_batch_size = 1      # Process one by one for clean saving
+        cfg.task = "segmenter"
+        cfg.data.cache_rate = 0.0
+        cfg.data.num_workers = 0
+        cfg.data.val_batch_size = 1
     
     generator, gen_version, checkpoint_contrast, checkpoint = _load_generator(checkpoint_path, cfg)
     _, model_id, _ = _checkpoint_metadata(checkpoint_path, checkpoint)
     
-    # =====================================================================
-    # THE FIX: Override config to force val set creation and KILL caching
-    # =====================================================================
     with open_dict(cfg):
-        cfg.task = "segmenter"           
-        cfg.data.cache_rate = 0.0        
-        cfg.data.num_workers = 0         
-        cfg.data.val_batch_size = 1      
-        # FORCE the dataset to use the contrast the model was trained on!
+        # Force the dataset to use the contrast the model was trained on.
         cfg.data.source_contrast = checkpoint_contrast
         
         
@@ -160,22 +148,22 @@ def main(args: argparse.Namespace) -> None:
     datamodule = BraTSDataModule(cfg)
     datamodule.setup(stage="fit")
     
-    from monai.transforms import Compose
+    if datamodule.val_dataset is None:
+        raise RuntimeError("Validation dataset is unavailable. Ensure cfg.task is not 'generator'.")
 
-    underlying_dataset = datamodule.val_dataset.dataset
-    
-    # Grab the original list of transforms from the validation pipeline
-    original_transforms = underlying_dataset.transform.transforms
-    
-    inference_transforms = []
-    for t in original_transforms:
-        t_name = type(t).__name__
-        # Keep everything EXCEPT spatial manipulators
-        if not any(keyword in t_name for keyword in ["Crop", "Pad", "Resize"]):
-            inference_transforms.append(t)
-            
-    # Apply the filtered pipeline back to the dataset
-    underlying_dataset.transform = Compose(inference_transforms)
+    underlying_dataset = datamodule.val_dataset
+    while hasattr(underlying_dataset, "dataset"):
+        underlying_dataset = underlying_dataset.dataset
+
+    dataset_transform = getattr(underlying_dataset, "transform", None)
+    if dataset_transform is not None and hasattr(dataset_transform, "transforms"):
+        # Keep preprocessing/intensity steps but skip spatial shape-altering ops for full-volume export.
+        inference_transforms = []
+        for transform in dataset_transform.transforms:
+            t_name = type(transform).__name__
+            if not any(keyword in t_name for keyword in ["Crop", "Pad", "Resize"]):
+                inference_transforms.append(transform)
+        underlying_dataset.transform = Compose(inference_transforms)
     
     val_dataloader = datamodule.val_dataloader()
     

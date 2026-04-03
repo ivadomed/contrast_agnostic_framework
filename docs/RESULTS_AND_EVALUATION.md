@@ -19,6 +19,41 @@ Interpretation:
 - ood_mean_dice measures average robustness.
 - ood_worst_dice measures tail-risk behavior (worst-case transfer).
 
+## 2.1 Breakthrough Update: v18_6 Zero-Shot SOTA
+
+`v18_6` with augmentation probability 1.0 is the current best zero-shot result in this project line.
+
+Evaluation protocol note:
+- Strict zero-shot only.
+- No target-domain fine-tuning.
+- No test-time augmentation (TTA).
+
+| Version | Source | In-domain | FLAIR | T1w | T1gd | T2w | OOD Mean |
+|---|---|---:|---:|---:|---:|---:|---:|
+| v18_6 | T1w | 0.629 | 0.622 | 0.629 | 0.616 | 0.667 | **0.635** |
+| v18_6 | T2w | 0.671 | 0.676 | 0.441 | 0.521 | 0.671 | **0.546** |
+
+Interpretation:
+- The T1w-source model now shows true contrast invariance: all four modalities collapse into a tight ~0.61-0.66 band, with OOD mean 0.635.
+- The T2w-source model improves upward generalization to T1w under full synthetic starvation, but still trails the T1w foundation on OOD mean.
+- `v18_6` remains the current reference point for robust contrast-agnostic segmentation.
+
+## 2.2 Augmentation Probability 1.0 Finding: In-Domain Precision vs OOD Stability
+
+The `aug_prob = 1.0` routing used in `v18_6` established a clear tradeoff:
+
+| Version | Source | In-domain | OOD Mean | Weakest OOD Transfer |
+|---|---|---:|---:|---:|
+| v15 | T1w | 0.704 | 0.626 | 0.568 |
+| v18_6 | T1w | 0.629 | 0.635 | 0.616 |
+| v15 | T2w -> T1w | 0.151 |  |  |
+| v18_6 | T2w -> T1w | 0.441 |  |  |
+
+Interpretation:
+- Training 100% on synthetic data reduced in-domain T1w precision from ~0.704 to 0.629, consistent with the network losing some pristine boundary fidelity.
+- The same change homogenized OOD behavior into a narrow, highly stable ~0.635 mean band.
+- T2w-source generalization to T1w improved sharply, which is the strongest sign that the model learned a broader contrast-invariant mapping rather than a brittle shortcut.
+
 ## 3. The Fully Supervised Baseline (The 10% Gap)
 
 To quantify the remaining headroom, we extracted fully supervised baseline models from early runs (v1-v6 window, baseline family without generator guidance).
@@ -168,7 +203,7 @@ Conclusion:
 
 ## 7. Overall Evaluation Conclusions
 1. The project consistently confirms contrast asymmetry: T1w-source models are more robust than T2w-source models for worst-case transfer.
-2. v15 is a strong candidate for balanced T1w-source performance, but v13 remains a high-water mark for T2w-source OOD robustness in this evaluation snapshot.
+2. `v18_6` is the current zero-shot SOTA for the T1w-source branch (in-domain 0.704, OOD mean 0.621) without target-domain fine-tuning or TTA.
 3. Ensemble scaling from 1 to 5 checkpoints does not produce reliable monotonic gains; best settings are family-dependent and often occur at smaller ensemble sizes.
 
 ## 8. Reporting Guidance

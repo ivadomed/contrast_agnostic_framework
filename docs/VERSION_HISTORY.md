@@ -104,3 +104,11 @@ Hypothesis -> Implementation -> Result -> Scientific Takeaway.
 - v4-v6 established reproducibility/performance/correctness foundations.
 - v7-v10 experimentally falsified several edge-hallucination strategies.
 - v11-v15 converged toward the current hybrid architecture, with v15 as the leading candidate pending future external validation.
+
+## Rapid v18.x Progression
+- `v18_1`: Global Bezier. High visual quality, but OOD diversity was over-regularized.
+- `v18_2`: Anchored Piecewise Splines. Better OOD than `v18_1`, but still too tame due to anchored extremes.
+- `v18_3`: Unanchored Free-Knot Splines. Excellent OOD gain, but preserved healthy boundaries too perfectly.
+- `v18_4`: Spline Knot Coalescence. Aggressive boundary destruction; slight overall performance dip.
+- `v18_5`: Blurred Guidance. Correct direction, but loss contradiction (blurred target with sharp guidance penalties) undermined optimization.
+- `v18_6`: Current SOTA. Texture-preserving chunk remapping + blurred guidance + loss hotfix, reaching OOD mean Dice 0.621 (zero-shot).

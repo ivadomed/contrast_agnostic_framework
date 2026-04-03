@@ -1,0 +1,36 @@
+defaults:
+  - defaults
+  - _self_
+
+generator:
+  gen_version: v18_5
+  apply_guidance_blur: false
+  target_generator:
+    _target_: src.target_generators.V18_3UnanchoredSplineTargetGenerator
+    coarse_grid_size: [8, 8, 8]
+    background_threshold: 0.01
+    num_quantiles: 100
+    max_sample_size: 100000
+  guidance_perturber:
+    _target_: src.guidance_perturbers.HeavyGaussianGuidancePerturber
+    sigma: 3.0
+    kernel_size: 21
+    background_threshold: 0.01
+
+segmenter:
+  use_generator: true
+  gen_version: v18_5
+  aug_prob_val: 1.0
+  compile_synthesis: false
+  apply_guidance_blur: false
+  target_generator:
+    _target_: src.target_generators.V18_3UnanchoredSplineTargetGenerator
+    coarse_grid_size: [8, 8, 8]
+    background_threshold: 0.01
+    num_quantiles: 100
+    max_sample_size: 100000
+  guidance_perturber:
+    _target_: src.guidance_perturbers.HeavyGaussianGuidancePerturber
+    sigma: 3.0
+    kernel_size: 21
+    background_threshold: 0.01

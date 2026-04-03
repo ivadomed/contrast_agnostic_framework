@@ -7,11 +7,11 @@ The current system-level strategy is:
 - Use a guidance generator to create synthetic contrast perturbations that preserve anatomy while diversifying intensity semantics.
 - Train the segmenter to remain anatomically consistent across raw and synthesized inputs.
 
-## 2. Current SOTA Candidate: v15
-v15 combines:
-- v8-style spatially localized grid chunking (preserves macro-structural sharpness),
-- v13-style non-monotonic intensity remapping (allows contrast inversion),
-- explicit background masking (prevents gray background hallucination),
+## 2. Current SOTA Candidate: v18_6
+v18_6 combines:
+- texture-preserving discontinuous piecewise linear chunk remapping for aggressive contrast inversion without destroying tissue micro-texture,
+- blurred guidance supervision (separable 1D Gaussian passes) so high-frequency boundaries must be recovered from the raw source image,
+- rebalanced generator losses with dominant edge supervision and removal of contradictory high-frequency L1 guidance penalties,
 - inherited anisotropic degradation and consistency regularization in segmenter training.
 
 ## 3. End-to-End Training Pipeline
@@ -19,8 +19,8 @@ v15 combines:
 ### 3.1 Input and normalization
 Input volumes are normalized to x in [0,1] with shape (B, C, D, H, W).
 
-### 3.2 Guidance target synthesis (v15)
-Core operator: non-monotonic grid chunking.
+### 3.2 Guidance target synthesis (v18_6)
+Core operator: texture-preserving non-monotonic chunk remapping.
 
 For each batch:
 1. Partition each volume into a coarse grid (default 4x4x4).
@@ -32,6 +32,7 @@ For each batch:
 7. Apply strict background preservation using a tissue mask threshold (~0.01).
 
 This allows non-monotonic mappings where intensity order can invert, while still respecting local spatial anatomy.
+In v18_6, each chunk remap keeps the original local residual texture around the chunk floor so naturally noisy Gaussian-like tissue bands are preserved instead of flattened into smooth synthetic ramps.
 
 Formal mapping used by the v15 operator:
 
@@ -63,7 +64,20 @@ $$
 
 Because {\mu_k} is unsorted, the mapping is explicitly non-monotonic and permits contrast inversion.
 
-### 3.3 Generator path
+Texture-preserving residual form used in v18_6:
+
+$$
+x_i^{\text{v18\_6}} = \mu_{c_i} + \alpha_{c_i}\big(x_i - q_{c_i-1}(i)\big),
+$$
+
+with chunk-wise scale $\alpha_{c_i}$ chosen to preserve stochastic intra-band variation while allowing aggressive inter-band inversion and displacement.
+
+### 3.3 Blurred guidance + rebalanced edge loss (v18_6)
+v18_6 applies a separable 1D Gaussian blur to the guidance target before guidance supervision. This intentionally removes high-frequency shortcuts from the target signal so the generator cannot copy crisp boundaries from guidance.
+
+The loss stack is rebalanced so edge loss dominates high-frequency structure learning from the raw source image. Contradictory high-frequency L1 penalties against blurred guidance are removed to avoid penalizing anatomically correct sharp recovery.
+
+### 3.4 Generator path
 The generator is a 3D synthesis network optimized with a composite objective:
 - histogram/distribution alignment,
 - edge-aware structure retention,
@@ -73,7 +87,7 @@ The generator is a 3D synthesis network optimized with a composite objective:
 
 Version-gated augmentations and target generation are integrated through compiled wrappers to keep execution deterministic and fast enough for iterative research.
 
-### 3.4 Segmenter path
+### 3.5 Segmenter path
 The segmenter is a 3D U-Net style model trained on synthesized inputs (and baseline modes where applicable), with Dice+CE supervision and version-gated robustness terms.
 
 v15 segmenter inherits:
@@ -131,21 +145,42 @@ $$
 - Reduces launch overhead versus sequential dual forwards.
 - Improves throughput stability in compiled 3D training.
 
-## 5. Why v15 is the current architecture direction
-v15 is the first design that jointly addresses the two dominant prior failure classes:
-- Over-monotonic mappings that cannot invert contrast semantics.
-- Spatially over-smoothed mappings that wash out macro-structural contrast.
+## 5. Why v18_6 is the current architecture direction
+v18_6 is the first design that simultaneously resolves the two dominant v18.x failure classes:
+- Continuous CDF/spline remapping that creates metallic/plastic shading artifacts by over-smoothing noisy tissue bands.
+- Loss-level contradictions where blurred targets are paired with high-frequency guidance penalties.
 
-By combining local spatial chunking with non-monotonic targets and strict background control, v15 preserves structure while increasing contrast diversity in anatomically plausible regions.
+By combining texture-preserving chunk remapping with blurred guidance and edge-dominant supervision, v18_6 preserves biologically plausible micro-texture while forcing robust boundary extraction from source anatomy.
 
 ## 6. Practical Design Constraints
 The architecture is intentionally shaped by known physical and computational limits:
-- Physics asymmetry: T2w -> T1w boundary synthesis remains fundamentally harder than T1w -> other contrasts.
+- Physics asymmetry: T2w -> T1w boundary synthesis is not merely harder; it is information-limited because critical high-frequency GM/WM boundaries are not encoded in T2w with sufficient fidelity.
 - 3D compute budget: generator + histogram + multi-loss training is inherently expensive; compilation and vectorization are mandatory, not optional.
 - Reproducibility: Hydra + Lightning + version-gated operators are required to keep experimental claims auditable across versions.
+
+### 6.1 Formal hypothesis: T1w is all you need
+Operational hypothesis:
+- T1w is the only viable source domain for robust contrast-agnostic generation in this project setting.
+
+Reasoning:
+- T1w contains the highest-frequency healthy GM/WM boundary content used by downstream segmentation.
+- T2w/FLAIR attenuate or remove portions of this boundary signal.
+- A source-to-target mapping cannot reconstruct reliably absent high-frequency information without external priors.
+
+Information-theoretic interpretation:
+- Let $S$ be source contrast and $B$ be high-frequency boundary content needed for T1-like supervision.
+- In T2w-source regimes, mutual information $I(S_{T2w}; B_{T1})$ is insufficient for consistent reconstruction of $B_{T1}$.
+- Therefore forcing T2w-source synthesis to emulate T1w boundary-rich supervision is underdetermined and effectively impossible at the required fidelity.
+
+### 6.2 The Augmentation Probability 1.0 Caveat (T2w Resurrection)
+The `aug_prob=0.7` setting still exposed the segmenter to raw T2w scans 30% of the time. In practice, that was enough for the model to retain a blurry structural prior from the native T2w domain, which encouraged edge-overfitting to low-frequency anatomy instead of forcing a cleaner contrast-invariant representation.
+
+By forcing `aug_prob=1.0`, the segmenter is completely starved of native T2w priors during training. That removes the blurry shortcut, prevents edge-overfitting to the source contrast, and substantially restores upward generalization: the T1w target jumps from 0.151 to 0.441 under the new regime.
+
+The important asymmetry remains intact: T1w is still the mathematically superior foundation, with 0.635 OOD mean versus 0.545 for T2w. The new result only shows that T2w upward-generalization is possible when the model is driven entirely by synthetic contrasts and denied access to raw T2w priors.
 
 ## 7. Deployment-facing interpretation
 For downstream users, the practical contract is:
 - Use version-matched generator and segmenter settings.
 - Preserve background masking and mask-safe augmentations.
-- Treat v15 as the current best candidate for robust cross-contrast transfer, pending further ensemble and external-cohort validation.
+- Treat v18_6 as the current best candidate for robust cross-contrast transfer, pending further ensemble and external-cohort validation.

@@ -39,8 +39,8 @@ segmenter:
   fully_artificial: false
   gen_version: null
   gen_weights: null
-  aug_prob_train: 0.7
-  aug_prob_val: 0.0
+  aug_prob_train: 1.0
+  aug_prob_val: 1.0
 
   # Transfer learning parameters
   pretrained_ckpt_path: null

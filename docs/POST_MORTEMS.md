@@ -211,6 +211,133 @@ The mapping was still constrained by a single global Bezier polynomial over rank
 ### Scientific conclusion
 Empirical CDF anchoring fixed intensity-collapse pathology but introduced an expressivity bottleneck for OOD robustness. Future versions must preserve rank-space stability while breaking global monotonic coupling between tissue bands.
 
+## 14. v18_2 Post-Mortem: Anchored Extreme Knots Limited Contrast Aggression
+
+### Hypothesis
+Moving from global Bezier coupling to a piecewise spatial spline with higher-resolution knot fields would improve OOD invariance while preserving stable intensity semantics.
+
+### What was implemented
+- Empirical CDF rank mapping with 100 quantiles and `torch.searchsorted`.
+- Piecewise spline interpolation over spatially varying knot targets.
+- Fixed global extreme knots with inversion mode:
+	- standard: `Y_0=0`, `Y_K=1`
+	- inverted: `Y_0=1`, `Y_K=0`
+
+### What worked
+- OOD transfer improved materially versus earlier variants.
+- Example: T1w->FLAIR rose to approximately `0.396` Dice in observed evaluations.
+
+### What failed
+- Synthetic targets remained structurally too tame for worst-case clinical contrast diversity.
+- The segmenter still relied on expected intensity spans and under-covered aggressively compressed or globally shifted scans.
+
+### Root cause
+Anchoring the spline extremes (`Y_0`, `Y_K`) to `{0,1}` (or `{1,0}` under inversion) hard-constrained dynamic range endpoints. This prevented the generator from expressing collapsed-range mappings and stronger global contrast shifts, reducing the space of realistic low-contrast and strongly shifted domains.
+
+### Scientific conclusion
+Rank-space spline control improved robustness, but endpoint anchoring imposed an expressivity ceiling. v18_3 should remove endpoint anchoring entirely and use fully unanchored free-knot spatial targets.
+
+## 15. v18_3 Post-Mortem: Free-Knot Splines Preserved Boundaries Too Well
+
+### Hypothesis
+Removing endpoint anchors and using fully unanchored spatial free-knot targets would maximize contrast-domain diversity and improve OOD robustness.
+
+### What was implemented
+- Empirical CDF rank mapping with 100 quantiles and vectorized `torch.searchsorted` rank assignment.
+- Fully unanchored `K=8` spline knot fields sampled independently over space.
+- AMP-safe vectorized piecewise interpolation with strict background masking.
+
+### What worked
+- v18_3 significantly improved OOD mean and stabilized broad transfer behavior relative to prior anchored variants.
+
+### What failed
+- Healthy anatomical boundaries were preserved too perfectly across adjacent tissue bands.
+- Synthetic supervision remained overly boundary-faithful, especially for contrasts where boundaries are physically attenuated.
+
+### Root cause
+Assigning distinct targets to every neighboring tissue quantile mathematically preserves inter-quantile gradients. Even with unanchored knots, if each adjacent rank interval maps to a different target trajectory, boundaries survive by construction.
+
+### Core insight
+
+The direct conclusion is that preserving a rank-space spline alone is not enough; the generator must also vary how much raw identity survives in each spatial region. `v18_7` does that by stochastic leakage instead of a deterministic continuous remap.
+
+## 16. v18_7 Design Rationale: Dynamic Stochastic Identity Leakage
+
+### Motivation
+`v18_6` proved that full synthetic augmentation can substantially stabilize OOD behavior, but the in-domain T1w score still degraded because the segmenter no longer saw enough pristine anatomy.
+
+### Strategy
+`v18_7` introduces a controlled leakage path that mixes the raw image back into the synthetic target while keeping the aggressive remapping path intact.
+
+Mechanically:
+- Randomize the number of quantile bins per batch so the target generator cannot settle on one fixed partitioning scheme.
+- Randomize the spatial alpha grid from `1^3` up to `8^3` so the identity leak is spatially heterogeneous rather than globally smooth.
+- Blend the raw image directly into the generated target with a dense alpha field, forcing the segmenter to handle raw biological boundaries and heavily distorted synthetic features within the same training sample.
+
+### Why this should work
+The goal is not to remove the OOD robustness discovered in `v18_6`; it is to recover some of the in-domain precision that was lost when the model was exposed to fully synthetic supervision at probability 1.0.
+
+The stochastic leak keeps the network from learning an optimization shortcut that simply copies identity structure, because the leak strength and spatial structure change every batch. At the same time, it prevents the synthetic objective from becoming so disconnected from raw anatomy that the segmenter forgets crisp biological boundaries entirely.
+
+### Additional bottlenecking
+`v18_7` also reduces the generator footprint by cutting `base_filters` to 8. That enforces a stricter information bottleneck and reduces forward/backward cost, which is important because the new stochastic target construction adds more runtime work than the earlier deterministic mapping.
+
+## 17. v18_5 Post-Mortem: Spline-Family CDF Stretching Produced Metallic Tissue Artifacts
+
+### Hypothesis
+Spline-based rank-space mappings (v18_1 through v18_5) could preserve stochastic variation while allowing strong contrast-domain remapping without introducing quantization artifacts.
+
+### What was implemented
+- `v18_1` through `v18_5` all mapped empirical CDF/rank coordinates through continuous interpolation families (Bezier/spline variants), with progressively stronger boundary suppression and optional heavy guidance smoothing.
+
+### What failed
+- Across the spline family, synthetic volumes developed non-biological "metallic" or "plastic" reflection-like shading.
+- Artifact severity increased when pushing aggressive inversions or broadened dynamic range manipulations.
+
+### Root cause
+Continuous curve interpolation over CDF ranks imposes smooth gradient structure on regions where the original tissue distribution is naturally tight and noisy. In MRI tissue clusters, local variation is dominated by residual stochastic texture, not wide uniform ramps. Rank-space spline stretching converts these dense noisy clusters into artificially uniform gradients, yielding the observed metallic/plastic shading.
+
+### Scientific conclusion
+The failure is structural to the spline-over-rank family, not a tuning issue in knot count, anchors, coalescence, or blur strength. Any continuously interpolated CDF-rank remapper tends to erase biologically plausible micro-texture when forced to perform aggressive remapping.
+
+### Pivot decision (v18_6)
+Return to discontinuous piece-wise linear mapping on raw intensities with texture-preserving residuals:
+- Partition intensities into discrete quantile chunks.
+- Shift chunk base color with independent random chunk target means.
+- Preserve each voxel's intra-chunk residual noise via local linear scaling around the chunk lower edge.
+
+This gives aggressive non-monotonic boundary destruction while preserving biologically plausible local texture, avoiding CDF-stretch metallic artifacts.
+To generalize to boundary-poor contrasts (for example T2w/FLAIR), the synthetic target generator must intentionally destroy healthy tissue boundaries. Adjacent quantile bands must be forced to collapse onto shared targets so their separating gradients are annihilated, explicitly simulating topological tissue merging.
+
+### Scientific conclusion
+v18_4 must add explicit quantile-band coalescence rather than only free-knot randomness. Without forced adjacent-band collapse, edge overfitting remains structurally incentivized.
+
+## 16. v18_4 Post-Mortem: Knot Coalescence Over-Destroyed Useful Structure
+
+### Hypothesis
+Randomly coalescing adjacent spline knots would annihilate healthy boundary shortcuts and improve OOD robustness on boundary-poor contrasts.
+
+### What was implemented
+- Vectorized knot coalescence over `K=8` spatial spline channels using keep masks and `torch.cummax` forward-filled indices.
+- Coalesced knot gathering with pure tensor indexing (`torch.gather`) and AMP-safe interpolation in rank space.
+
+### What worked
+- Slight FLAIR transfer improvement versus v18_3.
+- No startup stability regressions; operator remained fully vectorized and throughput-safe.
+
+### What failed
+- OOD mean regressed from approximately `0.543` (v18_3) to `0.534` (v18_4).
+- T2w transfer also regressed, indicating loss of clinically useful inter-tissue structure.
+
+### Root cause
+Boundary destruction was likely too aggressive. Coalescing adjacent quantile bands removed not only shortcut edges but also structurally informative mid/high-frequency cues needed for robust cross-contrast generalization.
+
+### Pivot
+v18_5 reverts target generation to `v18_3` unanchored splines, but introduces heavy low-pass filtering on the guidance map. This keeps low-frequency intensity supervision while forcing the generator to recover high-frequency structural edges from the source image instead of copying them directly from guidance.
+
+### Scientific conclusion
+The best operating point is controlled edge suppression, not full topological collapse. Heavy guidance low-pass filtering should decouple contrast cues from structural boundary shortcuts while preserving useful macro-structure.
+
 ## 9. v16_bigaug Restart Post-Mortem: Throughput SLO Violation on First Launch
 
 ### Hypothesis
@@ -249,3 +376,38 @@ The initial BigAug implementation executed several dense transforms over the ful
 	1. Removed compile wrapping for BigAug augmentation path.
 	2. Reworked intensity stack to run at half spatial resolution and upsample back, preserving transform contract with substantially lower blur compute.
 - Decision: second hard restart required under strict SLO policy.
+
+## 18. Consolidated Post-Mortem: The Spline "Metallic Reflection" Artifact (v18_1 to v18_5)
+
+### Failure statement
+Continuous CDF/rank spline families from `v18_1` through `v18_5` repeatedly generated non-biological metallic/plastic tissue appearance under aggressive remapping.
+
+### Mechanism
+- Brain tissue intensity clusters are naturally tight and stochastic (approximately Gaussian-like local bands with micro-texture).
+- Continuous spline stretching redistributes these tight clusters over smooth ramps.
+- The remapper imposes artificial low-frequency shading gradients that resemble 3D lighting/reflection, not MRI biology.
+
+### Practical impact
+- Biological texture cues are destroyed.
+- The segmenter receives unrealistic supervision and overfits synthetic shading artifacts.
+
+### Decision
+The spline-over-CDF family is treated as structurally unsafe for aggressive remapping in this project. `v18_6` replaced it with discontinuous texture-preserving chunk remapping to preserve intra-band noise while still enabling strong contrast inversion.
+
+## 19. Post-Mortem: Generative TTA Domain-Shift Paradox
+
+### Failure statement
+Synth-only / generative TTA evaluation failed because the generator is explicitly trained on a T1w-source domain and is not domain-agnostic.
+
+### What was attempted
+- At test time, target-domain scans (for example FLAIR/T2w) were fed into the T1w-trained generator to synthesize additional TTA variants.
+
+### What failed
+- Catastrophic OOD feature explosion in generator activations.
+- Generated volumes became garbage-like and degraded downstream segmentation.
+
+### Root cause
+Generative TTA assumes the synthesis model remains stable for the inference-domain input manifold. Our generator is intentionally specialized to T1w source statistics. Feeding non-T1w contrasts at evaluation violates that manifold assumption and induces distributional breakdown.
+
+### Scientific conclusion
+Generative TTA is only valid when the generator itself is domain-agnostic or explicitly trained for the target-domain manifold. In this project, zero-shot evaluation must avoid generator-driven TTA on non-T1w inputs.

@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from src.intensity_ops import _shared_rand as _shared_rand_intensity
+from src.intensity_ops import _shared_randint as _shared_randint_intensity
 
 
 _SHARED_RNG_COUNTER = 0
@@ -631,6 +632,376 @@ class V18_2PiecewiseSplineTargetGenerator(BaseTargetGenerator):
         target_hist = hist_module(synthesized_targets)
         anchor_state = invert_mask.to(dtype=input_images.dtype).view(b, 1)
         return target_hist, anchor_state, synthesized_targets
+
+
+class V18_3UnanchoredSplineTargetGenerator(BaseTargetGenerator):
+    """Fully unanchored free-knot spatial spline mapping over empirical CDF ranks for v18_3."""
+
+    def __init__(
+        self,
+        coarse_grid_size: tuple[int, int, int] = (8, 8, 8),
+        background_threshold: float = 0.01,
+        num_quantiles: int = 100,
+        max_sample_size: int = 100000,
+    ):
+        super().__init__()
+        self.coarse_grid_size = tuple(int(v) for v in coarse_grid_size)
+        self.background_threshold = float(background_threshold)
+        self.num_quantiles = int(num_quantiles)
+        self.max_sample_size = int(max_sample_size)
+
+    def forward(
+        self,
+        input_images: torch.Tensor,
+        num_bins: int,
+        num_chunks: int,
+        dark_threshold: float,
+        hist_module: HistogramModuleLike,
+        return_guidance_map: bool = True,
+        masks: torch.Tensor | None = None,
+        **kwargs: object,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        del num_bins, num_chunks, dark_threshold, masks, return_guidance_map
+
+        if "images" in kwargs and kwargs["images"] is not None:
+            input_images = kwargs["images"]
+
+        if input_images.ndim != 5:
+            raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
+        if self.num_quantiles < 2:
+            raise ValueError("num_quantiles must be >= 2 for rank mapping.")
+        if self.coarse_grid_size != (8, 8, 8):
+            raise ValueError("V18_3UnanchoredSplineTargetGenerator requires coarse_grid_size=(8, 8, 8).")
+
+        b, c, d, h, w = input_images.shape
+        x = input_images.mean(dim=1, keepdim=True).clamp(0.0, 1.0)
+        x_flat = x.view(b, -1)
+
+        total_voxels = x_flat.shape[1]
+        sample_stride = max(1, total_voxels // self.max_sample_size) if total_voxels > self.max_sample_size else 1
+        sampled = x_flat[:, ::sample_stride].clone()
+        sampled[sampled <= self.background_threshold] = float("nan")
+
+        q_probs = torch.linspace(0.0, 1.0, self.num_quantiles, device=input_images.device, dtype=torch.float32)
+        quantiles = torch.nanquantile(sampled, q_probs, dim=1).transpose(0, 1)
+        quantiles = torch.nan_to_num(quantiles, nan=float(self.background_threshold))
+        quantiles = torch.cummax(quantiles, dim=1).values
+
+        rank_idx = torch.searchsorted(quantiles, x_flat, right=True)
+        rank_idx = rank_idx.clamp(min=0, max=self.num_quantiles - 1)
+        r = (rank_idx.to(dtype=x.dtype) / float(self.num_quantiles - 1)).view(b, 1, d, h, w)
+
+        coarse_knots = _shared_rand((b, 8, 8, 8, 8), device=input_images.device, dtype=input_images.dtype)
+        y_knots = F.interpolate(
+            coarse_knots,
+            size=(d, h, w),
+            mode="trilinear",
+            align_corners=True,
+        )
+
+        orig_dtype = input_images.dtype
+        with torch.autocast(device_type="cuda", enabled=False):
+            r32 = r.to(torch.float32)
+            y_knots32 = y_knots.to(torch.float32)
+
+            k_idx = torch.clamp((r32 * 7.0).long(), 0, 6)
+            t = (r32 * 7.0) - k_idx.to(torch.float32)
+
+            y_lower = torch.gather(y_knots32, 1, k_idx)
+            y_upper = torch.gather(y_knots32, 1, k_idx + 1)
+            y32 = (1.0 - t) * y_lower + t * y_upper
+
+        y = y32.to(dtype=orig_dtype)
+        y[x < self.background_threshold] = 0.0
+        synthesized_targets = y.expand(-1, c, -1, -1, -1).clone().clamp(0.0, 1.0)
+
+        target_hist = hist_module(synthesized_targets)
+        return target_hist, coarse_knots, synthesized_targets
+
+
+class V18_4CoalescingSplineTargetGenerator(BaseTargetGenerator):
+    """Free-knot spline mapping with vectorized knot coalescence for v18_4."""
+
+    def __init__(
+        self,
+        coarse_grid_size: tuple[int, int, int] = (8, 8, 8),
+        background_threshold: float = 0.01,
+        num_quantiles: int = 100,
+        max_sample_size: int = 100000,
+    ):
+        super().__init__()
+        self.coarse_grid_size = tuple(int(v) for v in coarse_grid_size)
+        self.background_threshold = float(background_threshold)
+        self.num_quantiles = int(num_quantiles)
+        self.max_sample_size = int(max_sample_size)
+
+    def forward(
+        self,
+        input_images: torch.Tensor,
+        num_bins: int,
+        num_chunks: int,
+        dark_threshold: float,
+        hist_module: HistogramModuleLike,
+        return_guidance_map: bool = True,
+        masks: torch.Tensor | None = None,
+        **kwargs: object,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        del num_bins, num_chunks, dark_threshold, masks, return_guidance_map
+
+        if "images" in kwargs and kwargs["images"] is not None:
+            input_images = kwargs["images"]
+
+        if input_images.ndim != 5:
+            raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
+        if self.num_quantiles < 2:
+            raise ValueError("num_quantiles must be >= 2 for rank mapping.")
+        if self.coarse_grid_size != (8, 8, 8):
+            raise ValueError("V18_4CoalescingSplineTargetGenerator requires coarse_grid_size=(8, 8, 8).")
+
+        b, c, d, h, w = input_images.shape
+        x = input_images.mean(dim=1, keepdim=True).clamp(0.0, 1.0)
+        x_flat = x.view(b, -1)
+
+        total_voxels = x_flat.shape[1]
+        sample_stride = max(1, total_voxels // self.max_sample_size) if total_voxels > self.max_sample_size else 1
+        sampled = x_flat[:, ::sample_stride].clone()
+        sampled[sampled <= self.background_threshold] = float("nan")
+
+        q_probs = torch.linspace(0.0, 1.0, self.num_quantiles, device=input_images.device, dtype=torch.float32)
+        quantiles = torch.nanquantile(sampled, q_probs, dim=1).transpose(0, 1)
+        quantiles = torch.nan_to_num(quantiles, nan=float(self.background_threshold))
+        quantiles = torch.cummax(quantiles, dim=1).values
+
+        rank_idx = torch.searchsorted(quantiles, x_flat, right=True)
+        rank_idx = rank_idx.clamp(min=0, max=self.num_quantiles - 1)
+        r = (rank_idx.to(dtype=x.dtype) / float(self.num_quantiles - 1)).view(b, 1, d, h, w)
+
+        y_base = _shared_rand((b, 8, 8, 8, 8), device=input_images.device, dtype=input_images.dtype)
+        idx = torch.arange(8, device=input_images.device).view(1, 8, 1, 1, 1).expand(b, 8, 1, 1, 1)
+        keep = (_shared_rand((b, 8, 1, 1, 1), device=input_images.device, dtype=input_images.dtype) > 0.4).long()
+        keep[:, 0] = 1
+        forward_idx = torch.cummax(idx * keep, dim=1)[0]
+        forward_idx = forward_idx.expand(-1, -1, 8, 8, 8)
+        y_coalesced = torch.gather(y_base, 1, forward_idx)
+
+        y_coalesced = F.interpolate(
+            y_coalesced,
+            size=(d, h, w),
+            mode="trilinear",
+            align_corners=True,
+        )
+
+        orig_dtype = input_images.dtype
+        with torch.autocast(device_type="cuda", enabled=False):
+            r32 = r.to(torch.float32)
+            y_coalesced32 = y_coalesced.to(torch.float32)
+
+            k_idx = torch.clamp((r32 * 7.0).long(), 0, 6)
+            t = (r32 * 7.0) - k_idx.to(torch.float32)
+
+            y_lower = torch.gather(y_coalesced32, 1, k_idx)
+            y_upper = torch.gather(y_coalesced32, 1, k_idx + 1)
+            y32 = (1.0 - t) * y_lower + t * y_upper
+
+        y = y32.to(dtype=orig_dtype)
+        y[x < self.background_threshold] = 0.0
+        synthesized_targets = y.expand(-1, c, -1, -1, -1).clone().clamp(0.0, 1.0)
+
+        target_hist = hist_module(synthesized_targets)
+        return target_hist, y_base, synthesized_targets
+
+
+class V18_6TexturePreservingChunkTargetGenerator(BaseTargetGenerator):
+    """Discontinuous raw-intensity chunk mapping with texture-preserving residual scaling for v18_6."""
+
+    def __init__(
+        self,
+        background_threshold: float = 0.01,
+        num_chunks: int = 8,
+        max_sample_size: int = 100000,
+        alpha_min: float = 0.5,
+        alpha_max: float = 2.0,
+    ):
+        super().__init__()
+        self.background_threshold = float(background_threshold)
+        self.num_chunks = int(num_chunks)
+        self.max_sample_size = int(max_sample_size)
+        self.alpha_min = float(alpha_min)
+        self.alpha_max = float(alpha_max)
+
+    def forward(
+        self,
+        input_images: torch.Tensor,
+        num_bins: int,
+        num_chunks: int,
+        dark_threshold: float,
+        hist_module: HistogramModuleLike,
+        return_guidance_map: bool = True,
+        masks: torch.Tensor | None = None,
+        **kwargs: object,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        del num_bins, dark_threshold, masks, return_guidance_map
+
+        if "images" in kwargs and kwargs["images"] is not None:
+            input_images = kwargs["images"]
+
+        if input_images.ndim != 5:
+            raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
+        if self.num_chunks != 8:
+            raise ValueError("V18_6TexturePreservingChunkTargetGenerator requires num_chunks=8.")
+
+        b, c, d, h, w = input_images.shape
+        x = input_images.mean(dim=1, keepdim=True).clamp(0.0, 1.0)
+        x_flat = x.view(b, -1)
+
+        total_voxels = x_flat.shape[1]
+        sample_stride = max(1, total_voxels // self.max_sample_size) if total_voxels > self.max_sample_size else 1
+        sampled = x_flat[:, ::sample_stride].clone()
+        sampled[sampled <= self.background_threshold] = float("nan")
+
+        q_probs = torch.linspace(
+            0.0,
+            1.0,
+            self.num_chunks + 1,
+            device=input_images.device,
+            dtype=torch.float32,
+        )
+        quantiles = torch.nanquantile(sampled, q_probs, dim=1).transpose(0, 1)
+        quantiles = torch.nan_to_num(quantiles, nan=float(self.background_threshold))
+        quantiles = torch.cummax(quantiles, dim=1).values
+
+        q = quantiles
+        q[:, 0] = 0.0
+        q[:, -1] = 1.0
+
+        mu = _shared_rand((b, self.num_chunks), device=input_images.device, dtype=x.dtype)
+        alpha_u = _shared_rand((b, self.num_chunks), device=input_images.device, dtype=x.dtype)
+        alpha = self.alpha_min + (self.alpha_max - self.alpha_min) * alpha_u
+
+        chunk_idx_flat = torch.searchsorted(q, x_flat, right=True) - 1
+        chunk_idx_flat = chunk_idx_flat.clamp(min=0, max=self.num_chunks - 1)
+        chunk_idx = chunk_idx_flat.view(b, 1, d, h, w)
+
+        mu_dense = mu.view(b, self.num_chunks, 1, 1, 1)
+        alpha_dense = alpha.view(b, self.num_chunks, 1, 1, 1)
+        q_lower_dense = q[:, :-1].view(b, self.num_chunks, 1, 1, 1)
+
+        orig_dtype = input_images.dtype
+        with torch.autocast(device_type="cuda", enabled=False):
+            x32 = x.to(torch.float32)
+            mu32 = mu_dense.to(torch.float32).expand(-1, -1, d, h, w)
+            alpha32 = alpha_dense.to(torch.float32).expand(-1, -1, d, h, w)
+            q32 = q_lower_dense.to(torch.float32).expand(-1, -1, d, h, w)
+
+            mu_gathered = torch.gather(mu32, dim=1, index=chunk_idx)
+            alpha_gathered = torch.gather(alpha32, dim=1, index=chunk_idx)
+            q_gathered = torch.gather(q32, dim=1, index=chunk_idx)
+
+            y32 = mu_gathered + alpha_gathered * (x32 - q_gathered)
+            y32 = y32.clamp(0.0, 1.0)
+
+        y = y32.to(dtype=orig_dtype)
+        y[x < self.background_threshold] = 0.0
+        synthesized_targets = y.expand(-1, c, -1, -1, -1).clone()
+
+        target_hist = hist_module(synthesized_targets)
+
+        metadata = torch.cat([mu, alpha], dim=1).to(dtype=orig_dtype)
+        return target_hist, metadata, synthesized_targets
+
+
+class V18_7StochasticTargetGenerator(BaseTargetGenerator):
+    """Stochastic rank-space target generator with dynamic quantiles and spatial identity leakage for v18_7."""
+
+    def __init__(
+        self,
+        background_threshold: float = 0.01,
+        max_sample_size: int = 100000,
+        alpha_min: float = 0.5,
+        alpha_max: float = 2.0,
+    ):
+        super().__init__()
+        self.background_threshold = float(background_threshold)
+        self.max_sample_size = int(max_sample_size)
+        self.alpha_min = float(alpha_min)
+        self.alpha_max = float(alpha_max)
+
+    def forward(
+        self,
+        input_images: torch.Tensor,
+        num_bins: int,
+        num_chunks: int,
+        dark_threshold: float,
+        hist_module: HistogramModuleLike,
+        return_guidance_map: bool = True,
+        masks: torch.Tensor | None = None,
+        **kwargs: object,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        del num_bins, num_chunks, dark_threshold, masks, return_guidance_map
+
+        if "images" in kwargs and kwargs["images"] is not None:
+            input_images = kwargs["images"]
+
+        if input_images.ndim != 5:
+            raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
+
+        b, c, d, h, w = input_images.shape
+        raw = input_images.mean(dim=1, keepdim=True).clamp(0.0, 1.0)
+        raw_flat = raw.view(b, -1)
+
+        total_voxels = raw_flat.shape[1]
+        sample_stride = max(1, total_voxels // self.max_sample_size) if total_voxels > self.max_sample_size else 1
+        sampled = raw_flat[:, ::sample_stride].clone()
+        sampled[sampled <= self.background_threshold] = float("nan")
+
+        k = int(_shared_randint_intensity(4, 13, (1,), device=input_images.device).item())
+        q_probs = torch.linspace(0.0, 1.0, k + 1, device=input_images.device, dtype=torch.float32)
+        quantiles = torch.nanquantile(sampled, q_probs, dim=1).transpose(0, 1)
+        quantiles = torch.nan_to_num(quantiles, nan=float(self.background_threshold))
+        quantiles = torch.cummax(quantiles, dim=1).values
+        quantiles[:, 0] = 0.0
+        quantiles[:, -1] = 1.0
+
+        mu = _shared_rand((b, k), device=input_images.device, dtype=torch.float32)
+        alpha_u = _shared_rand((b, k), device=input_images.device, dtype=torch.float32)
+        alpha = self.alpha_min + (self.alpha_max - self.alpha_min) * alpha_u
+
+        orig_dtype = input_images.dtype
+        with torch.autocast(device_type="cuda", enabled=False):
+            raw32 = raw.to(torch.float32)
+            raw_flat32 = raw32.view(b, -1)
+            quantiles32 = quantiles.to(torch.float32)
+            mu32 = mu.to(torch.float32)
+            alpha32 = alpha.to(torch.float32)
+
+            chunk_idx = torch.searchsorted(quantiles32[:, 1:-1], raw_flat32, right=True)
+            chunk_idx = chunk_idx.clamp(min=0, max=k - 1)
+
+            lower_bounds = quantiles32.gather(1, chunk_idx)
+            mu_c = mu32.gather(1, chunk_idx)
+            alpha_c = alpha32.gather(1, chunk_idx)
+
+            y_synth_flat = mu_c + alpha_c * (raw_flat32 - lower_bounds)
+            y_synth_flat = y_synth_flat.clamp(0.0, 1.0)
+            y_synth = y_synth_flat.view(b, 1, d, h, w)
+
+            s = int(_shared_randint_intensity(1, 9, (1,), device=input_images.device).item())
+            alpha_coarse = _shared_rand((b, 1, s, s, s), device=input_images.device, dtype=torch.float32)
+            alpha_dense = F.interpolate(
+                alpha_coarse,
+                size=(d, h, w),
+                mode="trilinear",
+                align_corners=s > 1,
+            )
+
+            y_final = alpha_dense * raw32 + (1.0 - alpha_dense) * y_synth
+            y_final = y_final.clamp(0.0, 1.0)
+            y_final = torch.where(raw32 < self.background_threshold, torch.zeros_like(y_final), y_final)
+
+        synthesized_targets = y_final.to(dtype=orig_dtype).expand(-1, c, -1, -1, -1).clone()
+        target_hist = hist_module(synthesized_targets)
+        metadata = torch.cat([mu, alpha], dim=1).to(dtype=orig_dtype)
+        return target_hist, metadata, synthesized_targets
 
 
 def _create_range_translation_guidance_map(

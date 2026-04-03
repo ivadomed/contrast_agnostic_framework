@@ -14,4 +14,33 @@ The core challenge in unsupervised single-source MRI contrast synthesis is the "
 * **v12 (Multi-Peak GMM Histogram Matching):** Used CDF matching against a random Multi-Peak GMM to fix the gray washout and force vivid contrast bands. Purged Fourier noise. Result: Restored sharp boundaries (T2w->T1w hit 0.49). *Flaw:* CDF matching is strictly monotonic, preventing contrast inversions (dark could never become bright).
 * **v13 (Soft-Quantile Shuffling & Consistency Regularization):** Replaced monotonic CDF matching with temperature-scaled soft-assignments to random, independent targets (allowing contrast inversion). Added a Jensen-Shannon/KL Consistency Loss (via batch concatenation) to anchor the segmenter to real T1w anatomy. Result: Phenomenal breakthrough. T2w in-domain hit 0.814, OOD on T1w hit 0.525.
 * **v14 (Spatially-Varying Soft-Quantiles):** Attempted extreme variability by mapping tissues to 3D gradients instead of scalars. Result: Failed. Overlapping 3D gradients averaged out into gray mush, and background masking was bugged.
-* **v15 (Non-Monotonic Grid Chunking):** Current SOTA candidate. Combines the spatial sharpness of v8's grids with the contrast-inverting non-monotonicity of v13, plus explicit background masking.
+* **v15 (Non-Monotonic Grid Chunking):** Major hybrid milestone. Combines the spatial sharpness of v8's grids with the contrast-inverting non-monotonicity of v13, plus explicit background masking.
+
+## Loss Landscape Contradictions (v18_6 Lesson)
+
+When a target or guidance map is intentionally blurred, the loss stack must be made logically consistent with that decision.
+
+What failed in `v18_5`:
+- Guidance was heavily low-pass filtered.
+- At the same time, high-frequency L1 guidance penalties (for example `guidance_sharp`) still forced the model to match crisp details against a blurred target.
+
+Why this is contradictory:
+- The blur objective says: do not trust high-frequency detail in guidance.
+- The sharp-L1 objective says: exactly reproduce high-frequency detail from guidance.
+- The optimizer receives mutually incompatible gradients and punishes anatomically correct sharp boundaries recovered from the raw source image.
+
+v18_6 correction:
+- Keep blurred guidance to remove shortcut edges.
+- Remove/disable high-frequency L1 penalties against that blurred guidance.
+- Let dominant edge-aware supervision and source-image structure drive crisp anatomy recovery.
+
+Transferable rule:
+- If you intentionally low-pass a supervision signal, do not keep high-frequency reconstruction penalties tied to that same signal.
+
+## The Regularization Power of Total Synthetic Starvation
+
+Setting the segmenter training augmentation probability to 1.0 changes the optimization problem in a useful way. It trades a small amount of peak in-domain performance, roughly from the ~0.70 range down to ~0.62, for much stronger out-of-distribution stability and cross-contrast invariance.
+
+The mechanism is simple: once the model is denied raw source-domain views during training, it can no longer lean on domain-specific intensity bands as shortcuts. It is forced to learn pure topological structure and anatomy-consistent shape priors, which is exactly what improves transfer when contrast changes at test time.
+
+This is why the `v18_6` augmentation-probability-1.0 setting matters. It does not make T2w intrinsically richer than T1w, but it does show that total synthetic starvation is a powerful regularizer for segmenter robustness.
