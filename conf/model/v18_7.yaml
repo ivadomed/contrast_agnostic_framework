@@ -4,7 +4,7 @@ defaults:
 
 generator:
   gen_version: v18_7
-  base_filters: 8
+  base_filters: 6
   apply_guidance_blur: false
   target_generator:
     _target_: src.target_generators.V18_7StochasticTargetGenerator

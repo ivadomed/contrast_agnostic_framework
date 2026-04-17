@@ -1,0 +1,55 @@
+# @package model
+# seg_A: Legacy 3D MONAI U-Net / AH-Net architecture.
+# Provides ALL default hyperparameters for both the generator network and the segmenter.
+# Generator data-regime overrides are applied by composing a conf/generator/gen_*.yaml on top.
+
+generator:
+  in_channels: 2
+  out_channels: 1
+  base_filters: 16
+  gen_version: null
+  channels_last_3d: true
+  tf32: true
+  fused_adamw: true
+  num_bins: 64
+  num_chunks: 8
+  dark_threshold: 0.05
+  apply_guidance_blur: true
+  target_generator:
+    _target_: src.target_generators.LegacyChunkTargetGenerator
+  guidance_perturber: null
+  guidance_blur:
+    kernel_size: 5
+    sigma: 2.0
+  loss_weights:
+    wasserstein: 0.0
+    edge: 20.0
+    tv: 2.0
+    range: 100.0
+    guidance_blurred: 20.0
+    guidance_sharp: 40.0
+
+segmenter:
+  in_channels: 1
+  out_channels: 4
+  channels: [16, 32, 64, 128]
+  strides: [2, 2, 2]
+  num_res_units: 2
+  use_generator: false
+  fully_artificial: false
+  gen_version: null
+  gen_weights: null
+  aug_prob_train: 1.0
+  aug_prob_val: 1.0
+  pretrained_ckpt_path: null
+  freeze_encoder: false
+  compile_model: true
+  channels_last_3d: true
+  tf32: true
+  num_bins: 128
+  num_chunks: 8
+  dark_threshold: 0.05
+  apply_guidance_blur: true
+  target_generator:
+    _target_: src.target_generators.LegacyChunkTargetGenerator
+  guidance_perturber: null

@@ -1,0 +1,28 @@
+defaults:
+  - defaults
+  - _self_
+
+generator:
+  gen_version: synthseg_baseline
+  apply_guidance_blur: false
+  target_generator:
+    _target_: src.target_generators.SynthSegBaselineTargetGenerator
+  loss_weights:
+    edge: 30.0
+    tv: 0.5
+    range: 100.0
+    guidance_blurred: 10.0
+    guidance_sharp: 0.0
+  guidance_perturber:
+    _target_: src.guidance_perturbers.IdentityGuidancePerturber
+
+segmenter:
+  use_generator: true
+  gen_version: synthseg_baseline
+  aug_prob_val: 1.0
+  compile_synthesis: false
+  apply_guidance_blur: false
+  target_generator:
+    _target_: src.target_generators.SynthSegBaselineTargetGenerator
+  guidance_perturber:
+    _target_: src.guidance_perturbers.IdentityGuidancePerturber

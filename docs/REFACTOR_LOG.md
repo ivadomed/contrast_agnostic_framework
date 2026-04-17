@@ -1,5 +1,98 @@
 # Refactor Log
 
+## [2026-04-15] v19 Bookends Fine-Tuning: nnUNetTrainer_Bookends for Domain Adaptation
+
+- Scope: Introduced `nnUNetTrainer_Bookends` as a conservative transfer learning trainer to adapt the generalized v19 segmenters to a specific target data subset. The original `nnUNetTrainerBraTSGen19Wandb` checkpoints are never touched.
+- SOTA status: this v19 + seg_B + Bookends route is the current best adapted pipeline when target-subset fine-tuning is allowed.
+- Bookends Transfer Learning Strategy:
+  - All inner encoder (stages.1+) and decoder (upsampling blocks) parameters are frozen.
+  - Exactly two layer groups are kept trainable:
+    - `encoder.stages.0` — the first (shallowest) encoder block. Adapting this re-calibrates low-level intensity features to the target domain without disturbing the learned topology.
+    - `decoder.seg_layers` — all final 1×1×1 segmentation output heads (one per deep supervision level). Adapting these re-aligns class-probability distributions to the target dataset statistics.
+  - Rationale: shallow encoder features are maximally domain-specific (intensity-level); seg heads are maximally task-specific (output calibration). Inner layers encode the generalized structural priors from v19 pre-training and must not be catastrophically forgotten.
+- Non-Destructive Checkpoint Policy:
+  - Because the `-tr nnUNetTrainer_Bookends` flag is used, nnU-Net automatically creates a new output folder `nnUNetTrainer_Bookends__nnUNetPlans__3d_fullres/`, completely isolated from the original `nnUNetTrainerBraTSGen19Wandb__nnUNetPlans__3d_fullres/` directory.
+  - Pretrained weights are loaded via nnU-Net's native `-pretrained_weights` flag, which copies weight tensors at runtime and does not modify the source checkpoint file.
+  - Pretrained checkpoint paths:
+    - T1w base: `results/nnUNet/Dataset022_BraTST1w_gen_raw/nnUNetTrainerBraTSGen19Wandb__nnUNetPlans__3d_fullres/fold_0/checkpoint_final.pth`
+    - T2w base: `results/nnUNet/Dataset023_BraTST2w_gen_raw/nnUNetTrainerBraTSGen19Wandb__nnUNetPlans__3d_fullres/fold_0/checkpoint_final.pth`
+- Optimizer:
+  - Only the unfrozen parameters are passed to `torch.optim.SGD` (`momentum=0.99`, `nesterov=True`). This prevents momentum buffer allocation for frozen weights, reducing VRAM and ensuring mathematically correct gradient flow.
+  - Learning rate schedule: PolyLR over the configured number of epochs (unchanged from base trainer).
+  - The trainer logs a full frozen/trainable parameter summary to the nnU-Net log file at optimizer initialization.
+- Files created:
+  - `nnunetv2/training/nnUNetTrainer/variants/nnUNetTrainer_Bookends.py` (installed into the active venv at `nih_project/.venv`)
+  - `scripts/nnunet_scripts/run_seg_B_bookends_t1w.sh` — approved launch script for T1w Bookends fine-tuning
+  - `scripts/nnunet_scripts/run_seg_B_bookends_t2w.sh` — approved launch script for T2w Bookends fine-tuning
+- Evaluation routing:
+  - Fine-tuned model results route to `results/eval/v19/multiclass/seg_B/finetuning/<model_contrast>/` to keep them isolated from the zero-shot v19 gen_19 results.
+  - `scripts/nnunet_scripts/run_evaluation_nnunet.sh` updated: added `bookends` family branch (detected via `*bookends*` in run name), auto-inferring model contrast from run name and routing to the finetuning subtree (no `BOOKENDS_TARGET_DATASET` env var required in the current script).
+  - `scripts/nnunet_scripts/aggregate_nnunet_results.py` updated: added `"bookends": "nnUNetTrainer_Bookends"` to `TRAINER_MAP`.
+- Launch instructions (current scripts hardcode dataset IDs/names for T1w/T2w):
+  - Slot 0 (T1w): `tmux new-session -d -s bookends_t1w "set_slot 0 CUDA_VISIBLE_DEVICES=0 bash scripts/nnunet_scripts/run_seg_B_bookends_t1w.sh 2>&1 | tee /tmp/slot0_bookends_t1w.log"`
+  - Slot 1 (T2w): `tmux new-session -d -s bookends_t2w "set_slot 1 CUDA_VISIBLE_DEVICES=1 bash scripts/nnunet_scripts/run_seg_B_bookends_t2w.sh 2>&1 | tee /tmp/slot1_bookends_t2w.log"`
+
+## [2026-04-13] v16_bigaug Baseline Correction: Paper-Exact BigAug Bounds and Pre-Augmentation Min-Max Scaling
+
+- Scope: Patched the `v16_bigaug` segmenter baseline so the augmentation path matches the published Deep Stacked Transformation parameterization instead of using looser internal defaults.
+- BigAug configuration:
+  - Routed the baseline through `conf/model/bigaug.yaml` with explicit `segmenter.bigaug` settings.
+  - Enforced `p=0.5` for all nine transforms.
+  - Set the paper bounds exactly:
+    - blur `std: [0.25, 1.5]`
+    - sharpen `alpha: [10, 30]`
+    - noise `std: [0.1, 1.0]`
+    - brightness `shift: [-0.1, 0.1]`
+    - contrast `gamma: [0.5, 4.5]`
+    - perturbation `scale: [-0.1, 0.1]`, `shift: [-0.1, 0.1]`
+    - rotation `degrees: [-20, 20]`
+    - scaling `factor: [0.4, 1.6]`
+    - deformation `smoothing std: [10, 13]`, `scale: [0, 1000]`
+- Normalization contract:
+  - Added a hard min-max normalization guard inside `src/bigaug_augmentations.py` so the image is scaled to `[0, 1]` before the appearance and noise stack executes.
+  - This preserves the mathematical interpretation of the additive brightness/noise bounds even if an upstream loader path changes.
+- Wiring:
+  - Updated `MRISegmenterLightning._ensure_gpu_aug` to pass the active config into the BigAug builder.
+  - The existing data pipeline already applies `ScaleIntensityd(..., minv=0.0, maxv=1.0)` before the GPU augmentation hook, so the baseline now has both upstream and entry-point protection.
+
+## [2026-04-03] v18_7: Dynamic Stochastic Identity Leakage with Reduced Generator Bottleneck
+
+- Scope: Added `v18_7` as a stricter bottlenecked successor to `v18_6`, combining highly stochastic target generation with a smaller generator footprint.
+- Core Target Generator (`V18_7StochasticTargetGenerator` in `src/target_generators.py`):
+  - Dynamic quantile sizing:
+    - Samples `K ~ U(4, 12)` via `_shared_randint(4, 13, ...)`.
+    - Computes batched quantiles on non-background voxels (`x > 0.01`) and pads the edges so the range is explicitly anchored at `q_0 = 0` and `q_K = 1`.
+  - Residual chunk synthesis:
+    - Samples `mu ~ U(0,1)` and `alpha ~ U(0.5,2.0)` with shape `(B, K)`.
+    - Runs the aggressive affine residual mapping in FP32 under `autocast(enabled=False)`:
+      - `y_synth = mu_c + alpha_c * (x - q_{c-1})`
+    - Clamps the synthetic target to `[0,1]`.
+  - Dynamic spatial identity leakage:
+    - Samples a coarse alpha grid size `S ~ U(1, 8)`.
+    - Builds `A_coarse` with shape `(B,1,S,S,S)` and upsamples it with trilinear interpolation to a dense 3D blend mask.
+    - Produces `y_final = A_dense * x + (1 - A_dense) * y_synth` so raw anatomy leaks back into the target in a spatially varying way.
+  - Strict masking:
+    - Applies background masking with `x < 0.01 -> 0.0` and returns the original dtype.
+- Bottleneck reduction:
+  - Set `generator.base_filters: 8` in `conf/model/v18_7.yaml` to reduce the generator footprint and speed up the forward/backward path.
+- Guidance and loss routing:
+  - Kept `MildGaussianGuidancePerturber` from `v18_6`.
+  - Preserved the v18_6 loss hotfix (`guidance_sharp: 0`, `edge: 30`, `tv: 0.5`, `apply_guidance_blur: false`).
+- Validation and SLO check:
+  - Validation launch: `bash scripts/run_generators.sh 2 v18_7 t1w` in tmux.
+  - Monitoring window: full 8 minutes with minute-by-minute tmux capture.
+  - Dataset cache loading completed.
+  - Epoch 1 completed without CUDA OOM or tensor-shape mismatch errors.
+  - Observed generator throughput stabilized around `1.87-2.57 it/s` across 67 batches, corresponding to roughly `24-27s/epoch`, comfortably below the `<1.5 mins/epoch` SLO.
+  - A non-contiguous `searchsorted` boundary warning appeared in the first pass; it was fixed by making the quantile boundaries contiguous before the rerun.
+  - Validation tmux session was killed after confirmation.
+- Queued production launch:
+  - Slot 2 tmux session: `v18_7_slot2_chain`
+    - `bash scripts/run_generators.sh 2 v18_7 t1w && bash scripts/run_segmenters.sh 2 v18_7 t1w`
+  - Slot 3 tmux session: `v18_7_slot3_chain`
+    - `bash scripts/run_generators.sh 3 v18_7 t2w && bash scripts/run_segmenters.sh 3 v18_7 t2w`
+  - Both sessions were created successfully under tmux.
+
 ## [2026-04-03] Evaluation TTA/Synth-Only Routing: Generator-Driven Probability Accumulation
 
 - Scope: Added generative test-time augmentation and synth-only evaluation modes to `scripts/evaluate.py` while preserving binary vs. multiclass checkpoint auto-detection.
@@ -1372,3 +1465,91 @@ Because T1-weighted scans possess the densest structural priors (distinct GM/WM/
 - `tests/test_augmentations.py`
 - `docs/REFACTOR_LOG.md`
 
+
+## v19 Stochastic Semantic Decoupling
+Integrated `v19` Stochastic Semantic Decoupling by synthesizing SynthSeg-style geometric label-priors with the `v18_6` texture-preserving latent space. This resolves the physical limitation of "invisible" edema boundaries in T1w source images by injecting hallucinated pathological boundaries (e.g., T2w/FLAIR edema) while preserving the underlying biological micro-texture without collapsing intensities.
+Validation run for T1w contrast metrics meets sub-1.5 mins/epoch SLO. Segmenter pipeline is strictly chained.
+
+## v19 Segmenter Bugfix and Execution
+Fixed the `UnboundLocalError` in the segmenter checkpoint path generation caused by a shadowed `re` import. Validation runs confirm that the `v19` segmenters now start normally and properly respect SLO guidelines (segmenter runtime < 14s/epoch). We launched segmenter-only training for both `t1w` and `t2w` conditions in separate tmux sessions executing safely on slots 2 and 3.
+
+## SynthSeg Baseline Implementation
+Implemented `SynthSegBaselineTargetGenerator` as a rigorous ablation baseline against our `v19` architecture. This baseline applies pure SynthSeg GMM sampling exclusively to the available tumor labels (NCR: 1, ED: 2, ET: 3 are handled separately), while strictly omitting domain randomization / latent texture generation on the healthy background regions. T1w and T2w queued production jobs were initiated properly on slots 2 and 3 using explicit dependencies chained via `&&` within `tmux`. 
+
+---
+
+## [2026-04-13] Versioning Paradigm Shift: Decoupled Architecture × Data-Regime Axes
+
+### Motivation
+The previous single-integer versioning scheme (e.g., `v18_7`, `v19`) conflated two **orthogonal** axes:
+1. **Segmenter architecture** — the network topology (MONAI U-Net / AH-Net, nnUNet, etc.)
+2. **Data regime (generator)** — how training data is synthesised or augmented
+
+This caused naming collisions when evaluating the same architecture under different data regimes (e.g., `v22_v19` was required to distinguish "architecture v22 trained with generator v19"). It made matrix-style ablation tables unreadable and the MLOps checkpoint/logging hierarchy ambiguous.
+
+### Decision
+Adopted the `<segmenter>_<generator>` compound identifier (e.g., `seg_A_gen_19`).  This eliminates the naming debt and enables clean ablation matrices of the form:
+
+|            | gen_raw | gen_16 | gen_18_6 | gen_19 | gen_20_1 | gen_21 |
+|------------|:-------:|:------:|:--------:|:------:|:--------:|:------:|
+| **seg_A**  |   ✓     |   ✓    |    ✓     |   ✓    |    ✓     |   ✓    |
+| **seg_B**  |   ✓     |        |          |        |          |        |
+
+### Structural Changes
+
+**`conf/` directory restructured:**
+```
+conf/
+├── segmenter/          ← architecture axis
+│   ├── seg_A.yaml      (Legacy 3D MONAI U-Net / AH-Net + full default hyperparams)
+│   └── seg_B.yaml      (nnUNet framework stub; training via nnUNetv2_train)
+└── generator/          ← data-regime axis
+    ├── gen_raw.yaml    (Standard unaugmented T1w — pure supervised baseline)
+    ├── gen_16.yaml     (BigAug Baseline — Deep Stacked Transformation)
+    ├── gen_18_6.yaml   (SOTA Unsupervised Continuous Mapping — v18_6 texture-preserving chunk)
+    ├── gen_19.yaml     (Stochastic Semantic Decoupling — v19 label-conditioned texture)
+    ├── gen_20_1.yaml   (Partial SynthSeg Baseline)
+    └── gen_21.yaml     (Online Sparse SynthSeg Baseline)
+```
+
+Both groups use `# @package model` so the existing `cfg.model.generator.*` / `cfg.model.segmenter.*` namespace is preserved; **`lightning_modules.py` and `datamodule.py` require no changes**.
+
+**`conf/config.yaml`** defaults changed from:
+```yaml
+- model: defaults
+```
+to:
+```yaml
+- segmenter: seg_A    # architecture axis
+- generator: gen_raw  # data-regime axis
+```
+`version:` is now `null` (deprecated); run identity is derived from Hydra config-group choices at runtime.
+
+**`scripts/train.py`** updated:
+- Added `_get_model_id(cfg)` which reads `HydraConfig.get().runtime.choices` to produce `seg_A_gen_19` etc.
+- `_build_run_name` and `_build_checkpoint_dir` now use `model_id` for W&B run names and checkpoint paths.
+- Backward compatible: legacy scripts that still pass `version=v18_7` fall back correctly.
+
+**Backward compatibility:** Legacy run scripts that pass `model=v18_7` etc. should be invoked with `--config-name config_legacy` (see `conf/config_legacy.yaml`), which preserves the old `model:` group. New runs should use the canonical `conf/config.yaml` with `segmenter=seg_A generator=gen_*` overrides. The `version=<old>` fallback in `_get_model_id` is honoured when config-group choices are absent.
+
+### New Baseline: seg_B_gen_raw (nnUNet T1w)
+Launched the pure nnUNet baseline:
+- Dataset: `Dataset022_BraTST1w_gen_raw` — T1w channel extracted from MSD Task01, 329 labeled training cases, label remap `{4→3}`.
+- Conversion script: `scripts/convert_to_nnunet_format.py`
+- Launch script: `scripts/run_seg_B_gen_raw_t1w.sh` (tmux slot1, fold 0, 3d_fullres)
+- nnUNetv2 env: `nnUNet_raw/preprocessed/results` under `{PROJECT_ROOT}/data/` and `results/nnUNet/`
+
+### Files Touched
+- `conf/config.yaml`
+- `conf/segmenter/seg_A.yaml` (new)
+- `conf/segmenter/seg_B.yaml` (new)
+- `conf/generator/gen_raw.yaml` (new)
+- `conf/generator/gen_16.yaml` (new)
+- `conf/generator/gen_18_6.yaml` (new)
+- `conf/generator/gen_19.yaml` (new)
+- `conf/generator/gen_20_1.yaml` (new)
+- `conf/generator/gen_21.yaml` (new)
+- `scripts/train.py`
+- `scripts/convert_to_nnunet_format.py` (new)
+- `scripts/run_seg_B_gen_raw_t1w.sh` (new)
+- `docs/REFACTOR_LOG.md`

@@ -3,6 +3,10 @@
 This document summarizes the project evolution from v1 to v15 in a consistent scientific format:
 Hypothesis -> Implementation -> Result -> Scientific Takeaway.
 
+Scope note:
+- This file is an archival progression log for the v1-v18_6 lineage.
+- Current adapted SOTA status (v19 + seg_B Bookends) is maintained in architecture/refactor/evaluation docs.
+
 ## v1
 - Hypothesis: A basic generator-guided training loop can improve cross-contrast robustness over single-contrast supervision.
 - Implementation: Initial generator + segmenter workflow with early histogram/guidance ideas.
@@ -96,7 +100,7 @@ Hypothesis -> Implementation -> Result -> Scientific Takeaway.
 ## v15
 - Hypothesis: Combine v8 spatial sharpness with v13 non-monotonicity, while enforcing strict background semantics.
 - Implementation: Non-monotonic grid chunking with dense interpolated thresholds, unsorted chunk targets, and explicit tissue/background masking; integrated with inherited anisotropic degradation and consistency regularization gates.
-- Result: Current SOTA candidate with strong in-domain and balanced OOD for T1w source branch (ens1: in-domain 0.7060, OOD mean 0.6257).
+- Result: Then-SOTA candidate in this lineage with strong in-domain and balanced OOD for the T1w source branch (ens1: in-domain 0.7060, OOD mean 0.6257).
 - Scientific Takeaway: Best-performing design is a hybrid: spatially structured mapping + non-monotonic inversion + hard background constraints.
 
 ## Summary Across Versions
@@ -111,4 +115,4 @@ Hypothesis -> Implementation -> Result -> Scientific Takeaway.
 - `v18_3`: Unanchored Free-Knot Splines. Excellent OOD gain, but preserved healthy boundaries too perfectly.
 - `v18_4`: Spline Knot Coalescence. Aggressive boundary destruction; slight overall performance dip.
 - `v18_5`: Blurred Guidance. Correct direction, but loss contradiction (blurred target with sharp guidance penalties) undermined optimization.
-- `v18_6`: Current SOTA. Texture-preserving chunk remapping + blurred guidance + loss hotfix, reaching OOD mean Dice 0.621 (zero-shot).
+- `v18_6`: Zero-shot reference in the seg_A lineage. Texture-preserving chunk remapping + blurred guidance + loss hotfix, reaching strong OOD stability.

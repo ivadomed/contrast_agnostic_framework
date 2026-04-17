@@ -8,6 +8,7 @@ import re
 import hydra
 import pytorch_lightning as pl
 import torch
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
@@ -43,68 +44,46 @@ def _get_git_commit_hash() -> str:
         return "unknown"
 
 
-def _build_run_name(cfg: DictConfig) -> str:
-    if cfg.logging.run_name is not None:
-        return str(cfg.logging.run_name)
+def _get_model_id(cfg: DictConfig) -> str:
+    """Return the run identifier in <dataset>_<segmenter>_<generator> form.
 
-    task = str(cfg.task)
-    if task == "generator":
-        gen_version = cfg.model.generator.gen_version
-        if gen_version is None:
-            gen_version = cfg.version
-        return f"generator-{gen_version}-{cfg.data.source_contrast}"
+    Reads Hydra config-group choices at runtime so new-style invocations
+    (data=brats segmenter=seg_A generator=gen_19) produce
+    'brats_seg_A_gen_19'. Falls back to cfg.version for legacy scripts.
+    """
 
-    seg_version = cfg.version
-    resolved_gen_version = cfg.model.segmenter.gen_version
-    if resolved_gen_version is None and hasattr(cfg.model, "generator") and hasattr(cfg.model.generator, "gen_version"):
-        if cfg.model.generator.gen_version is not None:
-            resolved_gen_version = cfg.model.generator.gen_version
-    if resolved_gen_version is None:
-        resolved_gen_version = seg_version
+    dataset_name = str(getattr(cfg.data, "name", "unknown_dataset"))
+    task = str(getattr(cfg, "task", "generator"))
+    try:
+        choices = HydraConfig.get().runtime.choices
+        seg_id = getattr(getattr(cfg, "segmenter", None), "name", None) or choices.get("segmenter", None)
+        gen_id = getattr(getattr(cfg, "generator", None), "name", None) or choices.get("generator", None)
+        if task == "generator" and gen_id:
+            return f"{dataset_name}_{gen_id}"
+        if seg_id and gen_id:
+            return f"{dataset_name}_{seg_id}_{gen_id}"
+    except Exception:
+        pass
+    version = getattr(cfg, "version", None)
+    if version is not None and str(version) not in ("None", "null"):
+        return str(version)
+    return f"{dataset_name}_unknown_segmenter_unknown_generator"
 
-    if bool(cfg.model.segmenter.fully_artificial):
-        return f"fully-artificial-{resolved_gen_version}-{cfg.data.source_contrast}-segmenter"
-    if bool(cfg.model.segmenter.use_generator):
-        return f"generator-{resolved_gen_version}-{cfg.data.source_contrast}-segmenter"
-    return f"baseline-{seg_version}-{cfg.data.source_contrast}-segmenter"
+
+def _get_segmenter_choice_name(cfg: DictConfig) -> str:
+    try:
+        choices = HydraConfig.get().runtime.choices
+        seg_id = choices.get("segmenter", None)
+        if seg_id:
+            return str(seg_id)
+    except Exception:
+        pass
+    return str(getattr(getattr(cfg, "segmenter", None), "name", "segmenter"))
 
 
-def _build_checkpoint_dir(cfg: DictConfig) -> Path:
-    task = str(cfg.task)
-    if task == "generator":
-        configured_dir = cfg.training.checkpoint.dirpath_generator
-        if configured_dir is not None:
-            return _resolve_path(str(configured_dir))
-
-        gen_version = cfg.model.generator.gen_version
-        if gen_version is None:
-            gen_version = cfg.version
-
-        base_dir = PROJECT_ROOT / "checkpoints" / str(gen_version) / "generator" / str(cfg.data.source_contrast)
-    else:
-        configured_dir = cfg.training.checkpoint.dirpath_segmenter
-        if configured_dir is not None:
-            return _resolve_path(str(configured_dir))
-
-        resolved_version = cfg.model.segmenter.gen_version
-        if resolved_version is None and hasattr(cfg.model, "generator") and hasattr(cfg.model.generator, "gen_version"):
-            if cfg.model.generator.gen_version is not None:
-                resolved_version = cfg.model.generator.gen_version
-        if resolved_version is None:
-            resolved_version = cfg.version
-
-        if bool(cfg.model.segmenter.fully_artificial):
-            mode = "fully_artificial"
-        elif bool(cfg.model.segmenter.use_generator):
-            mode = "generator"
-        else:
-            mode = "baseline"
-
-        version_for_segmenter = resolved_version if bool(cfg.model.segmenter.use_generator) else cfg.version
-        base_dir = PROJECT_ROOT / "checkpoints" / str(version_for_segmenter) / "segmenter" / mode / str(cfg.data.source_contrast)
-
-    base_dir.mkdir(parents=True, exist_ok=True)
-
+def _list_run_dirs(base_dir: Path) -> list[tuple[int, Path]]:
+    if not base_dir.exists():
+        return []
     run_pattern = re.compile(r"^run(\d+)$")
     run_dirs = []
     for child in base_dir.iterdir():
@@ -113,6 +92,118 @@ def _build_checkpoint_dir(cfg: DictConfig) -> Path:
         match = run_pattern.match(child.name)
         if match:
             run_dirs.append((int(match.group(1)), child))
+    return run_dirs
+
+
+def _legacy_checkpoint_bases(cfg: DictConfig, model_id: str, task: str) -> list[Path]:
+    bases: list[Path] = []
+    source_contrast = str(cfg.data.source_contrast)
+    if task == "generator":
+        gen_version = cfg.model.generator.gen_version
+        if gen_version is None:
+            gen_version = model_id
+        bases.append(PROJECT_ROOT / "checkpoints" / str(gen_version) / "generator" / source_contrast)
+        bases.append(PROJECT_ROOT / "checkpoints" / "generator" / source_contrast)
+        return bases
+
+    if bool(cfg.model.segmenter.fully_artificial):
+        mode = "fully_artificial"
+    elif bool(cfg.model.segmenter.use_generator):
+        mode = "generator"
+    else:
+        mode = "baseline"
+
+    bases.append(PROJECT_ROOT / "checkpoints" / model_id / "segmenter" / mode / source_contrast)
+    return bases
+
+
+def _build_run_name(cfg: DictConfig) -> str:
+    if cfg.logging.run_name is not None:
+        return str(cfg.logging.run_name)
+
+    model_id = _get_model_id(cfg)
+    task = str(cfg.task)
+    dataset_name = str(getattr(cfg.data, "name", "dataset"))
+
+    if task == "generator":
+        gen_version = cfg.model.generator.gen_version
+        if gen_version is None:
+            gen_version = model_id
+        return f"generator-{dataset_name}-{gen_version}-{cfg.data.source_contrast}"
+
+    if bool(cfg.model.segmenter.fully_artificial):
+        return f"fully-artificial-{model_id}-{cfg.data.source_contrast}-segmenter"
+    if bool(cfg.model.segmenter.use_generator):
+        gen_version = cfg.model.segmenter.gen_version
+        if gen_version is None:
+            gen_version = "unknown"
+        seg_name = _get_segmenter_choice_name(cfg)
+        return f"segmenter-{dataset_name}-{seg_name}-generated-{gen_version}-{cfg.data.source_contrast}"
+    seg_name = _get_segmenter_choice_name(cfg)
+    return f"baseline-{dataset_name}-{seg_name}-{cfg.data.source_contrast}-segmenter"
+
+
+def _build_checkpoint_dir(cfg: DictConfig) -> Path:
+    model_id = _get_model_id(cfg)
+    dataset_name = str(getattr(cfg.data, "name", "unknown_dataset"))
+    task = str(cfg.task)
+
+    if task == "generator":
+        configured_dir = cfg.training.checkpoint.dirpath_generator
+        if configured_dir is not None:
+            return _resolve_path(str(configured_dir))
+
+        gen_version = cfg.model.generator.gen_version
+        if gen_version is None:
+            gen_version = model_id
+        base_dir = (
+            PROJECT_ROOT
+            / "checkpoints"
+            / dataset_name
+            / model_id
+            / "generator"
+            / str(cfg.data.source_contrast)
+        )
+    else:
+        configured_dir = cfg.training.checkpoint.dirpath_segmenter
+        if configured_dir is not None:
+            return _resolve_path(str(configured_dir))
+
+        if bool(cfg.model.segmenter.fully_artificial):
+            mode = "fully_artificial"
+        elif bool(cfg.model.segmenter.use_generator):
+            mode = "generator"
+        else:
+            mode = "baseline"
+
+        seg_name = _get_segmenter_choice_name(cfg)
+        gen_version = cfg.model.segmenter.gen_version
+        if gen_version is None:
+            gen_version = "none"
+        run_family = seg_name if mode == "baseline" else f"{seg_name}_gen_{gen_version}"
+
+        base_dir = (
+            PROJECT_ROOT
+            / "checkpoints"
+            / dataset_name
+            / run_family
+            / "segmenter"
+            / mode
+            / str(cfg.data.source_contrast)
+        )
+
+    base_dir.mkdir(parents=True, exist_ok=True)
+
+    run_dirs = _list_run_dirs(base_dir)
+
+    if bool(cfg.training.resume) and not run_dirs:
+        for legacy_base in _legacy_checkpoint_bases(cfg, model_id=model_id, task=task):
+            legacy_runs = _list_run_dirs(legacy_base)
+            if legacy_runs:
+                return max(legacy_runs, key=lambda item: item[0])[1]
+            legacy_last = legacy_base / "last.ckpt"
+            if legacy_last.exists():
+                return legacy_base
 
     # Resume into latest run directory; otherwise create next run directory.
     if bool(cfg.training.resume) and run_dirs:

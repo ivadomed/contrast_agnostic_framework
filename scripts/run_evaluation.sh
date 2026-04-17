@@ -2,8 +2,22 @@
 
 set -euo pipefail
 
-GPU_ID=1
-VERSION="v18_6"
+# Usage:
+#   bash scripts/run_evaluation.sh [gpu_id] [version]
+# Examples:
+#   bash scripts/run_evaluation.sh 3 v21          # seg_A (MONAI/Lightning)
+#   bash scripts/run_evaluation.sh 2 v19
+#   bash scripts/run_evaluation.sh 0 seg_B_gen_raw  # seg_B (nnUNet) → delegates
+
+GPU_ID="3"
+VERSION="v21"
+
+# ── seg_B experiments → delegate to run_evaluation_nnunet.sh ─────────────
+if [[ "${VERSION}" == seg_B* ]]; then
+    FOLD="${FOLD:-0}"
+    echo "[run_evaluation] Detected seg_B version '${VERSION}' — delegating to run_evaluation_nnunet.sh"
+    exec bash "$(dirname "$0")/run_evaluation_nnunet.sh" "${GPU_ID}" "${FOLD}" "${VERSION}"
+fi
 
 BASE_OUTPUT_DIR="results/eval/${VERSION}"
 

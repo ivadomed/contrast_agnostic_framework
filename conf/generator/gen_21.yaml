@@ -1,0 +1,9 @@
+# @package model
+# gen_21: Online Sparse SynthSeg Baseline.
+# Sparse online generation using SynthSeg-style sampling for tumour regions
+# without full domain randomisation across healthy anatomy.
+
+segmenter:
+  use_generator: false
+  fully_artificial: false
+  out_channels: 4

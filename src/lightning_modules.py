@@ -6,6 +6,7 @@ from typing import Any
 import re
 
 import matplotlib.pyplot as plt
+from hydra.core.hydra_config import HydraConfig
 from hydra.utils import instantiate
 import numpy as np
 import pytorch_lightning as pl
@@ -43,6 +44,17 @@ from src.guidance_perturbers import BaseGuidancePerturber, IdentityGuidancePertu
 from src.target_generators import BaseTargetGenerator
 
 
+def _get_hydra_choice(group_name: str) -> str | None:
+    try:
+        choices = HydraConfig.get().runtime.choices
+        choice = choices.get(group_name, None)
+        if choice is not None:
+            return str(choice)
+    except Exception:
+        return None
+    return None
+
+
 
 
 class CompiledSynthesisWrapper(nn.Module):
@@ -62,7 +74,7 @@ class CompiledSynthesisWrapper(nn.Module):
         self.apply_guidance_blur = bool(apply_guidance_blur)
 
     def forward(self, x: torch.Tensor, 
-                num_bins: int, num_chunks: int, dark_threshold: float):
+                num_bins: int, num_chunks: int, dark_threshold: float, labels: torch.Tensor | None = None):
         _, _, guidance_map = self.target_generator(
             input_images=x,
             num_bins=num_bins,
@@ -70,6 +82,7 @@ class CompiledSynthesisWrapper(nn.Module):
             dark_threshold=dark_threshold,
             hist_module=self.hist_module,
             return_guidance_map=True,
+            labels=labels,
         )
 
         guidance_map = self.guidance_perturber(guidance_map)
@@ -80,6 +93,8 @@ class CompiledSynthesisWrapper(nn.Module):
         generator_input = torch.cat([x, guidance_map], dim=1)
         generator_output = self.generator(generator_input)
         synthesized = ((generator_output + 1.0) * 0.5).clamp(0.0, 1.0)
+        bg_mask = x[:, :1] < dark_threshold
+        synthesized = torch.where(bg_mask, torch.zeros_like(synthesized), synthesized)
         return synthesized
 
 class CompiledSegmenterWrapper(nn.Module):
@@ -149,7 +164,7 @@ class CompiledLossWrapper(nn.Module):
                 num_bins: int, num_chunks: int, dark_threshold: float,
                 guidance_blur_k: int, guidance_blur_s: float,
                 w_edge: float, w_tv: float, w_range: float, w_wass: float,
-                w_guide_blur: float, w_guide_sharp: float) -> dict[str, torch.Tensor]:
+                w_guide_blur: float, w_guide_sharp: float, labels: torch.Tensor | None = None) -> dict[str, torch.Tensor]:
         
         target_hist, perms, guidance_map = self.target_generator(
             input_images=x,
@@ -158,6 +173,7 @@ class CompiledLossWrapper(nn.Module):
             dark_threshold=dark_threshold,
             hist_module=self.histogram_module,
             return_guidance_map=True,
+            labels=labels,
         )
 
         guidance_for_generator = self.guidance_perturber(guidance_map)
@@ -180,6 +196,8 @@ class CompiledLossWrapper(nn.Module):
         synthesized = self.model(model_input)
 
         synthesized_01 = ((synthesized + 1.0) * 0.5).clamp(0.0, 1.0)
+        bg_mask = x[:, :1] < dark_threshold
+        synthesized_01 = torch.where(bg_mask, torch.zeros_like(synthesized_01), synthesized_01)
         generated_hist = self.histogram_module(synthesized_01)
 
         wasserstein_loss = self.wasserstein_loss_fn(generated_hist, target_hist)
@@ -436,7 +454,7 @@ class MRISynthesisLightning(pl.LightningModule):
             x, num_bins, num_chunks, dark_threshold, 
             guidance_blur_k, guidance_blur_s,
             w_edge, w_tv, w_range, w_wass, 
-            w_guide_blur, w_guide_sharp
+            w_guide_blur, w_guide_sharp, labels=batch.get("label", None)
         )
 
         total_loss = outs["total_loss"]
@@ -646,9 +664,38 @@ class MRISegmenterLightning(pl.LightningModule):
     def _ensure_gpu_aug(self) -> None:
         if self._gpu_aug is not None:
             return
-        if str(self.cfg.task) == "segmenter" and str(self.cfg.version) == "v16_bigaug":
-            self._gpu_aug = build_bigaug_augmentation().to(self.device)
-            return
+        task = str(getattr(self.cfg, "task", ""))
+        version = str(getattr(self.cfg, "version", ""))
+        if task == "segmenter":
+            if version == "v16_bigaug":
+                self._gpu_aug = build_bigaug_augmentation(self.cfg).to(self.device)
+                return
+            if version == "v20_1" or version == "v20":
+                from src.intensity_ops import PartialSynthSegAugmentation3D
+                class BaselineAugmentationWrapper(nn.Module):
+                    def __init__(self, cfg, device):
+                        super().__init__()
+                        self.partial_aug = PartialSynthSegAugmentation3D(sigma=1.0).to(device)
+                        self.kornia_aug = build_kornia_augmentation(cfg, task="segmenter").to(device)
+                    def forward(self, images, labels):
+                        # First replace tumor intensities, smoothly blending boundaries via PSF simulation
+                        y, l = self.partial_aug(images, labels)
+                        # Then apply standard downsampling (low-res thick slice) and geometric augs
+                        return self.kornia_aug(y, l)
+                self._gpu_aug = BaselineAugmentationWrapper(self.cfg, self.device)
+                return
+            if version == "v21":
+                from src.intensity_ops import SparseSynthSegAugmentation3D
+                class SparseSynthSegWrapper(nn.Module):
+                    def __init__(self, cfg, device):
+                        super().__init__()
+                        self.sparse_synth_aug = SparseSynthSegAugmentation3D(sigma=1.5).to(device)
+                        self.kornia_aug = build_kornia_augmentation(cfg, task="segmenter").to(device)
+                    def forward(self, images, labels):
+                        y, l = self.sparse_synth_aug(images, labels)
+                        return self.kornia_aug(y, l)
+                self._gpu_aug = SparseSynthSegWrapper(self.cfg, self.device)
+                return
         self._gpu_aug = build_kornia_augmentation(self.cfg, task="segmenter").to(self.device)
 
     def _segmenter_gpu_aug_enabled(self) -> bool:
@@ -682,6 +729,9 @@ class MRISegmenterLightning(pl.LightningModule):
         if self.training and self._segmenter_gpu_aug_enabled():
             self._ensure_gpu_aug()
             if self._gpu_aug is not None:
+                # Stash the pre-augmentation scan so image logging can show a
+                # true before/after comparison (e.g. SparseSynthSegAugmentation3D).
+                batch["raw_image"] = image.contiguous().clone()
                 with torch.no_grad():
                     image, label = self._gpu_aug(image.contiguous(), label.contiguous())
 
@@ -717,13 +767,23 @@ class MRISegmenterLightning(pl.LightningModule):
         generator_weights = self.cfg.model.segmenter.gen_weights
         if generator_weights is None:
             project_root = Path(__file__).resolve().parents[1]
+            dataset_name = str(getattr(self.cfg.data, "name", "unknown_dataset"))
             contrast = self.cfg.data.source_contrast
             gen_version = self._resolved_segmenter_gen_version()
-            generator_root = project_root / "checkpoints" / str(gen_version) / "generator" / str(contrast)
+            gen_choice = _get_hydra_choice("generator") or str(getattr(getattr(self.cfg, "generator", None), "name", gen_version))
+            generator_roots = [
+                project_root / "checkpoints" / dataset_name / f"{dataset_name}_{gen_choice}" / "generator" / str(contrast),
+                project_root / "checkpoints" / dataset_name / f"{dataset_name}_{gen_version}" / "generator" / str(contrast),
+                project_root / "checkpoints" / dataset_name / str(gen_version) / "generator" / str(contrast),
+                project_root / "checkpoints" / str(gen_version) / "generator" / str(contrast),
+                project_root / "checkpoints" / "generator" / str(contrast),
+            ]
 
             run_pattern = re.compile(r"^run(\d+)$")
             latest_ckpt: Path | None = None
-            if generator_root.exists():
+            for generator_root in generator_roots:
+                if not generator_root.exists():
+                    continue
                 run_dirs = []
                 for child in generator_root.iterdir():
                     if not child.is_dir():
@@ -737,16 +797,22 @@ class MRISegmenterLightning(pl.LightningModule):
                     candidate = latest_run_dir / "last.ckpt"
                     if candidate.exists():
                         latest_ckpt = candidate
+                        break
+
+                legacy_candidate = generator_root / "last.ckpt"
+                if legacy_candidate.exists():
+                    latest_ckpt = legacy_candidate
+                    break
 
             if latest_ckpt is None:
-                legacy_candidate = generator_root / "last.ckpt"
-                latest_ckpt = legacy_candidate
+                latest_ckpt = generator_roots[0] / "last.ckpt"
 
             generator_weights = str(latest_ckpt)
             print(f"Loading generator from: {generator_weights}")
 
         if not Path(generator_weights).exists():
             project_root = Path(__file__).resolve().parents[1]
+            dataset_name = str(getattr(self.cfg.data, "name", "unknown_dataset"))
             gen_version = self._resolved_segmenter_gen_version()
             generator_base = project_root / "checkpoints" / str(gen_version) / "generator"
             available_contrasts: list[str] = []
@@ -756,7 +822,7 @@ class MRISegmenterLightning(pl.LightningModule):
                 "Missing generator checkpoint for segmenter synthesis path. "
                 f"Expected checkpoint: {generator_weights}. "
                 f"Requested source contrast: {self.cfg.data.source_contrast}. "
-                f"Available generator contrasts for {gen_version}: {available_contrasts}. "
+                f"Dataset: {dataset_name}. Available generator contrasts for {gen_version}: {available_contrasts}. "
                 "Either run generator training first for the requested contrast or switch to an available contrast/version."
             )
 
@@ -880,6 +946,14 @@ class MRISegmenterLightning(pl.LightningModule):
 
     def _prepare_segmentation_target(self, label: torch.Tensor) -> torch.Tensor:
         y = self._to_plain_tensor(label).long()
+        if y.ndim == 4:
+            y = y.unsqueeze(1)
+        elif y.ndim == 5 and y.shape[1] > 1:
+            # Convert one-hot-like targets back to class indices expected by DiceCELoss(to_onehot_y=True).
+            y = torch.argmax(y, dim=1, keepdim=True)
+        elif y.ndim > 5:
+            y = y.reshape(y.shape[0], 1, *y.shape[-3:])
+
         label_mapping = getattr(self.cfg.data, "label_mapping", None)
         if label_mapping is not None:
             for src, dst in dict(label_mapping).items():
@@ -888,6 +962,20 @@ class MRISegmenterLightning(pl.LightningModule):
             y = y.clamp(min=0, max=self._num_seg_classes - 1)
             return y
         return (y > 0).float()
+
+    def _align_target_to_input(self, y: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+        if any(int(dim) <= 0 for dim in y.shape[2:]):
+            # Some converted Spider samples can carry degenerate label tensors (e.g. W=0).
+            # Replace with an empty-background target matching the model input shape.
+            if self._is_multiclass:
+                return torch.zeros((x.shape[0], 1, *x.shape[2:]), device=x.device, dtype=torch.long)
+            return torch.zeros((x.shape[0], 1, *x.shape[2:]), device=x.device, dtype=x.dtype)
+        if y.shape[2:] == x.shape[2:]:
+            return y
+        if self._is_multiclass:
+            y = F.interpolate(y.float(), size=x.shape[2:], mode="nearest").long()
+            return y.clamp(min=0, max=self._num_seg_classes - 1)
+        return F.interpolate(y.float(), size=x.shape[2:], mode="nearest")
 
     def _build_generator_guidance(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
         assert self.hist_module is not None
@@ -900,6 +988,7 @@ class MRISegmenterLightning(pl.LightningModule):
                 num_bins=int(self.cfg.model.segmenter.num_bins),
                 num_chunks=int(self.cfg.model.segmenter.num_chunks),
                 dark_threshold=float(self.cfg.model.segmenter.dark_threshold),
+                labels=labels,
                 hist_module=self.hist_module,
                 return_guidance_map=True,
                 gen_version=gen_version,
@@ -911,6 +1000,7 @@ class MRISegmenterLightning(pl.LightningModule):
                 num_bins=int(self.cfg.model.segmenter.num_bins),
                 num_chunks=int(self.cfg.model.segmenter.num_chunks),
                 dark_threshold=float(self.cfg.model.segmenter.dark_threshold),
+                labels=labels,
                 hist_module=self.hist_module,
                 gen_version=gen_version,
             )
@@ -920,7 +1010,7 @@ class MRISegmenterLightning(pl.LightningModule):
 
         return guidance_map, target_hist
 
-    def _maybe_apply_generator(self, x: torch.Tensor, prob: float) -> tuple[torch.Tensor, bool]:
+    def _maybe_apply_generator(self, x: torch.Tensor, prob: float, labels: torch.Tensor | None = None) -> tuple[torch.Tensor, bool]:
         use_generator = bool(self.cfg.model.segmenter.use_generator) and self.generator is not None
         apply_generator = bool(torch.rand((), device=x.device) < float(prob))
         if not use_generator or not apply_generator:
@@ -945,7 +1035,8 @@ class MRISegmenterLightning(pl.LightningModule):
                 x,
                 num_bins=int(self.cfg.model.segmenter.num_bins),
                 num_chunks=int(self.cfg.model.segmenter.num_chunks),
-                dark_threshold=float(self.cfg.model.segmenter.dark_threshold)
+                dark_threshold=float(self.cfg.model.segmenter.dark_threshold),
+                labels=labels
             )
 
         if self._segmenter_uses_anisotropic_degradation():
@@ -989,7 +1080,11 @@ class MRISegmenterLightning(pl.LightningModule):
     def training_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
         if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
             torch.compiler.cudagraph_mark_step_begin()
-            
+
+        # Use the pre-augmentation scan for the "raw" image log column when
+        # available (stashed by on_after_batch_transfer for GPU-aug versions).
+        raw_image_for_log = batch.get("raw_image", None)
+
         x = self._to_plain_tensor(batch["image"])
         y = self._prepare_segmentation_target(batch["label"])
         if bool(self.cfg.model.segmenter.channels_last_3d) and not self._is_multiclass:
@@ -998,7 +1093,9 @@ class MRISegmenterLightning(pl.LightningModule):
         unet_input, used_generator = self._maybe_apply_generator(
             x,
             prob=float(self.cfg.model.segmenter.aug_prob_train),
+            labels=y
         )
+        y = self._align_target_to_input(y, unet_input)
 
         if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
             torch.compiler.cudagraph_mark_step_begin()
@@ -1058,8 +1155,13 @@ class MRISegmenterLightning(pl.LightningModule):
                     train_pred = (torch.sigmoid(train_logits) > 0.5).float()
                     y_for_logging = y
 
+            log_raw = (
+                self._to_plain_tensor(raw_image_for_log)
+                if raw_image_for_log is not None
+                else x
+            )
             self._log_segmenter_train_images(
-                raw_input=x,
+                raw_input=log_raw,
                 train_input=unet_input,
                 y=y_for_logging,
                 train_pred=train_pred,
@@ -1125,7 +1227,9 @@ class MRISegmenterLightning(pl.LightningModule):
         val_input, _ = self._maybe_apply_generator(
             x,
             prob=float(self.cfg.model.segmenter.aug_prob_val),
+            labels=y
         )
+        y = self._align_target_to_input(y, val_input)
 
         if hasattr(torch.compiler, "cudagraph_mark_step_begin"):
             torch.compiler.cudagraph_mark_step_begin()
@@ -1213,7 +1317,12 @@ class MRISegmenterLightning(pl.LightningModule):
             if per_class.ndim > 1:
                 per_class = per_class.mean(dim=0)
 
-            class_names = ["ncr", "ed", "et"]
+            class_names = list(getattr(self.cfg.data, "class_names", []))
+            if not class_names:
+                if str(getattr(self.cfg.data, "name", "")) == "brats":
+                    class_names = ["ncr", "ed", "et"]
+                else:
+                    class_names = [f"class_{i + 1}" for i in range(int(per_class.numel()))]
             for idx, value in enumerate(per_class.tolist()):
                 class_name = class_names[idx] if idx < len(class_names) else f"class_{idx + 1}"
                 self.log(f"val/dice_{class_name}", float(value), on_epoch=True, prog_bar=False, sync_dist=True)

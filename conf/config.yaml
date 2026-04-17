@@ -1,13 +1,16 @@
 defaults:
   - data: brats
-  - model: defaults
+  - segmenter: seg_A    # architecture axis  (conf/segmenter/)
+  - generator: gen_raw  # data-regime axis   (conf/generator/)
   - training: defaults
   - logging: wandb
   - _self_
 
 task: generator
 seed: 42
-version: v5
+# version is deprecated; run identity is now <segmenter>_<generator> (e.g. seg_A_gen_19).
+# Pass it explicitly on the CLI only when using legacy launch scripts.
+version: null
 
 hydra:
   job:

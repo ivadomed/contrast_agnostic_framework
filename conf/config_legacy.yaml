@@ -1,0 +1,28 @@
+# config_legacy.yaml
+# ── LEGACY config (old model= group, pre-paradigm-shift) ──────────────────
+# Use this config with the old run_generators.sh / run_segmenters.sh entries
+# that still pass model=v18_7 / model=v19 etc.
+#
+# Example:
+#   python scripts/train.py --config-name config_legacy version=v18_7 model=v18_7
+#
+# The canonical config is conf/config.yaml which uses the new
+# segmenter= / generator= groups.
+# ──────────────────────────────────────────────────────────────────────────
+
+defaults:
+  - data: brats
+  - model: defaults
+  - training: defaults
+  - logging: wandb
+  - _self_
+
+task: generator
+seed: 42
+version: null
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}

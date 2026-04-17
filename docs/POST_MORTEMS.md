@@ -411,3 +411,63 @@ Generative TTA assumes the synthesis model remains stable for the inference-doma
 
 ### Scientific conclusion
 Generative TTA is only valid when the generator itself is domain-agnostic or explicitly trained for the target-domain manifold. In this project, zero-shot evaluation must avoid generator-driven TTA on non-T1w inputs.
+
+## 20. v20 Post-Mortem: Partial SynthSeg White-Noise Collapse
+
+### Hypothesis
+Applying SynthSeg-style per-class Gaussian sampling only on sparse tumor labels (1/2/3) would provide a fair ablation baseline without requiring dense healthy-brain labels.
+
+### What was implemented
+- Tumor-only class sampling with independent Gaussian draws.
+- Healthy/background region largely preserved from the source scan.
+
+### What failed
+- Segmenter stability and OOD transfer collapsed.
+- Synthetic tumor regions became texture-incoherent and statistically disconnected from surrounding anatomy.
+
+### Root cause
+The augmentation path injected voxel-independent Gaussian noise (white noise) inside class masks. White noise has no local spatial correlation. 3D CNNs rely on spatially coherent local neighborhoods to learn useful anatomy-grounded filters; replacing masked regions with uncorrelated noise destroys that signal and encourages brittle overfitting.
+
+### Scientific conclusion
+Pure white-noise class replacement is not a valid MRI texture model for sparse-label synthesis. Any SynthSeg-style sparse-label baseline must preserve spatial correlation structure.
+
+## 21. v20_1 Hotfix: Spatially Correlated Noise via Separable Gaussian Filtering
+
+### Fix
+Convert white noise into spatially correlated noise before mapping it to tumor masks:
+1. Sample raw Gaussian noise tensor $Z \sim \mathcal{N}(0,1)$.
+2. Apply separable 1D Gaussian blur along depth, height, and width.
+3. Normalize variance and then apply class-wise affine mapping inside masks.
+
+### Why this works
+- The separable blur restores local correlation and biological-like continuity.
+- It reproduces the key resolution-smoothing behavior expected by SynthSeg-style intensity synthesis.
+- It is computationally efficient in 3D because the blur is separable, preserving an $O(3N)$-style cost profile instead of dense-kernel $O(N^3)$ scaling.
+
+### Outcome
+The hotfix removed the pathological white-noise behavior and produced a trainable partial-SynthSeg baseline with realistic local texture continuity.
+
+## 22. v21: Online Sparse SynthSeg Baseline — Scientific Redesign
+**Date:** 2026-04-13
+**Status:** Active — empirical lower-bound campaign
+
+### Prior offline attempt (superseded)
+An earlier v21 attempt applied the unmodified `BrainGenerator` from the `SynthSeg` codebase directly onto sparse BraTS labels to generate a static pre-synthesized dataset. That baseline was **scientifically unfair**: a fixed finite dataset cannot match the infinite variance of our online augmentation methods, meaning any observed performance gap could be attributed to dataset diversity rather than algorithmic quality.
+
+### Redesign: online GPU augmentation
+**Issue with the dense-label paradigm:**
+SynthSeg expects a fully segmented anatomical label map (GM, WM, CSF, ventricles, etc.) to fit per-class GMMs that reflect real tissue statistics. With only sparse BraTS labels, the healthy brain has no dedicated anatomical labels — we cannot synthesise it. We therefore preserve the original brain intensities for label 0 and apply GMM sampling only to the tumor subregions (labels 1/2/3).
+
+**What changed from the initial design:**
+An earlier v21 draft applied GMM sampling to ALL four classes (including label 0 = healthy brain), which caused the entire brain to disappear into homogeneous noise. This made training trivially broken — the segmenter had no anatomical signal to learn from, producing near-zero training Dice rather than the scientifically interesting result of a trainable-but-OOD-failing model. The corrected design preserves the original scan for the healthy brain and applies hard GMM replacement only to tumor subregions.
+
+**Scientific fix for fairness:**
+`v21` implements SynthSeg-style GMM + spatial-blur as an **online GPU augmentation** (`SparseSynthSegAugmentation3D`), giving the baseline identical infinite-variance data as `v19`/`v20_1`. The "floating tumor" failure mode is that each training batch randomises tumor intensities entirely independently of the surrounding brain context, so the segmenter cannot learn anatomy-grounded OOD features.
+
+**Key distinction from v20:**
+v20 (`PartialSynthSegAugmentation3D`) uses a soft spatial PSF blend at tumor boundaries. v21 uses a hard pixel-level replacement with no anatomical smoothing — sharper, more physically implausible tumor boundaries, and a harder learning problem.
+
+**Expected outcome:**
+- In-domain training Dice: moderate (model learns statistical anomalies within a realistic brain context).
+- OOD Dice: poor (random tumor intensities do not encode the anatomy-contrast relationships present in real scans).
+- v21 becomes the rigorous empirical lower bound over v20.

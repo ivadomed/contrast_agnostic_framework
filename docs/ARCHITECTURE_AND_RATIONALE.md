@@ -7,14 +7,33 @@ The current system-level strategy is:
 - Use a guidance generator to create synthetic contrast perturbations that preserve anatomy while diversifying intensity semantics.
 - Train the segmenter to remain anatomically consistent across raw and synthesized inputs.
 
-## 2. Current SOTA Candidate: v18_6
-v18_6 combines:
-- texture-preserving discontinuous piecewise linear chunk remapping for aggressive contrast inversion without destroying tissue micro-texture,
-- blurred guidance supervision (separable 1D Gaussian passes) so high-frequency boundaries must be recovered from the raw source image,
-- rebalanced generator losses with dominant edge supervision and removal of contradictory high-frequency L1 guidance penalties,
-- inherited anisotropic degradation and consistency regularization in segmenter training.
+## 2. Current SOTA: v19 Generator + seg_B (nnU-Net) Bookends Fine-Tuning
+The current best deployment path in this repository is:
+- data regime: `v19` Stochastic Semantic Decoupling (`V19LabelConditionedTextureGenerator`),
+- segmenter architecture: `seg_B` (nnU-Net),
+- adaptation strategy: Bookends fine-tuning (`nnUNetTrainer_Bookends`) for target-subset domain adaptation.
+
+This pairing is the current State-of-the-Art because it combines v19's label-conditioned contrast diversification with a conservative transfer-learning policy that preserves generalized topology while adapting low-level domain statistics and output calibration.
+
+### 2.1 Bookends Fine-Tuning Mechanics
+Bookends intentionally updates only two parameter groups:
+1. `encoder.stages.0` (first/shallow encoder block): adapts low-level intensity and texture statistics to the target domain.
+2. `decoder.seg_layers` (final segmentation heads): recalibrates class posterior boundaries to target-dataset label statistics.
+
+Everything else is frozen:
+- all deeper encoder stages (`encoder.stages.1+`),
+- decoder upsampling/body blocks (excluding segmentation heads).
+
+This prevents catastrophic forgetting of v19-pretrained structural priors while still enabling practical target-domain adaptation.
+
+### 2.2 Non-Destructive Checkpointing and Evaluation Isolation
+- Running nnU-Net with `-tr nnUNetTrainer_Bookends` writes into a trainer-specific output subtree (`nnUNetTrainer_Bookends__nnUNetPlans__3d_fullres`), parallel to and isolated from the base trainer subtree (`nnUNetTrainerBraTSGen19Wandb__nnUNetPlans__3d_fullres`).
+- Pretrained initialization uses `-pretrained_weights`, which loads source weights at runtime without mutating the source checkpoint files.
+- Fine-tuned evaluation is routed to `results/eval/v19/multiclass/seg_B/finetuning/<target_contrast>/` so zero-shot and fine-tuned artifacts cannot overwrite each other.
 
 ## 3. End-to-End Training Pipeline
+
+The pipeline below describes the zero-shot seg_A generator-supervision lineage (especially v18_6), which remains the reference architecture for non-fine-tuned contrast-agnostic training.
 
 ### 3.1 Input and normalization
 Input volumes are normalized to x in [0,1] with shape (B, C, D, H, W).
@@ -145,7 +164,7 @@ $$
 - Reduces launch overhead versus sequential dual forwards.
 - Improves throughput stability in compiled 3D training.
 
-## 5. Why v18_6 is the current architecture direction
+## 5. Why v18_6 remains the zero-shot architecture reference
 v18_6 is the first design that simultaneously resolves the two dominant v18.x failure classes:
 - Continuous CDF/spline remapping that creates metallic/plastic shading artifacts by over-smoothing noisy tissue bands.
 - Loss-level contradictions where blurred targets are paired with high-frequency guidance penalties.
@@ -183,4 +202,47 @@ The important asymmetry remains intact: T1w is still the mathematically superior
 For downstream users, the practical contract is:
 - Use version-matched generator and segmenter settings.
 - Preserve background masking and mask-safe augmentations.
-- Treat v18_6 as the current best candidate for robust cross-contrast transfer, pending further ensemble and external-cohort validation.
+- Treat v18_6 as the zero-shot reference for robust cross-contrast transfer.
+- Treat v19 + seg_B + Bookends as the current adapted SOTA path when target-subset fine-tuning is allowed.
+
+## 8. v20 Partial SynthSeg Baseline
+The v20 Partial SynthSeg Baseline strategy consists of applying pure Gaussian noise sampling (SynthSeg's core mechanic) explicitly to the available tumor labels (NCR, ED, ET) while leaving the unlabelled background intensities raw. 
+
+This baseline objective proves two things: 
+1) that flat GMM sampling destroys biological texture compared to our v19 texture-preserving shifts, and 
+2) that leaving the background raw destroys OOD generalization compared to our unsupervised v18_6 background chunking.
+
+### Version 21 (v21): Online Sparse SynthSeg Baseline - The "Floating Tumor" Failure Mode
+
+**Objective:** Empirically demonstrate, under a perfectly fair dynamic training environment, why the SynthSeg dense-label GMM paradigm fails on sparse BraTS inputs.
+
+**Fairness guarantee:**
+Prior offline SynthSeg baselines (static pre-synthesized datasets) are scientifically unfair: they compare a fixed finite dataset against our online, infinitely variable augmentation methods. v21 eliminates this confound by implementing SynthSeg's core mechanic as an **online GPU augmentation** (`SparseSynthSegAugmentation3D` in `src/intensity_ops.py`), giving the baseline the exact same infinite data variance as `v19` and `v20_1`. Any performance collapse is therefore purely attributable to the algorithm's reliance on dense anatomical labels, not to a lack of dataset diversity.
+
+**Description:**
+We apply SynthSeg's GMM sampling mechanic **to the tumor subregions only** (labels 1/2/3) on top of the original MRI scan. Label 0 (healthy brain + background) is left untouched because, without dense anatomical labels, we cannot synthesise realistic healthy brain texture. The "floating tumor" effect is that the tumour intensities are completely decoupled from the surrounding brain anatomy.
+
+Pipeline:
+1. `y = images.clone()` — start from the original scan.
+2. Generate spatially correlated noise `Z` via `randn` + separable Gaussian blur (σ=1.5) + unit-variance normalisation.
+3. For each tumor class `c ∈ {1, 2, 3}`: sample `μ_c ~ U(0,1)`, `σ_c ~ U(0.01, 0.1)`, and **hard-replace** `y[labels==c] = μ_c + σ_c * Z_blurred[labels==c]`.
+4. Restore true background: `y[images < 0.01] = 0.0`.
+5. Clamp to `[0, 1]`.
+
+**Key distinction from v20 (`PartialSynthSegAugmentation3D`):**
+v20 uses a soft spatial PSF blend at tumor boundaries (biologically plausible smooth transitions). v21 uses a **hard pixel-level cut** with no anatomical smoothing, producing sharp, physically implausible tumor boundaries. This is more aggressive than v20 while remaining trainable.
+
+**The "floating tumor" failure mode:**
+Each tumor voxel receives a completely random intensity (`μ_c ~ U(0,1)`) independent of the surrounding brain context. The segmenter is forced to learn arbitrary intensity-contrast cues ("this region differs from its neighbourhood by some amount") rather than anatomy-grounded features. Because `μ_c` changes every training batch, those cues are inconsistent. OOD, real tumours present with contrast-specific signatures tied to anatomy — the model has never seen this structure and fails to generalise.
+
+**Mathematical formulation:**
+
+Given correlated noise field $Z_\sigma$ and sparse label map $L \in \{0,1,2,3\}$:
+
+$$
+y_i = \begin{cases} \mu_{L_i} + \sigma_{L_i} \cdot Z_\sigma(i) & \text{if } L_i \in \{1,2,3\} \\ x_i & \text{if } L_i = 0 \text{ and } x_i \ge 0.01 \\ 0 & \text{otherwise (true background)} \end{cases}
+$$
+
+$$
+\mu_c \sim \mathcal{U}(0,1), \quad \sigma_c \sim \mathcal{U}(0.01, 0.1), \quad \hat{y} = \mathrm{clamp}(y, 0, 1)
+$$

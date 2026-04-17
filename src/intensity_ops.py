@@ -464,3 +464,147 @@ class RandomSpatialSoftQuantile(nn.Module):
 
         mapped = mapped_flat.view_as(x_clamped).clamp(0.0, 1.0)
         return torch.where(apply_mask, mapped, x_clamped)
+class SparseSynthSegAugmentation3D(nn.Module):
+    """Online SynthSeg GMM baseline for sparse BraTS labels.
+
+    Applies SynthSeg's core GMM sampling + separable Gaussian blur to the full
+    volume using only the four sparse BraTS classes (0=background/healthy,
+    1=NCR, 2=ED, 3=ET).
+
+    Background masking is intentionally omitted: label 0 covers the entire
+    healthy-brain volume, so the algorithm fills brain tissue and true
+    background with a single noise class, producing the "floating tumor"
+    failure mode that v21 is designed to empirically document.
+    """
+
+    def __init__(self, sigma: float = 1.5) -> None:
+        super().__init__()
+        self.sigma = float(sigma)
+
+    def _kernel_1d(self, x: torch.Tensor) -> torch.Tensor:
+        kernel_size = int(max(3, round(self.sigma * 6)))
+        if kernel_size % 2 == 0:
+            kernel_size += 1
+        coords = torch.arange(kernel_size, dtype=x.dtype, device=x.device) - (kernel_size - 1) / 2.0
+        g1d = torch.exp(-(coords ** 2) / (2.0 * self.sigma ** 2))
+        return g1d / g1d.sum().clamp_min(torch.finfo(g1d.dtype).eps)
+
+    def _separable_gaussian_blur(self, x: torch.Tensor) -> torch.Tensor:
+        channels = x.shape[1]
+        g1d = self._kernel_1d(x)
+        k = g1d.shape[0]
+        padding = k // 2
+
+        k_d = g1d.view(1, 1, k, 1, 1).expand(channels, 1, k, 1, 1).contiguous()
+        k_h = g1d.view(1, 1, 1, k, 1).expand(channels, 1, 1, k, 1).contiguous()
+        k_w = g1d.view(1, 1, 1, 1, k).expand(channels, 1, 1, 1, k).contiguous()
+
+        out = F.conv3d(x, k_d, padding=(padding, 0, 0), groups=channels)
+        out = F.conv3d(out, k_h, padding=(0, padding, 0), groups=channels)
+        out = F.conv3d(out, k_w, padding=(0, 0, padding), groups=channels)
+        return out
+
+    def forward(self, images: torch.Tensor, labels: torch.Tensor):
+        # Start from the original scan — healthy brain anatomy is preserved.
+        # Only tumor subregions (labels 1/2/3) receive GMM-sampled intensities.
+        # This is the key difference from v20 (PartialSynthSegAugmentation3D):
+        # v20 uses a soft spatial blend at tumor boundaries; v21 uses a hard
+        # pixel-level replacement with no anatomical smoothing, creating sharp,
+        # physically implausible tumor boundaries that expose the failure of
+        # pure intensity-based synthesis without dense anatomical labels.
+        y = images.clone()
+
+        # Spatially correlated noise: randn -> Gaussian blur -> unit variance.
+        # Shared across all classes so tumor sub-regions inherit the same
+        # correlated noise field (different means shift the band, same texture).
+        Z = torch.randn_like(y)
+        Z_blurred = self._separable_gaussian_blur(Z)
+        Z_blurred = Z_blurred / Z_blurred.std().clamp_min(1e-8)
+
+        # Hard GMM replacement for tumor subregions only.
+        # Label 0 (healthy brain + true background) is left untouched —
+        # without dense anatomical labels we cannot synthesise the healthy brain,
+        # so we admit it and keep the original. The "floating tumor" effect is
+        # that the tumour intensities (mu_c ~ U(0,1)) are completely decoupled
+        # from the surrounding anatomy, forcing intensity-contrast-based cues
+        # that do not generalise OOD.
+        for c in [1, 2, 3]:
+            mask = (labels == c)
+            if not mask.any():
+                continue
+            mu_c = _shared_rand((1,), device=images.device, dtype=images.dtype).item()
+            sigma_c = (_shared_rand((1,), device=images.device, dtype=images.dtype) * 0.09 + 0.01).item()
+            y[mask] = mu_c + sigma_c * Z_blurred[mask]
+
+        # Restore true background (outside skull) to zero.
+        y[images < 0.01] = 0.0
+        y = y.clamp(0.0, 1.0)
+        return y, labels
+
+
+class PartialSynthSegAugmentation3D(nn.Module):
+    def __init__(self, sigma: float = 1.0):
+        super().__init__()
+        self.sigma = float(sigma)
+
+    def _kernel_1d(self, x: torch.Tensor) -> torch.Tensor:
+        kernel_size = int(max(3, round(self.sigma * 6)))
+        if kernel_size % 2 == 0:
+            kernel_size += 1
+        coords = torch.arange(kernel_size, dtype=x.dtype, device=x.device) - (kernel_size - 1) / 2.0
+        g1d = torch.exp(-(coords ** 2) / (2 * self.sigma ** 2))
+        return g1d / g1d.sum().clamp_min(torch.finfo(g1d.dtype).eps)
+
+    def _separable_gaussian_blur(self, x: torch.Tensor) -> torch.Tensor:
+        channels = x.shape[1]
+        g1d = self._kernel_1d(x)
+        k = g1d.shape[0]
+        padding = k // 2
+
+        k_d = g1d.view(1, 1, k, 1, 1).expand(channels, 1, k, 1, 1).contiguous()
+        k_h = g1d.view(1, 1, 1, k, 1).expand(channels, 1, 1, k, 1).contiguous()
+        k_w = g1d.view(1, 1, 1, 1, k).expand(channels, 1, 1, 1, k).contiguous()
+
+        smoothed = F.conv3d(x, k_d, padding=(padding, 0, 0), groups=channels)
+        smoothed = F.conv3d(smoothed, k_h, padding=(0, padding, 0), groups=channels)
+        smoothed = F.conv3d(smoothed, k_w, padding=(0, 0, padding), groups=channels)
+        return smoothed
+
+    def forward(self, images, labels):
+        y = images.clone()
+        
+        # Generate Correlated Noise
+        Z = torch.randn_like(y)
+        Z_blurred = self._separable_gaussian_blur(Z)
+        Z_blurred = Z_blurred / Z_blurred.std().clamp_min(1e-8)
+        
+        synth_map = torch.zeros_like(y)
+        mask_weights = torch.zeros_like(y)
+        
+        has_tumor = False
+        for c in [1, 2, 3]:
+            mask = (labels == c).float()
+            if not mask.any():
+                continue
+            has_tumor = True
+            
+            mu_c = _shared_rand((1,), device=images.device)
+            sigma_c = _shared_rand((1,), device=images.device) * 0.09 + 0.01
+            
+            synth_c = mu_c + sigma_c * Z_blurred
+            synth_map += mask * synth_c
+            mask_weights += mask
+            
+        if has_tumor:
+            blurred_synth = self._separable_gaussian_blur(synth_map)
+            blurred_weights = self._separable_gaussian_blur(mask_weights)
+            
+            safe_weights = blurred_weights.clamp_min(1e-5)
+            blended_synth = blurred_synth / safe_weights
+            
+            alpha = blurred_weights.clamp(0.0, 1.0)
+            y = (1.0 - alpha) * y + alpha * blended_synth
+            
+        y = torch.clamp(y, 0.0, 1.0)
+        y[images < 0.01] = 0.0
+        return y, labels

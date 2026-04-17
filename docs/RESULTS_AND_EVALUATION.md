@@ -1,5 +1,9 @@
 # Results and Evaluation
 
+Status note:
+- Overall adapted SOTA (with target-subset fine-tuning): v19 + seg_B (nnU-Net) with Bookends.
+- This document primarily reports zero-shot historical and reference results.
+
 ## 1. Data Sources and Verification Method
 All values in this document were parsed from the project CSV artifacts in results/eval.
 
@@ -19,9 +23,9 @@ Interpretation:
 - ood_mean_dice measures average robustness.
 - ood_worst_dice measures tail-risk behavior (worst-case transfer).
 
-## 2.1 Breakthrough Update: v18_6 Zero-Shot SOTA
+## 2.1 Breakthrough Update: v18_6 Zero-Shot Reference
 
-`v18_6` with augmentation probability 1.0 is the current best zero-shot result in this project line.
+`v18_6` with augmentation probability 1.0 is the current zero-shot reference in this project line.
 
 Evaluation protocol note:
 - Strict zero-shot only.
@@ -126,7 +130,7 @@ Key signal:
 - v13 remains the strongest observed T2w-source robustness point in the current exported metrics.
 - v15 keeps strong in-domain quality but OOD robustness is lower than v13 on this branch.
 
-## 5. Current SOTA Candidate (v15) Summary
+## 5. Historical v15 Candidate Summary
 
 ### 5.1 v15 ens1 results
 | Model ID | flair | t1w | t1gd | t2w | In-domain | OOD Mean | OOD Worst |
@@ -203,8 +207,9 @@ Conclusion:
 
 ## 7. Overall Evaluation Conclusions
 1. The project consistently confirms contrast asymmetry: T1w-source models are more robust than T2w-source models for worst-case transfer.
-2. `v18_6` is the current zero-shot SOTA for the T1w-source branch (in-domain 0.704, OOD mean 0.621) without target-domain fine-tuning or TTA.
-3. Ensemble scaling from 1 to 5 checkpoints does not produce reliable monotonic gains; best settings are family-dependent and often occur at smaller ensemble sizes.
+2. `v18_6` is the current zero-shot reference for the T1w-source branch (in-domain 0.629, OOD mean 0.635 in this report) without target-domain fine-tuning or TTA.
+3. The current adapted SOTA (outside strict zero-shot) is v19 + seg_B Bookends, evaluated under `results/eval/v19/multiclass/seg_B/finetuning/<target_contrast>/`.
+4. Ensemble scaling from 1 to 5 checkpoints does not produce reliable monotonic gains; best settings are family-dependent and often occur at smaller ensemble sizes.
 
 ## 8. Reporting Guidance
 When presenting new results, report all three metrics together (in-domain, OOD mean, OOD worst), and treat OOD worst as a first-class safety metric for deployment decisions.

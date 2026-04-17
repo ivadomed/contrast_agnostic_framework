@@ -241,6 +241,7 @@ def _segmenter_runtime_info(checkpoint_path: str) -> dict[str, Any]:
 
     return {
         "source_contrast": normalize_contrast_name(str(source_contrast)) if source_contrast is not None else None,
+        "dataset_name": str(_nested_get(hyper, ["data", "name"], default="")) if hyper is not None else "",
         "version": str(version) if version is not None else None,
         "gen_version": str(gen_version) if gen_version is not None else None,
         "num_bins": int(num_bins),
@@ -264,30 +265,64 @@ def _build_eval_mode_name(task_mode: str, tta_samples: int, exclude_original: bo
     return mode_name
 
 
-def _resolve_latest_generator_checkpoint(source_contrast: str) -> Path:
-    generator_root = PROJECT_ROOT / "checkpoints" / "generator" / normalize_contrast_name(source_contrast)
-    if not generator_root.exists():
-        raise FileNotFoundError(f"Generator checkpoint directory not found: {generator_root}")
+def _resolve_latest_generator_checkpoint(
+    source_contrast: str,
+    runtime_info: dict[str, Any] | None = None,
+    model_id: str | None = None,
+) -> Path:
+    contrast = normalize_contrast_name(source_contrast)
+    runtime_info = runtime_info or {}
+    dataset_name = str(runtime_info.get("dataset_name") or "")
+    version = runtime_info.get("gen_version") or runtime_info.get("version")
+
+    candidate_roots: list[Path] = []
+    if dataset_name and model_id:
+        candidate_roots.append(PROJECT_ROOT / "checkpoints" / dataset_name / model_id / "generator" / contrast)
+    if version:
+        candidate_roots.append(PROJECT_ROOT / "checkpoints" / str(version) / "generator" / contrast)
+    candidate_roots.append(PROJECT_ROOT / "checkpoints" / "generator" / contrast)
 
     run_pattern = re.compile(r"^run(\d+)$")
-    run_dirs: list[tuple[int, Path]] = []
-    for child in generator_root.iterdir():
-        if not child.is_dir():
-            continue
-        match = run_pattern.match(child.name)
-        if match is not None:
-            run_dirs.append((int(match.group(1)), child))
 
-    for _, run_dir in sorted(run_dirs, key=lambda item: item[0], reverse=True):
-        candidate = run_dir / "last.ckpt"
-        if candidate.exists():
+    def _pick_from_root(root: Path) -> Path | None:
+        if not root.exists():
+            return None
+        run_dirs: list[tuple[int, Path]] = []
+        for child in root.iterdir():
+            if not child.is_dir():
+                continue
+            match = run_pattern.match(child.name)
+            if match is not None:
+                run_dirs.append((int(match.group(1)), child))
+
+        for _, run_dir in sorted(run_dirs, key=lambda item: item[0], reverse=True):
+            candidate = run_dir / "last.ckpt"
+            if candidate.exists():
+                return candidate
+
+        legacy_candidate = root / "last.ckpt"
+        if legacy_candidate.exists():
+            return legacy_candidate
+        return None
+
+    for root in candidate_roots:
+        candidate = _pick_from_root(root)
+        if candidate is not None:
             return candidate
 
-    legacy_candidate = generator_root / "last.ckpt"
-    if legacy_candidate.exists():
-        return legacy_candidate
+    # Last-resort fallback: scan any dataset/model-id namespace for this contrast.
+    wildcard_roots = sorted(
+        (PROJECT_ROOT / "checkpoints").glob(f"*/*/generator/{contrast}"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0,
+        reverse=True,
+    )
+    for root in wildcard_roots:
+        candidate = _pick_from_root(root)
+        if candidate is not None:
+            return candidate
 
-    raise FileNotFoundError(f"No generator checkpoint found under: {generator_root}")
+    attempted = ", ".join(str(p) for p in candidate_roots)
+    raise FileNotFoundError(f"No generator checkpoint found for contrast='{contrast}'. Attempted: {attempted}")
 
 
 def _load_generator_model(device: torch.device, checkpoint_path: Path, runtime_info: dict[str, Any]) -> MRI_Synthesis_Net:
@@ -338,7 +373,9 @@ def _generate_synth_input(
 
     generator_input = torch.cat([x_input, guidance_map], dim=1)
     synthesized = generator(generator_input)
-    return ((synthesized + 1.0) * 0.5).clamp(0.0, 1.0)
+    synthesized_01 = ((synthesized + 1.0) * 0.5).clamp(0.0, 1.0)
+    bg_mask = x_input[:, :1] < float(runtime_info["dark_threshold"])
+    return torch.where(bg_mask, torch.zeros_like(synthesized_01), synthesized_01)
 
 
 _GLOBAL_MIN_SW_BATCH_SIZE = 1
@@ -974,18 +1011,43 @@ def _collect_model_specs(args: argparse.Namespace) -> list[dict[str, Any]]:
 
 
 def _print_results_table(results: list[dict[str, Any]], target_contrasts: list[str]) -> None:
-    contrast_header = " | ".join(f"{c:<9}" for c in target_contrasts)
-    line = "+----------------------+-----------+---------+" + "-----------+" * len(target_contrasts)
+    # Collect all dynamic class columns
+    class_cols = set()
+    for row in results:
+        for k in row.keys():
+            if "_c" in k and k.split("_c")[-1].isdigit():
+                class_cols.add(k)
+    
+    # 1. Main Mean Table
+    contrast_cols = [f"{c} (mean)" for c in target_contrasts]
+    contrast_header = " | ".join(f"{c:<11}" for c in contrast_cols)
+    line = "+----------------------+-----------+---------+" + "-------------+" * len(target_contrasts)
     print("\nSegmentation Dice on Held-Out Test Subjects")
     print(line)
     print(f"| Model ID             | Family    | Source  | {contrast_header} |")
     print(line)
     for row in results:
-        contrast_values = " | ".join(f"{_format_metric(row[c]):>9}" for c in target_contrasts)
+        contrast_values = " | ".join(f"{_format_metric(row.get(c, '')):>11}" for c in target_contrasts)
         print(
             f"| {row['model_id']:<20} | {row['family']:<9} | {row['source_contrast']:<7} | {contrast_values} |"
         )
     print(line)
+
+    # 2. Secondary Per-class Table
+    if class_cols:
+        dynamic_cols = sorted(list(class_cols))
+        contrast_header_pc = " | ".join(f"{c:<9}" for c in dynamic_cols)
+        line_pc = "+----------------------+-----------+---------+" + "-----------+" * len(dynamic_cols)
+        print("\nSegmentation Dice (Per-Class) on Held-Out Test Subjects")
+        print(line_pc)
+        print(f"| Model ID             | Family    | Source  | {contrast_header_pc} |")
+        print(line_pc)
+        for row in results:
+            contrast_values_pc = " | ".join(f"{_format_metric(row.get(c, '')):>9}" for c in dynamic_cols)
+            print(
+                f"| {row['model_id']:<20} | {row['family']:<9} | {row['source_contrast']:<7} | {contrast_values_pc} |"
+            )
+        print(line_pc)
 
 
 def _write_long_csv(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -1006,6 +1068,18 @@ def _write_long_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def _write_wide_csv(path: Path, rows: list[dict[str, Any]], target_contrasts: list[str]) -> None:
+    dynamic_cols = []
+    if rows:
+        baseline_keys = {
+            "model_id", "family", "source_contrast", "checkpoint_path", "ckpt_exists",
+            *target_contrasts, "in_domain_dice", "ood_mean_dice", "ood_worst_dice"
+        }
+        # Find all e.g. t1w_c1, t1w_c2, etc. across all rows
+        extra_keys = set()
+        for r in rows:
+            extra_keys.update(k for k in r.keys() if k not in baseline_keys)
+        dynamic_cols = sorted(extra_keys)
+
     fields = [
         "model_id",
         "family",
@@ -1013,6 +1087,7 @@ def _write_wide_csv(path: Path, rows: list[dict[str, Any]], target_contrasts: li
         "checkpoint_path",
         "ckpt_exists",
         *target_contrasts,
+        *dynamic_cols,
         "in_domain_dice",
         "ood_mean_dice",
         "ood_worst_dice",
@@ -1021,12 +1096,29 @@ def _write_wide_csv(path: Path, rows: list[dict[str, Any]], target_contrasts: li
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
         for row in rows:
-            writer.writerow(row)
+            # fill missing dynamic columns with empty string
+            row_out = {**row}
+            for col in dynamic_cols:
+                if col not in row_out:
+                    row_out[col] = ""
+            writer.writerow(row_out)
 
 
 def _write_summary_markdown(path: Path, rows: list[dict[str, Any]], target_contrasts: list[str]) -> None:
-    contrast_header = " | ".join(target_contrasts)
-    contrast_rule = " | ".join(["---:"] * len(target_contrasts))
+    dynamic_cols = []
+    if rows:
+        baseline_keys = {
+            "model_id", "family", "source_contrast", "checkpoint_path", "ckpt_exists",
+            *target_contrasts, "in_domain_dice", "ood_mean_dice", "ood_worst_dice"
+        }
+        extra_keys = set()
+        for r in rows:
+            extra_keys.update(k for k in r.keys() if k not in baseline_keys)
+        dynamic_cols = sorted(extra_keys)
+    
+    cols = target_contrasts + dynamic_cols
+    contrast_header = " | ".join(cols)
+    contrast_rule = " | ".join(["---:"] * len(cols))
     header = [
         f"| model_id | family | source_contrast | ckpt_exists | {contrast_header} | in_domain_dice | ood_mean_dice | ood_worst_dice |",
         f"|---|---|---|---:| {contrast_rule} |---:|---:|---:|",
@@ -1041,7 +1133,7 @@ def _write_summary_markdown(path: Path, rows: list[dict[str, Any]], target_contr
                     str(row["family"]),
                     str(row["source_contrast"]),
                     str(row["ckpt_exists"]),
-                    *[_format_metric(row[c]) for c in target_contrasts],
+                    *[_format_metric(row.get(c, "")) for c in cols],
                     _format_metric(row["in_domain_dice"]),
                     _format_metric(row["ood_mean_dice"]),
                     _format_metric(row["ood_worst_dice"]),
@@ -1181,7 +1273,7 @@ def main() -> None:
     task_mode = inferred_mode if args.task_mode == "auto" else args.task_mode
 
     route_name = _build_eval_mode_name(task_mode=task_mode, tta_samples=int(args.tta_samples), exclude_original=bool(args.exclude_original))
-    effective_output_dir = output_dir if route_name == "binary" else output_dir / route_name
+    effective_output_dir = output_dir if route_name == "binary" else output_dir / route_name / "seg_A"
     effective_output_dir.mkdir(parents=True, exist_ok=True)
     print(f"Evaluation task mode: {task_mode}")
     print(f"Saving artifacts under: {effective_output_dir}")
@@ -1209,7 +1301,11 @@ def main() -> None:
         if cached is not None:
             return cached
 
-        checkpoint_path = _resolve_latest_generator_checkpoint(source_contrast)
+        checkpoint_path = _resolve_latest_generator_checkpoint(
+            source_contrast,
+            runtime_info=runtime_info,
+            model_id=str(spec["model_id"]),
+        )
         generator = _load_generator_model(device=device, checkpoint_path=checkpoint_path, runtime_info=runtime_info)
         generator_cache[source_contrast] = generator
         print(f"Loaded TTA generator for {source_contrast}: {checkpoint_path}")
@@ -1330,12 +1426,18 @@ def main() -> None:
                     if per_class.ndim > 1:
                         per_class = per_class.mean(dim=0)
                     dice_value = float(per_class.mean().item())
+                    per_class_list = per_class.tolist()
                 else:
                     dice_value = float(aggregated.item())
+                    per_class_list = [dice_value]
             else:
                 dice_value = None
+                per_class_list = []
 
             contrast_scores[target_contrast] = dice_value
+            for i, pc_val in enumerate(per_class_list):
+                contrast_scores[f"{target_contrast}_c{i+1}"] = pc_val
+
             long_rows.append(
                 {
                     "model_id": model_id,
@@ -1370,18 +1472,22 @@ def main() -> None:
         for contrast in target_contrasts:
             score = contrast_scores.get(contrast)
             wide_row[contrast] = "" if score is None else f"{score:.6f}"
+            for c_idx in range(1, 10): # check up to 10 classes
+                pc_key = f"{contrast}_c{c_idx}"
+                if pc_key in contrast_scores:
+                    wide_row[pc_key] = f"{contrast_scores[pc_key]:.6f}"
         wide_rows.append(wide_row)
 
     table_rows = []
     for row in wide_rows:
-        row_for_table = {
-            "model_id": row["model_id"],
-            "family": row["family"],
-            "source_contrast": row["source_contrast"],
-        }
+        row_for_table = dict(row)
         for contrast in target_contrasts:
             value = row.get(contrast, "")
             row_for_table[contrast] = None if value == "" else float(value)
+            for c_idx in range(1, 10):
+                pc_key = f"{contrast}_c{c_idx}"
+                if pc_key in row:
+                    row_for_table[pc_key] = float(row[pc_key])
         table_rows.append(row_for_table)
 
     _print_results_table(table_rows, target_contrasts)

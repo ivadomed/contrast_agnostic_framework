@@ -5,6 +5,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from omegaconf import DictConfig
 
 
 def _sample_uniform(
@@ -18,6 +19,14 @@ def _sample_uniform(
     if high <= low:
         return torch.full(shape, low, device=device, dtype=dtype)
     return torch.empty(shape, device=device, dtype=dtype).uniform_(low, high)
+
+
+def _min_max_normalize(x: torch.Tensor) -> torch.Tensor:
+    dims = tuple(range(2, x.ndim))
+    x_min = x.amin(dim=dims, keepdim=True)
+    x_max = x.amax(dim=dims, keepdim=True)
+    scale = (x_max - x_min).clamp_min(torch.finfo(x.dtype).eps)
+    return (x - x_min) / scale
 
 
 def _prob_mask(batch_size: int, p: float, *, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
@@ -59,14 +68,44 @@ class BigAugmentation3D(nn.Module):
     Spatial transforms (7-9) apply to image and label with one fused resampling.
     """
 
-    def __init__(self, p: float = 0.5) -> None:
+    def __init__(
+        self,
+        p: float = 0.5,
+        *,
+        sharp_sigma_range: tuple[float, float] = (0.25, 1.5),
+        sharp_alpha_range: tuple[float, float] = (10.0, 30.0),
+        blur_sigma_range: tuple[float, float] = (0.25, 1.5),
+        noise_std_range: tuple[float, float] = (0.1, 1.0),
+        brightness_shift_range: tuple[float, float] = (-0.1, 0.1),
+        contrast_gamma_range: tuple[float, float] = (0.5, 4.5),
+        perturb_scale_range: tuple[float, float] = (-0.1, 0.1),
+        perturb_shift_range: tuple[float, float] = (-0.1, 0.1),
+        rotation_degrees_range: tuple[float, float] = (-20.0, 20.0),
+        scaling_factor_range: tuple[float, float] = (0.4, 1.6),
+        deformation_sigma_range: tuple[float, float] = (10.0, 13.0),
+        deformation_scale_range: tuple[float, float] = (0.0, 1000.0),
+    ) -> None:
         super().__init__()
         self.p = float(p)
+        self.sharp_sigma_range = tuple(float(v) for v in sharp_sigma_range)
+        self.sharp_alpha_range = tuple(float(v) for v in sharp_alpha_range)
+        self.blur_sigma_range = tuple(float(v) for v in blur_sigma_range)
+        self.noise_std_range = tuple(float(v) for v in noise_std_range)
+        self.brightness_shift_range = tuple(float(v) for v in brightness_shift_range)
+        self.contrast_gamma_range = tuple(float(v) for v in contrast_gamma_range)
+        self.perturb_scale_range = tuple(float(v) for v in perturb_scale_range)
+        self.perturb_shift_range = tuple(float(v) for v in perturb_shift_range)
+        self.rotation_degrees_range = tuple(float(v) for v in rotation_degrees_range)
+        self.scaling_factor_range = tuple(float(v) for v in scaling_factor_range)
+        self.deformation_sigma_range = tuple(float(v) for v in deformation_sigma_range)
+        self.deformation_scale_range = tuple(float(v) for v in deformation_scale_range)
 
     def _apply_intensity_stack(self, x: torch.Tensor) -> torch.Tensor:
         b, _, d, h, w = x.shape
         device = x.device
         dtype = x.dtype
+
+        x = _min_max_normalize(x)
 
         # Process appearance transforms at half resolution, then upsample.
         # This keeps all nine transforms active while reducing blur/noise hotspot cost.
@@ -79,8 +118,12 @@ class BigAugmentation3D(nn.Module):
 
         # 1) Sharpness (unsharp masking variant from requested formula)
         sharp_mask = _prob_mask(b, self.p, device=device, dtype=dtype)
-        sigma_sharp = float(_sample_uniform((1,), 0.25, 1.5, device=device, dtype=dtype).detach().cpu())
-        alpha = _sample_uniform((b, 1, 1, 1, 1), 10.0, 30.0, device=device, dtype=dtype)
+        sigma_sharp = float(
+            _sample_uniform((1,), self.sharp_sigma_range[0], self.sharp_sigma_range[1], device=device, dtype=dtype)
+            .detach()
+            .cpu()
+        )
+        alpha = _sample_uniform((b, 1, 1, 1, 1), self.sharp_alpha_range[0], self.sharp_alpha_range[1], device=device, dtype=dtype)
         blurred = _separable_gaussian_blur_3d(x_lr, sigma=sigma_sharp)
         filtered_blurred = _separable_gaussian_blur_3d(blurred, sigma=sigma_sharp)
         sharpened = blurred + (blurred - filtered_blurred) * alpha
@@ -88,34 +131,59 @@ class BigAugmentation3D(nn.Module):
 
         # 2) Gaussian blur
         blur_mask = _prob_mask(b, self.p, device=device, dtype=dtype)
-        sigma_blur = float(_sample_uniform((1,), 0.25, 1.5, device=device, dtype=dtype).detach().cpu())
+        sigma_blur = float(
+            _sample_uniform((1,), self.blur_sigma_range[0], self.blur_sigma_range[1], device=device, dtype=dtype)
+            .detach()
+            .cpu()
+        )
         blurred2 = _separable_gaussian_blur_3d(x_lr, sigma=sigma_blur)
         x_lr = torch.where(blur_mask, blurred2, x_lr)
 
         # 3) Gaussian noise
         noise_mask = _prob_mask(b, self.p, device=device, dtype=dtype)
-        noise_sigma = _sample_uniform((b, 1, 1, 1, 1), 0.1, 1.0, device=device, dtype=dtype)
+        noise_sigma = _sample_uniform((b, 1, 1, 1, 1), self.noise_std_range[0], self.noise_std_range[1], device=device, dtype=dtype)
         x_noise = x_lr + torch.randn_like(x_lr) * noise_sigma
         x_lr = torch.where(noise_mask, x_noise, x_lr)
 
         # 4) Brightness shift
         bright_mask = _prob_mask(b, self.p, device=device, dtype=dtype)
-        bright_shift = _sample_uniform((b, 1, 1, 1, 1), -0.1, 0.1, device=device, dtype=dtype)
+        bright_shift = _sample_uniform(
+            (b, 1, 1, 1, 1),
+            self.brightness_shift_range[0],
+            self.brightness_shift_range[1],
+            device=device,
+            dtype=dtype,
+        )
         x_lr = torch.where(bright_mask, x_lr + bright_shift, x_lr)
 
         # 5) Contrast via gamma correction
         gamma_mask = _prob_mask(b, self.p, device=device, dtype=dtype)
-        gamma_branch = torch.rand((b, 1, 1, 1, 1), device=device, dtype=dtype) < 0.5
-        gamma_low = _sample_uniform((b, 1, 1, 1, 1), 0.5, 1.0, device=device, dtype=dtype)
-        gamma_high = _sample_uniform((b, 1, 1, 1, 1), 1.0, 4.5, device=device, dtype=dtype)
-        gamma = torch.where(gamma_branch, gamma_low, gamma_high)
+        gamma = _sample_uniform(
+            (b, 1, 1, 1, 1),
+            self.contrast_gamma_range[0],
+            self.contrast_gamma_range[1],
+            device=device,
+            dtype=dtype,
+        )
         x_gamma = torch.pow(x_lr.clamp(0.0, 1.0), gamma)
         x_lr = torch.where(gamma_mask, x_gamma, x_lr)
 
         # 6) Perturb (scale and shift)
         perturb_mask = _prob_mask(b, self.p, device=device, dtype=dtype)
-        scale = 1.0 + _sample_uniform((b, 1, 1, 1, 1), -0.1, 0.1, device=device, dtype=dtype)
-        shift = _sample_uniform((b, 1, 1, 1, 1), -0.1, 0.1, device=device, dtype=dtype)
+        scale = 1.0 + _sample_uniform(
+            (b, 1, 1, 1, 1),
+            self.perturb_scale_range[0],
+            self.perturb_scale_range[1],
+            device=device,
+            dtype=dtype,
+        )
+        shift = _sample_uniform(
+            (b, 1, 1, 1, 1),
+            self.perturb_shift_range[0],
+            self.perturb_shift_range[1],
+            device=device,
+            dtype=dtype,
+        )
         x_perturb = x_lr * scale + shift
         x_lr = torch.where(perturb_mask, x_perturb, x_lr)
 
@@ -147,7 +215,13 @@ class BigAugmentation3D(nn.Module):
         deform_on_a = deform_on[active_idx]
 
         # Rotation (degrees -> radians), independent gate.
-        ang_deg = _sample_uniform((n, 3), -20.0, 20.0, device=device, dtype=dtype)
+        ang_deg = _sample_uniform(
+            (n, 3),
+            self.rotation_degrees_range[0],
+            self.rotation_degrees_range[1],
+            device=device,
+            dtype=dtype,
+        )
         ang = ang_deg * (math.pi / 180.0)
         ang = torch.where(rot_on_a.view(n, 1), ang, torch.zeros_like(ang))
 
@@ -183,7 +257,13 @@ class BigAugmentation3D(nn.Module):
         rot = torch.bmm(rz, torch.bmm(ry, rx))
 
         # Scaling with independent gate.
-        scales = _sample_uniform((n, 3), 0.4, 1.6, device=device, dtype=dtype)
+        scales = _sample_uniform(
+            (n, 3),
+            self.scaling_factor_range[0],
+            self.scaling_factor_range[1],
+            device=device,
+            dtype=dtype,
+        )
         scales = torch.where(scale_on_a.view(n, 1), scales, torch.ones_like(scales))
         scale_mat = torch.diag_embed(scales)
 
@@ -202,7 +282,13 @@ class BigAugmentation3D(nn.Module):
         final_grid = grid
         if bool(deform_on_a.any()):
             sigma_lr = float(
-                _sample_uniform((1,), 10.0 / lr_factor, 13.0 / lr_factor, device=device, dtype=dtype)
+                _sample_uniform(
+                    (1,),
+                    self.deformation_sigma_range[0] / lr_factor,
+                    self.deformation_sigma_range[1] / lr_factor,
+                    device=device,
+                    dtype=dtype,
+                )
                 .detach()
                 .cpu()
             )
@@ -210,7 +296,13 @@ class BigAugmentation3D(nn.Module):
             smooth_noise = _separable_gaussian_blur_3d(noise, sigma=sigma_lr)
             smooth_noise = F.interpolate(smooth_noise, size=(d, h, w), mode="trilinear", align_corners=False)
 
-            mag = _sample_uniform((n, 1, 1, 1, 1), 0.0, 1000.0, device=device, dtype=dtype)
+            mag = _sample_uniform(
+                (n, 1, 1, 1, 1),
+                self.deformation_scale_range[0],
+                self.deformation_scale_range[1],
+                device=device,
+                dtype=dtype,
+            )
             mag = torch.where(deform_on_a.view(n, 1, 1, 1, 1), mag, torch.zeros_like(mag))
 
             norm = torch.tensor(
@@ -255,5 +347,67 @@ class BigAugmentation3D(nn.Module):
             return x_aug.clamp(0.0, 1.0), y_aug
 
 
-def build_bigaug_augmentation() -> nn.Module:
-    return BigAugmentation3D(p=0.5)
+def _resolve_bigaug_cfg(cfg: DictConfig | None) -> dict[str, tuple[float, float] | float]:
+    defaults: dict[str, tuple[float, float] | float] = {
+        "p": 0.5,
+        "sharp_sigma_range": (0.25, 1.5),
+        "sharp_alpha_range": (10.0, 30.0),
+        "blur_sigma_range": (0.25, 1.5),
+        "noise_std_range": (0.1, 1.0),
+        "brightness_shift_range": (-0.1, 0.1),
+        "contrast_gamma_range": (0.5, 4.5),
+        "perturb_scale_range": (-0.1, 0.1),
+        "perturb_shift_range": (-0.1, 0.1),
+        "rotation_degrees_range": (-20.0, 20.0),
+        "scaling_factor_range": (0.4, 1.6),
+        "deformation_sigma_range": (10.0, 13.0),
+        "deformation_scale_range": (0.0, 1000.0),
+    }
+    if cfg is None:
+        return defaults
+
+    model_cfg = getattr(cfg, "model", None)
+    segmenter_cfg = getattr(model_cfg, "segmenter", None) if model_cfg is not None else None
+    bigaug_cfg = getattr(segmenter_cfg, "bigaug", None) if segmenter_cfg is not None else None
+    if bigaug_cfg is None:
+        return defaults
+
+    resolved = dict(defaults)
+    resolved["p"] = float(getattr(bigaug_cfg, "p", resolved["p"]))
+    for key in (
+        "sharp_sigma_range",
+        "sharp_alpha_range",
+        "blur_sigma_range",
+        "noise_std_range",
+        "brightness_shift_range",
+        "contrast_gamma_range",
+        "perturb_scale_range",
+        "perturb_shift_range",
+        "rotation_degrees_range",
+        "scaling_factor_range",
+        "deformation_sigma_range",
+        "deformation_scale_range",
+    ):
+        value = getattr(bigaug_cfg, key, None)
+        if value is not None:
+            resolved[key] = tuple(float(v) for v in value)
+    return resolved
+
+
+def build_bigaug_augmentation(cfg: DictConfig | None = None) -> nn.Module:
+    resolved = _resolve_bigaug_cfg(cfg)
+    return BigAugmentation3D(
+        p=float(resolved["p"]),
+        sharp_sigma_range=tuple(float(v) for v in resolved["sharp_sigma_range"]),
+        sharp_alpha_range=tuple(float(v) for v in resolved["sharp_alpha_range"]),
+        blur_sigma_range=tuple(float(v) for v in resolved["blur_sigma_range"]),
+        noise_std_range=tuple(float(v) for v in resolved["noise_std_range"]),
+        brightness_shift_range=tuple(float(v) for v in resolved["brightness_shift_range"]),
+        contrast_gamma_range=tuple(float(v) for v in resolved["contrast_gamma_range"]),
+        perturb_scale_range=tuple(float(v) for v in resolved["perturb_scale_range"]),
+        perturb_shift_range=tuple(float(v) for v in resolved["perturb_shift_range"]),
+        rotation_degrees_range=tuple(float(v) for v in resolved["rotation_degrees_range"]),
+        scaling_factor_range=tuple(float(v) for v in resolved["scaling_factor_range"]),
+        deformation_sigma_range=tuple(float(v) for v in resolved["deformation_sigma_range"]),
+        deformation_scale_range=tuple(float(v) for v in resolved["deformation_scale_range"]),
+    )

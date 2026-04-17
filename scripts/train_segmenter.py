@@ -8,6 +8,7 @@ import re
 import hydra
 import pytorch_lightning as pl
 import torch
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
@@ -47,13 +48,23 @@ def _build_run_name(cfg: DictConfig) -> str:
     if cfg.logging.run_name is not None:
         return str(cfg.logging.run_name)
 
+    seg_name = "segmenter"
+    dataset_name = str(getattr(cfg.data, "name", "dataset"))
+    try:
+        choices = HydraConfig.get().runtime.choices
+        seg_name = str(choices.get("segmenter", seg_name))
+    except Exception:
+        seg_name = str(getattr(getattr(cfg, "segmenter", None), "name", seg_name))
     if bool(cfg.model.segmenter.fully_artificial):
-        return f"fully-artificial-{cfg.version}-{cfg.data.source_contrast}-segmenter"
+        return f"fully-artificial-{dataset_name}-{seg_name}-{cfg.data.source_contrast}-segmenter"
 
     if bool(cfg.model.segmenter.use_generator):
-        return f"generator-{cfg.version}-{cfg.data.source_contrast}-{cfg.model.segmenter.gen_version}-segmenter"
+        gen_version = cfg.model.segmenter.gen_version
+        if gen_version is None:
+            gen_version = cfg.version
+        return f"segmenter-{dataset_name}-{seg_name}-generated-{gen_version}-{cfg.data.source_contrast}"
 
-    return f"baseline-{cfg.version}-{cfg.data.source_contrast}-segmenter"
+    return f"baseline-{dataset_name}-{seg_name}-{cfg.data.source_contrast}-segmenter"
 
 
 def _build_checkpoint_dir(cfg: DictConfig) -> Path:
@@ -67,7 +78,6 @@ def _build_checkpoint_dir(cfg: DictConfig) -> Path:
     freeze_encoder = getattr(cfg.model.segmenter, 'freeze_encoder', False)
     if pretrained_ckpt not in (None, '', 'null'):
         # Try to extract source version and contrast from path
-        import re
         src_version = 'unknownsrc'
         src_contrast = 'unknownctr'
         m = re.search(r'/checkpoints/(v\d+)/segmenter/\w+/([a-zA-Z0-9]+)/', str(pretrained_ckpt))

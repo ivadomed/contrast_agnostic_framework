@@ -11,6 +11,7 @@ from monai.data import DataLoader, CacheDataset
 from omegaconf import DictConfig
 from torch.utils.data import Subset
 
+from src.data_registry import get_dataset_spec
 from src.dataset import get_preprocessing_transforms, normalize_contrast_name
 
 
@@ -59,6 +60,7 @@ class BraTSDataModule(pl.LightningDataModule):
     ) -> dict[str, Any]:
         subjects = [self._subject_id_from_sample(sample) for sample in samples]
         unique_subjects = sorted(set(subjects))
+        wrote_file = False
 
         split_file.parent.mkdir(parents=True, exist_ok=True)
         if split_file.exists():
@@ -83,10 +85,21 @@ class BraTSDataModule(pl.LightningDataModule):
             }
             with split_file.open("w", encoding="utf-8") as handle:
                 json.dump(split, handle, indent=2)
+            wrote_file = True
 
-        train_set = set(split.get("train_subjects", []))
-        val_set = set(split.get("val_subjects", []))
-        test_set = set(split.get("test_subjects", []))
+        if isinstance(split, list):
+            if not split:
+                split = [{"train": [], "val": [], "test": []}]
+            split_entry = dict(split[0] or {})
+            train_set = set(split_entry.get("train", []))
+            val_set = set(split_entry.get("val", []))
+            test_set = set(split_entry.get("test", []))
+            split_payload: dict[str, Any] = split_entry
+        else:
+            train_set = set(split.get("train_subjects", []))
+            val_set = set(split.get("val_subjects", []))
+            test_set = set(split.get("test_subjects", []))
+            split_payload = split
 
         train_indices, val_indices, test_indices = [], [], []
         for idx, subject in enumerate(subjects):
@@ -97,15 +110,37 @@ class BraTSDataModule(pl.LightningDataModule):
             elif subject in test_set:
                 test_indices.append(idx)
 
-        split["train_indices"] = train_indices
-        split["val_indices"] = val_indices
-        split["test_indices"] = test_indices
-        split["dataset_size"] = len(samples)
+        split_payload["train_indices"] = train_indices
+        split_payload["val_indices"] = val_indices
+        split_payload["test_indices"] = test_indices
+        split_payload["dataset_size"] = len(samples)
 
-        with split_file.open("w", encoding="utf-8") as handle:
-            json.dump(split, handle, indent=2)
+        if isinstance(split, list):
+            split[0] = split_payload
+        if isinstance(split, list) or wrote_file:
+            with split_file.open("w", encoding="utf-8") as handle:
+                json.dump(split, handle, indent=2)
 
-        return split
+        return split_payload
+
+    def _build_local_task_samples(self, task_dir: Path) -> list[dict[str, str]]:
+        images_tr = task_dir / "imagesTr"
+        labels_tr = task_dir / "labelsTr"
+        if not images_tr.exists() or not labels_tr.exists():
+            raise ValueError(f"Expected imagesTr and labelsTr under {task_dir}")
+
+        samples: list[dict[str, str]] = []
+        for image_path in sorted(images_tr.glob("*.nii.gz")):
+            label_path = labels_tr / image_path.name
+            if not label_path.exists():
+                continue
+            # Extract subject ID from filename (e.g., "100_0000.nii.gz" -> "100")
+            subject_id = image_path.stem.split("_")[0]
+            samples.append({"image": str(image_path), "label": str(label_path), "subject": subject_id})
+
+        if not samples:
+            raise ValueError(f"No paired training samples found under {task_dir}")
+        return samples
 
     def setup(self, stage: str | None = None) -> None:
         """Build train/val subsets and their MONAI datasets.
@@ -116,37 +151,50 @@ class BraTSDataModule(pl.LightningDataModule):
         if self.train_dataset is not None and self.val_dataset is not None:
             return
 
-        source_contrast = normalize_contrast_name(self.cfg.data.source_contrast)
-        available_contrasts = [str(c) for c in getattr(self.cfg.data, "contrasts", [])]
+        dataset_name = str(getattr(self.cfg.data, "name", "brats"))
+        dataset_spec = get_dataset_spec(dataset_name)
+
+        available_contrasts_cfg = [str(c) for c in getattr(self.cfg.data, "contrasts", [])]
+        available_contrasts = available_contrasts_cfg or [str(c) for c in dataset_spec["contrasts"]]
+        source_contrast = normalize_contrast_name(self.cfg.data.source_contrast, available_contrasts)
         label_mapping_cfg = getattr(self.cfg.data, "label_mapping", None)
-        label_mapping = dict(label_mapping_cfg) if label_mapping_cfg is not None else None
+        if label_mapping_cfg is not None:
+            label_mapping = dict(label_mapping_cfg)
+        else:
+            label_mapping = dict(dataset_spec.get("label_mapping") or {})
         patch_size = tuple(self.cfg.data.patch_size)
         data_dir = self._resolve_path(self.cfg.data.data_dir)
         split_file = self._resolve_path(self.cfg.data.split_file)
+        task_name = str(getattr(self.cfg.data, "task_name", dataset_spec.get("task_name", "Task01_BrainTumour")))
         train_mode = "train"
         if str(self.cfg.task) == "segmenter" and str(self.cfg.version) == "v16_bigaug":
             train_mode = "train_bigaug"
         if str(self.cfg.version) == "v17_lpci":
             train_mode = "train_lpci"
 
-        train_dataset_full = DecathlonDataset(
-            root_dir=str(data_dir),
-            task=self.cfg.data.task_name,
-            transform=get_preprocessing_transforms(
-                mode=train_mode,
-                patch_size=patch_size,
-                source_contrast=source_contrast,
-                contrasts=available_contrasts,
-                label_mapping=label_mapping,
-            ),
-            section="training",
-            download=True,
-            cache_rate=0.0,
-            num_workers=int(self.cfg.data.num_workers),
-        )
+        task_dir = data_dir / task_name
+        if (task_dir / "imagesTr").exists() and (task_dir / "labelsTr").exists():
+            full_samples = self._build_local_task_samples(task_dir)
+        else:
+            train_dataset_full = DecathlonDataset(
+                root_dir=str(data_dir),
+                task=task_name,
+                transform=get_preprocessing_transforms(
+                    mode=train_mode,
+                    patch_size=patch_size,
+                    source_contrast=source_contrast,
+                    contrasts=available_contrasts,
+                    label_mapping=label_mapping,
+                ),
+                section="training",
+                download=True,
+                cache_rate=0.0,
+                num_workers=int(self.cfg.data.num_workers),
+            )
+            full_samples = train_dataset_full.data
 
         self.split = self._load_or_create_split(
-            samples=train_dataset_full.data,
+            samples=full_samples,
             split_file=split_file,
             train_ratio=float(self.cfg.data.train_ratio),
             val_ratio=float(self.cfg.data.val_ratio),
@@ -158,7 +206,7 @@ class BraTSDataModule(pl.LightningDataModule):
         if not train_indices:
             raise ValueError(f"No train indices found in split file: {split_file}")
 
-        train_samples = [train_dataset_full.data[i] for i in train_indices]
+        train_samples = [full_samples[i] for i in train_indices]
         self.train_dataset = CacheDataset(
             data=train_samples,
             transform=get_preprocessing_transforms(
@@ -180,7 +228,7 @@ class BraTSDataModule(pl.LightningDataModule):
         if not val_indices:
             raise ValueError(f"No validation indices found in split file: {split_file}")
 
-        val_samples = [train_dataset_full.data[i] for i in val_indices]
+        val_samples = [full_samples[i] for i in val_indices]
         self.val_dataset = CacheDataset(
             data=val_samples,
             transform=get_preprocessing_transforms(

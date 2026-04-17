@@ -65,6 +65,7 @@ class BaseTargetGenerator(nn.Module):
         dark_threshold: float,
         hist_module: HistogramModuleLike,
         return_guidance_map: bool = True,
+        labels: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         raise NotImplementedError
 
@@ -80,6 +81,7 @@ class LegacyChunkTargetGenerator(BaseTargetGenerator):
         dark_threshold: float,
         hist_module: HistogramModuleLike,
         return_guidance_map: bool = True,
+        labels: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if input_images.ndim != 5:
             raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
@@ -115,6 +117,7 @@ class V8GridTargetGenerator(BaseTargetGenerator):
         dark_threshold: float,
         hist_module: HistogramModuleLike,
         return_guidance_map: bool = True,
+        labels: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if input_images.ndim != 5:
             raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
@@ -216,6 +219,7 @@ class V15GridTargetGenerator(BaseTargetGenerator):
         dark_threshold: float,
         hist_module: HistogramModuleLike,
         return_guidance_map: bool = True,
+        labels: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if input_images.ndim != 5:
             raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
@@ -306,6 +310,7 @@ class V17MicroAnchorTargetGenerator(BaseTargetGenerator):
         dark_threshold: float,
         hist_module: HistogramModuleLike,
         return_guidance_map: bool = True,
+        labels: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if input_images.ndim != 5:
             raise ValueError("input_images must be a 5D tensor shaped as (B, C, D, H, W).")
@@ -970,11 +975,11 @@ class V18_7StochasticTargetGenerator(BaseTargetGenerator):
         with torch.autocast(device_type="cuda", enabled=False):
             raw32 = raw.to(torch.float32)
             raw_flat32 = raw32.view(b, -1)
-            quantiles32 = quantiles.to(torch.float32)
+            quantiles32 = quantiles.to(torch.float32).contiguous()
             mu32 = mu.to(torch.float32)
             alpha32 = alpha.to(torch.float32)
 
-            chunk_idx = torch.searchsorted(quantiles32[:, 1:-1], raw_flat32, right=True)
+            chunk_idx = torch.searchsorted(quantiles32[:, 1:-1].contiguous(), raw_flat32, right=True)
             chunk_idx = chunk_idx.clamp(min=0, max=k - 1)
 
             lower_bounds = quantiles32.gather(1, chunk_idx)
@@ -1056,3 +1061,141 @@ def _create_range_translation_guidance_map(
     mapped_img = torch.where(bg_mask, input_image, mapped_img)
 
     return mapped_img
+
+
+
+class V19LabelConditionedTextureGenerator(BaseTargetGenerator):
+    """
+    V19 Stochastic Semantic Decoupling: Merges geometric label-priors with
+    texture-preserving latent space.
+    """
+    def __call__(
+        self,
+        input_images: torch.Tensor,
+        hist_module: nn.Module,
+        labels: Optional[torch.Tensor] = None,
+        **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        images = input_images
+        B, C, D, H, W = images.shape
+        device = images.device
+        dtype = images.dtype
+
+        # Step A: Base v18_6 Background Synthesis
+        mask = images > 0.01
+        
+        y = images.clone()
+        
+        # Subsample to compute K=8 quantile edges
+        with torch.autocast(device_type="cuda" if device.type == "cuda" else "cpu", enabled=False):
+            images_f = images.float()
+            
+            # Generate random base targets
+            mu_base = _shared_rand((B, 8), device=device, dtype=torch.float32)
+            alpha_base = _shared_rand((B, 8), device=device, dtype=torch.float32) * 1.5 + 0.5
+            
+            q_edges = torch.linspace(0, 1, 9, device=device)
+            
+            # Bucketize
+            c_i = torch.bucketize(images_f, q_edges) - 1
+            c_i = torch.clamp(c_i, 0, 7)
+            
+            mu_c = mu_base.view(B, 8, 1, 1, 1).expand(B, 8, D, H, W).gather(1, c_i)
+            alpha_c = alpha_base.view(B, 8, 1, 1, 1).expand(B, 8, D, H, W).gather(1, c_i)
+            q_c_minus_1 = q_edges[:-1].view(1, 8, 1, 1, 1).expand(B, 8, D, H, W).gather(1, c_i)
+            
+            y_base = mu_c + alpha_c * (images_f - q_c_minus_1)
+            y = torch.where(mask, y_base.to(dtype), y)
+
+        # Step B: Stochastic Semantic Decoupling
+        if labels is not None:
+            with torch.autocast(device_type="cuda" if device.type == "cuda" else "cpu", enabled=False):
+                if labels.dim() == 4:
+                    labels = labels.unsqueeze(1)
+                if any(dim <= 0 for dim in labels.shape[2:]):
+                    labels = None
+                else:
+                    if labels.shape[2:] != images.shape[2:]:
+                        labels = F.interpolate(labels.float(), size=images.shape[2:], mode="nearest")
+                    labels = labels.to(device=device)
+                    y_f = y.float()
+                    images_f = images.float()
+                    
+                    for c in [1, 2, 3]:
+                        # DDP-safe boolean decoupling mask per batch item
+                        decouple = _shared_rand((B, 1, 1, 1, 1), device=device, dtype=torch.float32) > 0.5
+                        
+                        mu_path = _shared_rand((B, 1, 1, 1, 1), device=device, dtype=torch.float32)
+                        alpha_path = _shared_rand((B, 1, 1, 1, 1), device=device, dtype=torch.float32) * 1.5 + 0.5
+                        
+                        class_mask = (labels == c)
+                        
+                        # Calculate mean intensity of class voxels per batch item
+                        # Use safe division
+                        class_sum = (images_f * class_mask).sum(dim=(1, 2, 3, 4), keepdim=True)
+                        class_count = class_mask.sum(dim=(1, 2, 3, 4), keepdim=True)
+                        class_count_safe = torch.clamp(class_count, min=1.0)
+                        mean_c = class_sum / class_count_safe
+                        
+                        y_override = mu_path + alpha_path * (images_f - mean_c)
+                        
+                        # Apply override conditionally
+                        valid_override = class_mask & decouple & (class_count > 0)
+                        y_f = torch.where(valid_override, y_override, y_f)
+                        
+                    y = y_f.to(dtype)
+                
+        # Step C: Masking & Clamping
+        y = torch.clamp(y, 0.0, 1.0)
+        y = torch.where(mask, y, torch.zeros_like(y))
+        
+        target_hist = hist_module(y)
+        return target_hist, y, y
+
+class SynthSegBaselineTargetGenerator(BaseTargetGenerator):
+    """
+    SynthSeg Baseline: Applies pure SynthSeg GMM sampling exclusively to the 
+    available tumor labels (NCR, ED, ET handled separately) while leaving the 
+    background intensities unaugmented, serving as a direct ablation study 
+    for partial-label generalization scenarios.
+    """
+    def __call__(
+        self,
+        input_images: torch.Tensor,
+        hist_module: nn.Module,
+        labels: Optional[torch.Tensor] = None,
+        **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        images = input_images
+        B, C, D, H, W = images.shape
+        device = images.device
+        dtype = images.dtype
+
+        # Step A: Initialize
+        y = images.clone()
+        mask = images > 0.01
+
+        # Step B: Pure GMM Sampling on Masks
+        if labels is not None:
+            with torch.autocast(device_type="cuda" if device.type == "cuda" else "cpu", enabled=False):
+                y_f = y.float()
+                
+                for c in [1, 2, 3]:
+                    class_mask = (labels == c)
+                    
+                    mu_c = _shared_rand((B, 1, 1, 1, 1), device=device, dtype=torch.float32)
+                    sigma_c = _shared_rand((B, 1, 1, 1, 1), device=device, dtype=torch.float32) * 0.09 + 0.01
+                    
+                    Z = torch.randn_like(y_f)
+                    y_synthseg = mu_c + sigma_c * Z
+                    
+                    y_f = torch.where(class_mask, y_synthseg, y_f)
+                    
+                y = y_f.to(dtype)
+                
+        # Step C: Masking & Clamping
+        y = torch.clamp(y, 0.0, 1.0)
+        y = torch.where(mask, y, torch.zeros_like(y))
+        
+        target_hist = hist_module(y)
+        return target_hist, y, y

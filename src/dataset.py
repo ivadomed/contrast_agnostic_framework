@@ -8,6 +8,7 @@ from monai.transforms import (
     EnsureChannelFirstd,
     Spacingd,
     Orientationd,
+    SpatialPadd,
     RandAffined,
     Rand3DElasticd,             # <-- ADDED IMPORT
     RandSimulateLowResolutiond,
@@ -19,7 +20,11 @@ from monai.transforms import (
     EnsureTyped
 )
 
-DEFAULT_CONTRASTS = ("flair", "t1w", "t1gd", "t2w")
+from src.data_registry import get_dataset_spec
+
+
+DEFAULT_DATASET_NAME = "brats"
+DEFAULT_CONTRASTS = tuple(get_dataset_spec(DEFAULT_DATASET_NAME)["contrasts"])
 
 
 def build_contrast_to_index(contrasts: list[str] | tuple[str, ...] | None) -> dict[str, int]:
@@ -73,6 +78,8 @@ def get_preprocessing_transforms(
     Channel 0: FLAIR, Channel 1: T1w, Channel 2: T1gd, Channel 3: T2w
     """
     
+    if not contrasts:
+        raise ValueError("Expected non-empty 'contrasts' from cfg.data.contrasts.")
     contrast_to_index = build_contrast_to_index(contrasts)
     source_contrast = normalize_contrast_name(source_contrast, list(contrast_to_index.keys()))
     source_index = contrast_to_index[source_contrast]
@@ -109,18 +116,24 @@ def get_preprocessing_transforms(
     # 3. Normalize intensities to [0, 1] after train-time augmentations
     transforms_list.append(ScaleIntensityd(keys=["image"], minv=0.0, maxv=1.0))
 
-    # 4. Spatial cropping with larger patch size support
+    # 4. Ensure tensors are at least patch-sized before random crop.
+    transforms_list.append(
+        SpatialPadd(keys=["image", "label"], spatial_size=patch_size)
+    )
+
+    # 5. Spatial cropping with larger patch size support
     transforms_list.append(
         RandSpatialCropd(keys=["image", "label"], roi_size=patch_size, random_size=False)
     )
     
-    # 5. Finalize types
+    # 6. Finalize types
     transforms_list.append(EnsureTyped(keys=["image", "label"], data_type="tensor"))
     
     return Compose(transforms_list)
 
 def build_train_dataset(
     data_dir: str,
+    task_name: str,
     patch_size: tuple = (128, 128, 128),
     cache_rate: float = 0.0,
     num_workers: int = 4,
@@ -144,7 +157,7 @@ def build_train_dataset(
     
     dataset = DecathlonDataset(
         root_dir=data_dir,
-        task="Task01_BrainTumour", # Tells MONAI exactly which dataset to fetch
+        task=task_name,
         transform=transforms,
         section="training",
         download=True, # Will only download if it doesn't already exist

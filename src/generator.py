@@ -116,4 +116,5 @@ class MRI_Synthesis_Net(nn.Module):
         x = self.dec1(x, skip1)
 
         residual = self.head(x)
-        return torch.tanh(original_x + residual)
+        x_mapped_to_bipolar = original_x * 2.0 - 1.0
+        return x_mapped_to_bipolar + residual
