@@ -1,9 +1,0 @@
-model_id,family,source_contrast,target_contrast,dice,ckpt_exists,checkpoint_path
-segmenter_fullyartificial_t1w,fullyartificial,t1w,flair,0.603040,1,checkpoints/v8/segmenter/fully_artificial/t1w/run1/last.ckpt
-segmenter_fullyartificial_t1w,fullyartificial,t1w,t1w,0.658047,1,checkpoints/v8/segmenter/fully_artificial/t1w/run1/last.ckpt
-segmenter_fullyartificial_t1w,fullyartificial,t1w,t1gd,0.647333,1,checkpoints/v8/segmenter/fully_artificial/t1w/run1/last.ckpt
-segmenter_fullyartificial_t1w,fullyartificial,t1w,t2w,0.623495,1,checkpoints/v8/segmenter/fully_artificial/t1w/run1/last.ckpt
-segmenter_fullyartificial_t2w,fullyartificial,t2w,flair,0.727173,1,checkpoints/v8/segmenter/fully_artificial/t2w/run1/last.ckpt
-segmenter_fullyartificial_t2w,fullyartificial,t2w,t1w,0.255639,1,checkpoints/v8/segmenter/fully_artificial/t2w/run1/last.ckpt
-segmenter_fullyartificial_t2w,fullyartificial,t2w,t1gd,0.417325,1,checkpoints/v8/segmenter/fully_artificial/t2w/run1/last.ckpt
-segmenter_fullyartificial_t2w,fullyartificial,t2w,t2w,0.697892,1,checkpoints/v8/segmenter/fully_artificial/t2w/run1/last.ckpt

@@ -4,7 +4,7 @@ import time
 
 import torch
 
-from src.noise_ops import generate_fractal_noise_3d
+from src.synthesis.noise_ops import generate_fractal_noise_3d
 
 
 def test_generate_fractal_noise_3d_shape_range_and_finite() -> None:

@@ -5,8 +5,8 @@ import time
 import pytest
 import torch
 
-from src.histogram_ops import DifferentiableHistogram3D, create_range_translation_guidance_map, generate_unified_targets
-from src.intensity_ops import RandomGMMHistogramMatching
+from src.synthesis.histogram_ops import DifferentiableHistogram3D, create_range_translation_guidance_map, generate_unified_targets
+from src.synthesis.intensity_ops import RandomGMMHistogramMatching
 
 
 def test_differentiable_histogram3d_shape_and_mass() -> None:

@@ -1,9 +1,0 @@
-# @package model
-# gen_20_1: Partial SynthSeg Baseline.
-# SynthSeg GMM sampling applied selectively to tumour labels; healthy background
-# uses raw T1w without domain randomisation.
-
-segmenter:
-  use_generator: false
-  fully_artificial: false
-  out_channels: 4

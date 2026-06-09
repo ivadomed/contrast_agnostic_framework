@@ -1,0 +1,33 @@
+name: brats2017
+task_name: Task01_BrainTumour
+source_contrast: t1w
+contrasts: [flair, t1w, t1gd, t2w]
+num_classes: 4
+label_mapping:
+  4: 3
+nnunet_id:
+  flair: "021"
+  t1w: "022"
+  t2w: "023"
+  t1gd: "024"
+
+data_dir: data
+split_file: splits/brats_subject_split.json
+cache_dir: data/cache/persistent
+
+patch_size: [128, 128, 128]
+cache_rate: 1.0
+num_workers: 4
+
+train_ratio: 0.7
+val_ratio: 0.15
+
+# If set, this explicit value overrides task-specific defaults below.
+batch_size: null
+batch_size_generator: 4
+batch_size_segmenter: 8
+val_batch_size: 4
+pin_memory: true
+persistent_workers: true
+prefetch_factor: 2
+drop_last_train: true

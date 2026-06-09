@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import torch
 
-from src.intensity_ops import (
+from src.synthesis.intensity_ops import (
     RandomAnisotropicDegradation3D,
     RandomBezierIntensityWarp,
     RandomSoftQuantileShuffling,

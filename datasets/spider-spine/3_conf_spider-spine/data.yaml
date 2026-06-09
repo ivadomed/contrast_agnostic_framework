@@ -1,0 +1,28 @@
+name: spider_spine
+task_name: Task102_SpiderSpine
+source_contrast: t1_sag
+contrasts: [t1_sag, t2_sag, t2_space]
+class_names: [class_1, class_2, class_3]
+label_mapping: null
+nnunet_id: 102
+
+data_dir: data
+split_file: data/splits/spider_spine_split.json
+cache_dir: data/cache/persistent
+
+patch_size: [128, 128, 128]
+cache_rate: 1.0
+num_workers: 4
+
+train_ratio: 0.7
+val_ratio: 0.15
+
+# If set, this explicit value overrides task-specific defaults below.
+batch_size: null
+batch_size_generator: 4
+batch_size_segmenter: 8
+val_batch_size: 4
+pin_memory: true
+persistent_workers: true
+prefetch_factor: 2
+drop_last_train: true

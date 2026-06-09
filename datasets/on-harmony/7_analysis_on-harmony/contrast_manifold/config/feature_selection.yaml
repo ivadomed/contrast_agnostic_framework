@@ -1,0 +1,25 @@
+# Feature selection for the contrast manifold UMAP / feature analysis.
+# Applied by plot_umap_joint.py and analyze_features.py via --feature_config.
+#
+# exclude_families: drop ALL features whose name contains the family prefix.
+# exclude_features: drop specific named features (exact match after 'original_' strip).
+
+exclude_families:
+  - shape       # mask-derived geometry (volume, surface area, …) — reflects brain size,
+                # not image contrast or texture quality; must exclude for cross-modality comparison
+
+exclude_features:
+  # Near-constant after 1st/99th percentile clip + [0,1] rescale:
+  # these converge to the same value for every scan and carry no discriminative signal.
+  - firstorder_10Percentile
+  - firstorder_90Percentile
+  - firstorder_Minimum
+  - firstorder_Maximum
+  - firstorder_Range
+  - firstorder_InterquartileRange
+
+  # Unstable GLCM features: high sensitivity to noise / resampling artefacts,
+  # making them unreliable across scanners and synthetic images.
+  - glcm_ClusterShade
+  - glcm_ClusterProminence
+  - glcm_Imc1

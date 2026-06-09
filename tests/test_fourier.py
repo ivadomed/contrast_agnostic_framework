@@ -10,7 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.kornia_augmentations import RandomFourierAmplitude3D
+from src.augmentation.kornia_augmentations import RandomFourierAmplitude3D
 
 
 def test_random_fourier_amplitude_3d_properties() -> None:

@@ -1,0 +1,30 @@
+name: on_harmony
+task_name: ON-Harmony
+source_contrast: t1w
+contrasts: [t1w]
+num_classes: 1  # background only; no label masks used
+
+# BIDS loader: globs sub-*/ses-*/anat/*_T1w.nii.gz — no labels loaded
+bids_root: data/ON-Harmony
+label_free: true
+
+data_dir: data
+split_file: splits/on_harmony_split.json
+cache_dir: data/cache/persistent
+
+patch_size: [128, 128, 128]
+cache_rate: 1.0
+num_workers: 4
+
+train_ratio: 0.7
+val_ratio: 0.15
+
+samples_per_volume: 1
+batch_size: null
+batch_size_generator: 4
+batch_size_segmenter: 8
+val_batch_size: 4
+pin_memory: true
+persistent_workers: true
+prefetch_factor: 2
+drop_last_train: true

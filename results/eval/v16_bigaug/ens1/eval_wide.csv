@@ -1,3 +1,0 @@
-model_id,family,source_contrast,checkpoint_path,ckpt_exists,flair,t1w,t1gd,t2w,in_domain_dice,ood_mean_dice,ood_worst_dice
-segmenter_baseline_t1w,baseline,t1w,checkpoints/v16_bigaug/segmenter/baseline/t1w/run2/last.ckpt,1,0.109782,0.598088,0.508073,0.076299,0.598088,0.231385,0.076299
-segmenter_baseline_t2w,baseline,t2w,checkpoints/v16_bigaug/segmenter/baseline/t2w/run2/last.ckpt,1,0.649771,0.079121,0.100369,0.760373,0.760373,0.276420,0.079121

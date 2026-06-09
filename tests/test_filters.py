@@ -4,7 +4,7 @@ import time
 
 import torch
 
-from src.filters import AnatomicalUnsharpMask3D
+from src.synthesis.filters import AnatomicalUnsharpMask3D
 
 
 def test_anatomical_unsharp_mask_3d_shape_clamp_and_grad() -> None:

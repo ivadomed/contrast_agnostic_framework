@@ -15,3 +15,10 @@ results/visualizations/
 Dataset0*/
 predictions*/
 results/
+archive/
+*.nii.gz
+*.nii
+*.ckpt
+**/8_results*/*
+**/2_nnUNet*/*
+**/1_BIDS*/*

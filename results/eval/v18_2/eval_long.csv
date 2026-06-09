@@ -1,9 +1,0 @@
-model_id,family,source_contrast,target_contrast,dice,ckpt_exists,checkpoint_path
-segmenter_generator_t1w,generator,t1w,flair,0.404998,1,checkpoints/v18_2/segmenter/generator/t1w/run2/last.ckpt
-segmenter_generator_t1w,generator,t1w,t1w,0.684509,1,checkpoints/v18_2/segmenter/generator/t1w/run2/last.ckpt
-segmenter_generator_t1w,generator,t1w,t1gd,0.601016,1,checkpoints/v18_2/segmenter/generator/t1w/run2/last.ckpt
-segmenter_generator_t1w,generator,t1w,t2w,0.365932,1,checkpoints/v18_2/segmenter/generator/t1w/run2/last.ckpt
-segmenter_generator_t2w,generator,t2w,flair,0.640496,1,checkpoints/v18_2/segmenter/generator/t2w/run3/last.ckpt
-segmenter_generator_t2w,generator,t2w,t1w,0.129296,1,checkpoints/v18_2/segmenter/generator/t2w/run3/last.ckpt
-segmenter_generator_t2w,generator,t2w,t1gd,0.141999,1,checkpoints/v18_2/segmenter/generator/t2w/run3/last.ckpt
-segmenter_generator_t2w,generator,t2w,t2w,0.799168,1,checkpoints/v18_2/segmenter/generator/t2w/run3/last.ckpt

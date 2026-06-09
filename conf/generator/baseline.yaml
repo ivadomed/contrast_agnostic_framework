@@ -1,0 +1,14 @@
+# @package model
+# baseline: Standard unaugmented data regime.
+# Segmenter trains on raw volumes only — no synthesis, no domain randomisation.
+# Corresponds to the pure supervised baseline (seg_A_baseline or seg_B_baseline).
+
+segmenter:
+  use_generator: false
+  fully_artificial: false
+  gen_version: null
+  gen_weights: null
+  apply_guidance_blur: true
+  target_generator:
+    _target_: src.target_generators.LegacyChunkTargetGenerator
+  guidance_perturber: null

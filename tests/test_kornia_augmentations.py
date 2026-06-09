@@ -11,7 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.kornia_augmentations import RandomElasticTransform3D, build_kornia_augmentation
+from src.augmentation.kornia_augmentations import RandomElasticTransform3D, build_kornia_augmentation
 
 
 def _base_cfg(*, affine_prob: float, elastic_prob: float) -> object:

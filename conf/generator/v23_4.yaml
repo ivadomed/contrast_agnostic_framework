@@ -1,0 +1,43 @@
+# @package model
+# gen_23_4: v23_3 with guidance_blurred loss weight doubled (15 → 30).
+# Stronger intensity-matching pressure to force the network to follow
+# guidance map intensity inversions (T2w-like contrast).
+
+generator:
+  gen_version: v23_4
+  apply_guidance_blur: false
+  sigmoid_scale: 4.0
+  target_generator:
+    _target_: src.target_generators.V23RandomChunkTargetGenerator
+  loss_weights:
+    edge: 30.0
+    tv: 0.0
+    range: 100.0
+    guidance_blurred: 30.0
+    guidance_sharp: 0.0
+  guidance_perturber:
+    _target_: src.guidance_perturbers.MildGaussianGuidancePerturber
+    sigma: 1.0
+    kernel_size: 9
+    background_threshold: 0.02
+
+segmenter:
+  use_generator: true
+  gen_version: v23_4
+  aug_prob_val: 1.0
+  compile_synthesis: false
+  apply_guidance_blur: false
+  out_channels: 4
+  sigmoid_scale: 4.0
+  target_generator:
+    _target_: src.target_generators.V23RandomChunkTargetGenerator
+  guidance_perturber:
+    _target_: src.guidance_perturbers.MildGaussianGuidancePerturber
+    sigma: 1.0
+    kernel_size: 9
+    background_threshold: 0.02
+  resolution_resampler:
+    zoom_min: 0.3
+    zoom_max: 1.5
+    anisotropy_prob: 0.5
+    apply_prob: 1.0

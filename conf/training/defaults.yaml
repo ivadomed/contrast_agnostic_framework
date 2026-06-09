@@ -55,9 +55,9 @@ generator:
     affine_prob: 0.8
     affine_rotate_range: [0.35, 0.35, 0.35]
     affine_scale_range: [0.2, 0.2, 0.2]
-    elastic_prob: 0.5
+    elastic_prob: 0.3
     elastic_sigma_range: [10.0, 13.0]
-    elastic_magnitude_range: [0.0, 1000.0]
+    elastic_magnitude_range: [0.0, 300.0]
     low_res_prob: 0.3
     low_res_zoom_range: [0.5, 1.0]
     noise_prob: 0.2

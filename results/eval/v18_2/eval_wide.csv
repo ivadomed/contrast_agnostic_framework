@@ -1,3 +1,0 @@
-model_id,family,source_contrast,checkpoint_path,ckpt_exists,flair,t1w,t1gd,t2w,in_domain_dice,ood_mean_dice,ood_worst_dice
-segmenter_generator_t1w,generator,t1w,checkpoints/v18_2/segmenter/generator/t1w/run2/last.ckpt,1,0.404998,0.684509,0.601016,0.365932,0.684509,0.457316,0.365932
-segmenter_generator_t2w,generator,t2w,checkpoints/v18_2/segmenter/generator/t2w/run3/last.ckpt,1,0.640496,0.129296,0.141999,0.799168,0.799168,0.303930,0.129296

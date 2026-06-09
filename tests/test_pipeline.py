@@ -9,13 +9,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.generator import MRI_Synthesis_Net
-from src.histogram_ops import (
+from src.synthesis.generator import MRI_Synthesis_Net
+from src.synthesis.histogram_ops import (
     DifferentiableHistogram3D,
     create_range_translation_guidance_map,
     generate_unified_targets,
 )
-from src.losses import (
+from src.training.losses import (
     DiceEdgeLoss3D,
     DifferentiableWassersteinLoss,
     RangeLoss,

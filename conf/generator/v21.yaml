@@ -1,0 +1,38 @@
+# @package model
+# gen_21: Based on v19_c with more texture-sensitive edge loss.
+# Only change vs v19_c:
+#   - edge_threshold: 0.02 (vs 0.05) → Sobel edge map activates on faint texture gradients
+
+generator:
+  gen_version: v21
+  apply_guidance_blur: false
+  edge_threshold: 0.02
+  sigmoid_scale: 12.0
+  target_generator:
+    _target_: src.target_generators.V19LabelConditionedTextureGenerator
+  loss_weights:
+    edge: 30.0
+    tv: 0.0
+    range: 100.0
+    guidance_blurred: 10.0
+    guidance_sharp: 0.0
+  guidance_perturber:
+    _target_: src.guidance_perturbers.MildGaussianGuidancePerturber
+    sigma: 1.0
+    kernel_size: 9
+    background_threshold: 0.02
+
+segmenter:
+  use_generator: true
+  gen_version: v21
+  aug_prob_val: 1.0
+  compile_synthesis: false
+  apply_guidance_blur: false
+  out_channels: 4
+  target_generator:
+    _target_: src.target_generators.V19LabelConditionedTextureGenerator
+  guidance_perturber:
+    _target_: src.guidance_perturbers.MildGaussianGuidancePerturber
+    sigma: 1.0
+    kernel_size: 9
+    background_threshold: 0.02

@@ -1,11 +1,11 @@
-from .dataset import get_preprocessing_transforms, build_train_dataset
-from .generator import MRI_Synthesis_Net
-from .histogram_ops import (
+from .training.dataset import get_preprocessing_transforms, build_train_dataset
+from .synthesis.generator import MRI_Synthesis_Net
+from .synthesis.histogram_ops import (
     DifferentiableHistogram3D,
     create_range_translation_guidance_map,
     generate_unified_targets,
 )
-from .losses import (
+from .training.losses import (
     DiceEdgeLoss3D,
     DifferentiableWassersteinLoss,
     RangeLoss,

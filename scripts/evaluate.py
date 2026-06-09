@@ -33,9 +33,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.dataset import DEFAULT_CONTRASTS, build_contrast_to_index, normalize_contrast_name
-from src.generator import MRI_Synthesis_Net
-from src.histogram_ops import DifferentiableHistogram3D, generate_unified_targets
+from src.training.dataset import DEFAULT_CONTRASTS, build_contrast_to_index, normalize_contrast_name
+from src.synthesis.generator import MRI_Synthesis_Net
+from src.synthesis.histogram_ops import DifferentiableHistogram3D, generate_unified_targets
 
 try:
     mp.set_sharing_strategy("file_system")
@@ -276,6 +276,10 @@ def _resolve_latest_generator_checkpoint(
     version = runtime_info.get("gen_version") or runtime_info.get("version")
 
     candidate_roots: list[Path] = []
+    # Canonical path first: checkpoints/{dataset}/generator/{gen_version}/{contrast}/
+    if dataset_name and version:
+        candidate_roots.append(PROJECT_ROOT / "checkpoints" / dataset_name / "generator" / str(version) / contrast)
+    # Legacy paths as ordered fallback
     if dataset_name and model_id:
         candidate_roots.append(PROJECT_ROOT / "checkpoints" / dataset_name / model_id / "generator" / contrast)
     if version:
@@ -310,9 +314,10 @@ def _resolve_latest_generator_checkpoint(
         if candidate is not None:
             return candidate
 
-    # Last-resort fallback: scan any dataset/model-id namespace for this contrast.
+    # Last-resort fallback: scan canonical then legacy wildcard paths.
     wildcard_roots = sorted(
-        (PROJECT_ROOT / "checkpoints").glob(f"*/*/generator/{contrast}"),
+        list((PROJECT_ROOT / "checkpoints").glob(f"*/generator/*/{contrast}"))   # canonical: {dataset}/generator/{version}/{contrast}
+        + list((PROJECT_ROOT / "checkpoints").glob(f"*/*/generator/{contrast}")),  # legacy: {dataset}/{model_id}/generator/{contrast}
         key=lambda path: path.stat().st_mtime if path.exists() else 0,
         reverse=True,
     )
@@ -419,7 +424,7 @@ def _contrasts_from_hyper_parameters(hyper: dict[str, Any] | None) -> list[str] 
 
 
 def _load_contrasts_from_default_config() -> list[str]:
-    cfg_path = PROJECT_ROOT / "conf" / "data" / "brats.yaml"
+    cfg_path = PROJECT_ROOT / "conf" / "data" / "brats2017.yaml"
     if cfg_path.exists():
         try:
             cfg = OmegaConf.load(cfg_path)
@@ -441,7 +446,7 @@ def _resolve_target_contrasts(model_specs: list[dict[str, Any]]) -> list[str]:
 
 
 def _load_label_mapping_from_default_config() -> dict[int, int]:
-    cfg_path = PROJECT_ROOT / "conf" / "data" / "brats.yaml"
+    cfg_path = PROJECT_ROOT / "conf" / "data" / "brats2017.yaml"
     if cfg_path.exists():
         try:
             cfg = OmegaConf.load(cfg_path)
@@ -662,10 +667,14 @@ def _validate_family(family: str) -> str:
     normalized = family.strip().lower()
     if normalized == "fully_artificial":
         normalized = "fullyartificial"
-    valid = {"baseline", "generator", "bigaug", "fullyartificial"}
-    if normalized not in valid:
-        raise ValueError(f"Unsupported family '{family}'. Expected one of: {sorted(valid)}")
-    return normalized
+    legacy_valid = {"baseline", "generator", "bigaug", "fullyartificial"}
+    if normalized in legacy_valid:
+        return normalized
+    # Accept canonical mode names: gen_v{N}, fully_artificial_v{N}, finetuned_from-...
+    _CANONICAL = re.compile(r"^(gen_v\d|fully_artificial_v\d|finetuned_from-|baseline_pth)")
+    if _CANONICAL.match(normalized):
+        return normalized
+    raise ValueError(f"Unsupported family '{family}'. Expected one of: {sorted(legacy_valid)} or canonical mode name.")
 
 
 def _parse_enabled(value: Any) -> bool:
@@ -882,13 +891,25 @@ def _discover_models(checkpoint_dir: Path) -> list[dict[str, Any]]:
             continue
 
         seg_idx = parts.index("segmenter")
-        if seg_idx + 2 >= len(parts):
-            continue
-
-        family = _validate_family(parts[seg_idx + 1])
         hyper = _load_hyper_parameters(str(checkpoint))
         hyper_contrast = _nested_get(hyper, ["data", "source_contrast"], default=None)
-        contrast_raw = hyper_contrast if hyper_contrast is not None else parts[seg_idx + 2]
+
+        if seg_idx + 1 < len(parts) and parts[seg_idx + 1] == "seg_A":
+            # Canonical path: checkpoints/{dataset}/segmenter/seg_A/{mode}/{seg_mode}/{contrast}/runN/
+            if seg_idx + 4 >= len(parts):
+                continue
+            family = parts[seg_idx + 2]  # mode, e.g. baseline, gen_v19, finetuned_from-...
+            contrast_raw = hyper_contrast if hyper_contrast is not None else parts[seg_idx + 4]
+        else:
+            # Legacy path: checkpoints/{version}/segmenter/{family}/{contrast}/runN/
+            if seg_idx + 2 >= len(parts):
+                continue
+            try:
+                family = _validate_family(parts[seg_idx + 1])
+            except ValueError:
+                continue
+            contrast_raw = hyper_contrast if hyper_contrast is not None else parts[seg_idx + 2]
+
         contrast = normalize_contrast_name(str(contrast_raw))
         key = (family, contrast)
 

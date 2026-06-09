@@ -1,8 +1,0 @@
-defaults:
-  - defaults
-  - _self_
-
-segmenter:
-  use_generator: false
-  fully_artificial: false
-  out_channels: 4

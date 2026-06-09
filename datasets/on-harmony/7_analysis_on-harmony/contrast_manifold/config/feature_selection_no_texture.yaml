@@ -1,0 +1,75 @@
+# Feature selection: base exclusions + high-Cohen's-d texture features.
+# Purpose: visualize where synthetic contrasts sit in feature space after
+# removing the systematic texture/intensity divergence from v19_c vs real MRI.
+# All features with |Cohen's d| > 2.5 for v19_c vs original are excluded.
+#
+# Inherits all exclusions from feature_selection.yaml, plus:
+#   - All GLCM, GLSZM, GLRLM, NGTDM, GLDM, and firstorder features with d > 2.5
+
+exclude_families:
+  - shape       # mask-derived geometry — not contrast/texture signal
+
+exclude_features:
+  # ── Base exclusions (from feature_selection.yaml) ──────────────────────────
+  # Near-constant after [0,1] rescale:
+  - firstorder_10Percentile
+  - firstorder_90Percentile
+  - firstorder_Minimum
+  - firstorder_Maximum
+  - firstorder_Range
+  - firstorder_InterquartileRange
+
+  # Unstable GLCM features:
+  - glcm_ClusterShade
+  - glcm_ClusterProminence
+  - glcm_Imc1
+
+  # ── High-Cohen's-d texture features (|d| > 2.5 for v19_c vs original) ──────
+  # These dominate PC1 and reflect systematic texture loss in synthetic images.
+  # Excluded here to visualize contrast placement without the texture dimension.
+
+  # GLCM (d > 2.5)
+  - glcm_DifferenceAverage       # d=4.39
+  - glcm_Idmn                    # d=4.30
+  - glcm_Imc2                    # d=4.24
+  - glcm_Idn                     # d=4.23
+  - glcm_Contrast                # d=4.02
+  - glcm_DifferenceEntropy       # d=3.66
+  - glcm_InverseVariance         # d=3.64
+  - glcm_DifferenceVariance      # d=3.25
+  - glcm_Correlation             # d=2.79
+  - glcm_SumAverage              # d=2.76
+  - glcm_JointAverage            # d=2.76 (alias of SumAverage)
+  - glcm_MCC                     # d=2.62
+  - glcm_Id                      # d=2.58
+  - glcm_Autocorrelation         # d=2.54
+
+  # GLSZM (d > 2.5)
+  - glszm_SmallAreaHighGrayLevelEmphasis  # d=3.92
+  - glszm_GrayLevelNonUniformity         # d=3.63
+  - glszm_HighGrayLevelZoneEmphasis      # d=3.58
+  - glszm_SizeZoneNonUniformity          # d=3.21
+
+  # GLRLM (d > 2.5)
+  - glrlm_ShortRunHighGrayLevelEmphasis  # d=3.08
+  - glrlm_HighGrayLevelRunEmphasis       # d=2.98
+  - glrlm_GrayLevelNonUniformity         # d=2.75
+  - glrlm_RunLengthNonUniformity         # d=2.73
+  - glrlm_LongRunHighGrayLevelEmphasis   # d=2.59
+  - glrlm_LongRunLowGrayLevelEmphasis    # d=2.54
+
+  # NGTDM (d > 2.5)
+  - ngtdm_Complexity             # d=3.51
+  - ngtdm_Contrast               # d=2.90
+  - ngtdm_Busyness               # d=2.68
+
+  # GLDM (d > 2.5)
+  - gldm_SmallDependenceHighGrayLevelEmphasis  # d=4.28
+  - gldm_DependenceNonUniformity               # d=2.93
+  - gldm_HighGrayLevelEmphasis                 # d=2.86
+  - gldm_GrayLevelNonUniformity                # d=2.77
+
+  # First-order (d > 2.5)
+  - firstorder_Energy            # d=3.17
+  - firstorder_TotalEnergy       # d=3.17
+  - firstorder_Mean              # d=2.67

@@ -1,0 +1,8 @@
+sub-12813,ses-NOT1ACH001,NOT1ACH,dwi_ap,nan,True,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/ON-Harmony/derivatives/synthseg_registered/dwi_ap/sub-12813_ses-NOT1ACH001_dwi_ap_seg7.nii.gz
+sub-12813,ses-OXF1PRI001,OXF1PRI,bold,nan,True,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/ON-Harmony/derivatives/synthseg_registered/bold/sub-12813_ses-OXF1PRI001_bold_seg7.nii.gz
+sub-14230,ses-NOT1ACH001,NOT1ACH,T2w,1.2086,False,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/ON-Harmony/derivatives/synthseg_registered/T2w/sub-14230_ses-NOT1ACH001_T2w_seg7.nii.gz
+sub-14230,ses-NOT1ACH001,NOT1ACH,gre_echo1_mag,1.1895,False,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/ON-Harmony/derivatives/synthseg_registered/gre_echo1_mag/sub-14230_ses-NOT1ACH001_gre_echo1_mag_seg7.nii.gz
+sub-16842,ses-NOT1ACH001,NOT1ACH,dwi_ap,nan,True,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/ON-Harmony/derivatives/synthseg_registered/dwi_ap/sub-16842_ses-NOT1ACH001_dwi_ap_seg7.nii.gz
+sub-16842,ses-OXF1PRI001,OXF1PRI,bold,nan,True,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/ON-Harmony/derivatives/synthseg_registered/bold/sub-16842_ses-OXF1PRI001_bold_seg7.nii.gz
+sub-16975,ses-NOT1ACH001,NOT1ACH,T2w,1.2073,False,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/ON-Harmony/derivatives/synthseg_registered/T2w/sub-16975_ses-NOT1ACH001_T2w_seg7.nii.gz
+sub-16975,ses-NOT1ACH001,NOT1ACH,gre_echo1_mag,1.1767,False,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/data/ON-Harmony/derivatives/synthseg_registered/gre_echo1_mag/sub-16975_ses-NOT1ACH001_gre_echo1_mag_seg7.nii.gz

@@ -1,0 +1,34 @@
+# PyRadiomics configuration for contrast manifold analysis.
+# Internal normalisation (z-score within mask) is enabled so that features
+# are comparable across scanners and synthetic images regardless of intensity scale.
+
+imageType:
+  Original: {}
+
+featureClass:
+  firstorder:  []
+
+setting:
+  # --- Binning ----------------------------------------------------------
+  binCount: 64
+
+  # --- Geometry ---------------------------------------------------------
+  # No internal resampling — we pre-resample image+labels once before the loop.
+  padDistance: 10
+
+  # --- Normalisation ----------------------------------------------------
+  # Disabled: synthetic images have hard-zero backgrounds which break global z-score.
+  # Intensity consistency is handled by extracting from the same region for both datasets.
+  normalize: false
+
+  # --- Mask validity ----------------------------------------------------
+  correctMask: true
+  minimumROIDimensions: 2
+  minimumROISize: 50
+
+  # --- GLCM-specific ----------------------------------------------------
+  distances: [1]
+  weightingNorm:
+
+  # --- Misc -------------------------------------------------------------
+  additionalInfo: false

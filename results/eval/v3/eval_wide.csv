@@ -1,9 +1,0 @@
-model_id,family,source_contrast,checkpoint_path,ckpt_exists,flair,t1w,t1gd,t2w,in_domain_dice,ood_mean_dice,ood_worst_dice
-baseline_baseline_flair,baseline,flair,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/checkpoints/baseline/best_segmenter_baseline_flair.pth,1,0.802798,0.020590,0.182473,0.374557,0.802798,0.192540,0.020590
-baseline_baseline_t1gd,baseline,t1gd,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/checkpoints/baseline/best_segmenter_baseline_t1gd.pth,1,0.313605,0.659855,0.742725,0.094141,0.742725,0.355867,0.094141
-baseline_baseline_t1w,baseline,t1w,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/checkpoints/baseline/best_segmenter_baseline_t1w.pth,1,0.213911,0.730730,0.641253,0.109128,0.730730,0.321431,0.109128
-baseline_baseline_t2w,baseline,t2w,/home/ge.polymtl.ca/pahoa/mri_synthesis_project/checkpoints/baseline/best_segmenter_baseline_t2w.pth,1,0.590841,0.072157,0.092325,0.827594,0.827594,0.251774,0.072157
-v3_fullyartificial_t1w,fullyartificial,t1w,checkpoints/v3/best_segmenter_fullyartificial_t1w.pth,1,0.649576,0.624249,0.644539,0.688222,0.624249,0.660779,0.644539
-v3_fullyartificial_t2w,fullyartificial,t2w,checkpoints/v3/best_segmenter_fullyartificial_t2w.pth,1,0.581280,0.302440,0.375109,0.669098,0.669098,0.419610,0.302440
-v3_generator_t1w,generator,t1w,checkpoints/v3/best_segmenter_generator_t1w.pth,1,0.471729,0.683399,0.646262,0.530433,0.683399,0.549474,0.471729
-v3_generator_t2w,generator,t2w,checkpoints/v3/best_segmenter_generator_t2w.pth,1,0.710978,0.089712,0.286548,0.745484,0.745484,0.362412,0.089712

@@ -1,0 +1,37 @@
+# @package model
+# gen_19_c: v19 with centered chunk mapping (bias fix) and TV loss removed.
+# Identical to v19 except:
+#   - target generators use chunk midpoint instead of lower edge → no upward brightness bias
+#   - tv loss weight set to 0.0
+
+generator:
+  gen_version: v19_c
+  apply_guidance_blur: false
+  target_generator:
+    _target_: src.target_generators.V19LabelConditionedTextureGenerator
+  loss_weights:
+    edge: 30.0
+    tv: 0.0
+    range: 100.0
+    guidance_blurred: 10.0
+    guidance_sharp: 0.0
+  guidance_perturber:
+    _target_: src.guidance_perturbers.MildGaussianGuidancePerturber
+    sigma: 1.0
+    kernel_size: 9
+    background_threshold: 0.02
+
+segmenter:
+  use_generator: true
+  gen_version: v19_c
+  aug_prob_val: 1.0
+  compile_synthesis: false
+  apply_guidance_blur: false
+  out_channels: 4
+  target_generator:
+    _target_: src.target_generators.V19LabelConditionedTextureGenerator
+  guidance_perturber:
+    _target_: src.guidance_perturbers.MildGaussianGuidancePerturber
+    sigma: 1.0
+    kernel_size: 9
+    background_threshold: 0.02

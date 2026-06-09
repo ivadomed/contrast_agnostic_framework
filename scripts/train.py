@@ -22,8 +22,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.datamodule import BraTSDataModule
-from src.lightning_modules import MRISegmenterLightning, MRISynthesisLightning
+from src.training.datamodule import BraTSDataModule
+from src.training.lightning_modules import MRISegmenterLightning, MRISynthesisLightning
 
 
 def _resolve_path(path_like: str) -> Path:
@@ -48,8 +48,8 @@ def _get_model_id(cfg: DictConfig) -> str:
     """Return the run identifier in <dataset>_<segmenter>_<generator> form.
 
     Reads Hydra config-group choices at runtime so new-style invocations
-    (data=brats segmenter=seg_A generator=gen_19) produce
-    'brats_seg_A_gen_19'. Falls back to cfg.version for legacy scripts.
+    (data=brats2017 segmenter=seg_A generator=gen_19) produce
+    'brats2017_seg_A_gen_19'. Falls back to cfg.version for legacy scripts.
     """
 
     dataset_name = str(getattr(cfg.data, "name", "unknown_dataset"))
