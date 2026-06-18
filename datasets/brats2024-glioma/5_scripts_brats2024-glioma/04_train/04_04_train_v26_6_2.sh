@@ -17,11 +17,11 @@
 #
 # Example (this run): resume to 1600 keeping the original wandb runs:
 #   RESUME_WANDB_IDS="rx5xtndf mymxmv1h uem9bokf i1evwzl4" NNUNET_NUM_EPOCHS=1600 \
-#     bash 04_04_train_v26_6_2.sh v26_6_2_20260608_003445
+#     bash 04_04_train_v26_6_2.sh brats2024-glioma_v26_6_2_train090_val000_20260608_003445
 
 source "$(dirname "$0")/../00_utils/env.sh"
 
-METHOD="v26_6_2"
+METHOD="v26_6_2_train090_val100"
 TRAINER="nnUNetTrainerBraTS2024GliomaV26_6_2"
 DATASET_ID="051"
 DA_WORKERS=16

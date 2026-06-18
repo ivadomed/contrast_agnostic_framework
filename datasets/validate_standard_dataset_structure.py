@@ -59,11 +59,14 @@ REQUIRED_SLOTS = {
     "9": {"tests"},
 }
 
-# Slot 0 and slot 1 are mutually exclusive data-source slots
+# Slot 0 (raw) and slot 1 (BIDS) data-source slots — may coexist (raw kept alongside BIDSified version)
 SLOT0_TYPE = "raw"    # 0_raw_<dataset>  — non-BIDS
 SLOT1_TYPE = "BIDS"   # 1_BIDS_<dataset> — BIDS
 
-REQUIRED_RESULTS_SUBDIRS = {"01_results", "02_nnUNet_results", "03_aggregated_results"}
+# Non-dir items permitted at the dataset root (documentation only).
+ALLOWED_ROOT_FILES = {"README.md"}
+
+REQUIRED_RESULTS_SUBDIRS = {"01_predictions", "02_metrics"}
 REQUIRED_NNUNET_SUBDIRS   = {"raw", "preprocessed"}
 
 
@@ -84,6 +87,9 @@ def validate_dataset(ds_path: Path) -> list[str]:
     slot_map: dict[str, str] = {}  # slot_num → dir_name
 
     for name, path in children.items():
+        # A top-level README documenting the dataset is allowed (and encouraged).
+        if name in ALLOWED_ROOT_FILES:
+            continue
         if not path.is_dir() and not path.is_symlink():
             errors.append(f"  [root] unexpected file (not a dir): {name}")
             continue

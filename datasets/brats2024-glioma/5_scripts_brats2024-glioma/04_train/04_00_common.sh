@@ -46,14 +46,15 @@ cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 
 PROJECT_ROOT="$(pwd)"
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
-RESULTS_BASE="${nnUNet_results}"
+# NNUNET_RESULTS_BASE overrides the env.sh default (useful for method-specific output dirs)
+RESULTS_BASE="${NNUNET_RESULTS_BASE:-${nnUNet_results}}"
 # DATASET_ID defaults to 050 (4-channel); T1n baseline sets it to 051
 DATASET_ID="${DATASET_ID:-050}"
 _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset${DATASET_ID}_" | head -1)"
 TRAINER_DIR="${_DS_NAME}/${TRAINER}__nnUNetPlans__3d_fullres"
 GPUS_PER_FOLD="${GPUS_PER_FOLD:-1}"
 
-RUN_ID="${1:-${METHOD}_$(date +%Y%m%d_%H%M%S)}"
+RUN_ID="${1:-${DATASET_NAME}_${METHOD}_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "$LOG_DIR"
 echo "[$(date '+%H:%M:%S')] ${METHOD} — RUN_ID=${RUN_ID}  (GPUS_PER_FOLD=${GPUS_PER_FOLD})"
 
@@ -96,9 +97,11 @@ launch_fold() {
         export PYTHONPATH='${PROJECT_ROOT}/datasets/brats2024-glioma/5_scripts_brats2024-glioma:\${PYTHONPATH:-}'
         export RUN_ID='${RUN_ID}'
         export nnUNet_n_proc_DA=${DA_WORKERS}
+        export AUGLAB_PARAMS_GPU_JSON='${AUGLAB_PARAMS_GPU_JSON:-}'
+        export AUGLAB_VAL_PARAMS_GPU_JSON='${AUGLAB_VAL_PARAMS_GPU_JSON:-}'
         export CUDA_VISIBLE_DEVICES='${GPUS}'
         export nnUNet_wandb_enabled=1
-        export nnUNet_wandb_project='mri_synthesis_seg'
+        export nnUNet_wandb_project='${WANDB_PROJECT:-mri_synthesis_seg_${DATASET_NAME}}'
         export nnUNet_wandb_run_name='${RUN_ID}_fold${FOLD}'
         export nnUNet_wandb_run_id='${WANDB_ID}'
         export TF_USE_LEGACY_KERAS=1
@@ -122,13 +125,42 @@ LAUNCH_STAGGER_S="${LAUNCH_STAGGER_S:-15}"
 # LAUNCH_WAIT=1 → block until all folds finish (only for non-Bash-tool / scripted
 # use). Default (unset) → fire-and-exit: the per-fold set_slot jobs keep running on
 # their own slices after this script returns. See RESUME NOTES #1.
-if [ "${GPUS_PER_FOLD}" = "1" ]; then
-    declare -A PIDS
-    for FOLD in 0 1 2 3; do
-        launch_fold "${FOLD}" "${FOLD}" "${FOLD}" &
-        PIDS[$FOLD]=$!
-        if [ "${FOLD}" -lt 3 ]; then sleep "${LAUNCH_STAGGER_S}"; fi
+if [ -n "${FOLD_SLOT_GPU:-}" ]; then
+    # Explicit per-fold placement: space-separated "FOLD,SLOT,GPU" tuples, where GPU
+    # is the physical CUDA_VISIBLE_DEVICES index (set_slot does NOT isolate GPUs on
+    # this box — all 4 are visible by physical index). Enables packing >1 fold per
+    # GPU, e.g. 4 folds on 2 GPUs: FOLD_SLOT_GPU="0,0,0 1,1,0 2,2,1 3,3,1".
+    echo "[$(date '+%H:%M:%S')] custom placement (FOLD,SLOT,GPU): ${FOLD_SLOT_GPU}"
+    declare -A PIDS; _i=0
+    for _tuple in ${FOLD_SLOT_GPU}; do
+        IFS=',' read -r _F _S _G <<< "${_tuple}"
+        launch_fold "${_F}" "${_S}" "${_G}" &
+        PIDS[${_i}]=$!; _i=$((_i + 1))
+        sleep "${LAUNCH_STAGGER_S}"
     done
+    if [ "${LAUNCH_WAIT:-0}" = "1" ]; then
+        wait "${PIDS[@]}"
+        echo "[$(date '+%H:%M:%S')] All ${METHOD} folds complete — ${RESULTS_BASE}/${RUN_ID}/"
+    else
+        echo "[$(date '+%H:%M:%S')] ${_i} folds launched (detached) — ${RESULTS_BASE}/${RUN_ID}/"
+        echo "  monitor: tail -f ${LOG_DIR}/fold0.log   |   logs: ${LOG_DIR}/fold*.log"
+    fi
+elif [ "${GPUS_PER_FOLD}" = "1" ]; then
+    declare -A PIDS
+    # SINGLE_FOLD override: resume ONE fold on a chosen slot (e.g. to move a fold
+    # off a slot someone else booked). SINGLE_GPU is the SLOT-LOCAL CUDA index:
+    # under per-slot GPU isolation the slot exposes its physical GPU as index 0,
+    # so SINGLE_GPU defaults to 0 (NOT the slot number).
+    if [ -n "${SINGLE_FOLD:-}" ]; then
+        launch_fold "${SINGLE_FOLD}" "${SINGLE_SLOT:-${SINGLE_FOLD}}" "${SINGLE_GPU:-0}" &
+        PIDS[0]=$!
+    else
+        for FOLD in 0 1 2 3; do
+            launch_fold "${FOLD}" "${FOLD}" "${FOLD}" &
+            PIDS[$FOLD]=$!
+            if [ "${FOLD}" -lt 3 ]; then sleep "${LAUNCH_STAGGER_S}"; fi
+        done
+    fi
     if [ "${LAUNCH_WAIT:-0}" = "1" ]; then
         wait "${PIDS[@]}"
         echo "[$(date '+%H:%M:%S')] All ${METHOD} folds complete — ${RESULTS_BASE}/${RUN_ID}/"

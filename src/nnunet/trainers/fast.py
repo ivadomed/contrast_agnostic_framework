@@ -51,8 +51,10 @@ Environment variables
 """
 from __future__ import annotations
 
+import json
 import os
 import random
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -198,11 +200,50 @@ class nnUNetTrainerFast(nnUNetTrainer):
         self._aug_latency_sum_ms = 0.0
         self._aug_latency_n = 0
 
+        self._save_run_config()
         self._install_progress_plot_throttle()
 
     # ------------------------------------------------------------------ #
     # Speed overrides (no core-logic change)
     # ------------------------------------------------------------------ #
+    def _save_run_config(self) -> None:
+        """Write run_config.json to output_folder capturing this fold's training setup.
+
+        Captures trainer class, synthesis probabilities, augmentation config paths,
+        and training hyperparameters so any run can be reconstructed from disk alone.
+        Dataset-specific or method-specific trainers may override _run_config_extras()
+        to add extra fields (e.g. generator config path, synthesis variant name).
+        """
+        config: dict = {
+            "trainer_class": type(self).__name__,
+            "fold": self.fold,
+            "num_epochs": self.num_epochs,
+            "run_id": os.environ.get("RUN_ID", ""),
+            "dataset_name": os.environ.get("DATASET_NAME", ""),
+        }
+        # Synthesis probabilities — present on v26_6 / synthseg bases, absent on baseline.
+        for attr in ("train_synth_prob", "val_synth_prob"):
+            val = getattr(self, attr, None)
+            if val is not None:
+                config[attr] = val
+        # AugLab config paths — set by 04_train wrappers, empty string if not used.
+        for env_key, cfg_key in (
+            ("AUGLAB_PARAMS_GPU_JSON",     "auglab_params_json"),
+            ("AUGLAB_VAL_PARAMS_GPU_JSON", "auglab_val_params_json"),
+        ):
+            v = os.environ.get(env_key, "")
+            if v:
+                config[cfg_key] = v
+        config.update(self._run_config_extras())
+        out = Path(self.output_folder) / "run_config.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(config, indent=2))
+        self.print_to_log_file(f"[Config] saved to {out}")
+
+    def _run_config_extras(self) -> dict:
+        """Override in subclasses to add method/dataset-specific config fields."""
+        return {}
+
     def _install_progress_plot_throttle(self) -> None:
         """
         Wrap self.logger.plot_progress_png so it renders only every

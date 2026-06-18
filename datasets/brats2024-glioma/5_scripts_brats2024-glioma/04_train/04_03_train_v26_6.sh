@@ -5,7 +5,7 @@
 
 source "$(dirname "$0")/../00_utils/env.sh"
 
-METHOD="v26_6"
+METHOD="v26_6_train090_val100"
 TRAINER="nnUNetTrainerBraTS2024GliomaV26_6"
 DATASET_ID="051"
 DA_WORKERS=8

@@ -22,3 +22,8 @@ archive/
 **/8_results*/*
 **/2_nnUNet*/*
 **/1_BIDS*/*
+*.tsv
+*.png
+*.dcm
+*.raw
+*.mhd

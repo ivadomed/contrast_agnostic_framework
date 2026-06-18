@@ -40,13 +40,13 @@ The analysis pipeline (`contrast_manifold`) measures how synthetic images relate
 
 ## Dataset structure
 
-All datasets live under `datasets/`. Every dataset follows the same 9-subdir standard:
+All datasets live under `datasets/`. We work in a dataset-centric manner. Every dataset follows the same 9-subdir standard:
 ```
 datasets/
   validate_standard_dataset_structure.py   # run to check compliance
   <dataset>/
-    0_raw_<dataset>/     # non-BIDS datasets only  (mutually exclusive with 1_BIDS)
-    1_BIDS_<dataset>/    # BIDS datasets only       (mutually exclusive with 0_raw)
+    0_raw_<dataset>/     # raw data as downloaded (DICOM, non-BIDS NIfTI, etc.)
+    1_BIDS_<dataset>/    # BIDSified data (usually derived from 0_raw — both can coexist)
     2_nnUNet_<dataset>/raw/ + preprocessed/     # nnUNet converted data
     3_conf_<dataset>/data.yaml                  # Hydra data config
     4_splits_<dataset>/                         # train/val/test splits
@@ -62,7 +62,7 @@ Scripts inside `5_scripts_*/` follow a strict numbered convention:
 ```
 00_utils/           # shared helpers; env.sh sets all paths (source this first)
 01_create_splits/   01_NN_name.py/.sh
-02_convert_to_nnunet/
+02_nnunet/
 03_preprocess/
 04_train/           04_00_common.sh = shared bash functions
 05_predict/
@@ -85,19 +85,9 @@ datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/
       synthetic_<version>/<mask_type>/
     plots/v<major>/<version>_r<run>/<mask_type>/pca/ prdc/ umap/
 ```
-
-### Configs
-```
-conf/
-  config.yaml              # top-level Hydra config (searchpath includes all 3_conf_* dirs)
-  generator/   training/   logging/   model/   segmenter/
-```
-Dataset-specific configs live in `datasets/<ds>/3_conf_<ds>/data.yaml` and are
-auto-discovered by Hydra via `conf/config.yaml`'s `hydra.searchpath`.
-
 ---
 
-## Feature types (mask types)
+#### Feature types (mask types)
 
 | Name | Dims | Description |
 |---|---|---|
@@ -113,21 +103,7 @@ auto-discovered by Hydra via `conf/config.yaml`'s `hydra.searchpath`.
 
 ---
 
-## Synthetic data versions
-
-| Version | Description |
-|---|---|
-| `v19_c` | Baseline, grid-sampled contrast parameters |
-| `v19_c_lhc` | v19_c with Latin Hypercube Sampling (LHC) |
-| `v22_1_lhc` | Best recall / manifold alignment |
-| `v22_2_lhc` | Highest OOD diversity (Vendi), lower recall |
-
-LHC = Sobol quasi-random parameter sampling for contrast generation.
-Version naming: `v<major>_<minor>_<sampling>` where `lhc` = LHC sampling.
-
----
-
-## PRDC + Vendi (plot_prdc.py)
+#### PRDC + Vendi (plot_prdc.py)
 
 Key constants (do not change without good reason):
 ```python
@@ -145,7 +121,7 @@ Only `GRE × Siemens Trio` (~25–33% IND) and a handful of T1w groups have enou
 
 ---
 
-## HTML interactive plots (plot_umap_joint.py)
+#### HTML interactive plots (plot_umap_joint.py)
 
 - Every 3D PCA/UMAP plot (`*_3d.html`) has a companion 2D lasso plot (`*_2d.html`).
 - The 2D plot supports: lasso selection → remove points, click-to-copy metadata, reset.
@@ -157,6 +133,4 @@ Only `GRE × Siemens Trio` (~25–33% IND) and a handful of T1w groups have enou
 ## Common gotchas
 
 - `set_slot` is a real binary (`/usr/local/bin/set_slot` → `sudo ml_job` → `systemd-run --slice=ml-1slot-N.slice`). It is available in all subshells and works from non-interactive contexts including Claude Code's Bash tool. `sudo` is passwordless for `ml_job`.
-- `run_all_analysis.py` has no `--steps` argument. To re-run only PCA: call `plot_umap_joint.py` directly with `--plot_pca --plot_loadings --skip_umap`.
-- kd-trees and ball-trees are useless in 448+ dims. Use `sklearn.metrics.euclidean_distances` for batch distance computation, then slice per group.
-- `compute_prdc` (from `prdc` package) internally calls `np.partition(arr, kth=nearest_k+1)`, so `n_fake` must be ≥ `nearest_k + 2`.
+- Whenever we run anything, we want to run a script with a simple bash command. The likely already exists in `5_scripts_*/` and if not, it should be added there, the structure should naturally guide you. We want to avoid running Python scripts directly from the command line without a proper script wrapper. Running existing scripts is good for consistency, and creating new scripts in the right place is good for organization and future reproducibility, it also ensure we don't try to debug the same thing many times. 

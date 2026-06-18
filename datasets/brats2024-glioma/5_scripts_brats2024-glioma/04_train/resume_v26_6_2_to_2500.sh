@@ -16,7 +16,7 @@
 set -uo pipefail
 cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 
-RES="$PWD/datasets/brats2024-glioma/8_results_brats2024-glioma/02_nnUNet_results/v26_6_2_20260608_003445"
+RES="$PWD/datasets/brats2024-glioma/8_results_brats2024-glioma/01_predictions/nnUNet/brats2024-glioma_v26_6_2_train090_val000_20260608_003445"
 RAW="$PWD/datasets/brats2024-glioma/2_nnUNet_brats2024-glioma/raw"
 PRE="$PWD/datasets/brats2024-glioma/2_nnUNet_brats2024-glioma/preprocessed"
 PP="$PWD/datasets/brats2024-glioma/5_scripts_brats2024-glioma"
@@ -36,8 +36,8 @@ for f in 0 1 2 3; do
     NNUNET_PROJECT_ROOT="$PWD" PYTHONPATH="$PP" \
     nnUNet_n_proc_DA=16 nnUNet_compile=1 \
     NNUNET_NUM_EPOCHS=3000 NNUNET_INITIAL_LR=0.002 \
-    nnUNet_wandb_enabled=1 nnUNet_wandb_project=mri_synthesis_seg \
-    nnUNet_wandb_run_name="v26_6_2_20260608_003445_fold${f}" nnUNet_wandb_run_id="${IDS[$f]}" \
+    nnUNet_wandb_enabled=1 nnUNet_wandb_project=mri_synthesis_seg_brats2024-glioma \
+    nnUNet_wandb_run_name="brats2024-glioma_v26_6_2_train090_val000_20260608_003445_fold${f}" nnUNet_wandb_run_id="${IDS[$f]}" \
     .venv/bin/nnUNetv2_train 051 3d_fullres "$f" --c \
       -tr nnUNetTrainerBraTS2024GliomaV26_6_2 -p nnUNetPlans -num_gpus 1 \
     > "$LOGD/fold${f}.log" 2>&1 &
