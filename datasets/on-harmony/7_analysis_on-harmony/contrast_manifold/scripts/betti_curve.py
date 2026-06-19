@@ -50,7 +50,7 @@ Outputs (in --output_dir):
   betti_deaths.csv             death scales (MST weights) for each curve
 
 Usage:
-  set_slot 0 .venv/bin/python .../scripts/betti_curve.py \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python .../scripts/betti_curve.py \\
     --original_csv .../on_harmony_..._feat_selected.csv \\
     --synthetic_csv .../synthetic_..._feat_selected.csv \\
     --output_dir   .../umap/betti

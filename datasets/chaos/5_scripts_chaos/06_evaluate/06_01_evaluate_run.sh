@@ -25,10 +25,15 @@
 #
 # NOTE: CT GT is liver-only — only the `liver` rows are meaningful for the ct modality;
 # kidney/spleen rows there are spurious (read liver-only for CT).
+#
+# Evaluation is CPU-only (no GPU needed) — each modality is launched through
+# run_job() (scripts/job_runner/run_job.sh, sourced transitively via
+# 00_utils/env.sh) with --gpus 0 --wait, since the per-fold summary script
+# below needs every modality's CSV to actually exist before it runs.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
-source "$(dirname "$0")/../00_utils/env.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 RUN_ID="${1:?RUN_ID required}"
 FOLD="${2:-all}"
@@ -62,7 +67,7 @@ PRED_BASE="${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}"
 declare -A MOD_LABELS
 while IFS=$'\t' read -r _mod _labs; do
     [ -n "$_mod" ] && MOD_LABELS["$_mod"]="$_labs"
-done < <("$(pwd)/.venv/bin/python" - "$DJ" "${SPLITS_DIR}/test_cases.json" <<'PY'
+done < <(.venv/bin/python - "$DJ" "${SPLITS_DIR}/test_cases.json" <<'PY'
 import json, sys
 dj = json.loads(open(sys.argv[1]).read())
 tc = json.loads(open(sys.argv[2]).read())
@@ -100,7 +105,8 @@ eval_fold() {
         # Restrict to this modality's scoreable labels (ct → liver only).
         local LBL_ARG=""
         [ -n "${MOD_LABELS[$m]:-}" ] && LBL_ARG="--labels ${MOD_LABELS[$m]}"
-        set_slot ${SLOT} "$(pwd)/.venv/bin/python" "${HERE}/06_00_evaluate.py" \
+        run_job --name "chaos_eval_${RUN_ID}_fold${F}_${m}" --gpus 0 --slot "${SLOT}" --wait -- \
+            .venv/bin/python "${HERE}/06_00_evaluate.py" \
             --pred_dir "$d" --gt_dir "$GT_DIR" --dataset_json "$DJ" \
             --name "$m" --out_csv "${EVAL_DIR}/${m}_metrics.csv" \
             ${LBL_ARG} --workers 16 &
@@ -114,7 +120,7 @@ eval_fold() {
     fi
 
     # per-fold summary: aggregate per-modality CSVs → combined CSV + markdown table
-    "$(pwd)/.venv/bin/python" - "$EVAL_DIR" "$RUN_ID" "$F" "${mods[@]}" << 'PY'
+    .venv/bin/python - "$EVAL_DIR" "$RUN_ID" "$F" "${mods[@]}" << 'PY'
 import csv, sys
 from pathlib import Path
 import numpy as np

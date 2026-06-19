@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-
-source "$(dirname "$0")/../00_utils/env.sh"
 # Preprocess Dataset030_OnHarmonyT1w for nnUNet.
 #
-# Uses all 4 slots for maximum CPU parallelism.
+# Uses a single CPU slot for nnUNetv2_plan_and_preprocess.
 # Must be run AFTER 01_convert_dataset.py.
 # splits_final.json is already written by 01_convert_dataset.py — nnUNet will
 # not regenerate it because it already exists.
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
+source "$(dirname "$0")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 PY=".venv/bin/python"
 
@@ -27,18 +26,18 @@ print(f'OK: {len(images)} cases, 4 folds')
 "
 
 echo "[$(date '+%H:%M:%S')] Running nnUNetv2_plan_and_preprocess …"
-# env vars passed explicitly because set_slot runs in a systemd cgroup
-set_slot 0 bash -c "
+run_job --name on_harmony_preprocess --gpus 1 --slot 0 \
+    --log "/tmp/preprocess_030.log" --wait -- bash -c "
     export nnUNet_raw='${nnUNet_raw}'
     export nnUNet_preprocessed='${nnUNet_preprocessed}'
     export nnUNet_results='${nnUNet_results}'
-    cd '$(pwd)'
+    cd '${PROJECT_ROOT}'
     .venv/bin/nnUNetv2_plan_and_preprocess \
         -d 030 \
         -c 3d_fullres \
         --verify_dataset_integrity \
         -np 64
-" > /tmp/preprocess_030.log 2>&1
+"
 
 echo "[$(date '+%H:%M:%S')] Preprocessing complete."
 echo "Preprocessed data at: ${nnUNet_preprocessed}/Dataset030_OnHarmonyT1w/"

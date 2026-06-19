@@ -28,7 +28,7 @@ Outputs (never overwrites existing files):
       synthetic_v19_features_normalized_combined.csv
 
 Usage:
-  set_slot 0 .venv/bin/python analysis/contrast_manifold/scripts/normalize_combined.py
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/normalize_combined.py
 """
 
 from __future__ import annotations

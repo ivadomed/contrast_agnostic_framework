@@ -3,7 +3,7 @@
 # Train synth = config prob 0.5; validation runs on clean data (stock nnUNet
 # validation_step). The AugLabV26_6_2 trainer's validation_uses_augmentation=True
 # only changes the WandB *viz panel* — actual validation is un-augmented (val 0%).
-# Runs on set_slot 3 / GPU 3.
+# Runs on GPU 3 (SINGLE_GPU=3).
 #
 # Usage:
 #   bash 04_09_train_auglabAug_v26_6_2_train050_val000.sh [RUN_ID]

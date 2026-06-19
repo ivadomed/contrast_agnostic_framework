@@ -22,10 +22,10 @@ Output:
 
 Usage (4 GPUs, parallelised over volumes):
   for rank in 0 1 2 3; do
-    set_slot 1 .venv/bin/python scripts/generate_synthetic_guidance.py \\
-      --generator v23_1 --lhc --rank $rank --world-size 4 --device cuda:$rank \\
-      > /tmp/guidance_v23_1_r${rank}.log 2>&1 &
-  done
+    run_job --gpus 1 --slot $rank --wait --log /tmp/guidance_v23_1_r${rank}.log -- \
+      .venv/bin/python scripts/generate_synthetic_guidance.py \
+      --generator v23_1 --lhc --rank $rank --world-size 4 --device cuda:0 &
+  done; wait
 """
 from __future__ import annotations
 

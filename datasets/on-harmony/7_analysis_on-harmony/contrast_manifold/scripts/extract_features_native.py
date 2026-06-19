@@ -22,7 +22,7 @@ Output:
 
 Usage (run inside tmux):
   tmux new -s radiomics_extract
-  set_slot 3 .venv/bin/python analysis/contrast_manifold/scripts/extract_features_native.py \
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/extract_features_native.py \
       --bids_dir        data/ON-Harmony \
       --derivatives_dir data/ON-Harmony/derivatives \
       --n_workers       6

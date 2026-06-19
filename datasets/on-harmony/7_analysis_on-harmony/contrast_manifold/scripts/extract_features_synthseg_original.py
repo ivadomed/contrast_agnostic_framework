@@ -14,13 +14,13 @@ Output CSV goes under:
 where N is the number of regions extracted (all 31 by default).
 
 Usage (single slot):
-  set_slot 0 .venv/bin/python \\
+  run_job --gpus 1 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/extract_features_synthseg_original.py \\
     --n_workers 8
 
 Usage (4 parallel slots):
   for rank in 0 1 2 3; do
-    set_slot $rank .venv/bin/python \\
+    run_job --gpus 1 --slot $rank --wait -- .venv/bin/python \\
       analysis/contrast_manifold/scripts/extract_features_synthseg_original.py \\
       --n_workers 4 --rank $rank --world-size 4 \\
       > /tmp/feat_synth_orig_rank${rank}.log 2>&1 < /dev/null &
@@ -28,7 +28,7 @@ Usage (4 parallel slots):
   wait && echo "All done."
 
 Dev / dry-run (1 subject):
-  set_slot 0 .venv/bin/python \\
+  run_job --gpus 1 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/extract_features_synthseg_original.py \\
     --limit 1
 

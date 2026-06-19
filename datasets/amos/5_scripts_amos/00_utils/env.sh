@@ -11,6 +11,8 @@
 # ID convention: CT cases 0000–0499, MRI cases 0500–0599.
 
 DATASET_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export PROJECT_ROOT="$(cd "${DATASET_ROOT}/../.." && pwd)"
+source "${PROJECT_ROOT}/scripts/job_runner/run_job.sh"
 
 export RAW_ROOT="${DATASET_ROOT}/0_raw_amos"
 # AMOS ships as NIfTI (nnUNet-style) — raw layout lives under 0_raw_amos/amos22/.

@@ -3,17 +3,17 @@
 # CV splits (nnUNet would otherwise generate its own at first training).
 # Usage: bash 03_00_preprocess.sh
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 source "$(dirname "$0")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 DATASET_ID="${DATASET_ID:-60}"
 SPLITS_SRC="${SPLITS_DIR}/splits_final.json"
 
-set_slot 0 bash -c "
+run_job --name chaos_preprocess --gpus 1 --slot 0 --wait -- bash -c "
     export nnUNet_raw='${nnUNet_raw}'
     export nnUNet_preprocessed='${nnUNet_preprocessed}'
     export nnUNet_results='${nnUNet_results}'
-    cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
+    cd '${PROJECT_ROOT}'
     .venv/bin/nnUNetv2_plan_and_preprocess -d ${DATASET_ID} --verify_dataset_integrity
 "
 

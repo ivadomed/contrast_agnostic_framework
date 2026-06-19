@@ -6,8 +6,8 @@
 # automatically by the trainer (_log_wandb_images).
 #
 # Placement: 4 folds packed onto GPUs 0 and 1 (2 folds per GPU) — folds 0,1 → GPU 0,
-# folds 2,3 → GPU 1 (set_slot does NOT isolate GPUs here; GPU chosen via the physical
-# CUDA_VISIBLE_DEVICES index passed through FOLD_SLOT_GPU).
+# folds 2,3 → GPU 1. GPU is chosen via the physical CUDA_VISIBLE_DEVICES index
+# passed through FOLD_SLOT_GPU (Slurm assigns the physical GPU; the index selects within it).
 #
 # Usage:
 #   bash 04_08_train_synthseg_EM.sh                                          # auto: brats2024-glioma_synthseg_EM_train100_val000_<TS>

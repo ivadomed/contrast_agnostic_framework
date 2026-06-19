@@ -17,14 +17,14 @@ The two 256-bin histograms are model-agnostic, physics-motivated features:
 CPU-only, parallel via ProcessPoolExecutor.  No GPU required.
 
 Usage (original ON-Harmony, all 64 cores):
-  set_slot 0 .venv/bin/python analysis/contrast_manifold/scripts/extract_features_histogram.py \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/extract_features_histogram.py \\
     --mode original \\
     --output-csv analysis/contrast_manifold/outputs/data/original/histogram_256/on_harmony_features.csv \\
     --n-workers 56
 
 Usage (synthetic, parallel ranks):
   for rank in 0 1 2 3; do
-    set_slot 0 .venv/bin/python ... --mode synthetic --synth-root ... \\
+    run_job --gpus 0 --slot 0 --wait -- .venv/bin/python ... --mode synthetic --synth-root ... \\
       --rank $rank --world-size 4 --n-workers 14 > /tmp/hist_rank${rank}.log 2>&1 &
   done
 """

@@ -21,7 +21,7 @@ Outputs (in --output_dir):
   umap_original_coords.csv
 
 Usage:
-  set_slot 0 .venv/bin/python \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python \\
     datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/scripts/plot_umap_original.py \\
     --original_csv datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/outputs/data/original/regional_hist_64/on_harmony_features_normalized_combined_downsampled100_feat_selected.csv \\
     --output_dir   datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/outputs/plots/v19/v19_c_r1/regional_hist_64/umap

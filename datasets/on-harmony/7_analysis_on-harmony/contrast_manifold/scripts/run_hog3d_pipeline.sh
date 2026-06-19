@@ -4,14 +4,17 @@
 
 set -euo pipefail
 
-PROJ="$(cd "$(dirname "$0")/.." && pwd)"
-PY="$PROJ/.venv/bin/python"
-SCRIPT="$PROJ/analysis/contrast_manifold/scripts/extract_features_hog3d.py"
-NORM="$PROJ/analysis/contrast_manifold/scripts/normalize_combined.py"
-ANALYSIS="$PROJ/analysis/contrast_manifold/scripts/run_all_analysis.py"
-DATA="$PROJ/analysis/contrast_manifold/outputs/data"
-FEAT_CONFIG="$PROJ/analysis/contrast_manifold/config/feature_selection.yaml"
-BIDS="$PROJ/data/ON-Harmony"
+CM_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "${CM_ROOT}/../../../.." && pwd)"
+source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
+
+PY="${REPO_ROOT}/.venv/bin/python"
+SCRIPT="${CM_ROOT}/scripts/extract_features_hog3d.py"
+NORM="${CM_ROOT}/scripts/normalize_combined.py"
+ANALYSIS="${CM_ROOT}/scripts/run_all_analysis.py"
+DATA="${CM_ROOT}/outputs/data"
+FEAT_CONFIG="${CM_ROOT}/config/feature_selection.yaml"
+BIDS="${REPO_ROOT}/data/ON-Harmony"
 MASK_TYPE="hog3d_512"
 
 # ── 0. Original extraction — 4 ranks × 4 slots ───────────────────────────────
@@ -21,14 +24,15 @@ if [ ! -f "$ORIG_OUT" ]; then
     mkdir -p "$(dirname "$ORIG_OUT")"
     ORIG_PIDS=()
     for rank in 0 1 2 3; do
-        set_slot $rank "$PY" "$SCRIPT" \
+        run_job --gpus 0 --slot $rank --wait \
+            --log "/tmp/hog3d_orig_r${rank}.log" -- \
+            "$PY" "$SCRIPT" \
             --mode original \
             --bids-root "$BIDS" \
             --deriv-root "$BIDS/derivatives" \
             --output-csv "$ORIG_OUT" \
             --n-workers 56 \
-            --rank $rank --world-size 4 \
-            > "/tmp/hog3d_orig_r${rank}.log" 2>&1 &
+            --rank $rank --world-size 4 &
         ORIG_PIDS+=($!)
     done
     echo "  Waiting … PIDs: ${ORIG_PIDS[*]}"
@@ -79,13 +83,14 @@ for VER in v19_c v19_c_lhc v22_1_lhc v22_2_lhc; do
     fi
     echo "  $VER → slot $SLOT"
     for rank in 0 1 2 3; do
-        set_slot $SLOT "$PY" "$SCRIPT" \
+        run_job --gpus 0 --slot $SLOT --wait \
+            --log "/tmp/hog3d_${VER}_r${rank}.log" -- \
+            "$PY" "$SCRIPT" \
             --mode synthetic \
             --synth-root "$SYNTH_ROOT" \
             --output-csv "$OUT_CSV" \
             --n-workers 14 \
-            --rank $rank --world-size 4 \
-            > "/tmp/hog3d_${VER}_r${rank}.log" 2>&1 &
+            --rank $rank --world-size 4 &
         EXTRACT_PIDS+=($!)
     done
 done
@@ -128,22 +133,22 @@ _normalize_and_analyze() {
     local ORIG_NORM="$SYNTH_OUT/on_harmony_features_normalized_combined_downsampled100.csv"
     local GLOBAL_ORIG="$DATA/original/${MASK_TYPE}/on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
 
-    set_slot $SLOT "$PY" "$NORM" \
+    run_job --gpus 0 --slot $SLOT --wait --log "/tmp/hog3d_norm_${VER}.log" -- \
+        "$PY" "$NORM" \
         --original_csv "$DATA/original/${MASK_TYPE}/on_harmony_features.csv" \
         --synthetic_csv "$SYNTH_CSV" \
         --output_original "$ORIG_NORM" \
         --output_synthetic "$NORM_OUT" \
-        --feature_config "$FEAT_CONFIG" \
-        >> "/tmp/hog3d_norm_${VER}.log" 2>&1
+        --feature_config "$FEAT_CONFIG"
 
     if [ "$VER" = "v19_c" ] && [ ! -f "$GLOBAL_ORIG" ]; then
         cp "${ORIG_NORM%.csv}_feat_selected.csv" "$GLOBAL_ORIG" 2>/dev/null || true
     fi
 
-    set_slot $SLOT "$PY" "$ANALYSIS" \
+    run_job --gpus 0 --slot $SLOT --wait --log "/tmp/hog3d_analysis_${VER}.log" -- \
+        "$PY" "$ANALYSIS" \
         --only "$RUN_NAME" \
-        --mask-type "${MASK_TYPE}" \
-        >> "/tmp/hog3d_analysis_${VER}.log" 2>&1
+        --mask-type "${MASK_TYPE}"
 
     echo "  [$VER] done."
 }

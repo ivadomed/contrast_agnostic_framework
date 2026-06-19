@@ -4,6 +4,8 @@
 #   source "$(dirname "$0")/00_utils/env.sh"       (from 5_scripts_on-harmony root)
 
 DATASET_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export PROJECT_ROOT="$(cd "${DATASET_ROOT}/../.." && pwd)"
+source "${PROJECT_ROOT}/scripts/job_runner/run_job.sh"
 
 export BIDS_ROOT="${DATASET_ROOT}/1_BIDS_on-harmony"
 export nnUNet_raw="${DATASET_ROOT}/2_nnUNet_on-harmony/raw"

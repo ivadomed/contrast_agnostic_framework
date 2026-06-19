@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # exp2: AugLab + SynthSeg_EM augmentation on CHAOS, fold 0 only, 300 epochs.
 # Uses the new config with auglab augmentations actually enabled (prob > 0).
-# Runs on set_slot 2 / GPU 2.
+# Runs on GPU 2 (SINGLE_GPU=2).
 #
 # Usage:
 #   bash 04_08_train_exp2_auglabAug_synthseg_EM.sh [RUN_ID]

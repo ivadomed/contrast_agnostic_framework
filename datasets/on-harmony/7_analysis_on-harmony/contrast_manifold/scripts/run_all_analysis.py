@@ -12,13 +12,13 @@ where <mask_type> is one of:  roi_mask  |  synthseg_mask_31  |  synthseg_mask_31
 
 Usage (all versions, roi_mask, 4 parallel slots):
   for rank in 0 1 2 3; do
-    set_slot $rank .venv/bin/python analysis/contrast_manifold/scripts/run_all_analysis.py \\
+    run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/run_all_analysis.py \\
       --rank $rank --world-size 4 > /tmp/analysis_rank${rank}.log 2>&1 < /dev/null &
   done
 
 Usage (all versions, synthseg_mask_31):
   for rank in 0 1 2 3; do
-    set_slot $rank .venv/bin/python analysis/contrast_manifold/scripts/run_all_analysis.py \\
+    run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/run_all_analysis.py \\
       --mask-type synthseg_mask_31 \\
       --rank $rank --world-size 4 > /tmp/analysis_synthseg_rank${rank}.log 2>&1 < /dev/null &
   done

@@ -37,7 +37,7 @@ Outputs (in --output_dir):
   bridging_heatmap.png    real×real bridge_ratio heatmap
 
 Usage:
-  set_slot 0 .venv/bin/python .../scripts/quantify_bridging.py \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python .../scripts/quantify_bridging.py \\
     --original_csv .../on_harmony_..._feat_selected.csv \\
     --synthetic_csv .../synthetic_v26_6_..._feat_selected.csv \\
     --output_dir   .../umap/bridging --null

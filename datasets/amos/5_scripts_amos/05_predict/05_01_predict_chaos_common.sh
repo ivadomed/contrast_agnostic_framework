@@ -32,10 +32,17 @@
 #
 # Output:
 #   PREDICTIONS_ROOT/chaos_models/{CATEGORY}/{RUN_ID}/fold{k}/{modality}/{case}.nii.gz
+#
+# Each prediction is launched through run_job() (scripts/job_runner/run_job.sh,
+# sourced transitively via 00_utils/env.sh) instead of calling a resource
+# manager directly. Unlike fire-and-exit training, predict jobs always block
+# (--wait): each fold's modalities run sequentially on the same slot/GPU, and
+# the outer per-fold parallelism still needs to know when each fold is truly
+# done before reporting completion.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 MODEL_SOURCE="${MODEL_SOURCE:-chaos}"
 
@@ -73,21 +80,23 @@ predict_fold() {
         fi
         mkdir -p "$OUTPUT_DIR"
         echo "  → fold${F} ${mod}: $(ls "$INPUT_DIR" | wc -l) inputs → $OUTPUT_DIR"
-        set_slot ${SLOT} bash -c "
+        run_job --name "amos_predict_${METHOD}_fold${F}_${mod}" --gpus 1 --slot "${SLOT}" \
+            --log "/tmp/amos_predict_${METHOD}_${RUN_ID}_fold${F}_${mod}.log" --wait -- \
+            bash -c "
             export nnUNet_raw='${CHAOS_NNUNET_RAW}'
             export nnUNet_preprocessed='${CHAOS_DATASET_ROOT}/2_nnUNet_chaos/preprocessed'
             export nnUNet_results='${CHAOS_RUN_DIR}'
-            export NNUNET_PROJECT_ROOT='$(pwd)'
+            export NNUNET_PROJECT_ROOT='${PROJECT_ROOT}'
             export PYTHONPATH='${PYTHONPATH}'
             export CUDA_VISIBLE_DEVICES='${GPU}'
             export TF_USE_LEGACY_KERAS=1
-            cd '$(pwd)'
+            cd '${PROJECT_ROOT}'
             .venv/bin/nnUNetv2_predict \
                 -i '${INPUT_DIR}' -o '${OUTPUT_DIR}' \
                 -d ${DATASET_ID} -c 3d_fullres -tr ${TRAINER} -f ${F} \
                 --disable_tta -chk ${CHECKPOINT} \
                 -npp 12 -nps 6
-        " 2>&1 | tee "/tmp/amos_predict_${METHOD}_${RUN_ID}_fold${F}_${mod}.log"
+        "
         echo "  ✓ fold${F} ${mod} done"
     done
     echo "[$(date '+%H:%M:%S')] fold${F} all modalities done"

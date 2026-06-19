@@ -15,6 +15,7 @@ VERSION_RUN="${2:-v19/v19_c_r1}"
 CM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # repo root = .../mri_synthesis_project
 REPO_ROOT="$(cd "$CM_ROOT/../../../.." && pwd)"
+source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
 
 ORIGINAL_CSV="$CM_ROOT/outputs/data/original/$MASK_TYPE/on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
 OUTPUT_DIR="$CM_ROOT/outputs/plots/$VERSION_RUN/$MASK_TYPE/umap"
@@ -22,7 +23,7 @@ OUTPUT_DIR="$CM_ROOT/outputs/plots/$VERSION_RUN/$MASK_TYPE/umap"
 echo "Original CSV : $ORIGINAL_CSV"
 echo "Output dir   : $OUTPUT_DIR"
 
-set_slot 0 "$REPO_ROOT/.venv/bin/python" \
+run_job --gpus 0 --slot 0 --wait -- "$REPO_ROOT/.venv/bin/python" \
     "$CM_ROOT/scripts/plot_umap_original.py" \
     --original_csv "$ORIGINAL_CSV" \
     --output_dir   "$OUTPUT_DIR"

@@ -16,12 +16,21 @@
 #                                Folds run 2-at-a-time across the 4 GPUs (2 rounds).
 #                                Per-fold epoch ≈ 1.9× faster; total CV wall-clock
 #                                is ~unchanged (the 4 GPUs were already saturated).
+#
+# Each fold is launched through run_job() (scripts/job_runner/run_job.sh, sourced
+# transitively via 00_utils/env.sh) instead of calling a resource manager directly
+# — this script runs unchanged on whichever machine it's on. Unlike the
+# brats2024-glioma/chaos common.sh, this one always blocks until all folds finish
+# (no fire-and-exit mode), so every launch_fold call below passes --wait to
+# run_job: on the set_slot backend that's a no-op (set_slot already blocks for
+# the job's duration); on the slurm backend it's required (`sbatch --wait`), since
+# a plain `sbatch` would return in ~1s and `wait "${PIDS[@]}"` would falsely
+# report completion immediately.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
-
-PROJECT_ROOT="$(pwd)"
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
+
 RESULTS_BASE="${nnUNet_results}/runs"
 TRAINER_DIR="Dataset031_OnHarmonyT1w31/${TRAINER}__nnUNetPlans__3d_fullres"
 GPUS_PER_FOLD="${GPUS_PER_FOLD:-1}"
@@ -30,7 +39,7 @@ RUN_ID="${1:-${METHOD}_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "$LOG_DIR"
 echo "[$(date '+%H:%M:%S')] ${METHOD} — RUN_ID=${RUN_ID}  (GPUS_PER_FOLD=${GPUS_PER_FOLD})"
 
-# Launch one fold.  $1=fold  $2=set_slot spec (e.g. "0" or "0-1")  $3=CUDA_VISIBLE_DEVICES
+# Launch one fold.  $1=fold  $2=slot spec (set_slot backend only, e.g. "0" or "0-1")  $3=CUDA_VISIBLE_DEVICES
 launch_fold() {
     local FOLD="$1" SLOT="$2" GPUS="$3"
     local NGPU; NGPU="$(awk -F',' '{print NF}' <<<"$GPUS")"
@@ -44,7 +53,9 @@ launch_fold() {
         echo "  Fold ${FOLD}: fresh start (slot ${SLOT}, GPUs ${GPUS})"
     fi
 
-    set_slot ${SLOT} bash -c "
+    run_job --name "fold${FOLD}_${RUN_ID}" --gpus "${NGPU}" --slot "${SLOT}" \
+        --log "${LOG_DIR}/fold${FOLD}.log" --wait -- \
+        bash -c "
         export nnUNet_raw='${nnUNet_raw}'
         export nnUNet_preprocessed='${nnUNet_preprocessed}'
         export nnUNet_results='${RESULTS_BASE}/${RUN_ID}'
@@ -65,7 +76,7 @@ launch_fold() {
         cd '${PROJECT_ROOT}'
         .venv/bin/nnUNetv2_train 031 3d_fullres ${FOLD} ${CONTINUE_FLAG} \
             -tr ${TRAINER} -p nnUNetPlans -num_gpus ${NGPU}
-    " > "${LOG_DIR}/fold${FOLD}.log" 2>&1
+    "
 }
 
 if [ "${GPUS_PER_FOLD}" = "1" ]; then

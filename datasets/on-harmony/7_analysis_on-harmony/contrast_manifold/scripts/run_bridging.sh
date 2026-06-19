@@ -12,6 +12,7 @@ MASK_TYPE="${4:-regional_hist_64}"
 
 CM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_ROOT="$(cd "$CM_ROOT/../../../.." && pwd)"
+source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
 
 DATA_DIR="$CM_ROOT/outputs/data/$DATA_SUBDIR/$MASK_TYPE"
 ORIGINAL_CSV="$DATA_DIR/on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -22,7 +23,7 @@ echo "Original CSV : $ORIGINAL_CSV"
 echo "Synthetic CSV: $SYNTH_CSV"
 echo "Output dir   : $OUTPUT_DIR"
 
-set_slot 0 "$REPO_ROOT/.venv/bin/python" \
+run_job --gpus 0 --slot 0 --wait -- "$REPO_ROOT/.venv/bin/python" \
     "$CM_ROOT/scripts/quantify_bridging.py" \
     --original_csv  "$ORIGINAL_CSV" \
     --synthetic_csv "$SYNTH_CSV" \

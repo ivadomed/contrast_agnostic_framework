@@ -92,7 +92,7 @@ Every run ID must follow exactly:
 - [ ] `trainers/` subdir exists (may be a symlink to `02_nnunet/trainers/`)
 - [ ] `trainers/__init__.py` exists with the standard boilerplate comment
 - [ ] The nnUNet registration shim
-  (`.venv/lib/python3.12/site-packages/nnunetv2/training/nnUNetTrainer/<Dataset>Trainers.py`)
+  (`.venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/<Dataset>Trainers.py`)
   exists and imports every concrete trainer class used by this dataset
 - [ ] After adding a new trainer, the shim import is added and importable:
   `.venv/bin/python -c "from <pkg>.trainers.<module> import <Class>"`

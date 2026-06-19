@@ -16,7 +16,7 @@ For each real (modality × scanner_model) group:
   6. Print a summary ASCII table.
 
 Usage:
-  set_slot 0 .venv/bin/python \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/plot_prdc.py \\
     --original_csv  .../on_harmony_features_normalized_combined_downsampled100_feat_selected.csv \\
     --synthetic_csv .../synthetic_v22_2_lhc_features_normalized_combined_feat_selected.csv \\

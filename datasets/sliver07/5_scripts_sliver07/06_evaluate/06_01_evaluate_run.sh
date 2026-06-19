@@ -22,10 +22,15 @@
 #   bash 06_01_evaluate_run.sh nnUNet chaos_baseline_20260614_153230
 #   bash 06_01_evaluate_run.sh auglab chaos_synthseg_EM_train100_val000_20260611_120000 all
 #   bash 06_01_evaluate_run.sh nnUNet chaos_v26_6_2_train090_val000_20260614_205937 2
+#
+# Evaluation is CPU-only (no GPU needed) — launched through run_job()
+# (scripts/job_runner/run_job.sh, sourced transitively via 00_utils/env.sh)
+# with --gpus 0 --wait, since the per-fold summary right after needs the CSV
+# to already exist.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 CATEGORY="${1:?CATEGORY required (nnUNet|auglab)}"
 RUN_ID="${2:?RUN_ID required (chaos training run dir name)}"
@@ -52,7 +57,8 @@ eval_fold() {
     mkdir -p "$EVAL_DIR"
     echo "[$(date '+%H:%M:%S')] evaluate ${CATEGORY}/${RUN_ID} fold${F}"
 
-    set_slot ${SLOT} .venv/bin/python "$EVALUATE_PY" \
+    run_job --name "sliver07_eval_${RUN_ID}_fold${F}" --gpus 0 --slot "${SLOT}" --wait -- \
+        .venv/bin/python "$EVALUATE_PY" \
         --pred_dir  "$PRED_DIR" \
         --gt_dir    "$GT_DIR" \
         --dataset_json "$CHAOS_DATASET_JSON" \

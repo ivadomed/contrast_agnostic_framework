@@ -19,7 +19,7 @@ Skips:
 
 Usage (run inside tmux):
   tmux new -s native_masks
-  set_slot 3 .venv/bin/python analysis/contrast_manifold/scripts/generate_masks.py \
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/generate_masks.py \
       --bids_dir data/ON-Harmony \
       --n_workers 6
 """

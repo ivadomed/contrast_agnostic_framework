@@ -8,7 +8,7 @@ fall back to implicit-GEMM. 3-D Winograd needs 4^3=64 elementwise multiplies per
 This script: (1) verifies numerical equivalence to F.conv3d, (2) benchmarks
 Winograd vs cuDNN for representative layers (fp16, tensor cores).
 
-Run: set_slot 0 .venv/bin/python scripts/experiments/winograd3d_poc.py
+Run: run_job --gpus 1 --slot 0 --wait -- .venv/bin/python scripts/experiments/winograd3d_poc.py
 """
 from __future__ import annotations
 import time

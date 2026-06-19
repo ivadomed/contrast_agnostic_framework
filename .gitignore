@@ -27,3 +27,8 @@ archive/
 *.dcm
 *.raw
 *.mhd
+CLAUDE.md
+.claude/
+python_usage.html
+running_jobs.html
+storage_handling.html

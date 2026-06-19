@@ -28,15 +28,15 @@ Parameters:
 
 Speed: ~0.15 s/scan (CPU), ~10 s for 1650 files with 28 workers.
 
-Usage (recommended — use set_slot 0-3 for all 256 CPU workers in one command):
-  set_slot 0-3 .venv/bin/python \\
+Usage (recommended — use a CPU-heavy job with extra workers):
+  run_job --gpus 0 --cpus 32 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/extract_features_hog3d.py \\
     --mode original \\
     --output-csv .../original/hog3d_512/on_harmony_features.csv \\
     --n-workers 224
 
   # Synthetic mode (same pattern):
-  set_slot 0-3 .venv/bin/python \\
+  run_job --gpus 0 --cpus 32 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/extract_features_hog3d.py \\
     --mode synthetic --synth-root <synth_dir> \\
     --output-csv <out>.csv \\

@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-
-source "$(dirname "$0")/../00_utils/env.sh"
 # Evaluate a trained method on the test set.
 #
 # Usage
-#   bash 04_evaluate_testset.sh <RUN_ID>
-#   e.g.: bash 04_evaluate_testset.sh baseline_20260529_233632
-#         bash 04_evaluate_testset.sh v26_6_gpuaug_20260531_110150
+#   bash 06_01_evaluate_testset.sh <RUN_ID>
+#   e.g.: bash 06_01_evaluate_testset.sh baseline_20260529_233632
+#         bash 06_01_evaluate_testset.sh v26_6_gpuaug_20260531_110150
 #
 # Steps
 #   1. Assemble test images + remap/copy GT into per-contrast directories
@@ -14,8 +12,12 @@ source "$(dirname "$0")/../00_utils/env.sh"
 #   3. Ensemble 4 folds: nnUNetv2_ensemble → predictions_1mm/ensemble/
 #   4. Resample predictions to native space (SimpleITK NN, no ANTs CLI needed)
 #   5. nnUNetv2_evaluate_folder on native-space predictions vs native-space GT
+#
+# Each per-fold prediction is launched through run_job() with --gpus 1 --wait
+# (background + PIDs wait, so all 4 folds run in parallel on separate GPUs).
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
+source "$(dirname "$0")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 if [ -z "${1:-}" ]; then
     echo "Usage: $0 <RUN_ID>"
@@ -37,8 +39,8 @@ EVAL_DIR="eval/onharmony/${RUN_ID}"
 export nnUNet_raw="${nnUNet_raw}"
 export nnUNet_preprocessed="${nnUNet_preprocessed}"
 export nnUNet_results="${nnUNet_results}/${RUN_ID}"
-export NNUNET_PROJECT_ROOT="$(pwd)"
-export PYTHONPATH="$(pwd)/src/nnunet:$(pwd)/SynthSeg:${PYTHONPATH:-}"
+export NNUNET_PROJECT_ROOT="${PROJECT_ROOT}"
+export PYTHONPATH="${PYTHONPATH}"
 
 [ -f "$TEST_CASES" ] || { echo "ERROR: $TEST_CASES not found"; exit 1; }
 [ -d "$RESULTS_DIR" ] || { echo "ERROR: $RESULTS_DIR not found"; exit 1; }
@@ -136,6 +138,11 @@ PYEOF
 export BIDS EVAL_DIR
 
 # ── Steps 2-5: Per contrast ───────────────────────────────────────────────────
+_NNUNET_RAW="${nnUNet_raw}"
+_NNUNET_PRE="${nnUNet_preprocessed}"
+_NNUNET_RES="${nnUNet_results}"
+_PYTHONPATH="${PROJECT_ROOT}/src/nnunet:${PROJECT_ROOT}/SynthSeg"
+
 for CONTRAST in T1w T2w bold dwi_ap epi_ap gre_echo1_mag; do
     IMG_DIR="$EVAL_DIR/$CONTRAST/images_native"
     GT_DIR="$EVAL_DIR/$CONTRAST/gt_native"
@@ -146,7 +153,7 @@ for CONTRAST in T1w T2w bold dwi_ap epi_ap gre_echo1_mag; do
     # Check if GT is available (skip evaluation for contrasts without GT yet)
     [ -d "$GT_DIR" ] && NGT=$(ls "$GT_DIR" 2>/dev/null | wc -l) || NGT=0
     if [ "$NGT" -eq 0 ]; then
-        echo "  Warning: $CONTRAST — no GT available (run 01b_register_test_gt.sh). Skipping metrics."
+        echo "  Warning: $CONTRAST — no GT available (run 02_03_register_test_gt.sh). Skipping metrics."
         GT_AVAILABLE=0
     else
         GT_AVAILABLE=1
@@ -155,22 +162,20 @@ for CONTRAST in T1w T2w bold dwi_ap epi_ap gre_echo1_mag; do
     echo "[$(date '+%H:%M:%S')] $CONTRAST: $N images, $NGT GT masks"
 
     # ── Step 2: Predict per fold (4 folds in parallel on 4 GPUs) ───────────
-    # set_slot uses sudo which strips env vars → wrap in bash -c with exports
     declare -A PIDS_FOLD
-    _NNUNET_RAW="${nnUNet_raw}"
-    _NNUNET_PRE="${nnUNet_preprocessed}"
-    _NNUNET_RES="${nnUNet_results}/${RUN_ID}"
-    _PYTHONPATH="$(pwd)/src/nnunet:$(pwd)/SynthSeg"
     for FOLD in 0 1 2 3; do
         PRED_DIR="$EVAL_DIR/$CONTRAST/predictions_1mm/fold_${FOLD}"
         mkdir -p "$PRED_DIR"
-        set_slot ${FOLD} bash -c "
+        run_job --name "onharmony_eval_${RUN_ID}_${CONTRAST}_fold${FOLD}" \
+            --gpus 1 --slot "${FOLD}" --wait \
+            --log "/tmp/predict_${RUN_ID}_${CONTRAST}_fold${FOLD}.log" -- \
+            bash -c "
             export nnUNet_raw='${_NNUNET_RAW}'
             export nnUNet_preprocessed='${_NNUNET_PRE}'
             export nnUNet_results='${_NNUNET_RES}'
-            export NNUNET_PROJECT_ROOT='$(pwd)'
+            export NNUNET_PROJECT_ROOT='${PROJECT_ROOT}'
             export PYTHONPATH='${_PYTHONPATH}:\${PYTHONPATH:-}'
-            cd '$(pwd)'
+            cd '${PROJECT_ROOT}'
             .venv/bin/nnUNetv2_predict \
                 -i '${IMG_DIR}' \
                 -o '${PRED_DIR}' \
@@ -179,7 +184,7 @@ for CONTRAST in T1w T2w bold dwi_ap epi_ap gre_echo1_mag; do
                 -tr '${TRAINER}' \
                 -p nnUNetPlans \
                 --save_probabilities
-        " > /tmp/predict_${RUN_ID}_${CONTRAST}_fold${FOLD}.log 2>&1 &
+        " &
         PIDS_FOLD[$FOLD]=$!
     done
     for FOLD in 0 1 2 3; do wait "${PIDS_FOLD[$FOLD]}"; done

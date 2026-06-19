@@ -5,7 +5,7 @@ Find the pure-code (no logic change) ceiling for the network step:
   - separate forward / loss / backward timing
   - graph-break check via torch._dynamo
 
-Run: set_slot 0 .venv/bin/python scripts/experiments/profile_compile_modes.py
+Run: run_job --gpus 1 --slot 0 --wait -- .venv/bin/python scripts/experiments/profile_compile_modes.py
 """
 from __future__ import annotations
 import os, sys, time, copy

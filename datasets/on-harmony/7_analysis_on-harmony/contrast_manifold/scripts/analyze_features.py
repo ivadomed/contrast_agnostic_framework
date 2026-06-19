@@ -25,7 +25,7 @@ Outputs (in --output_dir):
   feature_umap_corr_axis3.{pdf,png}
 
 Usage:
-  set_slot 1 .venv/bin/python \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/analyze_features.py
 """
 

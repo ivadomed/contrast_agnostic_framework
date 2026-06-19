@@ -45,9 +45,11 @@ for RUN in $RUN_ID; do
         CHUNK="${CONTRAST_ARR[@]:$START:$((END - START))}"
         SLOT="${GPU_ARR[$i]}"
 
-        set_slot $SLOT $PY "$PROJECT_ROOT/scripts/nnunet_onharmony/ensemble_and_dice.py" \
-            "$RUN" $CHUNK \
-            > /tmp/eval_${RUN}_chunk${i}.log 2>&1 &
+        run_job --name "benchmark_eval_${RUN}_chunk${i}" \
+            --gpus 0 --slot "${SLOT}" --wait \
+            --log "/tmp/eval_${RUN}_chunk${i}.log" -- \
+            $PY "$PROJECT_ROOT/scripts/nnunet_onharmony/ensemble_and_dice.py" \
+                "$RUN" $CHUNK &
         PIDS[$i]=$!
     done
     for i in "${!PIDS[@]}"; do wait "${PIDS[$i]}"; done

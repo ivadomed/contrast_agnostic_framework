@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Register T1w SynthSeg labels to non-T1w test contrasts via ANTs SyN (antspyx).
 #
-# Uses all 4 set_slot ranks for maximum CPU parallelism:
-#   4 ranks × 16 jobs each = 64 concurrent ANTs registrations
-#   All CPUs used (set_slot gives ~256 CPU workers total).
+# Launches 4 CPU ranks in parallel — each rank processes its share of the
+# contrast × subject registration jobs, 8 concurrent ANTs workers per rank.
+#   4 ranks × 8 jobs each = 32 concurrent ANTs registrations
 #
 # Output:
 #   data/ON-Harmony/derivatives/synthseg_registered/{contrast}/{sub}_{ses}_{contrast}_seg7.nii.gz
 #   data/splits/test_registration_qc.csv
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
+source "$(dirname "$0")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 PY=".venv/bin/python"
 TEST_CASES="data/splits/test_cases.json"
@@ -18,7 +19,8 @@ JOBS_PER_RANK=8    # parallel ANTs jobs per rank (4 ranks × 8 = 32 concurrent)
 [ -f "$TEST_CASES" ] || { echo "ERROR: $TEST_CASES not found"; exit 1; }
 echo "[$(date '+%H:%M:%S')] Starting GT registration across all 4 slots ($((JOBS_PER_RANK * 4)) concurrent ANTs jobs)"
 
-# Write the worker script once
+# Write the worker script once — PROJECT_ROOT passed as --project-root to avoid
+# hardcoding the path inside the heredoc.
 cat > /tmp/register_gt_worker.py << 'PYEOF'
 import sys, os, json, argparse
 import numpy as np
@@ -28,17 +30,18 @@ import ants
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-PROJECT_ROOT = Path("/home/ge.polymtl.ca/pahoa/mri_synthesis_project")
+p = argparse.ArgumentParser()
+p.add_argument("--rank",          type=int, default=0)
+p.add_argument("--world-size",    type=int, default=4)
+p.add_argument("--jobs",          type=int, default=8)
+p.add_argument("--project-root",  required=True)
+args = p.parse_args()
+
+PROJECT_ROOT = Path(args.project_root)
 BIDS         = PROJECT_ROOT / "data" / "ON-Harmony"
 OUT_BASE     = BIDS / "derivatives" / "synthseg_registered"
 TEST_CASES   = PROJECT_ROOT / "data" / "splits" / "test_cases.json"
 QC_CSV       = PROJECT_ROOT / "data" / "splits" / "test_registration_qc.csv"
-
-p = argparse.ArgumentParser()
-p.add_argument("--rank",       type=int, default=0)
-p.add_argument("--world-size", type=int, default=4)
-p.add_argument("--jobs",       type=int, default=8)
-args = p.parse_args()
 
 _MAX = 60
 _LUT = np.zeros(_MAX + 2, dtype=np.uint8)
@@ -146,18 +149,20 @@ with open(partial, "w") as f:
 print(f"[rank {args.rank}] Done → {partial}")
 PYEOF
 
-# Launch across all 4 slots — each rank gets 8 parallel ANTs jobs = 32 concurrent
-set_slot 0 $PY /tmp/register_gt_worker.py --rank 0 --world-size 4 --jobs $JOBS_PER_RANK \
-    > /tmp/reg_gt_r0.log 2>&1 & P0=$!
-set_slot 1 $PY /tmp/register_gt_worker.py --rank 1 --world-size 4 --jobs $JOBS_PER_RANK \
-    > /tmp/reg_gt_r1.log 2>&1 & P1=$!
-set_slot 2 $PY /tmp/register_gt_worker.py --rank 2 --world-size 4 --jobs $JOBS_PER_RANK \
-    > /tmp/reg_gt_r2.log 2>&1 & P2=$!
-set_slot 3 $PY /tmp/register_gt_worker.py --rank 3 --world-size 4 --jobs $JOBS_PER_RANK \
-    > /tmp/reg_gt_r3.log 2>&1 & P3=$!
+# Launch 4 CPU ranks in parallel — each rank becomes its own blocking run_job call
+# (background + wait on PIDs so we continue only when all ranks are done before merging).
+PIDS=()
+for R in 0 1 2 3; do
+    run_job --name "reg_gt_rank${R}" --gpus 0 --slot "${R}" --wait \
+        --log "/tmp/reg_gt_r${R}.log" -- \
+        "$PY" /tmp/register_gt_worker.py \
+            --rank "$R" --world-size 4 --jobs "$JOBS_PER_RANK" \
+            --project-root "${PROJECT_ROOT}" &
+    PIDS+=($!)
+done
 
 echo "[$(date '+%H:%M:%S')] All 4 ranks launched. Waiting..."
-wait $P0 $P1 $P2 $P3
+wait "${PIDS[@]}"
 
 echo "[$(date '+%H:%M:%S')] All ranks done. Merging QC..."
 echo "subject,session,scanner,contrast,nmi,flagged,registered_seg" \

@@ -2,23 +2,27 @@
 # Extract regional_hist_13_64 / histogram_256 / hog_972 / hog3d_512
 # for v27a, v27a_bis, synthseg_modeA, synthseg_modeB_em, then normalize + analyze.
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 
-PY=".venv/bin/python"
-ANALYSIS="analysis/contrast_manifold/scripts"
-DATA_ROOT="analysis/contrast_manifold/outputs/data"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CM_ROOT="$(cd "${SCRIPTS_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${CM_ROOT}/../../../.." && pwd)"
+source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
+
+PY="${REPO_ROOT}/.venv/bin/python"
+ANALYSIS="${CM_ROOT}/scripts"
+DATA_ROOT="${CM_ROOT}/outputs/data"
 ORIG_CSV_BASE="$DATA_ROOT/original"
-FEAT_CFG="analysis/contrast_manifold/config/feature_selection.yaml"
+FEAT_CFG="${CM_ROOT}/config/feature_selection.yaml"
 mkdir -p /tmp/v27extra
 
 log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a /tmp/v27extra/pipeline.log; }
 
 # ── Version / synth-root / data-dir mapping ───────────────────────────────────
 declare -A SYNTH_ROOT=(
-  ["v27a"]="data/ON-Harmony/derivatives/synthetic_v27a_guidance_lhc"
-  ["v27a_bis"]="data/ON-Harmony/derivatives/synthetic_v27a_bis_guidance_lhc"
-  ["synthseg_modeA"]="data/ON-Harmony/derivatives/synthseg_modeA"
-  ["synthseg_modeB_em"]="data/ON-Harmony/derivatives/synthseg_modeB_em"
+  ["v27a"]="${REPO_ROOT}/data/ON-Harmony/derivatives/synthetic_v27a_guidance_lhc"
+  ["v27a_bis"]="${REPO_ROOT}/data/ON-Harmony/derivatives/synthetic_v27a_bis_guidance_lhc"
+  ["synthseg_modeA"]="${REPO_ROOT}/data/ON-Harmony/derivatives/synthseg_modeA"
+  ["synthseg_modeB_em"]="${REPO_ROOT}/data/ON-Harmony/derivatives/synthseg_modeB_em"
 )
 declare -A DATA_NAME=(
   ["v27a"]="synthetic_v27a_guidance_lhc"
@@ -58,12 +62,13 @@ for ver in "${VERSIONS[@]}"; do
       continue
     fi
     log "  extracting $ver / $ft on slot $slot"
-    set_slot $slot $PY "${EXTRACTOR[$ft]}" \
+    run_job --gpus 0 --slot $slot --wait \
+      --log "/tmp/v27extra/extract_${ver}_${ft}.log" -- \
+      "$PY" "${EXTRACTOR[$ft]}" \
       --mode synthetic \
       --synth-root "${SYNTH_ROOT[$ver]}" \
       --output-csv "$out_csv" \
-      --n-workers 14 \
-      > /tmp/v27extra/extract_${ver}_${ft}.log 2>&1 &
+      --n-workers 14 &
     pids+=($!)
     slot=$(( (slot + 1) % 4 ))
     # Wait for a full batch of 4 before launching more
@@ -94,13 +99,14 @@ for ver in "${VERSIONS[@]}"; do
       log "  skip (exists): $ver / $ft"
       continue
     fi
-    set_slot $slot $PY $ANALYSIS/normalize_combined.py \
+    run_job --gpus 0 --slot $slot --wait \
+      --log "/tmp/v27extra/normalize_${ver}_${ft}.log" -- \
+      "$PY" "$ANALYSIS/normalize_combined.py" \
       --original_csv  "$orig_csv" \
       --synthetic_csv "$synth_csv" \
       --output_original  "$out_norm_orig" \
       --output_synthetic "$out_norm_synth" \
-      --feature_config "$FEAT_CFG" \
-      > /tmp/v27extra/normalize_${ver}_${ft}.log 2>&1 &
+      --feature_config "$FEAT_CFG" &
     pids+=($!)
     slot=$(( (slot + 1) % 4 ))
     if [ ${#pids[@]} -ge 4 ]; then
@@ -125,10 +131,11 @@ declare -A RUN_NAME=(
 slot=0; pids=()
 for ver in "${VERSIONS[@]}"; do
   for ft in "${FEATURE_TYPES[@]}"; do
-    set_slot $slot $PY $ANALYSIS/run_all_analysis.py \
+    run_job --gpus 0 --slot $slot --wait \
+      --log "/tmp/v27extra/analysis_${ver}_${ft}.log" -- \
+      "$PY" "$ANALYSIS/run_all_analysis.py" \
       --mask-type "$ft" \
-      --only "${RUN_NAME[$ver]}" \
-      > /tmp/v27extra/analysis_${ver}_${ft}.log 2>&1 &
+      --only "${RUN_NAME[$ver]}" &
     pids+=($!)
     slot=$(( (slot + 1) % 4 ))
     if [ ${#pids[@]} -ge 4 ]; then

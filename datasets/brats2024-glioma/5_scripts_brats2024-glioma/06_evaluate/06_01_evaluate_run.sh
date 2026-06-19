@@ -20,10 +20,15 @@
 #   <contrast>_metrics.csv   per-case, per-label Dice & HD95
 #   eval_all.csv             all contrasts concatenated
 #   eval_summary.md          contrast × label table of mean±std Dice / HD95
+#
+# Evaluation is CPU-only (no GPU needed) — launched through run_job()
+# (scripts/job_runner/run_job.sh, sourced transitively via 00_utils/env.sh)
+# with --gpus 0 --wait, since the per-fold summary right after needs the CSV
+# to already exist.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 source "$(dirname "$0")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 RUN_ID="${1:?RUN_ID required}"
 FOLD="${2:-all}"
@@ -70,13 +75,15 @@ eval_fold() {
         [ "$c" = "eval" ] && continue
         [ -n "$(ls -A "$d"/*.nii.gz 2>/dev/null)" ] || continue
         contrasts+=("$c")
-        set_slot ${SLOT} "$(pwd)/.venv/bin/python" "${HERE}/06_00_evaluate.py" \
+        run_job --name "brats_eval_${RUN_ID}_fold${F}_${c}" \
+            --gpus 0 --slot "${SLOT}" --wait -- \
+            .venv/bin/python "${HERE}/06_00_evaluate.py" \
             --pred_dir "$d" --gt_dir "$GT_DIR" --dataset_json "$DJ" \
             --name "$c" --out_csv "${EVAL_DIR}/${c}_metrics.csv" \
             --workers 16 &
         pids+=($!)
     done
-    wait "${pids[@]}"
+    [ ${#pids[@]} -gt 0 ] && wait "${pids[@]}"
 
     if [ ${#contrasts[@]} -eq 0 ]; then
         echo "  ! fold${F}: no contrast predictions found — skipping summary" >&2
@@ -84,7 +91,7 @@ eval_fold() {
     fi
 
     # per-fold summary: aggregate per-contrast CSVs → combined CSV + markdown table
-    "$(pwd)/.venv/bin/python" - "$EVAL_DIR" "$RUN_ID" "$F" "${contrasts[@]}" << 'PY'
+    .venv/bin/python - "$EVAL_DIR" "$RUN_ID" "$F" "${contrasts[@]}" << 'PY'
 import csv, sys
 from pathlib import Path
 import numpy as np

@@ -14,16 +14,16 @@ otherwise falls back to SynthSeg 1.0 with a warning.
 
 Usage (4 parallel slots — recommended):
   for rank in 0 1 2 3; do
-    set_slot $rank .venv/bin/python analysis/contrast_manifold/scripts/run_synthseg.py \\
+    run_job --gpus 1 --slot $rank --wait -- .venv/bin/python analysis/contrast_manifold/scripts/run_synthseg.py \\
       --rank $rank --world-size 4 > /tmp/synthseg_rank${rank}.log 2>&1 < /dev/null &
   done
   wait && echo "All done."
 
 Usage (single slot):
-  set_slot 0 .venv/bin/python analysis/contrast_manifold/scripts/run_synthseg.py
+  run_job --gpus 1 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/run_synthseg.py
 
 Dev / dry-run (2 volumes):
-  set_slot 0 .venv/bin/python analysis/contrast_manifold/scripts/run_synthseg.py --limit 2
+  run_job --gpus 1 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/run_synthseg.py --limit 2
 """
 from __future__ import annotations
 

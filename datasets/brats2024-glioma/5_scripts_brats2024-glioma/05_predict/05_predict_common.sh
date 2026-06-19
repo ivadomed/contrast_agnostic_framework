@@ -17,14 +17,18 @@
 #
 # Optional env overrides:
 #   CHECKPOINT  checkpoint_best.pth (default) | checkpoint_final.pth
-#   SLOT GPU    set_slot slot / CUDA device (used only when FOLD is a single number)
+#   SLOT GPU    slot / CUDA device override (used only when FOLD is a single number)
 #
 # Test-input dirs (imagesTs_<contrast>/) must exist — build once with:
 #   python 05_00_build_test_inputs.py
+#
+# Each prediction is launched through run_job() (scripts/job_runner/run_job.sh,
+# sourced transitively via 00_utils/env.sh) with --gpus 1 --wait: modalities
+# within a fold run sequentially on the same GPU, folds run in parallel.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 RUN_ID="${1:?RUN_ID required (training run dir name under nnUNet_results)}"
 FOLD="${2:-0}"
@@ -54,15 +58,18 @@ predict_fold() {
         fi
         mkdir -p "$OUTPUT_DIR"
         echo "  → fold${F} ${contrast}: $(ls "$INPUT_DIR" | wc -l) cases → $OUTPUT_DIR"
-        set_slot ${SLOT} bash -c "
+        run_job --name "brats_predict_${METHOD}_fold${F}_${contrast}" \
+            --gpus 1 --slot "${SLOT}" \
+            --log "/tmp/predict_${METHOD}_${RUN_ID}_fold${F}_${contrast}.log" --wait -- \
+            bash -c "
             export nnUNet_raw='${nnUNet_raw}'
             export nnUNet_preprocessed='${nnUNet_preprocessed}'
             export nnUNet_results='${RUN_DIR}'
-            export NNUNET_PROJECT_ROOT='$(pwd)'
-            export PYTHONPATH='$(pwd)/datasets/brats2024-glioma/5_scripts_brats2024-glioma:\${PYTHONPATH:-}'
+            export NNUNET_PROJECT_ROOT='${PROJECT_ROOT}'
+            export PYTHONPATH='${PYTHONPATH}'
             export CUDA_VISIBLE_DEVICES='${GPU}'
             export TF_USE_LEGACY_KERAS=1
-            cd '$(pwd)'
+            cd '${PROJECT_ROOT}'
             .venv/bin/nnUNetv2_predict \
                 -i '${INPUT_DIR}' \
                 -o '${OUTPUT_DIR}' \
@@ -72,7 +79,7 @@ predict_fold() {
                 -f ${F} \
                 --disable_tta \
                 -chk ${CHECKPOINT}
-        " 2>&1 | tee "/tmp/predict_${METHOD}_${RUN_ID}_fold${F}_${contrast}.log"
+        "
         echo "  ✓ fold${F} ${contrast} done"
     done
     echo "[$(date '+%H:%M:%S')] fold${F} done → ${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}/fold${F}/"

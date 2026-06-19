@@ -67,7 +67,10 @@ for CONTRAST in $CONTRASTS; do
         SLOT="${GPU_ARR[$((FOLD_IDX % N_GPUS))]}"
         FOLD_IDX=$((FOLD_IDX + 1))
 
-        set_slot $SLOT bash -c "
+        run_job --name "benchmark_predict_${RUN_ID}_${CONTRAST}_fold${FOLD}" \
+            --gpus 1 --slot "${SLOT}" --wait \
+            --log "/tmp/pred_${RUN_ID}_${CONTRAST}_f${FOLD}.log" -- \
+            bash -c "
             export CUDA_VISIBLE_DEVICES='$SLOT'
             export nnUNet_raw='$NNUNET_RAW'
             export nnUNet_preprocessed='$NNUNET_PRE'
@@ -80,7 +83,7 @@ for CONTRAST in $CONTRASTS; do
                 -o '$PRED_DIR' \
                 -d $DATASET_ID -c 3d_fullres \
                 -f $FOLD -tr $TRAINER -p nnUNetPlans
-        " > /tmp/pred_${RUN_ID}_${CONTRAST}_f${FOLD}.log 2>&1 &
+        " &
         PIDS[$FOLD]=$!
     done
     for FOLD in $FOLDS; do wait "${PIDS[$FOLD]}"; done

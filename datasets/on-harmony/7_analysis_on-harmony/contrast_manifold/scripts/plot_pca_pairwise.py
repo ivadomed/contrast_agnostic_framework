@@ -11,7 +11,7 @@ Produces per-pair:
   pca_pairwise_T1w_vs_{contrast}_3d.html   (interactive, click to copy path)
 
 Usage:
-  set_slot 0 .venv/bin/python analysis/contrast_manifold/scripts/plot_pca_pairwise.py \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/plot_pca_pairwise.py \\
       --original_csv  analysis/contrast_manifold/outputs/data/original/roi_mask/on_harmony_features_normalized_combined_downsampled100.csv \\
       --synthetic_csv analysis/contrast_manifold/outputs/data/synthetic_v19/roi_mask/synthetic_v19_features_normalized_combined.csv \\
       --output_dir    analysis/contrast_manifold/outputs/plots/v19/v19_c_r1/synthseg_mask_31/pca

@@ -7,7 +7,7 @@ For each training case: run GMM with N_COMPONENTS on the raw T1w brain voxels
 Then create fold-specific symlink directories matching the existing synthseg_labels layout.
 
 Usage:
-    set_slot 0 .venv/bin/python scripts/nnunet_onharmony/00b_generate_modeB_labels.py
+    run_job --gpus 0 --slot 0 --wait -- .venv/bin/python scripts/nnunet_onharmony/00b_generate_modeB_labels.py
 """
 import json
 from pathlib import Path

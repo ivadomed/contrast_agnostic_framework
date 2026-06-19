@@ -10,7 +10,7 @@ Output CSV goes under:
   analysis/contrast_manifold/outputs/data/{synthetic_cohort}/synthseg_mask_{N}/
 
 Usage (single slot):
-  set_slot 0 .venv/bin/python \\
+  run_job --gpus 1 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/extract_features_synthseg_synthetic.py \\
     --synth-root data/ON-Harmony/derivatives/synthetic_v19_c \\
     --output-csv analysis/contrast_manifold/outputs/data/synthetic_v19_c/synthseg_mask_31/synthetic_v19_c_features.csv \\
@@ -18,7 +18,7 @@ Usage (single slot):
 
 Usage (4 parallel slots):
   for rank in 0 1 2 3; do
-    set_slot $rank .venv/bin/python \\
+    run_job --gpus 1 --slot $rank --wait -- .venv/bin/python \\
       analysis/contrast_manifold/scripts/extract_features_synthseg_synthetic.py \\
       --synth-root data/ON-Harmony/derivatives/synthetic_v19_c \\
       --output-csv analysis/contrast_manifold/outputs/data/synthetic_v19_c/synthseg_mask_31/synthetic_v19_c_features.csv \\

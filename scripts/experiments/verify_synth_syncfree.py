@@ -4,7 +4,7 @@ Verify the sync-free synthesize_volume_fast:
       (per-voxel mean/std/percentiles over many random draws on a real volume), and
   (2) it no longer blocks the CUDA pipeline (time many calls without manual sync).
 
-Run: set_slot 0 .venv/bin/python scripts/experiments/verify_synth_syncfree.py
+Run: run_job --gpus 1 --slot 0 --wait -- .venv/bin/python scripts/experiments/verify_synth_syncfree.py
 """
 from __future__ import annotations
 import sys, time, math, random

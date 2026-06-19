@@ -2,8 +2,9 @@
 # Download CHAOS, copy raw (train only), and DICOM→NIfTI BIDSify.
 # Usage: bash 00_00_download_and_bidsify.sh [--skip-copy] [--skip-bids]
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
-REPO_ROOT="$(cd "${DATASET_ROOT}/../.." && pwd)"
-SCRIPT="$(dirname "${BASH_SOURCE[0]}")/00_00_download_and_bidsify.py"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/env.sh"
+cd "${PROJECT_ROOT}"
 
-set_slot 0 "${REPO_ROOT}/.venv/bin/python" "${SCRIPT}" "$@"
+run_job --name chaos_download_bidsify --gpus 0 --slot 0 --wait -- \
+    .venv/bin/python "${SCRIPT_DIR}/00_00_download_and_bidsify.py" "$@"

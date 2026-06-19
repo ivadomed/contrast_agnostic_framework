@@ -14,16 +14,21 @@
 #   NNUNET_NUM_EPOCHS / NNUNET_ITERS_PER_EPOCH   training horizon (read by fast.py).
 #   RESUME_WANDB_IDS  space-separated cloud run id per fold ("id0 id1 id2 id3").
 #
-# LAUNCH NOTE (learned the hard way — see project memory): fire-and-exit. Run
-# foreground from the Bash tool; each fold is an independent set_slot job (own
-# systemd slice) that survives after this script exits. Do NOT wrap in `timeout`
-# or `nohup … &` — both reap/kill the folds. GPU pinning is automatic below.
+# Each fold is launched through run_job() (scripts/job_runner/run_job.sh, sourced
+# transitively via 00_utils/env.sh) instead of calling a resource manager directly
+# — this script runs unchanged on whichever machine it's on. On the original
+# workstation (backend=set_slot) a fold is a detached systemd slice; on Vulcan
+# (backend=slurm) a fold is its own independent sbatch job. Either way, by
+# default launch_fold does NOT block (fire-and-exit): the fold keeps training
+# after this script returns. Set LAUNCH_WAIT=1 to block until all folds finish
+# instead (only for non-Bash-tool / scripted use). GPU pinning below is for the
+# set_slot backend only (it doesn't isolate GPUs on that box) — the slurm
+# backend lets Slurm bind GPUs via --gres instead.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
-
-PROJECT_ROOT="$(pwd)"
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
+
 RESULTS_BASE="${NNUNET_RESULTS_BASE:-${nnUNet_results}}"
 DATASET_ID="${DATASET_ID:-060}"
 _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset0*${DATASET_ID}_" | head -1)"
@@ -59,7 +64,12 @@ launch_fold() {
         WANDB_ID="${_RWIDS[$FOLD]:-}"
     fi
 
-    set_slot ${SLOT} bash -c "
+    local wait_args=()
+    [ "${LAUNCH_WAIT:-0}" = "1" ] && wait_args=(--wait)
+
+    run_job --name "fold${FOLD}_${RUN_ID}" --gpus "${NGPU}" --slot "${SLOT}" \
+        --log "${LOG_DIR}/fold${FOLD}.log" "${wait_args[@]}" -- \
+        bash -c "
         export nnUNet_raw='${nnUNet_raw}'
         export nnUNet_preprocessed='${nnUNet_preprocessed}'
         export nnUNet_results='${RESULTS_BASE}/${RUN_ID}'
@@ -86,7 +96,7 @@ launch_fold() {
         cd '${PROJECT_ROOT}'
         .venv/bin/nnUNetv2_train ${DATASET_ID} 3d_fullres ${FOLD} ${CONTINUE_FLAG} \
             -tr ${TRAINER} -p nnUNetPlans -num_gpus ${NGPU}
-    " > "${LOG_DIR}/fold${FOLD}.log" 2>&1
+    "
 }
 
 LAUNCH_STAGGER_S="${LAUNCH_STAGGER_S:-15}"
@@ -95,7 +105,8 @@ if [ -n "${FOLD_SLOT_GPU:-}" ]; then
     # Explicit per-fold placement: space-separated "FOLD,SLOT,GPU" tuples, where GPU is
     # the physical CUDA_VISIBLE_DEVICES index (set_slot does NOT isolate GPUs — all are
     # visible by physical index). Enables packing >1 fold per GPU, e.g. 4 folds on 2
-    # GPUs (2 per GPU): FOLD_SLOT_GPU="0,0,0 1,1,0 2,2,1 3,3,1".
+    # GPUs (2 per GPU): FOLD_SLOT_GPU="0,0,0 1,1,0 2,2,1 3,3,1". (slurm backend: SLOT
+    # is ignored, only the fold/GPU grouping matters.)
     echo "[$(date '+%H:%M:%S')] custom placement (FOLD,SLOT,GPU): ${FOLD_SLOT_GPU}"
     declare -A PIDS; _i=0
     for _tuple in ${FOLD_SLOT_GPU}; do
@@ -131,11 +142,16 @@ elif [ "${GPUS_PER_FOLD}" = "1" ]; then
         echo "  monitor: tail -f ${LOG_DIR}/fold0.log"
     fi
 elif [ "${GPUS_PER_FOLD}" = "2" ]; then
+    # DDP: only 2 folds fit at a time, so rounds are inherently sequential → must
+    # wait for round N's folds to actually finish before round N+1 reuses the same
+    # GPUs. LAUNCH_WAIT=1 here (regardless of the caller's global setting) forces
+    # run_job to block: on set_slot this is a no-op (set_slot already blocks for
+    # the job's duration); on slurm it's required (`sbatch --wait`).
     for ROUND in 0 1; do
         FA=$((ROUND * 2)); FB=$((ROUND * 2 + 1))
-        launch_fold "${FA}" "0-1" "0,1" &  PA=$!
+        LAUNCH_WAIT=1 launch_fold "${FA}" "0-1" "0,1" &  PA=$!
         sleep "${LAUNCH_STAGGER_S}"
-        launch_fold "${FB}" "2-3" "2,3" &  PB=$!
+        LAUNCH_WAIT=1 launch_fold "${FB}" "2-3" "2,3" &  PB=$!
         wait $PA $PB
     done
     echo "[$(date '+%H:%M:%S')] All ${METHOD} folds complete — ${RESULTS_BASE}/${RUN_ID}/"

@@ -38,7 +38,7 @@ RUN_ID="${RUN_ID:-auto}"
 
 # ── Paths (from env.sh — single source of truth) ─────────────────────────────
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)"
+# PROJECT_ROOT is set by env.sh — do not override it here.
 PY="$PROJECT_ROOT/.venv/bin/python"
 
 case "$DATASET" in

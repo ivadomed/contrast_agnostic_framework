@@ -17,7 +17,7 @@ Outputs (in --output_dir):
   lda_coords.csv                  — LD coordinates for original + synthetic
 
 Usage:
-  set_slot 0 .venv/bin/python analysis/contrast_manifold/scripts/analyze_contrast_clustering.py \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/analyze_contrast_clustering.py \\
     --output_dir analysis/contrast_manifold/outputs/plots/contrast_clustering_v19_c
 """
 

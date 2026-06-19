@@ -9,27 +9,30 @@
 
 set -euo pipefail
 
-PROJ="$(cd "$(dirname "$0")/.." && pwd)"
-PY="$PROJ/.venv/bin/python"
-SCRIPT="$PROJ/analysis/contrast_manifold/scripts/extract_features_histogram.py"
-NORM="$PROJ/analysis/contrast_manifold/scripts/normalize_combined.py"
-ANALYSIS="$PROJ/analysis/contrast_manifold/scripts/run_all_analysis.py"
-DATA="$PROJ/analysis/contrast_manifold/outputs/data"
-FEAT_CONFIG="$PROJ/analysis/contrast_manifold/config/feature_selection.yaml"
-BIDS="$PROJ/data/ON-Harmony"
+CM_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "${CM_ROOT}/../../../.." && pwd)"
+source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
+
+PY="${REPO_ROOT}/.venv/bin/python"
+SCRIPT="${CM_ROOT}/scripts/extract_features_histogram.py"
+NORM="${CM_ROOT}/scripts/normalize_combined.py"
+ANALYSIS="${CM_ROOT}/scripts/run_all_analysis.py"
+DATA="${CM_ROOT}/outputs/data"
+FEAT_CONFIG="${CM_ROOT}/config/feature_selection.yaml"
+BIDS="${REPO_ROOT}/data/ON-Harmony"
 
 # ── 0. Original extraction (56 workers, single process) ──────────────────────
 ORIG_OUT="$DATA/original/histogram_256/on_harmony_features.csv"
 if [ ! -f "$ORIG_OUT" ]; then
     echo "=== [0] Extracting original histogram features ==="
     mkdir -p "$(dirname "$ORIG_OUT")"
-    set_slot 0 "$PY" "$SCRIPT" \
+    run_job --gpus 0 --slot 0 --wait --log "/tmp/hist_orig.log" -- \
+        "$PY" "$SCRIPT" \
         --mode original \
         --bids-root "$BIDS" \
         --deriv-root "$BIDS/derivatives" \
         --output-csv "$ORIG_OUT" \
-        --n-workers 56 \
-        > /tmp/hist_orig.log 2>&1
+        --n-workers 56
     echo "  Original done."
 else
     echo "=== [0] Original already exists, skipping ==="
@@ -59,13 +62,14 @@ for VER in v19_c v19_c_lhc v22_1_lhc v22_2_lhc; do
 
     echo "  $VER: launching 4-rank extraction …"
     for rank in 0 1 2 3; do
-        set_slot 0 "$PY" "$SCRIPT" \
+        run_job --gpus 0 --slot 0 --wait \
+            --log "/tmp/hist_${VER}_r${rank}.log" -- \
+            "$PY" "$SCRIPT" \
             --mode synthetic \
             --synth-root "$SYNTH_ROOT" \
             --output-csv "$OUT_CSV" \
             --n-workers 14 \
-            --rank $rank --world-size 4 \
-            > "/tmp/hist_${VER}_r${rank}.log" 2>&1 &
+            --rank $rank --world-size 4 &
         EXTRACT_PIDS+=($!)
     done
 done
@@ -114,13 +118,13 @@ _normalize_and_analyze() {
     local ORIG_NORM="$SYNTH_OUT/on_harmony_features_normalized_combined_downsampled100.csv"
 
     echo "  [$VER] normalize_combined …"
-    set_slot 0 "$PY" "$NORM" \
+    run_job --gpus 0 --slot 0 --wait --log "/tmp/hist_norm_${VER}.log" -- \
+        "$PY" "$NORM" \
         --original_csv "$DATA/original/histogram_256/on_harmony_features.csv" \
         --synthetic_csv "$SYNTH_CSV" \
         --output_original "$ORIG_NORM" \
         --output_synthetic "$NORM_OUT" \
-        --feature_config "$FEAT_CONFIG" \
-        >> "/tmp/hist_norm_${VER}.log" 2>&1
+        --feature_config "$FEAT_CONFIG"
 
     # Populate the global original CSV used by run_all_analysis for v19_c_r1
     local GLOBAL_ORIG="$DATA/original/histogram_256/on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -129,10 +133,10 @@ _normalize_and_analyze() {
     fi
 
     echo "  [$VER] run_all_analysis …"
-    set_slot 0 "$PY" "$ANALYSIS" \
+    run_job --gpus 0 --slot 0 --wait --log "/tmp/hist_analysis_${VER}.log" -- \
+        "$PY" "$ANALYSIS" \
         --only "$RUN_NAME" \
-        --mask-type histogram_256 \
-        >> "/tmp/hist_analysis_${VER}.log" 2>&1
+        --mask-type histogram_256
 
     echo "  [$VER] done."
 }

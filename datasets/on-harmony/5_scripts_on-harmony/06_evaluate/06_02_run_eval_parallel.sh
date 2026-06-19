@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-
-source "$(dirname "$0")/../00_utils/env.sh"
 # Evaluate baseline + V26_6 on all contrasts.
-# - 4 folds per method run on 4 GPUs simultaneously
+# - 4 folds per method run on 4 GPUs simultaneously (run_job --wait, background)
 # - Majority vote ensemble (no softmax needed)
 # - Dice computed directly (no nnUNetv2_evaluate_folder dependency)
-# Usage: bash run_eval_parallel.sh
+# Usage: bash 06_02_run_eval_parallel.sh
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
+source "$(dirname "$0")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
+
 PY=".venv/bin/python"
 NNRAW="${nnUNet_raw}"
 NNPRE="${nnUNet_preprocessed}"
-ROOT="$(pwd)"
+ROOT="${PROJECT_ROOT}"
 
 METHODS=(
     "baseline_20260529_233632:nnUNetTrainerOnHarmonyBaseline"
@@ -47,7 +47,10 @@ for METHOD_TRAINER in "${METHODS[@]}"; do
             for FOLD in 0 1 2 3; do
                 PRED_DIR="${EVAL}/${CONTRAST}/predictions_1mm/fold_${FOLD}"
                 mkdir -p "$PRED_DIR"
-                set_slot ${FOLD} bash -c "
+                run_job --name "onharmony_evpar_${METHOD_DIR}_${CONTRAST}_fold${FOLD}" \
+                    --gpus 1 --slot "${FOLD}" --wait \
+                    --log "/tmp/pred_${METHOD_DIR}_${CONTRAST}_f${FOLD}.log" -- \
+                    bash -c "
                     export nnUNet_raw='${NNRAW}'
                     export nnUNet_preprocessed='${NNPRE}'
                     export nnUNet_results='${NNRES}'
@@ -59,7 +62,7 @@ for METHOD_TRAINER in "${METHODS[@]}"; do
                         -o '${PRED_DIR}' \
                         -d 030 -c 3d_fullres \
                         -f ${FOLD} -tr '${TRAINER}' -p nnUNetPlans
-                " > /tmp/pred_${METHOD_DIR}_${CONTRAST}_f${FOLD}.log 2>&1 &
+                " &
                 PIDS[$FOLD]=$!
             done
             for F in 0 1 2 3; do wait "${PIDS[$F]}"; done
@@ -119,7 +122,6 @@ for pf in sorted(native_dir.glob("*.nii.gz")):
     gt   = np.asarray(nib.load(str(gt_files[pf.name])).dataobj, dtype=np.uint8)
     for c in CLASS:
         pm, gm = pred==c, gt==c
-        d = pred.sum()+gt.sum()  # wrong var name but ok
         den = pm.sum()+gm.sum()
         dice_lists[c].append(2*(pm&gm).sum()/den if den>0 else float("nan"))
 

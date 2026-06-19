@@ -32,7 +32,7 @@ TRAINER_DIR="$DATASET_NAME/${TRAINER}__nnUNetPlans__3d_fullres"
 echo "[train] RUN_ID=$RUN_ID"
 mkdir -p "$LOG_DIR"
 
-# ── Launch one fold per GPU slot ──────────────────────────────────────────────
+# ── Launch one fold per GPU slot (run_job --wait, background — wait on PIDs) ──
 declare -A PIDS
 SLOT=0
 for FOLD in $FOLDS; do
@@ -58,7 +58,10 @@ except Exception:
         echo "[train] fold $FOLD → GPU $SLOT  fresh start"
     fi
 
-    set_slot $SLOT bash -c "
+    run_job --name "benchmark_train_${RUN_ID}_fold${FOLD}" \
+        --gpus 1 --slot "${SLOT}" --wait \
+        --log "$LOG_DIR/fold${FOLD}.log" -- \
+        bash -c "
         export CUDA_VISIBLE_DEVICES='$SLOT'
         export nnUNet_raw='$NNUNET_RAW'
         export nnUNet_preprocessed='$NNUNET_PRE'
@@ -79,7 +82,7 @@ except Exception:
         .venv/bin/nnUNetv2_train $DATASET_ID 3d_fullres $FOLD $CONTINUE_FLAG \
             -tr $TRAINER \
             -p nnUNetPlans
-    " > "$LOG_DIR/fold${FOLD}.log" 2>&1 &
+    " &
     PIDS[$FOLD]=$!
 done
 

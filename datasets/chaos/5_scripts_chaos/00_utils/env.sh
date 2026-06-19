@@ -4,6 +4,8 @@
 #   source "$(dirname "$0")/00_utils/env.sh"       (from 5_scripts_chaos root)
 
 DATASET_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export PROJECT_ROOT="$(cd "${DATASET_ROOT}/../.." && pwd)"
+source "${PROJECT_ROOT}/scripts/job_runner/run_job.sh"
 
 export RAW_ROOT="${DATASET_ROOT}/0_raw_chaos"
 export BIDS_ROOT="${DATASET_ROOT}/1_BIDS_chaos/chaos-abdominal"

@@ -3,7 +3,7 @@ Operator-level profile of the network fwd/bwd (the 185 ms/step wall).
 Finds which pytorch/cuDNN ops dominate — conv fwd, conv bwd (dgrad/wgrad),
 InstanceNorm, elementwise, etc. — to locate a pytorch-level lever.
 
-Run: set_slot 0 .venv/bin/python scripts/experiments/profile_ops.py [compile]
+Run: run_job --gpus 1 --slot 0 --wait -- .venv/bin/python scripts/experiments/profile_ops.py [compile]
 """
 from __future__ import annotations
 import os, sys

@@ -12,7 +12,7 @@ This lets you inspect how well the synthetic distribution bridges between T1w
 and each real contrast, without re-fitting UMAP.
 
 Usage:
-  set_slot 0 .venv/bin/python analysis/contrast_manifold/scripts/plot_umap_pairwise.py \
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/plot_umap_pairwise.py \
       --coords analysis/contrast_manifold/outputs/plots/v19/v19_c_r1/synthseg_mask_31/umap/umap_joint_coords.csv \
       --output_dir analysis/contrast_manifold/outputs/plots/v19/v19_c_r1/synthseg_mask_31/umap
 """

@@ -9,11 +9,11 @@ Output:
   analysis/contrast_manifold/outputs/data/synthetic_v19/synthetic_v19_features.csv
 
 Usage:
-  set_slot 1 .venv/bin/python analysis/contrast_manifold/scripts/extract_features_synthetic.py \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/extract_features_synthetic.py \\
       --n_workers 6
 
   # Dev / dry-run (1 subject):
-  set_slot 1 .venv/bin/python analysis/contrast_manifold/scripts/extract_features_synthetic.py \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python analysis/contrast_manifold/scripts/extract_features_synthetic.py \\
       --limit 1
 """
 

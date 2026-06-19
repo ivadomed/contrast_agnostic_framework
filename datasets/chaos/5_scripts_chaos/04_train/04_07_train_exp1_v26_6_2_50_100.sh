@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # exp1: V26_6_2 on CHAOS, fold 0 only, 50% train synth / 100% val synth, 300 epochs.
-# Runs on set_slot 1 / GPU 1.
+# Runs on GPU 1 (SINGLE_GPU=1).
 #
 # Usage:
 #   bash 04_07_train_exp1_v26_6_2_50_100.sh [RUN_ID]

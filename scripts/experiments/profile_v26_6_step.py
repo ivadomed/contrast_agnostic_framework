@@ -6,7 +6,7 @@ full volume, and times each component of the train_step with proper CUDA
 synchronisation.  Reports per-component ms and the fwd/bwd vs. data split so we
 know where to spend optimisation effort.
 
-Run:  set_slot 0 .venv/bin/python scripts/experiments/profile_v26_6_step.py
+Run:  run_job --gpus 1 --slot 0 --wait -- .venv/bin/python scripts/experiments/profile_v26_6_step.py
 """
 from __future__ import annotations
 

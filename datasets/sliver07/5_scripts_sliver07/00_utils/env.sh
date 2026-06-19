@@ -10,6 +10,8 @@
 # vars below point the predict/evaluate steps at the chaos-trained checkpoints.
 
 DATASET_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export PROJECT_ROOT="$(cd "${DATASET_ROOT}/../.." && pwd)"
+source "${PROJECT_ROOT}/scripts/job_runner/run_job.sh"
 
 export RAW_ROOT="${DATASET_ROOT}/0_raw_sliver07"
 export BIDS_ROOT="${DATASET_ROOT}/1_BIDS_sliver07/sliver07-liver"

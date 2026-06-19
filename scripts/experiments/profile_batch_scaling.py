@@ -2,7 +2,7 @@
 Measure network fwd/bwd time vs batch size + peak GPU memory, to see whether
 batch=2 underutilises the A6000 (=> headroom to trade iters for batch).
 
-Run: set_slot 0 .venv/bin/python scripts/experiments/profile_batch_scaling.py
+Run: run_job --gpus 1 --slot 0 --wait -- .venv/bin/python scripts/experiments/profile_batch_scaling.py
 """
 from __future__ import annotations
 import os, sys, time

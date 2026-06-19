@@ -19,7 +19,7 @@ Outputs (in --output_dir):
   umap_joint_coords.csv
 
 Usage:
-  set_slot 1 .venv/bin/python \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/plot_umap_joint.py \\
     --original_csv analysis/contrast_manifold/outputs/data/original/roi_mask/on_harmony_features_normalized_downsampled100.csv \\
     --synthetic_csv analysis/contrast_manifold/outputs/data/synthetic_v19/roi_mask/synthetic_v19_features_normalized.csv \\

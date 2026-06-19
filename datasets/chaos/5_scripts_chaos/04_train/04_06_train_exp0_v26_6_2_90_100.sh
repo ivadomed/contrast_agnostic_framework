@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # exp0: V26_6_2 on CHAOS, fold 0 only, default synth prob (90% train / 100% val), 300 epochs.
-# Runs on set_slot 0 / GPU 0.
+# Runs on GPU 0 (SINGLE_GPU=0).
 #
 # Usage:
 #   bash 04_06_train_exp0_v26_6_2_90_100.sh [RUN_ID]

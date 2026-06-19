@@ -32,7 +32,7 @@ Outputs (in --output_dir):
   paga_graph.png                       PAGA node-link graph (supplementary)
 
 Usage:
-  set_slot 0 .venv/bin/python \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python \\
     datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/scripts/plot_paga.py \\
     --original_csv  .../on_harmony_features_normalized_combined_downsampled100_feat_selected.csv \\
     --synthetic_csv .../synthetic_v26_6_guidance_lhc_features_normalized_combined_feat_selected.csv \\

@@ -28,7 +28,7 @@ CPU-only, parallel via ProcessPoolExecutor.
 
 Usage (original ON-Harmony, 4 ranks × 56 workers):
   for rank in 0 1 2 3; do
-    set_slot $rank .venv/bin/python \\
+    run_job --gpus 0 --slot 0 --wait -- .venv/bin/python \\
       analysis/contrast_manifold/scripts/extract_features_regional_hist_13.py \\
       --mode original \\
       --output-csv analysis/contrast_manifold/outputs/data/original/regional_hist_13_64/on_harmony_features.csv \\

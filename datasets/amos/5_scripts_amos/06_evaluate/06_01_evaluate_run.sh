@@ -21,10 +21,15 @@
 # Examples:
 #   bash 06_01_evaluate_run.sh nnUNet chaos_v26_6_2_train090_val000_20260614_205937
 #   bash 06_01_evaluate_run.sh auglab chaos_synthseg_EM_train100_val000_20260611_120000 all ct
+#
+# Evaluation is CPU-only (no GPU needed) — each modality is launched through
+# run_job() (scripts/job_runner/run_job.sh, sourced transitively via
+# 00_utils/env.sh) with --gpus 0 --wait, since the per-fold summary script
+# below needs every modality's CSV to actually exist before it runs.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 CATEGORY="${1:?CATEGORY required (nnUNet|auglab)}"
 RUN_ID="${2:?RUN_ID required}"
@@ -32,7 +37,7 @@ FOLD="${3:-all}"
 shift $(( $# >= 3 ? 3 : $# )) || true
 MODALITIES=("$@"); [ ${#MODALITIES[@]} -eq 0 ] && MODALITIES=(ct mri)
 
-EVALUATE_PY="$(pwd)/datasets/amos/5_scripts_amos/06_evaluate/06_00_evaluate_amos.py"
+EVALUATE_PY="${PROJECT_ROOT}/datasets/amos/5_scripts_amos/06_evaluate/06_00_evaluate_amos.py"
 PRED_BASE="${PREDICTIONS_ROOT}/chaos_models/${CATEGORY}/${RUN_ID}"
 METRICS_BASE="${METRICS_ROOT}/chaos_models_${CATEGORY}_${RUN_ID}"
 
@@ -57,7 +62,8 @@ eval_fold() {
             continue
         fi
         mod_ok+=("$mod")
-        set_slot ${SLOT} .venv/bin/python "$EVALUATE_PY" \
+        run_job --name "amos_eval_${RUN_ID}_fold${F}_${mod}" --gpus 0 --slot "${SLOT}" --wait -- \
+            .venv/bin/python "$EVALUATE_PY" \
             --pred_dir "$PRED_DIR" \
             --gt_dir   "$GT_DIR" \
             --name     "$mod" \

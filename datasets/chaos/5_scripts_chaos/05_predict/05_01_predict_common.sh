@@ -15,10 +15,14 @@
 #   MODALITIES  $3… optional — subset of: t1in t1out t2spir ct (default all)
 #
 # Output: PREDICTIONS_ROOT/CATEGORY/RUN_ID/fold{k}/{modality}/{case}.nii.gz
+#
+# Each prediction is launched through run_job() (scripts/job_runner/run_job.sh,
+# sourced transitively via 00_utils/env.sh) with --gpus 1 --wait: modalities
+# within a fold run sequentially on the same GPU, folds run in parallel.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 RUN_ID="${1:?RUN_ID required (training run dir name)}"
 FOLD="${2:-0}"
@@ -46,20 +50,23 @@ predict_fold() {
         fi
         mkdir -p "$OUTPUT_DIR"
         echo "  → fold${F} ${mod}: $(ls "$INPUT_DIR" | wc -l) cases → $OUTPUT_DIR"
-        set_slot ${SLOT} bash -c "
+        run_job --name "chaos_predict_${METHOD}_fold${F}_${mod}" \
+            --gpus 1 --slot "${SLOT}" \
+            --log "/tmp/predict_${METHOD}_${RUN_ID}_fold${F}_${mod}.log" --wait -- \
+            bash -c "
             export nnUNet_raw='${nnUNet_raw}'
             export nnUNet_preprocessed='${nnUNet_preprocessed}'
             export nnUNet_results='${RUN_DIR}'
-            export NNUNET_PROJECT_ROOT='$(pwd)'
-            export PYTHONPATH='$(pwd)/datasets/chaos/5_scripts_chaos:\${PYTHONPATH:-}'
+            export NNUNET_PROJECT_ROOT='${PROJECT_ROOT}'
+            export PYTHONPATH='${PYTHONPATH}'
             export CUDA_VISIBLE_DEVICES='${GPU}'
             export TF_USE_LEGACY_KERAS=1
-            cd '$(pwd)'
+            cd '${PROJECT_ROOT}'
             .venv/bin/nnUNetv2_predict \
                 -i '${INPUT_DIR}' -o '${OUTPUT_DIR}' \
                 -d ${DATASET_ID} -c 3d_fullres -tr ${TRAINER} -f ${F} \
                 --disable_tta -chk ${CHECKPOINT}
-        " 2>&1 | tee "/tmp/predict_${METHOD}_${RUN_ID}_fold${F}_${mod}.log"
+        "
         echo "  ✓ fold${F} ${mod} done"
     done
     echo "[$(date '+%H:%M:%S')] fold${F} done → ${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}/fold${F}/"

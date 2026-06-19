@@ -24,7 +24,7 @@ computing per-region histograms, so the relative ordering between regions
 CPU-only, parallel via ProcessPoolExecutor.
 
 Usage (original ON-Harmony, all 56 workers):
-  set_slot 0 .venv/bin/python \\
+  run_job --gpus 0 --slot 0 --wait -- .venv/bin/python \\
     analysis/contrast_manifold/scripts/extract_features_regional_hist.py \\
     --mode original \\
     --output-csv analysis/contrast_manifold/outputs/data/original/regional_hist_64/on_harmony_features.csv \\
@@ -32,13 +32,12 @@ Usage (original ON-Harmony, all 56 workers):
 
 Usage (synthetic, 4 parallel ranks × 14 workers):
   for rank in 0 1 2 3; do
-    set_slot 0 .venv/bin/python \\
+    run_job --gpus 0 --slot 0 --wait -- .venv/bin/python \\
       analysis/contrast_manifold/scripts/extract_features_regional_hist.py \\
       --mode synthetic --synth-root <path> \\
       --output-csv <path>/features.csv \\
-      --n-workers 14 --rank $rank --world-size 4 \\
-      > /tmp/reghist_${VER}_r${rank}.log 2>&1 &
-  done
+      --n-workers 14 --rank $rank --world-size 4 &
+  done; wait
 """
 from __future__ import annotations
 
