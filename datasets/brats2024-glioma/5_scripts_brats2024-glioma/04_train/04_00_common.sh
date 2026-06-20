@@ -63,13 +63,20 @@ _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset${DATASET_ID}_" | head -1)"
 TRAINER_DIR="${_DS_NAME}/${TRAINER}__nnUNetPlans__3d_fullres"
 GPUS_PER_FOLD="${GPUS_PER_FOLD:-1}"
 
-RUN_ID="${1:-${DATASET_NAME}_${METHOD}_$(date +%Y%m%d_%H%M%S)}"
+RUN_ID="${1:-${DATASET_NAME}_${TRAINING_CONTRAST}_${METHOD}_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "$LOG_DIR"
 echo "[$(date '+%H:%M:%S')] ${METHOD} — RUN_ID=${RUN_ID}  (GPUS_PER_FOLD=${GPUS_PER_FOLD})"
 
 launch_fold() {
     local FOLD="$1" SLOT="$2" GPUS="$3"
     local NGPU; NGPU="$(awk -F',' '{print NF}' <<<"$GPUS")"
+    # On Slurm each fold is its own isolated job; the allocated GPU(s) are always
+    # device 0..N-1 within the job's cgroup namespace — the physical CUDA index
+    # (used by set_slot, where all 4 GPUs are visible) is meaningless here.
+    local _CUDA_DEV="${GPUS}"
+    if [ "${RUN_JOB_BACKEND:-}" = "slurm" ]; then
+        _CUDA_DEV="$(seq -s, 0 $((NGPU-1)))"
+    fi
 
     local FOLD_DIR="${RESULTS_BASE}/${RUN_ID}/${TRAINER_DIR}/fold_${FOLD}"
     local CKPT_LATEST="${FOLD_DIR}/checkpoint_latest.pth"
@@ -113,7 +120,7 @@ launch_fold() {
         export nnUNet_n_proc_DA=${DA_WORKERS}
         export AUGLAB_PARAMS_GPU_JSON='${AUGLAB_PARAMS_GPU_JSON:-}'
         export AUGLAB_VAL_PARAMS_GPU_JSON='${AUGLAB_VAL_PARAMS_GPU_JSON:-}'
-        export CUDA_VISIBLE_DEVICES='${GPUS}'
+        export CUDA_VISIBLE_DEVICES='${_CUDA_DEV}'
         export nnUNet_wandb_enabled=1
         export nnUNet_wandb_project='${WANDB_PROJECT:-mri_synthesis_seg_${DATASET_NAME}}'
         export nnUNet_wandb_run_name='${RUN_ID}_fold${FOLD}'

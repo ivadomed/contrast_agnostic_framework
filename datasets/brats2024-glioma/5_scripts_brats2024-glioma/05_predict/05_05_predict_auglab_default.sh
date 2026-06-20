@@ -5,9 +5,9 @@
 # Usage:
 #   bash 05_05_predict_auglab_default.sh <RUN_ID> [FOLD] [CONTRAST ...]
 # Examples:
-#   bash 05_05_predict_auglab_default.sh brats2024-glioma_auglab_default_20260609_220932
-#   bash 05_05_predict_auglab_default.sh brats2024-glioma_auglab_default_20260609_220932 all
-#   bash 05_05_predict_auglab_default.sh brats2024-glioma_auglab_default_20260609_220932 2
+#   bash 05_05_predict_auglab_default.sh brats2024-glioma_t1n_auglab_default_20260609_220932
+#   bash 05_05_predict_auglab_default.sh brats2024-glioma_t1n_auglab_default_20260609_220932 all
+#   bash 05_05_predict_auglab_default.sh brats2024-glioma_t1n_auglab_default_20260609_220932 2
 
 set -euo pipefail
 METHOD="auglab_default"

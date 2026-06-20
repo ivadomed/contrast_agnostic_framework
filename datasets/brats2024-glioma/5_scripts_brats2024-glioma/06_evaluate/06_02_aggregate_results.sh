@@ -18,15 +18,16 @@ source "$(dirname "$0")/../00_utils/env.sh"
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-echo "[$(date '+%H:%M:%S')] aggregating metrics from ${METRICS_ROOT}/"
+_AGG_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}"
+echo "[$(date '+%H:%M:%S')] aggregating metrics from ${_AGG_DIR}/"
 
 if [ $# -gt 0 ]; then
     .venv/bin/python "${HERE}/06_02_aggregate_results.py" \
-        --metrics_dir "${METRICS_ROOT}" \
+        --metrics_dir "${_AGG_DIR}" \
         --run_keys "$@"
 else
     .venv/bin/python "${HERE}/06_02_aggregate_results.py" \
-        --metrics_dir "${METRICS_ROOT}"
+        --metrics_dir "${_AGG_DIR}"
 fi
 
-echo "[$(date '+%H:%M:%S')] done → ${METRICS_ROOT}/02_00_aggregated_metrics.md"
+echo "[$(date '+%H:%M:%S')] done → ${_AGG_DIR}/02_00_aggregated_metrics.md"

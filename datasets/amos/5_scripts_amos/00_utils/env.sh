@@ -44,6 +44,9 @@ export CHAOS_NNUNET_RAW="${CHAOS_DATASET_ROOT}/2_nnUNet_chaos/raw"
 export CHAOS_DATASET_ID="60"
 export CHAOS_DS_NAME="Dataset060_CHAOS_MR_T1in"
 export CHAOS_DATASET_JSON="${CHAOS_NNUNET_RAW}/${CHAOS_DS_NAME}/dataset.json"
+# Training contrast and model type for chaos (used in result path structure).
+export CHAOS_TRAINING_CONTRAST="t1in"
+export CHAOS_MODEL_TYPE="chaos_model"
 
 SCRIPTS_DIR="${DATASET_ROOT}/5_scripts_amos"
 CHAOS_SCRIPTS_DIR="${CHAOS_DATASET_ROOT}/5_scripts_chaos"

@@ -6,5 +6,5 @@ set -euo pipefail
 METHOD="v26_6_2"
 TRAINER="nnUNetTrainerCHAOSV26_6_2"
 CATEGORY="nnUNet"
-RUN_ID="${1:-chaos_v26_6_2_train090_val000_20260614_205937}"
+RUN_ID="${1:-chaos_t1in_v26_6_2_train090_val000_20260614_205937}"
 source "$(dirname "$0")/05_01_predict_common.sh" "$RUN_ID" "${@:2}"

@@ -6,5 +6,5 @@ set -euo pipefail
 METHOD="synthseg_noEM"
 TRAINER="nnUNetTrainerCHAOSAugLabDefault"
 CATEGORY="auglab"
-RUN_ID="${1:-chaos_synthseg_noEM_train100_val000_20260611_120000}"
+RUN_ID="${1:-chaos_t1in_synthseg_noEM_train100_val000_20260611_120000}"
 source "$(dirname "$0")/05_01_predict_common.sh" "$RUN_ID" "${@:2}"

@@ -28,7 +28,7 @@ AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../sub-workspaces/auglab_work
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_default01-23_auglabAug_ImageContrastV26_6_2GPUTransform_train050.json"
 export AUGLAB_VAL_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_VALsynthonly_ImageContrastV26_6_2GPUTransform.json"
 
-export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/auglab"
+export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/auglab"
 
 # folds 0,1 → one per GPU (0,1)
 export FOLD_SLOT_GPU="${FOLD_SLOT_GPU:-0,0,0 1,1,1}"

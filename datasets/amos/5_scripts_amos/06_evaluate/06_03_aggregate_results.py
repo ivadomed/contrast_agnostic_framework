@@ -2,9 +2,9 @@
 """
 Aggregate AMOS evaluation results across all chaos-trained methods.
 
-Reads METRICS_ROOT/chaos_models_{CATEGORY}_{RUN_ID}/fold{k}/eval_all.csv,
+Reads METRICS_ROOT/chaos_model/t1in/{CATEGORY}_{RUN_ID}/fold{k}/eval_all.csv,
 computes cross-fold Dice and HD95 per organ per modality, and writes a
-comparison table to METRICS_ROOT/00_comparison.md.
+comparison table to the metrics root's 00_comparison.md.
 
 Usage:
   python 06_03_aggregate_results.py

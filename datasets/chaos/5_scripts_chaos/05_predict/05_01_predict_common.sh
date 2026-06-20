@@ -32,7 +32,7 @@ MODALITIES=("$@"); [ ${#MODALITIES[@]} -eq 0 ] && MODALITIES=(t1in t1out t2spir 
 DATASET_ID="${DATASET_ID:-60}"
 CHECKPOINT="${CHECKPOINT:-checkpoint_best.pth}"
 CATEGORY="${CATEGORY:-nnUNet}"
-export nnUNet_results="${PREDICTIONS_ROOT}/${CATEGORY}"
+export nnUNet_results="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}"
 _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset0*${DATASET_ID}_" | head -1)"
 RUN_DIR="${nnUNet_results}/${RUN_ID}"
 
@@ -40,10 +40,17 @@ RUN_DIR="${nnUNet_results}/${RUN_ID}"
 
 predict_fold() {
     local F="$1" SLOT="$2" GPU="$3"
+    # On Slurm each fold prediction is its own isolated sbatch job — the allocated
+    # GPU is always device 0 within the job's cgroup namespace. The physical GPU
+    # index (used by set_slot, where all 4 GPUs are visible) is meaningless here.
+    local _CUDA_DEV="${GPU}"
+    if [ "${RUN_JOB_BACKEND:-}" = "slurm" ]; then
+        _CUDA_DEV="0"
+    fi
     echo "[$(date '+%H:%M:%S')] predict ${METHOD} | run=${RUN_ID} | fold=${F} | ckpt=${CHECKPOINT} | slot=${SLOT} gpu=${GPU}"
     for mod in "${MODALITIES[@]}"; do
         local INPUT_DIR="${nnUNet_raw}/${_DS_NAME}/imagesTs_${mod}"
-        local OUTPUT_DIR="${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}/fold${F}/${mod}"
+        local OUTPUT_DIR="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}/fold${F}/${mod}"
         if [ ! -d "$INPUT_DIR" ] || [ -z "$(ls -A "$INPUT_DIR" 2>/dev/null)" ]; then
             echo "  ! fold${F} skip ${mod}: input dir missing/empty ($INPUT_DIR) — run 05_00_build_test_inputs.py" >&2
             continue
@@ -59,7 +66,7 @@ predict_fold() {
             export nnUNet_results='${RUN_DIR}'
             export NNUNET_PROJECT_ROOT='${PROJECT_ROOT}'
             export PYTHONPATH='${PYTHONPATH}'
-            export CUDA_VISIBLE_DEVICES='${GPU}'
+            export CUDA_VISIBLE_DEVICES='${_CUDA_DEV}'
             export TF_USE_LEGACY_KERAS=1
             cd '${PROJECT_ROOT}'
             .venv/bin/nnUNetv2_predict \
@@ -69,14 +76,14 @@ predict_fold() {
         "
         echo "  ✓ fold${F} ${mod} done"
     done
-    echo "[$(date '+%H:%M:%S')] fold${F} done → ${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}/fold${F}/"
+    echo "[$(date '+%H:%M:%S')] fold${F} done → ${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}/fold${F}/"
 }
 
 if [ "$FOLD" = "all" ]; then
     echo "[$(date '+%H:%M:%S')] predict ${METHOD} | ALL FOLDS (parallel, fold→slot) | modalities: ${MODALITIES[*]}"
     for F in 0 1 2 3; do predict_fold "$F" "$F" "$F" & done
     wait
-    echo "[$(date '+%H:%M:%S')] all folds done → ${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}/"
+    echo "[$(date '+%H:%M:%S')] all folds done → ${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}/"
 else
     echo "  modalities: ${MODALITIES[*]}"
     predict_fold "${FOLD}" "${SLOT:-0}" "${GPU:-0}"

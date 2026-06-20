@@ -31,7 +31,7 @@ if _root:
 try:
     from chaos.trainers.baseline import nnUNetTrainerCHAOSBaseline  # noqa: F401
     from chaos.trainers.v26_6_2 import nnUNetTrainerCHAOSV26_6_2  # noqa: F401
-    from chaos.trainers.v26_6_2_p50 import nnUNetTrainerCHAOSV26_6_2_p50  # noqa: F401
+    from chaos.trainers.v26_6_2_p50 import nnUNetTrainerCHAOSV26_6_2_p50  # noqa: F401  # used by t2spir train050_val100
     from chaos.trainers.v26_6_2_train050_val000 import nnUNetTrainerCHAOSV26_6_2_train050_val000  # noqa: F401
     from chaos.trainers.v26_6_2_train025_val000 import nnUNetTrainerCHAOSV26_6_2_train025_val000  # noqa: F401
     from chaos.trainers.v26_6_2_train025_val100 import nnUNetTrainerCHAOSV26_6_2_train025_val100  # noqa: F401

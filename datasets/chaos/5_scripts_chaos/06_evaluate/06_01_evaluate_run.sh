@@ -14,9 +14,9 @@
 #   CATEGORY   "nnUNet" or "auglab" (default: auto-detected from PREDICTIONS_ROOT)
 #
 # Examples:
-#   bash 06_01_evaluate_run.sh chaos_v26_6_2_train090_val000_20260614_205937   # all folds
+#   bash 06_01_evaluate_run.sh chaos_t1in_v26_6_2_train090_val000_20260614_205937   # all folds
 #   bash 06_01_evaluate_run.sh chaos_auglab_default_20260611_120000 2          # fold 2 only
-#   CATEGORY=auglab bash 06_01_evaluate_run.sh chaos_synthseg_EM_train100_val000_20260611_120000
+#   CATEGORY=auglab bash 06_01_evaluate_run.sh chaos_t1in_synthseg_EM_train100_val000_20260611_120000
 #
 # Per fold → METRICS_ROOT/{CATEGORY}_{RUN_ID}/fold{k}/:
 #   <modality>_metrics.csv   per-case, per-label Dice & HD95
@@ -40,16 +40,16 @@ FOLD="${2:-all}"
 DATASET_ID="${DATASET_ID:-60}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-# CATEGORY: env override if given, else auto-detect which PREDICTIONS_ROOT/<category>/
-# subdir contains this RUN_ID.
+# CATEGORY: env override if given, else auto-detect which
+# PREDICTIONS_ROOT/{MODEL_TYPE}/{TRAINING_CONTRAST}/<category>/ subdir contains this RUN_ID.
 if [ -z "${CATEGORY:-}" ]; then
     _matches=()
-    for _c in "${PREDICTIONS_ROOT}"/*/; do
+    for _c in "${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}"/*/; do
         [ -d "${_c}${RUN_ID}" ] && _matches+=("$(basename "$_c")")
     done
     case "${#_matches[@]}" in
         1) CATEGORY="${_matches[0]}";;
-        0) echo "ERROR: RUN_ID '${RUN_ID}' not found under any ${PREDICTIONS_ROOT}/<category>/" >&2; exit 1;;
+        0) echo "ERROR: RUN_ID '${RUN_ID}' not found under any ${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/<category>/" >&2; exit 1;;
         *) echo "ERROR: RUN_ID '${RUN_ID}' in multiple categories: ${_matches[*]}. Set CATEGORY=<one>." >&2; exit 1;;
     esac
     echo "[$(date '+%H:%M:%S')] auto-detected CATEGORY=${CATEGORY} for ${RUN_ID}"
@@ -57,7 +57,7 @@ fi
 
 _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset0*${DATASET_ID}_" | head -1)"
 DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
-PRED_BASE="${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}"
+PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 
 [ -d "$PRED_BASE" ] || { echo "ERROR: no predictions at $PRED_BASE" >&2; exit 1; }
 
@@ -83,7 +83,7 @@ PY
 eval_fold() {
     local F="$1" SLOT="${2:-0}"
     local PRED_ROOT="${PRED_BASE}/fold${F}"
-    local EVAL_DIR="${METRICS_ROOT}/${CATEGORY}_${RUN_ID}/fold${F}"
+    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}/fold${F}"
 
     if [ ! -d "$PRED_ROOT" ]; then
         echo "  ! fold${F}: no predictions dir at $PRED_ROOT — skipping" >&2
@@ -105,11 +105,11 @@ eval_fold() {
         # Restrict to this modality's scoreable labels (ct → liver only).
         local LBL_ARG=""
         [ -n "${MOD_LABELS[$m]:-}" ] && LBL_ARG="--labels ${MOD_LABELS[$m]}"
-        run_job --name "chaos_eval_${RUN_ID}_fold${F}_${m}" --gpus 0 --slot "${SLOT}" --wait -- \
+        run_job --name "chaos_eval_${RUN_ID}_fold${F}_${m}" --gpus 0 --mem 32G --slot "${SLOT}" --wait -- \
             .venv/bin/python "${HERE}/06_00_evaluate.py" \
             --pred_dir "$d" --gt_dir "$GT_DIR" --dataset_json "$DJ" \
             --name "$m" --out_csv "${EVAL_DIR}/${m}_metrics.csv" \
-            ${LBL_ARG} --workers 16 &
+            ${LBL_ARG} --workers 4 &
         pids+=($!)
     done
     [ ${#pids[@]} -gt 0 ] && wait "${pids[@]}"
@@ -176,7 +176,7 @@ if [ "$FOLD" = "all" ]; then
         eval_fold "$F" "$F" &
     done
     wait
-    echo "[$(date '+%H:%M:%S')] all folds evaluated → ${METRICS_ROOT}/${CATEGORY}_${RUN_ID}/"
+    echo "[$(date '+%H:%M:%S')] all folds evaluated → ${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}/"
 else
     eval_fold "${FOLD}" "${SLOT:-0}"
 fi

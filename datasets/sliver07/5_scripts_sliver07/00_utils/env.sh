@@ -40,6 +40,9 @@ export CHAOS_DS_NAME="Dataset060_CHAOS_MR_T1in"
 # chaos dataset.json (label map: background 0, liver 1, …) — used by 06_evaluate to
 # score the liver label only (SLIVER07 GT annotates the liver alone).
 export CHAOS_DATASET_JSON="${CHAOS_NNUNET_RAW}/${CHAOS_DS_NAME}/dataset.json"
+# Training contrast and model type for chaos (used in result path structure).
+export CHAOS_TRAINING_CONTRAST="t1in"
+export CHAOS_MODEL_TYPE="chaos_model"
 
 # Make the sliver07 scripts dir importable, plus the chaos scripts dir so the chaos
 # trainer classes (nnUNetTrainerCHAOS*) resolve for -tr at predict time.

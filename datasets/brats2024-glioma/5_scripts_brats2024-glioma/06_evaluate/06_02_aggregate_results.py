@@ -9,7 +9,7 @@ Markdown report to --out_dir.
 Usage:
   python 06_aggregate_results.py --results_dir <nnUNet_results> --out_dir <03_aggregated>
   python 06_02_aggregate_results.py --metrics_dir <METRICS_ROOT> \
-      --run_keys nnUNet_brats2024-glioma_v26_6_2_train090_val000_20260608_003445 nnUNet_brats2024-glioma_t1n_baseline_20260606_162001
+      --run_keys nnUNet_brats2024-glioma_t1n_v26_6_2_train090_val000_20260608_003445 nnUNet_brats2024-glioma_t1n_baseline_20260606_162001
 """
 import argparse
 import csv
@@ -25,7 +25,7 @@ def load_run(metrics_dir: Path) -> dict:
     """Return {metric: {contrast: {label: {fold: [values]}}}} for all fold CSVs.
 
     metrics_dir is the run's directory under METRICS_ROOT, e.g.
-    02_metrics/nnUNet_brats2024-glioma_v26_6_2_train090_val000_20260608_003445/.  It contains fold0/, fold1/, …
+    02_metrics/nnUNet_brats2024-glioma_t1n_v26_6_2_train090_val000_20260608_003445/.  It contains fold0/, fold1/, …
     each with an eval_all.csv.
     """
     data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))

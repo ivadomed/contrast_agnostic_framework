@@ -6,8 +6,8 @@
 #     v26_6_2_train025_val000_<TS>            (nnUNet)  slot 1
 #     auglabAug_v26_6_2_train025_val000_<TS>  (auglab)  slot 2
 #   EXISTING runs (predict fold 1 only — fold 0 already predicted):
-#     chaos_auglabAug_synthseg_EM_train100_val000_20260615_213615   (auglab)  slot 3
-#     chaos_v26_6_2_train050_val100_20260615_213615                 (nnUNet)  slot 3
+#     chaos_t1in_auglabAug_synthseg_EM_train100_val000_20260615_213615   (auglab)  slot 3
+#     chaos_t1in_v26_6_2_train050_val100_20260615_213615                 (nnUNet)  slot 3
 #
 # Evaluation uses "all" (skips absent folds 2,3; re-evals existing fold 0 idempotently),
 # then a single global aggregate.
@@ -23,8 +23,8 @@ source datasets/chaos/5_scripts_chaos/00_utils/env.sh
 RUN_T050="${1:?RUN_train050_val000 required}"
 RUN_T025="${2:?RUN_train025_val000 required}"
 RUN_AUG_T025="${3:?RUN_auglabAug_v26_6_2_train025_val000 required}"
-EXIST_EM="${4:-chaos_auglabAug_synthseg_EM_train100_val000_20260615_213615}"
-EXIST_50="${5:-chaos_v26_6_2_train050_val100_20260615_213615}"
+EXIST_EM="${4:-chaos_t1in_auglabAug_synthseg_EM_train100_val000_20260615_213615}"
+EXIST_50="${5:-chaos_t1in_v26_6_2_train050_val100_20260615_213615}"
 
 PD="$(cd datasets/chaos/5_scripts_chaos/05_predict && pwd)"
 ED="$(cd datasets/chaos/5_scripts_chaos/06_evaluate && pwd)"

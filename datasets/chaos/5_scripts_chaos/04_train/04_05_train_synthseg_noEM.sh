@@ -27,7 +27,7 @@ AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../sub-workspaces/auglab_work
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_default01-23_Synthseg.json"
 
 # Save under 01_predictions/auglab (where auglab models live → predict/eval find them).
-export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/auglab"
+export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/auglab"
 
 # 4 folds → slots 0 and 1 only (GPUs 0,1); 2 folds packed per slot/GPU.
 export FOLD_SLOT_GPU="0,0,0 1,0,0 2,1,1 3,1,1"

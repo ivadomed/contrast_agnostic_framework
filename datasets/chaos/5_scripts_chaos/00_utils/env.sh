@@ -12,11 +12,14 @@ export BIDS_ROOT="${DATASET_ROOT}/1_BIDS_chaos/chaos-abdominal"
 export nnUNet_raw="${DATASET_ROOT}/2_nnUNet_chaos/raw"
 export nnUNet_preprocessed="${DATASET_ROOT}/2_nnUNet_chaos/preprocessed"
 # nnUNet_results: where nnUNet stores model checkpoints for nnUNet-family methods.
-export nnUNet_results="${DATASET_ROOT}/8_results_chaos/01_predictions/nnUNet"
+# Path includes model_type and training_contrast so each training context is isolated.
+# Conditional assignment: env_t2spir.sh (and any future contrast env) sets this before
+# sourcing env.sh; 04_00_common.sh re-sources env.sh so we must not clobber it.
+export nnUNet_results="${nnUNet_results:-${DATASET_ROOT}/8_results_chaos/01_predictions/chaos_model/t1in/nnUNet}"
 export SPLITS_DIR="${DATASET_ROOT}/4_splits_chaos"
-# Prediction output root: 01_predictions/{category}/{run_id}/fold{k}/{modality}/
+# Prediction output root: 01_predictions/{model_type}/{training_contrast}/{category}/{run_id}/fold{k}/{modality}/
 export PREDICTIONS_ROOT="${DATASET_ROOT}/8_results_chaos/01_predictions"
-# Metrics output root: 02_metrics/{category}_{run_id}/fold{k}/
+# Metrics output root: 02_metrics/{model_type}/{training_contrast}/{category}_{run_id}/fold{k}/
 export METRICS_ROOT="${DATASET_ROOT}/8_results_chaos/02_metrics"
 
 export DATASET_NAME="chaos"
@@ -27,6 +30,13 @@ export DATASET_NAME="chaos"
 export DATASET_ROLE="training"
 # Train dataset = MR T1-DUAL in-phase only (single channel). See 02_nnunet/02_00_convert.py.
 export NNUNET_DATASET_ID="Dataset060_CHAOS_MR_T1in"
+
+# Training contrast: the MRI contrast used to train models in this dataset.
+# Used in run names ({dataset}_{training_contrast}_{method}_{ts}) and result paths.
+# Conditional assignment: env_t2spir.sh sets this before 04_00_common.sh re-sources env.sh.
+export TRAINING_CONTRAST="${TRAINING_CONTRAST:-t1in}"
+# Model type label: identifies the source dataset for predictions (own or cross-dataset).
+export MODEL_TYPE="chaos_model"
 
 # Dataset-specific WandB project (keep per-dataset runs isolated; same convention for future datasets).
 export WANDB_PROJECT="mri_synthesis_seg_${DATASET_NAME}"

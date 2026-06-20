@@ -19,9 +19,9 @@
 #   FOLD: 0-3 or "all" (default: all, 4 folds parallel)
 #
 # Examples:
-#   bash 06_01_evaluate_run.sh nnUNet chaos_baseline_20260614_153230
-#   bash 06_01_evaluate_run.sh auglab chaos_synthseg_EM_train100_val000_20260611_120000 all
-#   bash 06_01_evaluate_run.sh nnUNet chaos_v26_6_2_train090_val000_20260614_205937 2
+#   bash 06_01_evaluate_run.sh nnUNet chaos_t1in_baseline_20260614_153230
+#   bash 06_01_evaluate_run.sh auglab chaos_t1in_synthseg_EM_train100_val000_20260611_120000 all
+#   bash 06_01_evaluate_run.sh nnUNet chaos_t1in_v26_6_2_train090_val000_20260614_205937 2
 #
 # Evaluation is CPU-only (no GPU needed) — launched through run_job()
 # (scripts/job_runner/run_job.sh, sourced transitively via 00_utils/env.sh)
@@ -38,8 +38,8 @@ FOLD="${3:-all}"
 
 EVALUATE_PY="${CHAOS_DATASET_ROOT}/5_scripts_chaos/06_evaluate/06_00_evaluate.py"
 GT_DIR="${nnUNet_raw}/labelsTs_ct"
-PRED_BASE="${PREDICTIONS_ROOT}/chaos_models/${CATEGORY}/${RUN_ID}"
-METRICS_BASE="${METRICS_ROOT}/chaos_models_${CATEGORY}_${RUN_ID}"
+PRED_BASE="${PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
+METRICS_BASE="${METRICS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}"
 
 [ -d "$PRED_BASE" ] || { echo "ERROR: no predictions at $PRED_BASE" >&2; exit 1; }
 [ -d "$GT_DIR" ]    || { echo "ERROR: GT dir missing: $GT_DIR — run 05_00_build_test_inputs.py" >&2; exit 1; }

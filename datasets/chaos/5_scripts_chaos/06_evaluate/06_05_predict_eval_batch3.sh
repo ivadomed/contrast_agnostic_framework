@@ -2,7 +2,7 @@
 # Predict folds 2,3 for the two now-4-fold runs, evaluate all folds, aggregate.
 #
 #   v26_6_2_train050_val000  (train 50% / val 0%)   folds 2,3  → slots 0,1
-#   chaos_v26_6_2_train050_val100  (train 50% / val 100%) folds 2,3  → slots 2,3
+#   chaos_t1in_v26_6_2_train050_val100  (train 50% / val 100%) folds 2,3  → slots 2,3
 #
 # Folds 0,1 already predicted/evaluated; "all" re-evals them idempotently so the
 # aggregate reflects the full 4-fold runs. This is the clean val-synth comparison.
@@ -14,8 +14,8 @@ set -euo pipefail
 cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 source datasets/chaos/5_scripts_chaos/00_utils/env.sh
 
-RUN_T050="${1:-chaos_v26_6_2_train050_val000_20260616_010628}"
-RUN_50_100="${2:-chaos_v26_6_2_train050_val100_20260615_213615}"
+RUN_T050="${1:-chaos_t1in_v26_6_2_train050_val000_20260616_010628}"
+RUN_50_100="${2:-chaos_t1in_v26_6_2_train050_val100_20260615_213615}"
 
 PD="$(cd datasets/chaos/5_scripts_chaos/05_predict && pwd)"
 ED="$(cd datasets/chaos/5_scripts_chaos/06_evaluate && pwd)"

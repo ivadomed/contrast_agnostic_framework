@@ -24,6 +24,6 @@ export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_defaul
 # Save under 01_results/auglab_valaug (separate from the paper-faithful auglab run);
 # NNUNET_RESULTS_BASE is read by 04_00_common.sh after it re-sources env.sh.
 DATASET_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-export NNUNET_RESULTS_BASE="${DATASET_ROOT}/8_results_brats2024-glioma/01_results/auglab_valaug"
+export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/auglab_valaug"
 
 source "$(dirname "$0")/04_00_common.sh" "$@"

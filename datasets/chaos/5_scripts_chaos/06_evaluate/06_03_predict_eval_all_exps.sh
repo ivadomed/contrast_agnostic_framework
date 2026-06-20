@@ -7,8 +7,8 @@
 #
 # Example:
 #   bash 06_03_predict_eval_all_exps.sh \
-#       chaos_v26_6_2_train090_val100_20260615_213615 \
-#       chaos_v26_6_2_train050_val100_20260615_213615 \
+#       chaos_t1in_v26_6_2_train090_val100_20260615_213615 \
+#       chaos_t1in_v26_6_2_train050_val100_20260615_213615 \
 #       chaos_auglabAug_synthseg_EM_train100_val000_20260615_213615 \
 #       chaos_auglabAug_v26_6_2_train050_val000_20260615_213615
 

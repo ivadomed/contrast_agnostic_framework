@@ -38,9 +38,9 @@ CONTRASTS=("$@"); [ ${#CONTRASTS[@]} -eq 0 ] && CONTRASTS=(t1n t1c t2w t2f)
 DATASET_ID="${DATASET_ID:-051}"
 CHECKPOINT="${CHECKPOINT:-checkpoint_best.pth}"
 CATEGORY="${CATEGORY:-nnUNet}"
-# Models live under PREDICTIONS_ROOT/<category>/ — derive here (after env.sh, which
-# always resets nnUNet_results to the nnUNet root and would clobber a wrapper export).
-export nnUNet_results="${PREDICTIONS_ROOT}/${CATEGORY}"
+# Models live under PREDICTIONS_ROOT/{model_type}/{training_contrast}/{category}/ — derive here
+# (after env.sh, which always resets nnUNet_results to the nnUNet root and would clobber a wrapper export).
+export nnUNet_results="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}"
 _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset${DATASET_ID}_" | head -1)"
 RUN_DIR="${nnUNet_results}/${RUN_ID}"   # model location
 
@@ -51,7 +51,7 @@ predict_fold() {
     echo "[$(date '+%H:%M:%S')] predict ${METHOD} | run=${RUN_ID} | fold=${F} | ckpt=${CHECKPOINT} | slot=${SLOT} gpu=${GPU}"
     for contrast in "${CONTRASTS[@]}"; do
         local INPUT_DIR="${nnUNet_raw}/${_DS_NAME}/imagesTs_${contrast}"
-        local OUTPUT_DIR="${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}/fold${F}/${contrast}"
+        local OUTPUT_DIR="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}/fold${F}/${contrast}"
         if [ ! -d "$INPUT_DIR" ] || [ -z "$(ls -A "$INPUT_DIR" 2>/dev/null)" ]; then
             echo "  ! fold${F} skip ${contrast}: input dir missing/empty ($INPUT_DIR) — run 05_00_build_test_inputs.py" >&2
             continue
@@ -82,7 +82,7 @@ predict_fold() {
         "
         echo "  ✓ fold${F} ${contrast} done"
     done
-    echo "[$(date '+%H:%M:%S')] fold${F} done → ${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}/fold${F}/"
+    echo "[$(date '+%H:%M:%S')] fold${F} done → ${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}/fold${F}/"
 }
 
 if [ "$FOLD" = "all" ]; then
@@ -92,7 +92,7 @@ if [ "$FOLD" = "all" ]; then
         predict_fold "$F" "$F" "$F" &
     done
     wait
-    echo "[$(date '+%H:%M:%S')] all folds done → ${PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}/"
+    echo "[$(date '+%H:%M:%S')] all folds done → ${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}/"
 else
     echo "  contrasts: ${CONTRASTS[*]}"
     predict_fold "${FOLD}" "${SLOT:-0}" "${GPU:-0}"

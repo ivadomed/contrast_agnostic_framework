@@ -17,17 +17,17 @@ cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
 S="$(cd "$(dirname "$0")" && pwd)"
 
 # Run IDs
-R090_100="chaos_v26_6_2_train090_val100_20260615_213615"
-R025_000="chaos_v26_6_2_train025_val000_20260616_010628"
-R025_100="chaos_v26_6_2_train025_val100_20260616_200514"
-A_SEM="chaos_auglabAug_synthseg_EM_train100_val000_20260615_213615"
-A_025_000="chaos_auglabAug_v26_6_2_train025_val000_20260616_010628"
-A_025_100="chaos_auglabAug_v26_6_2_train025_val100_20260616_200514"
-A_050_000="chaos_auglabAug_v26_6_2_train050_val000_20260615_213615"
-A_050_100="chaos_auglabAug_v26_6_2_train050_val100_20260616_112420"
-A_090_000="chaos_auglabAug_v26_6_2_train090_val000_20260616_200514"
-A_090_100="chaos_auglabAug_v26_6_2_train090_val100_20260616_200514"
-SEM_100="chaos_synthseg_EM_train100_val100_20260616_112420"
+R090_100="chaos_t1in_v26_6_2_train090_val100_20260615_213615"
+R025_000="chaos_t1in_v26_6_2_train025_val000_20260616_010628"
+R025_100="chaos_t1in_v26_6_2_train025_val100_20260616_200514"
+A_SEM="chaos_t1in_auglabAug_synthseg_EM_train100_val000_20260615_213615"
+A_025_000="chaos_t1in_auglabAug_v26_6_2_train025_val000_20260616_010628"
+A_025_100="chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514"
+A_050_000="chaos_t1in_auglabAug_v26_6_2_train050_val000_20260615_213615"
+A_050_100="chaos_t1in_auglabAug_v26_6_2_train050_val100_20260616_112420"
+A_090_000="chaos_t1in_auglabAug_v26_6_2_train090_val000_20260616_200514"
+A_090_100="chaos_t1in_auglabAug_v26_6_2_train090_val100_20260616_200514"
+SEM_100="chaos_t1in_synthseg_EM_train100_val100_20260616_112420"
 
 echo "[$(date '+%H:%M:%S')] Launching 36 pending predictions across slots 1, 2, 3"
 

@@ -19,8 +19,8 @@
 #   MODALITIES: ct mri or subset (default: ct mri)
 #
 # Examples:
-#   bash 06_01_evaluate_run.sh nnUNet chaos_v26_6_2_train090_val000_20260614_205937
-#   bash 06_01_evaluate_run.sh auglab chaos_synthseg_EM_train100_val000_20260611_120000 all ct
+#   bash 06_01_evaluate_run.sh nnUNet chaos_t1in_v26_6_2_train090_val000_20260614_205937
+#   bash 06_01_evaluate_run.sh auglab chaos_t1in_synthseg_EM_train100_val000_20260611_120000 all ct
 #
 # Evaluation is CPU-only (no GPU needed) — each modality is launched through
 # run_job() (scripts/job_runner/run_job.sh, sourced transitively via
@@ -38,8 +38,8 @@ shift $(( $# >= 3 ? 3 : $# )) || true
 MODALITIES=("$@"); [ ${#MODALITIES[@]} -eq 0 ] && MODALITIES=(ct mri)
 
 EVALUATE_PY="${PROJECT_ROOT}/datasets/amos/5_scripts_amos/06_evaluate/06_00_evaluate_amos.py"
-PRED_BASE="${PREDICTIONS_ROOT}/chaos_models/${CATEGORY}/${RUN_ID}"
-METRICS_BASE="${METRICS_ROOT}/chaos_models_${CATEGORY}_${RUN_ID}"
+PRED_BASE="${PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
+METRICS_BASE="${METRICS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}"
 
 [ -d "$PRED_BASE" ] || { echo "ERROR: no predictions at $PRED_BASE" >&2; exit 1; }
 

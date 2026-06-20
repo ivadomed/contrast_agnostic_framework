@@ -44,8 +44,6 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
 
-MODEL_SOURCE="${MODEL_SOURCE:-chaos}"
-
 RUN_ID="${1:-${RUN_ID:?RUN_ID required (chaos training run dir name)}}"
 FOLD="${2:-all}"
 shift $(( $# >= 2 ? 2 : $# )) || true
@@ -55,13 +53,13 @@ DATASET_ID="${CHAOS_DATASET_ID:-60}"
 CHECKPOINT="${CHECKPOINT:-checkpoint_best.pth}"
 CATEGORY="${CATEGORY:-nnUNet}"
 
-CHAOS_RUN_DIR="${CHAOS_PREDICTIONS_ROOT}/${CATEGORY}/${RUN_ID}"
+CHAOS_RUN_DIR="${CHAOS_PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 [ -d "$CHAOS_RUN_DIR" ] || {
     echo "ERROR: chaos run dir not found: $CHAOS_RUN_DIR" >&2; exit 1
 }
 echo "=================================================================="
 echo " AMOS ← CHAOS models (cross-dataset inference)"
-echo " MODEL_SOURCE : ${MODEL_SOURCE}"
+echo " MODEL_TYPE   : ${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}"
 echo " METHOD       : ${METHOD}"
 echo " TRAINER      : ${TRAINER}"
 echo " CHAOS RUN    : ${CHAOS_RUN_DIR}"
@@ -73,7 +71,7 @@ predict_fold() {
     echo "[$(date '+%H:%M:%S')] predict ${METHOD} | chaos run=${RUN_ID} | fold=${F} | slot=${SLOT} gpu=${GPU}"
     for mod in "${MODALITIES[@]}"; do
         local INPUT_DIR="${nnUNet_raw}/imagesTs_${mod}"
-        local OUTPUT_DIR="${PREDICTIONS_ROOT}/${MODEL_SOURCE}_models/${CATEGORY}/${RUN_ID}/fold${F}/${mod}"
+        local OUTPUT_DIR="${PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}/fold${F}/${mod}"
         if [ ! -d "$INPUT_DIR" ] || [ -z "$(ls -A "$INPUT_DIR" 2>/dev/null)" ]; then
             echo "  ! fold${F} skip ${mod}: $INPUT_DIR missing/empty — run 05_00_build_test_inputs.py" >&2
             continue
@@ -106,7 +104,7 @@ if [ "$FOLD" = "all" ]; then
     echo "[$(date '+%H:%M:%S')] ALL FOLDS (parallel, fold→slot/gpu) | modalities: ${MODALITIES[*]}"
     for F in 0 1 2 3; do predict_fold "$F" "$F" "$F" & done
     wait
-    echo "[$(date '+%H:%M:%S')] all folds done → ${PREDICTIONS_ROOT}/${MODEL_SOURCE}_models/${CATEGORY}/${RUN_ID}/"
+    echo "[$(date '+%H:%M:%S')] all folds done → ${PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}/"
 else
     predict_fold "${FOLD}" "${SLOT:-0}" "${GPU:-0}"
 fi

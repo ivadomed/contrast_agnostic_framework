@@ -29,7 +29,7 @@ export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_defaul
 
 # Save under 01_predictions/auglab (where auglab models live → predict/eval find them).
 DATASET_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-export NNUNET_RESULTS_BASE="${DATASET_ROOT}/8_results_brats2024-glioma/01_predictions/auglab"
+export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/auglab"
 
 # 4 folds → GPUs 0,1 (2 per GPU). Each fold on its own slot for CPU accounting.
 export FOLD_SLOT_GPU="0,0,0 1,1,0 2,2,1 3,3,1"

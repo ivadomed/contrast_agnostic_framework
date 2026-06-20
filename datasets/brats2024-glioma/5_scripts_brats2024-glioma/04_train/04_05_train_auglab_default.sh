@@ -21,6 +21,6 @@ export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_defaul
 # Save under 01_results/auglab (not 02_nnUNet_results); NNUNET_RESULTS_BASE is read
 # by 04_00_common.sh after it re-sources env.sh, so this override survives.
 DATASET_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-export NNUNET_RESULTS_BASE="${DATASET_ROOT}/8_results_brats2024-glioma/01_results/auglab"
+export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/auglab"
 
 source "$(dirname "$0")/04_00_common.sh" "$@"

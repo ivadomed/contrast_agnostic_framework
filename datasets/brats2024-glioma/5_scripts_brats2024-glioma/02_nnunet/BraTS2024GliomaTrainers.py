@@ -36,6 +36,12 @@ try:
     from brats2024_glioma.trainers.auglab_default_valaug import nnUNetTrainerBraTS2024GliomaAugLabDefaultValAug  # noqa: F401
     from brats2024_glioma.trainers.auglab_valsynth import nnUNetTrainerBraTS2024GliomaAugLabValSynth  # noqa: F401
     from brats2024_glioma.trainers.v26_6_2_train050_val100 import nnUNetTrainerBraTS2024GliomaV26_6_2_train050_val100  # noqa: F401
+    # T2w trainers (Dataset052_BraTS2024GliomaT2w)
+    from brats2024_glioma.trainers.baseline_t2w import nnUNetTrainerBraTS2024GliomaT2wBaseline  # noqa: F401
+    from brats2024_glioma.trainers.v26_6_2_t2w import nnUNetTrainerBraTS2024GliomaT2wV26_6_2  # noqa: F401
+    from brats2024_glioma.trainers.v26_6_2_t2w_train050_val100 import nnUNetTrainerBraTS2024GliomaT2wV26_6_2_train050_val100  # noqa: F401
+    from brats2024_glioma.trainers.auglab_default_t2w import nnUNetTrainerBraTS2024GliomaT2wAugLabDefault  # noqa: F401
+    from brats2024_glioma.trainers.auglab_valsynth_t2w import nnUNetTrainerBraTS2024GliomaT2wAugLabValSynth  # noqa: F401
 except ImportError as e:
     import warnings
     warnings.warn(
