@@ -7,6 +7,11 @@ reorganises it into a BIDS-compliant directory tree and writes metadata
 files (dataset_description.json, participants.tsv, per-volume .json sidecars).
 Files are hard-linked (no data duplication on the same filesystem).
 
+NOTE: this is a faithful reorganisation — it does NOT touch orientation. AMOS is
+stored LAS (CT) / RAS (MRI), whereas CHAOS/SLIVER07 are LPS, so the AMOS voxel
+arrays are flipped relative to them. Run 03_preprocess/03_00_reorient_to_lps.py
+after this step (and after 05_predict/05_00_build_test_inputs.py) to normalise.
+
 All 360 labeled cases are BIDSified:
   imagesTr / labelsTr  200 CT + 40 MRI  → split=train (reserved for future training)
   imagesVa / labelsVa  100 CT + 20 MRI  → split=val   (used as test set now)

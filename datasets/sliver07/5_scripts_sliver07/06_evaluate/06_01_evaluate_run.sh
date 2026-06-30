@@ -6,22 +6,23 @@
 # The chaos evaluate.py is method-agnostic and reused directly (no copy needed).
 #
 # Predictions are expected under:
-#   PREDICTIONS_ROOT/chaos_models/{CATEGORY}/{RUN_ID}/fold{k}/ct/
+#   PREDICTIONS_ROOT/{CHAOS_MODEL_TYPE}/{CHAOS_TRAINING_CONTRAST}/{CATEGORY}/{RUN_ID}/fold{k}/ct/
 # GT is under:
 #   2_nnUNet_sliver07/raw/labelsTs_ct/
 # Metrics written to:
-#   METRICS_ROOT/chaos_models_{CATEGORY}_{RUN_ID}/fold{k}/ct_metrics.csv
-#                                                          eval_all.csv
-#                                                          eval_summary.md
+#   METRICS_ROOT/{CHAOS_MODEL_TYPE}/{CHAOS_TRAINING_CONTRAST}/{CATEGORY}_{RUN_ID}/fold{k}/ct_metrics.csv
+#                                                                                          eval_all.csv
+#                                                                                          eval_summary.md
 #
-# Usage:
-#   bash 06_01_evaluate_run.sh <CATEGORY> <RUN_ID> [FOLD]
+# Usage (same CLI as brats/chaos 06_01_evaluate_run.sh):
+#   bash 06_01_evaluate_run.sh <RUN_ID> [FOLD]
 #   FOLD: 0-3 or "all" (default: all, 4 folds parallel)
+#   CATEGORY (nnUNet|auglab): env override; otherwise auto-detected from RUN_ID.
 #
 # Examples:
-#   bash 06_01_evaluate_run.sh nnUNet chaos_t1in_baseline_20260614_153230
-#   bash 06_01_evaluate_run.sh auglab chaos_t1in_synthseg_EM_train100_val000_20260611_120000 all
-#   bash 06_01_evaluate_run.sh nnUNet chaos_t1in_v26_6_2_train090_val000_20260614_205937 2
+#   bash 06_01_evaluate_run.sh chaos_t1in_baseline_20260614_153230
+#   CATEGORY=auglab bash 06_01_evaluate_run.sh chaos_t1in_synthseg_EM_train100_val000_20260611_120000 all
+#   bash 06_01_evaluate_run.sh chaos_t1in_v26_6_2_train090_val000_20260614_205937 2
 #
 # Evaluation is CPU-only (no GPU needed) — launched through run_job()
 # (scripts/job_runner/run_job.sh, sourced transitively via 00_utils/env.sh)
@@ -32,9 +33,25 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
 
-CATEGORY="${1:?CATEGORY required (nnUNet|auglab)}"
-RUN_ID="${2:?RUN_ID required (chaos training run dir name)}"
-FOLD="${3:-all}"
+# CLI matches brats/chaos 06_01: positional <RUN_ID> [FOLD]; CATEGORY is an env override
+# (CATEGORY=auglab bash 06_01 ...) or auto-detected below.
+RUN_ID="${1:?RUN_ID required (chaos training run dir name)}"
+FOLD="${2:-all}"
+
+# CATEGORY: env override if given, else auto-detect which
+# PREDICTIONS_ROOT/{CHAOS_MODEL_TYPE}/{CHAOS_TRAINING_CONTRAST}/<category>/ holds this RUN_ID.
+if [ -z "${CATEGORY:-}" ]; then
+    _matches=()
+    for _c in "${PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}"/*/; do
+        [ -d "${_c}${RUN_ID}" ] && _matches+=("$(basename "$_c")")
+    done
+    case "${#_matches[@]}" in
+        1) CATEGORY="${_matches[0]}";;
+        0) echo "ERROR: RUN_ID '${RUN_ID}' not found under any ${PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/<category>/" >&2; exit 1;;
+        *) echo "ERROR: RUN_ID '${RUN_ID}' in multiple categories: ${_matches[*]}. Set CATEGORY=<one>." >&2; exit 1;;
+    esac
+    echo "[$(date '+%H:%M:%S')] auto-detected CATEGORY=${CATEGORY} for ${RUN_ID}"
+fi
 
 EVALUATE_PY="${CHAOS_DATASET_ROOT}/5_scripts_chaos/06_evaluate/06_00_evaluate.py"
 GT_DIR="${nnUNet_raw}/labelsTs_ct"
@@ -57,7 +74,7 @@ eval_fold() {
     mkdir -p "$EVAL_DIR"
     echo "[$(date '+%H:%M:%S')] evaluate ${CATEGORY}/${RUN_ID} fold${F}"
 
-    run_job --name "sliver07_eval_${RUN_ID}_fold${F}" --gpus 0 --slot "${SLOT}" --wait -- \
+    run_job --name "sliver07_eval_${RUN_ID}_fold${F}" --gpus 0 --slot "${SLOT}" --mem 48G --time 01:00:00 --wait -- \
         .venv/bin/python "$EVALUATE_PY" \
         --pred_dir  "$PRED_DIR" \
         --gt_dir    "$GT_DIR" \
@@ -65,38 +82,13 @@ eval_fold() {
         --labels liver \
         --name ct \
         --out_csv "${EVAL_DIR}/ct_metrics.csv" \
-        --workers 8
+        --workers 4
 
-    # Alias to eval_all.csv so 06_03_aggregate_results.py can find it.
-    cp "${EVAL_DIR}/ct_metrics.csv" "${EVAL_DIR}/eval_all.csv"
-
-    # Per-fold summary.
-    .venv/bin/python - "${EVAL_DIR}" "${RUN_ID}" "${F}" <<'PY'
-import csv, sys
-from pathlib import Path
-import numpy as np
-
-eval_dir, run_id, fold = sys.argv[1], sys.argv[2], sys.argv[3]
-eval_dir = Path(eval_dir)
-rows = []
-with (eval_dir / "eval_all.csv").open() as f:
-    rows = list(csv.DictReader(f))
-
-labels = sorted({r["label"] for r in rows})
-lines = [f"# Evaluation — {run_id} fold {fold} | SLIVER07 CT | liver only", "",
-         f"Cases: {len({r['case'] for r in rows})} | Label: liver (binarised from chaos 4-label output)", ""]
-for metric, title in (("dice", "Dice (↑)"), ("hd95", "HD95 mm (↓)")):
-    vals = np.array([float(r[metric]) for r in rows], float)
-    n = int(np.isfinite(vals).sum())
-    mn, sd = np.nanmean(vals), np.nanstd(vals)
-    lines.append(f"**{title}**: {mn:.4f}±{sd:.4f}  (n={n})")
-lines.append("")
-
-out = eval_dir / "eval_summary.md"
-out.write_text("\n".join(lines))
-print("\n".join(lines))
-print(f"→ {out}")
-PY
+    # Merge ct CSV → eval_all.csv (consumed by 06_03_aggregate) + summary (shared)
+    .venv/bin/python "${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/summarize_fold.py" \
+        "${EVAL_DIR}" "${RUN_ID}" "${F}" --group-col modality --groups-word Modalities \
+        --title-suffix " | SLIVER07 CT | liver only" \
+        --groups ct
     echo "[$(date '+%H:%M:%S')] fold${F} done → ${EVAL_DIR}/"
 }
 

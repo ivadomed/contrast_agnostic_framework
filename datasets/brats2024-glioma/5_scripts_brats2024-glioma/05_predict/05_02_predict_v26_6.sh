@@ -11,4 +11,4 @@ set -euo pipefail
 METHOD="v26_6"
 TRAINER="nnUNetTrainerBraTS2024GliomaV26_6"
 CATEGORY="nnUNet"
-source "$(dirname "$0")/05_predict_common.sh" "$@"
+source "$(dirname "$0")/05_01_predict_common.sh" "$@"

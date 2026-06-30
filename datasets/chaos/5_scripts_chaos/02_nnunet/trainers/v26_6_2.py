@@ -1,66 +1,29 @@
 """
-nnUNetTrainerCHAOSV26_6_2 — V26_6_2 on-the-fly synthesis for CHAOS.
+nnUNetTrainerCHAOSV26_6_2 — V26_6_2 synthesis for CHAOS.
 
-Thin dataset binding: it only wires CHAOS's data loading (nnUNet's default
-loader + V26_6 synth-friendly transforms) and sets the axial WandB slice axis.
-ALL synthesis / step / viz logic lives in the shared base
-(src/nnunet/trainers/v26_6_base.py via nnUNetTrainerV26_6_2):
+CHANGED 2026-06-25: v26_6_2 now runs the **AugLab GPU** ImageContrastV26_6_2GPUTransform
+(patch-based, standard nnU-Net pipeline) instead of the native src/synthesis path — the
+SAME K-means/Voronoi contrast synthesis, applied per-patch. This makes the synthesis
+backend identical across all datasets and avoids the `torch.multinomial` 2**24 limit the
+native full-volume path hit on large volumes (e.g. ON-Harmony T2w).
 
-  * synthesis variant      → nnUNetTrainerV26_6_2._synthesize (per-label remap)
-  * train/val synth prob   → train_synth_prob / val_synth_prob (default 0.9 / 1.0)
-  * patch train/val steps  → _patch_train_step / _patch_validation_step
-  * honest WandB panels    → base renders the exact tensor each step fed the net
-
-To change how much is synthesised, set train_synth_prob / val_synth_prob — never
-re-implement the steps here.
+"Without the AugLab augmentation": the train config keeps ONLY the contrast synthesis +
+standard spatial DA (rotation/scaling via nnUNetSpatialTransform, mirroring via Flip);
+all other AugLab intensity transforms are off. Synth probabilities come entirely from the
+config JSONs the 04_train wrapper exports (NOT class attributes):
+  AUGLAB_PARAMS_GPU_JSON      → train: transform_params_gpu_v26_6_2_synth_spatialDA_train0NN.json
+  AUGLAB_VAL_PARAMS_GPU_JSON  → val:   transform_params_gpu_VALsynthonly_ImageContrastV26_6_2GPUTransform.json
 
 MRO: nnUNetTrainerCHAOSV26_6_2
-  → nnUNetTrainerCHAOSBase   (do_split — anti-contamination guard)
-  → nnUNetTrainerV26_6_2     (per-label synthesis hook)
-  → nnUNetTrainerV26_6       (steps, viz, synth probability)
-  → nnUNetTrainerFast / nnUNetTrainer
+  → nnUNetTrainerCHAOSAugLabValSynth  (synth-only validation)
+  → nnUNetTrainerCHAOSAugLabDefault   (AugLab GPU train transforms)
+  → nnUNetTrainerCHAOSBase            (do_split — anti-contamination guard)
+  → nnUNetTrainerDAExtGPU             (standard patch loader + GPU transforms)
 """
 from __future__ import annotations
 
-from nnunetv2.training.nnUNetTrainer.nnUNetTrainer import nnUNetTrainer
-
-from chaos.trainers.base import nnUNetTrainerCHAOSBase
-from src.nnunet.trainers.v26_6_2_base import nnUNetTrainerV26_6_2
-from src.nnunet.trainers.v26_6_base import _build_synth_training_transforms
+from chaos.trainers.auglab_valsynth import nnUNetTrainerCHAOSAugLabValSynth
 
 
-class nnUNetTrainerCHAOSV26_6_2(nnUNetTrainerCHAOSBase, nnUNetTrainerV26_6_2):
-    """V26_6_2 for CHAOS (Dataset060, single T1-DUAL in-phase channel)."""
-
-    # Anisotropic abdominal volumes → slice the first (axial) spatial axis.
-    _wandb_slice_axis: int = 0
-
-    # ── Data loading: nnUNet default loader + V26_6 synth transforms ───────────
-
-    def get_dataloaders(self):
-        self._configure_v26_6()
-        return nnUNetTrainer.get_dataloaders(self)
-
-    def get_training_transforms(self, *args, **kwargs):
-        return _build_synth_training_transforms(
-            self._patch_size_cfg,
-            self._rotation_for_DA,
-            self._deep_supervision_scales,
-            self._mirror_axes,
-            self._do_dummy_2d,
-            use_mask_for_norm=self.configuration_manager.use_mask_for_norm,
-            ignore_label=self.label_manager.ignore_label,
-        )
-
-    def get_validation_transforms(self, *args, **kwargs):
-        from batchgeneratorsv2.transforms.utils.compose import ComposeTransforms
-        from batchgeneratorsv2.transforms.utils.remove_label import RemoveLabelTansform
-        return ComposeTransforms([RemoveLabelTansform(-1, 0)])
-
-    # ── Steps: patch pipeline, all logic in the base ───────────────────────────
-
-    def train_step(self, batch: dict) -> dict:
-        return self._patch_train_step(batch)
-
-    def validation_step(self, batch: dict) -> dict:
-        return self._patch_validation_step(batch)
+class nnUNetTrainerCHAOSV26_6_2(nnUNetTrainerCHAOSAugLabValSynth):
+    """V26_6_2 for CHAOS via the AugLab contrast transform (see module docstring)."""

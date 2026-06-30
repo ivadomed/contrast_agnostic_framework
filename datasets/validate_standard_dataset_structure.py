@@ -20,9 +20,9 @@ Expected layout per dataset:
     6_checkpoints_<dataset>/
     7_analysis_<dataset>/
     8_results_<dataset>/
-      01_results/
-      02_nnUNet_results/
-      03_aggregated_results/
+      01_predictions/        ← REQUIRED (per-fold model predictions)
+      02_metrics/            ← REQUIRED (per-run Dice/HD95 + aggregated reports)
+      03_aggregated_results/ ← optional
     9_tests_<dataset>/
 
 Naming rules:
@@ -33,7 +33,12 @@ Naming rules:
   - Script subdirs:  NN_name          (NN = two-digit number)
   - Script files:    NN_NN_name.ext   (both parts two-digit)
   - 00_utils/ is exempt from file naming rules (config/helper dir)
+  - *Trainers.py files are exempt (nnU-Net registration shims must keep this
+    exact name for recursive_find_python_class discovery — see CLAUDE.md)
   - No unnumbered items at dataset root or inside 5_scripts_*/
+
+Cross-dataset shared code lives in datasets/00_commun_scripts/ — it is NOT a
+dataset and is skipped by this validator (see IGNORED_ENTRIES).
 """
 
 import re
@@ -62,6 +67,9 @@ REQUIRED_SLOTS = {
 # Slot 0 (raw) and slot 1 (BIDS) data-source slots — may coexist (raw kept alongside BIDSified version)
 SLOT0_TYPE = "raw"    # 0_raw_<dataset>  — non-BIDS
 SLOT1_TYPE = "BIDS"   # 1_BIDS_<dataset> — BIDS
+
+# Entries directly under datasets/ that are NOT datasets and must be skipped.
+IGNORED_ENTRIES = {"00_commun_scripts", "__pycache__"}
 
 # Non-dir items permitted at the dataset root (documentation only).
 ALLOWED_ROOT_FILES = {"README.md"}
@@ -163,6 +171,10 @@ def validate_dataset(ds_path: Path) -> list[str]:
             for f in sorted(item.iterdir()):
                 if f.name.startswith(".") or f.is_dir():
                     continue
+                # nnU-Net trainer registration shims must keep their exact class-derived
+                # name (recursive_find_python_class scans by filename) — see CLAUDE.md.
+                if f.name.endswith("Trainers.py"):
+                    continue
                 if not SCRIPT_FILE_RE.match(f.name):
                     errors.append(f"  [5_scripts/{item.name}] non-standard file name "
                                   f"(expected NN_NN_name.ext): {f.name!r}")
@@ -180,7 +192,8 @@ def validate_dataset(ds_path: Path) -> list[str]:
 
 def main() -> int:
     datasets = sorted(p for p in DATASETS_ROOT.iterdir()
-                      if p.is_dir() and not p.name.startswith(".") and p.name != "__pycache__")
+                      if p.is_dir() and not p.name.startswith(".")
+                      and p.name not in IGNORED_ENTRIES)
 
     if not datasets:
         print("No dataset directories found under datasets/")

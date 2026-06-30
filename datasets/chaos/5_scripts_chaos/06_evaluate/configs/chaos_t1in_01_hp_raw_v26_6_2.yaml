@@ -1,0 +1,12 @@
+title: "CHAOS T1in — v26_6_2 HP tuning (raw)"
+metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+output_prefix: "03_01_hp_raw_v26_6_2"
+in_domain_contrast: t1in
+
+runs:
+  - chaos_t1in_v26_6_2_train025_val000_20260616_010628
+  - chaos_t1in_v26_6_2_train025_val100_20260616_200514
+  - chaos_t1in_v26_6_2_train050_val000_20260616_010628
+  - chaos_t1in_v26_6_2_train050_val100_20260615_213615
+  - chaos_t1in_v26_6_2_train090_val000_20260614_205937
+  - chaos_t1in_v26_6_2_train090_val100_20260615_213615

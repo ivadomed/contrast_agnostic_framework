@@ -2,9 +2,14 @@
 """
 Aggregate SLIVER07 evaluation results across all chaos-trained methods.
 
-Reads METRICS_ROOT/chaos_model/t1in/{CATEGORY}_{RUN_ID}/fold{k}/eval_all.csv for every
-run found under the metrics root, computes cross-fold Dice and HD95 (liver label only),
-and writes a comparison Markdown table to the metrics root's 00_comparison.md.
+Reads METRICS_ROOT/chaos_model/<contrast>/{CATEGORY}_{RUN_ID}/fold{k}/eval_all.csv
+for every run found under the metrics root, computes cross-fold Dice and HD95
+(liver label only), and writes a comparison Markdown table to the metrics root's
+00_comparison.md.
+
+This keeps its own liver-only report layout, but the cross-fold statistic comes
+from the shared commun aggregation core. The fold loader here is the liver-only
+variant (SLIVER07 GT annotates the liver alone), so it stays local.
 
 Usage:
   python 06_03_aggregate_results.py
@@ -12,12 +17,16 @@ Usage:
 """
 import argparse
 import csv
-import os
+import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]
+                       / "00_commun_scripts" / "00_00_utils"))
+from eval_aggregate import cross_fold_stats  # noqa: E402
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_METRICS_ROOT = DATASET_ROOT / "8_results_sliver07" / "02_metrics"
@@ -41,19 +50,6 @@ def load_run(run_dir: Path) -> dict:
     return dict(data)
 
 
-def cross_fold_stats(per_fold: dict) -> tuple:
-    """per_fold: {fold: [values]} → (mean, std, n_folds) across per-fold means."""
-    fold_means = []
-    for vs in per_fold.values():
-        arr = np.array(vs, float)
-        if np.isfinite(arr).any():
-            fold_means.append(np.nanmean(arr))
-    if not fold_means:
-        return float("nan"), float("nan"), 0
-    fm = np.array(fold_means)
-    return float(np.nanmean(fm)), float(np.nanstd(fm)), len(fm)
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -64,7 +60,7 @@ def main() -> None:
     if not root.exists():
         raise SystemExit(f"METRICS_ROOT not found: {root}")
 
-    runs: dict[str, dict] = {}
+    runs: dict = {}
     for run_dir in sorted(root.iterdir()):
         if not run_dir.is_dir() or run_dir.name.startswith("."):
             continue

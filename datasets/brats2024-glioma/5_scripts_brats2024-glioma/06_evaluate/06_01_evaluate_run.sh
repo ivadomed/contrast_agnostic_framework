@@ -50,7 +50,7 @@ if [ -z "${CATEGORY:-}" ]; then
     echo "[$(date '+%H:%M:%S')] auto-detected CATEGORY=${CATEGORY} for ${RUN_ID}"
 fi
 
-_DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset${DATASET_ID}_" | head -1)"
+_DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset0*${DATASET_ID}_" | head -1)"
 GT_DIR="${nnUNet_raw}/${_DS_NAME}/labelsTr"
 DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
@@ -74,69 +74,32 @@ eval_fold() {
         local c; c="$(basename "$d")"
         [ "$c" = "eval" ] && continue
         [ -n "$(ls -A "$d"/*.nii.gz 2>/dev/null)" ] || continue
+        [ -f "${EVAL_DIR}/${c}_metrics.csv" ] && { contrasts+=("$c"); continue; }
         contrasts+=("$c")
         run_job --name "brats_eval_${RUN_ID}_fold${F}_${c}" \
-            --gpus 0 --slot "${SLOT}" --wait -- \
-            .venv/bin/python "${HERE}/06_00_evaluate.py" \
+            --gpus 0 --slot "${SLOT}" --time "3:00:00" \
+            --log "${EVAL_DIR}/${c}_eval.log" --wait -- \
+            "${PROJECT_ROOT}/.venv/bin/python" "${HERE}/06_00_evaluate.py" \
             --pred_dir "$d" --gt_dir "$GT_DIR" --dataset_json "$DJ" \
             --name "$c" --out_csv "${EVAL_DIR}/${c}_metrics.csv" \
-            --workers 16 &
+            --workers 8 &
         pids+=($!)
     done
-    [ ${#pids[@]} -gt 0 ] && wait "${pids[@]}"
+    local any_failed=0
+    for pid in "${pids[@]}"; do
+        wait "$pid" || any_failed=1
+    done
+    [ "$any_failed" = "1" ] && echo "  ! fold${F}: some contrast eval jobs failed — check *_eval.log files in ${EVAL_DIR}" >&2
 
     if [ ${#contrasts[@]} -eq 0 ]; then
         echo "  ! fold${F}: no contrast predictions found — skipping summary" >&2
         return
     fi
 
-    # per-fold summary: aggregate per-contrast CSVs → combined CSV + markdown table
-    .venv/bin/python - "$EVAL_DIR" "$RUN_ID" "$F" "${contrasts[@]}" << 'PY'
-import csv, sys
-from pathlib import Path
-import numpy as np
-
-eval_dir, run_id, fold, *contrasts = sys.argv[1:]
-eval_dir = Path(eval_dir)
-
-rows = []
-for c in contrasts:
-    p = eval_dir / f"{c}_metrics.csv"
-    if p.exists():
-        with p.open() as f:
-            rows.extend(list(csv.DictReader(f)))
-
-with (eval_dir / "eval_all.csv").open("w", newline="") as f:
-    w = csv.DictWriter(f, fieldnames=["group", "case", "label", "dice", "hd95"])
-    w.writeheader(); w.writerows(rows)
-
-labels = sorted({r["label"] for r in rows})
-def agg(c, lab, key):
-    v = np.array([float(r[key]) for r in rows
-                  if r["group"] == c and r["label"] == lab], float)
-    n = int(np.isfinite(v).sum())
-    return (np.nanmean(v) if n else float("nan"),
-            np.nanstd(v) if n else float("nan"), n)
-
-lines = [f"# Evaluation — {run_id} (fold {fold})", "",
-         f"Contrasts: {', '.join(contrasts)}  |  Labels: {', '.join(labels)}", ""]
-for metric, fmt in (("dice", "{:.4f}±{:.4f}"), ("hd95", "{:.2f}±{:.2f}")):
-    title = "Dice (↑)" if metric == "dice" else "HD95 mm (↓)"
-    lines += [f"## {title}", "",
-              "| contrast | " + " | ".join(labels) + " |",
-              "|" + "---|" * (len(labels) + 1)]
-    for c in contrasts:
-        cells = []
-        for lab in labels:
-            m, s, n = agg(c, lab, metric)
-            cells.append("—" if not np.isfinite(m) else fmt.format(m, s))
-        lines.append(f"| {c} | " + " | ".join(cells) + " |")
-    lines.append("")
-
-(eval_dir / "eval_summary.md").write_text("\n".join(lines))
-print("\n".join(lines))
-print(f"→ {eval_dir}/eval_summary.md")
-PY
+    # per-fold summary: merge per-contrast CSVs → eval_all.csv + markdown table (shared)
+    .venv/bin/python "${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/summarize_fold.py" \
+        "$EVAL_DIR" "$RUN_ID" "$F" --group-col contrast --groups-word Contrasts \
+        --groups "${contrasts[@]}"
     echo "[$(date '+%H:%M:%S')] fold${F} evaluation done → ${EVAL_DIR}/"
 }
 

@@ -59,6 +59,16 @@ _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset0*${DATASET_ID}_" | head -1)"
 DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 
+# Translation-robustness experiment (opt-in via EXP_TRANSLATION=NNN, paired with the
+# predict-side flag): read predictions from .../fold{F}/exp_translation_NNN/<mod>/,
+# score against the translated GT labelsTs_<mod>_translation_NNN, and write metrics
+# under METRICS_ROOT/.../<contrast>/exp_translation_NNN/<cat>_<run>/. Unset → normal eval.
+EXP_SUBDIR=""; GT_SUFFIX=""
+if [ -n "${EXP_TRANSLATION:-}" ]; then
+    EXP_SUBDIR="exp_translation_${EXP_TRANSLATION}"
+    GT_SUFFIX="_translation_${EXP_TRANSLATION}"
+fi
+
 [ -d "$PRED_BASE" ] || { echo "ERROR: no predictions at $PRED_BASE" >&2; exit 1; }
 
 # Scoreable label names per modality, from test_cases.json's scoreable_organs:
@@ -82,8 +92,8 @@ PY
 
 eval_fold() {
     local F="$1" SLOT="${2:-0}"
-    local PRED_ROOT="${PRED_BASE}/fold${F}"
-    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}/fold${F}"
+    local PRED_ROOT="${PRED_BASE}/fold${F}${EXP_SUBDIR:+/${EXP_SUBDIR}}"
+    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}${EXP_SUBDIR:+/${EXP_SUBDIR}}/${CATEGORY}_${RUN_ID}/fold${F}"
 
     if [ ! -d "$PRED_ROOT" ]; then
         echo "  ! fold${F}: no predictions dir at $PRED_ROOT — skipping" >&2
@@ -96,7 +106,7 @@ eval_fold() {
     for d in "$PRED_ROOT"/*/; do
         local m; m="$(basename "$d")"
         [ -n "$(ls -A "$d"/*.nii.gz 2>/dev/null)" ] || continue
-        local GT_DIR="${nnUNet_raw}/${_DS_NAME}/labelsTs_${m}"   # per-modality GT
+        local GT_DIR="${nnUNet_raw}/${_DS_NAME}/labelsTs_${m}${GT_SUFFIX}"   # per-modality GT (translated variant if EXP set)
         if [ ! -d "$GT_DIR" ]; then
             echo "  ! fold${F} ${m}: no GT dir ($GT_DIR) — skipping" >&2
             continue
@@ -105,7 +115,7 @@ eval_fold() {
         # Restrict to this modality's scoreable labels (ct → liver only).
         local LBL_ARG=""
         [ -n "${MOD_LABELS[$m]:-}" ] && LBL_ARG="--labels ${MOD_LABELS[$m]}"
-        run_job --name "chaos_eval_${RUN_ID}_fold${F}_${m}" --gpus 0 --mem 32G --slot "${SLOT}" --wait -- \
+        run_job --name "chaos_eval_${RUN_ID}_fold${F}_${m}" --gpus 0 --mem 32G --time "01:00:00" --slot "${SLOT}" --wait -- \
             .venv/bin/python "${HERE}/06_00_evaluate.py" \
             --pred_dir "$d" --gt_dir "$GT_DIR" --dataset_json "$DJ" \
             --name "$m" --out_csv "${EVAL_DIR}/${m}_metrics.csv" \
@@ -119,54 +129,11 @@ eval_fold() {
         return
     fi
 
-    # per-fold summary: aggregate per-modality CSVs → combined CSV + markdown table
-    .venv/bin/python - "$EVAL_DIR" "$RUN_ID" "$F" "${mods[@]}" << 'PY'
-import csv, sys
-from pathlib import Path
-import numpy as np
-
-eval_dir, run_id, fold, *mods = sys.argv[1:]
-eval_dir = Path(eval_dir)
-
-rows = []
-for m in mods:
-    p = eval_dir / f"{m}_metrics.csv"
-    if p.exists():
-        with p.open() as f:
-            rows.extend(list(csv.DictReader(f)))
-
-with (eval_dir / "eval_all.csv").open("w", newline="") as f:
-    w = csv.DictWriter(f, fieldnames=["group", "case", "label", "dice", "hd95"])
-    w.writeheader(); w.writerows(rows)
-
-labels = sorted({r["label"] for r in rows})
-def agg(m, lab, key):
-    v = np.array([float(r[key]) for r in rows
-                  if r["group"] == m and r["label"] == lab], float)
-    n = int(np.isfinite(v).sum())
-    return (np.nanmean(v) if n else float("nan"),
-            np.nanstd(v) if n else float("nan"), n)
-
-lines = [f"# Evaluation — {run_id} (fold {fold})", "",
-         f"Modalities: {', '.join(mods)}  |  Labels: {', '.join(labels)}",
-         "(CT modality: read `liver` only — kidney/spleen GT absent.)", ""]
-for metric, fmt in (("dice", "{:.4f}±{:.4f}"), ("hd95", "{:.2f}±{:.2f}")):
-    title = "Dice (↑)" if metric == "dice" else "HD95 mm (↓)"
-    lines += [f"## {title}", "",
-              "| modality | " + " | ".join(labels) + " |",
-              "|" + "---|" * (len(labels) + 1)]
-    for m in mods:
-        cells = []
-        for lab in labels:
-            mn, sd, n = agg(m, lab, metric)
-            cells.append("—" if not np.isfinite(mn) else fmt.format(mn, sd))
-        lines.append(f"| {m} | " + " | ".join(cells) + " |")
-    lines.append("")
-
-(eval_dir / "eval_summary.md").write_text("\n".join(lines))
-print("\n".join(lines))
-print(f"→ {eval_dir}/eval_summary.md")
-PY
+    # per-fold summary: merge per-modality CSVs → eval_all.csv + markdown table (shared)
+    .venv/bin/python "${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/summarize_fold.py" \
+        "$EVAL_DIR" "$RUN_ID" "$F" --group-col modality --groups-word Modalities \
+        --note "(CT modality: read \`liver\` only — kidney/spleen GT absent.)" \
+        --groups "${mods[@]}"
     echo "[$(date '+%H:%M:%S')] fold${F} evaluation done → ${EVAL_DIR}/"
 }
 
@@ -176,7 +143,7 @@ if [ "$FOLD" = "all" ]; then
         eval_fold "$F" "$F" &
     done
     wait
-    echo "[$(date '+%H:%M:%S')] all folds evaluated → ${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}/"
+    echo "[$(date '+%H:%M:%S')] all folds evaluated → ${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}${EXP_SUBDIR:+/${EXP_SUBDIR}}/${CATEGORY}_${RUN_ID}/"
 else
     eval_fold "${FOLD}" "${SLOT:-0}"
 fi

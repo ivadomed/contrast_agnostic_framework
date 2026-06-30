@@ -1,0 +1,16 @@
+# ON-Harmony cross-contrast benchmark — models TRAINED on T1w, tested on every contrast.
+# STANDARD layout (same as chaos): consumed by the shared aggregator
+# scripts/evaluate/aggregate_from_config.py via 06_06_aggregate_from_config.sh.
+# Eval (06_01) writes fold*/eval_all.csv under metrics_dir/{category}_{run_id}/.
+title: "ON-Harmony — T1w-trained models, cross-contrast"
+metrics_dir: "${METRICS_ROOT}/on_harmony_model/T1w"
+output_prefix: "results"
+in_domain_contrast: T1w
+
+runs:
+  - on-harmony_T1w_baseline_20260623_192811
+  - on-harmony_T1w_v26_6_2_train050_val100_20260623_192811
+  - on-harmony_T1w_auglab_default_20260623_192811
+  - on-harmony_T1w_synthseg_EM_20260623_192811
+  - on-harmony_T1w_synthseg_noEM_20260623_192811
+  - on-harmony_T1w_auglabAug_v26_6_2_train025_val100_20260623_192811

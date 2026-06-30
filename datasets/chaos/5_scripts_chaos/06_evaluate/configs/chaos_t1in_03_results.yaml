@@ -1,0 +1,12 @@
+title: "CHAOS T1in — results"
+metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+output_prefix: "03_03_results"
+in_domain_contrast: t1in
+
+runs:
+  - chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514
+  - chaos_t1in_v26_6_2_train050_val100_20260615_213615
+  - chaos_t1in_synthseg_EM_train100_val000_20260611_120000
+  - chaos_t1in_synthseg_noEM_train100_val000_20260611_120000
+  - chaos_t1in_auglab_default_20260611_120000
+  - chaos_t1in_baseline_20260614_153230

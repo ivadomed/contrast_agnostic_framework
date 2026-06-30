@@ -2,21 +2,28 @@
 """
 Aggregate AMOS evaluation results across all chaos-trained methods.
 
-Reads METRICS_ROOT/chaos_model/t1in/{CATEGORY}_{RUN_ID}/fold{k}/eval_all.csv,
-computes cross-fold Dice and HD95 per organ per modality, and writes a
-comparison table to the metrics root's 00_comparison.md.
+Reads METRICS_ROOT/chaos_model/<contrast>/{CATEGORY}_{RUN_ID}/fold{k}/eval_all.csv,
+computes cross-fold Dice and HD95 per organ per modality, and writes an
+organ-centric comparison table to the metrics root's 00_comparison.md.
+
+This keeps its own (organ-centric, CT/MRI-generalization) report layout — distinct
+from the modality-grid aggregator brats/chaos use — but the cross-fold primitives
+(load_run, cross_fold_stats) come from the shared commun aggregation core.
 
 Usage:
   python 06_03_aggregate_results.py
   python 06_03_aggregate_results.py --metrics_root <path>
 """
 import argparse
-import csv
-from collections import defaultdict
+import sys
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]
+                       / "00_commun_scripts" / "00_00_utils"))
+from eval_aggregate import load_run, cross_fold_stats  # noqa: E402
 
 DATASET_ROOT         = Path(__file__).resolve().parents[2]
 DEFAULT_METRICS_ROOT = DATASET_ROOT / "8_results_amos" / "02_metrics"
@@ -30,33 +37,6 @@ ORGAN_MAP = {
 ORGANS = list(ORGAN_MAP)
 
 
-def load_run(run_dir: Path) -> dict:
-    """Return {metric: {modality: {organ: {fold: [values]}}}}."""
-    data: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
-    for fold_dir in sorted(run_dir.glob("fold*")):
-        csv_path = fold_dir / "eval_all.csv"
-        if not csv_path.exists():
-            continue
-        fold = fold_dir.name
-        with csv_path.open() as f:
-            for row in csv.DictReader(f):
-                mod = row["group"]
-                organ = row["label"]
-                for key in ("dice", "hd95"):
-                    data[key][mod][organ][fold].append(float(row[key]))
-    return dict(data)
-
-
-def cross_fold_stats(per_fold: dict) -> tuple:
-    fold_means = [np.nanmean(np.array(vs, float))
-                  for vs in per_fold.values()
-                  if np.isfinite(np.array(vs, float)).any()]
-    if not fold_means:
-        return float("nan"), float("nan"), 0
-    fm = np.array(fold_means)
-    return float(np.nanmean(fm)), float(np.nanstd(fm)), len(fm)
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -67,7 +47,7 @@ def main() -> None:
     if not root.exists():
         raise SystemExit(f"METRICS_ROOT not found: {root}")
 
-    runs: dict[str, dict] = {}
+    runs: dict = {}
     for run_dir in sorted(root.iterdir()):
         if not run_dir.is_dir() or run_dir.name.startswith("."):
             continue

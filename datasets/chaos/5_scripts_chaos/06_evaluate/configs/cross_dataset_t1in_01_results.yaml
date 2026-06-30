@@ -1,0 +1,36 @@
+title: "CHAOS T1in models — cross-dataset results"
+in_domain_contrast: chaos_t1in
+output_prefix: "04_01_cross_dataset_t1in"
+output_dir: "${PROJECT_ROOT}/datasets/chaos/8_results_chaos/02_metrics/chaos_model/t1in"
+
+column_order:
+  - chaos_t1in
+  - chaos_t1out
+  - chaos_t2spir
+  - chaos_ct_liver
+  - amos_ct
+  - amos_mri
+  - sliver07_ct_liver
+
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/datasets/chaos/8_results_chaos/02_metrics/chaos_model/t1in"
+    column_prefix: "chaos_"
+    column_rename:
+      ct: chaos_ct_liver     # chaos CT GT only has liver
+  - metrics_dir: "${PROJECT_ROOT}/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in"
+    column_prefix: "amos_"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/sliver07/8_results_sliver07/02_metrics/chaos_model/t1in"
+    column_rename:
+      ct: sliver07_ct_liver  # sliver07 GT only has liver
+  # NOTE: TRUSTED intentionally NOT included here. Its US eval is confounded by a
+  # center-bias artifact (per-kidney crop → kidney dead-center; a centered blob scores
+  # ~31% Dice, above every chaos model's US), so its numbers don't belong in the
+  # cross-dataset comparison. TRUSTED's own results live in datasets/trusted/.
+
+runs:
+  - chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514
+  - chaos_t1in_v26_6_2_train050_val100_20260615_213615
+  - chaos_t1in_synthseg_EM_train100_val000_20260611_120000
+  - chaos_t1in_synthseg_noEM_train100_val000_20260611_120000
+  - chaos_t1in_auglab_default_20260611_120000
+  - chaos_t1in_baseline_20260614_153230

@@ -1,0 +1,12 @@
+title: "CHAOS T2spir — results"
+metrics_dir: "${METRICS_ROOT}/chaos_model/t2spir"
+output_prefix: "03_01_results"
+in_domain_contrast: t2spir
+
+runs:
+  - chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633
+  - chaos_t2spir_v26_6_2_train050_val100_20260620_112122
+  - chaos_t2spir_synthseg_EM_20260620_112357
+  - chaos_t2spir_synthseg_noEM_20260620_112515
+  - chaos_t2spir_auglab_default_20260620_112240
+  - chaos_t2spir_baseline_20260620_111146

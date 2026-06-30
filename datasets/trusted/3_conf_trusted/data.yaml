@@ -1,0 +1,28 @@
+# TRUSTED data config (evaluation-only — see datasets/trusted/README.md).
+# Unlike training datasets, TRUSTED has no Hydra training pipeline; this file just
+# documents the dataset shape for downstream tooling and human reference.
+name: trusted
+role: test-only                 # evaluates foreign (chaos) models; never trained on
+source: "IRCAD France TRUSTED (figshare file 51079133) — NOT redistributable"
+
+modalities:
+  ct:
+    description: "Contrast-enhanced abdominal CT, both kidneys per volume"
+    n_volumes: 48
+    channels: 1
+  us:
+    description: "3D ultrasound, single kidney per volume (acq-R / acq-L)"
+    n_volumes: 59
+    channels: 1
+
+orientation: LPS                # already canonical; 03_preprocess check is a no-op
+labels:                         # TRUSTED's own GT label space (single binary kidney)
+  background: 0
+  kidney: 1
+
+# Cross-dataset scoring: chaos models predict right_kidney(2)+left_kidney(3); the
+# evaluator merges {2,3} → kidney vs TRUSTED GT(1). See 06_00_evaluate_trusted.py.
+evaluated_with:
+  source_dataset: chaos
+  model_type: chaos_model
+  contrasts: [t1in, t2spir]

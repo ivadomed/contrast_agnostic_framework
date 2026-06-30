@@ -1,0 +1,12 @@
+title: "BraTS 2024 Glioma T1n — results"
+metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t1n"
+output_prefix: "03_01_results"
+in_domain_contrast: t1n
+
+runs:
+  - brats2024-glioma_t1n_baseline_20260622_044535
+  - brats2024-glioma_t1n_v26_6_2_train050_val100_20260622_044535
+  - brats2024-glioma_t1n_auglab_default_20260622_044535
+  - brats2024-glioma_t1n_synthseg_EM_20260622_044535
+  - brats2024-glioma_t1n_synthseg_noEM_20260622_044535
+  - brats2024-glioma_t1n_auglabAug_v26_6_2_train025_val100_20260622_044535

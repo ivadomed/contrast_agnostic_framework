@@ -30,11 +30,14 @@ if _root:
             sys.path.insert(0, _p)
 
 try:
-    from on_harmony.trainers.baseline import nnUNetTrainerOnHarmonyBaseline      # noqa: F401
-    from on_harmony.trainers.v26_6 import nnUNetTrainerOnHarmonyV26_6            # noqa: F401
-    from on_harmony.trainers.v26_6_2 import nnUNetTrainerOnHarmonyV26_6_2        # noqa: F401
-    from on_harmony.trainers.synthseg_a import nnUNetTrainerOnHarmonySynthSegA   # noqa: F401
-    from on_harmony.trainers.synthseg_b import nnUNetTrainerOnHarmonySynthSegB   # noqa: F401
+    from on_harmony.trainers.baseline import nnUNetTrainerOnHarmonyBaseline                                    # noqa: F401
+    from on_harmony.trainers.v26_6 import nnUNetTrainerOnHarmonyV26_6                                         # noqa: F401
+    from on_harmony.trainers.v26_6_2 import nnUNetTrainerOnHarmonyV26_6_2                                     # noqa: F401
+    from on_harmony.trainers.v26_6_2_train050_val100 import nnUNetTrainerOnHarmonyV26_6_2_train050_val100      # noqa: F401
+    from on_harmony.trainers.synthseg_a import nnUNetTrainerOnHarmonySynthSegA                                 # noqa: F401
+    from on_harmony.trainers.synthseg_b import nnUNetTrainerOnHarmonySynthSegB                                 # noqa: F401
+    from on_harmony.trainers.auglab_default import nnUNetTrainerOnHarmonyAugLabDefault                         # noqa: F401
+    from on_harmony.trainers.auglab_valsynth import nnUNetTrainerOnHarmonyAugLabValSynth                       # noqa: F401
 except ImportError as e:
     import warnings
     warnings.warn(

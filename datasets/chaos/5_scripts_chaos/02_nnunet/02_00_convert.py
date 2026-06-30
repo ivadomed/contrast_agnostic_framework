@@ -13,26 +13,19 @@ Usage:
   python 02_00_convert.py [--dataset-id 60] [--jobs N]
 """
 import argparse
-import gzip
 import json
-import shutil
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
 from pathlib import Path
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(DATASET_ROOT.parent / "00_commun_scripts" / "00_00_utils"))
+from nnunet_convert_lib import gzip_copy, run_threaded_conversion, write_dataset_json  # noqa: E402
 BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "chaos-abdominal"
 NNUNET_RAW   = DATASET_ROOT / "2_nnUNet_chaos" / "raw"
 DERIV_DIR    = BIDS_ROOT / "derivatives" / "manual_masks"
 TEST_CASES   = DATASET_ROOT / "4_splits_chaos" / "test_cases.json"
 
 LABELS = {"background": 0, "liver": 1, "right_kidney": 2, "left_kidney": 3, "spleen": 4}
-
-
-def gzip_copy(src: Path, dst: Path) -> None:
-    if dst.exists():
-        return
-    with open(src, "rb") as f_in, gzip.open(dst, "wb", compresslevel=1) as f_out:
-        shutil.copyfileobj(f_in, f_out)
 
 
 def convert_case(case_id: str, images_tr: Path, labels_tr: Path) -> str:
@@ -71,33 +64,20 @@ def main() -> None:
     print(f"Converting {len(cv_cases)} MR CV cases (T1 in-phase) → {ds_name}")
     print(f"  excluded (test-only): {len(holdout)} MR holdout + all CT")
 
-    case_ids, failed = [], []
-    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        futs = {pool.submit(convert_case, c, images_tr, labels_tr): c for c in cv_cases}
-        for fut in as_completed(futs):
-            try:
-                case_ids.append(fut.result())
-            except Exception as e:
-                failed.append((futs[fut], str(e)))
+    case_ids = run_threaded_conversion(
+        cv_cases, lambda c: convert_case(c, images_tr, labels_tr), args.jobs)
 
-    if failed:
-        print(f"\nFAILED ({len(failed)}):")
-        for c, err in failed:
-            print(f"  {c}: {err}")
-        raise SystemExit(1)
-
-    dataset_json = {
-        "name": "CHAOS_MR_T1in",
-        "description": "CHAOS MR T1-DUAL in-phase only — train/val pool for cross-modality generalization",
-        "reference": "https://chaos.grand-challenge.org/",
-        "licence": "CC BY-NC-SA 4.0",
-        "release": "1.0",
-        "channel_names": {"0": "T1inphase"},
-        "labels": LABELS,
-        "numTraining": len(case_ids),
-        "file_ending": ".nii.gz",
-    }
-    (out_dir / "dataset.json").write_text(json.dumps(dataset_json, indent=2))
+    write_dataset_json(
+        out_dir,
+        channel_names={"0": "T1inphase"},
+        labels=LABELS,
+        num_training=len(case_ids),
+        name="CHAOS_MR_T1in",
+        description="CHAOS MR T1-DUAL in-phase only — train/val pool for cross-modality generalization",
+        reference="https://chaos.grand-challenge.org/",
+        licence="CC BY-NC-SA 4.0",
+        release="1.0",
+    )
     print(f"\nDone. {len(case_ids)} cases → {out_dir}")
 
 

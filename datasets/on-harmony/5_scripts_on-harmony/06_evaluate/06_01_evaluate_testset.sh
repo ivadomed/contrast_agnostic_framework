@@ -1,250 +1,191 @@
 #!/usr/bin/env bash
-# Evaluate a trained method on the test set.
+# Evaluate a trained on-harmony model on the cross-contrast test set, writing into the
+# STANDARD results layout (identical to chaos/brats):
+#   predictions → PREDICTIONS_ROOT/<model>/<train_contrast>/<category>/<RUN_ID>/fold{k}/<test_contrast>/
+#   metrics     → METRICS_ROOT/<model>/<train_contrast>/<category>_<RUN_ID>/fold{k}/eval_all.csv
+# Aggregate across runs with the SHARED scripts/evaluate/aggregate_from_config.py via
+# 06_06_aggregate_from_config.sh — exactly the same as chaos.
 #
-# Usage
-#   bash 06_01_evaluate_testset.sh <RUN_ID>
-#   e.g.: bash 06_01_evaluate_testset.sh baseline_20260529_233632
-#         bash 06_01_evaluate_testset.sh v26_6_gpuaug_20260531_110150
-#
-# Steps
-#   1. Assemble test images + remap/copy GT into per-contrast directories
-#   2. Per fold: nnUNetv2_predict → predictions_1mm/fold_k/
-#   3. Ensemble 4 folds: nnUNetv2_ensemble → predictions_1mm/ensemble/
-#   4. Resample predictions to native space (SimpleITK NN, no ANTs CLI needed)
-#   5. nnUNetv2_evaluate_folder on native-space predictions vs native-space GT
-#
-# Each per-fold prediction is launched through run_job() with --gpus 1 --wait
-# (background + PIDs wait, so all 4 folds run in parallel on separate GPUs).
+# TWO MODES:
+#   LAUNCHER:  bash 06_01_evaluate_testset.sh <RUN_ID>
+#       Assembles the shared cross-contrast test set once (cheap), then fans out ONE GPU
+#       job per fold (the job IS the compute — no idle CPU coordinator).
+#   WORKER:    bash 06_01_evaluate_testset.sh <RUN_ID> <FOLD>   (runs inside a 1-GPU job)
+#       Predicts every contrast for its fold → resamples to native → shared evaluate.py
+#       (Dice+HD95) → summarize_fold → fold{k}/eval_all.csv (group=test contrast).
 set -euo pipefail
 source "$(dirname "$0")/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
 
-if [ -z "${1:-}" ]; then
-    echo "Usage: $0 <RUN_ID>"
-    exit 1
-fi
-
-RUN_ID="$1"
-# Extract method prefix: strip _YYYYMMDD_HHMMSS suffix and any extra qualifiers
-# e.g. "v26_6_gpuaug_20260531_110150" → "v26_6_gpuaug" → strip to "v26_6"
-_RAW="${RUN_ID%%_2026*}"   # remove timestamp suffix
-
+RUN_ID="${1:?Usage: $0 <RUN_ID> [FOLD]}"
+FOLD="${2:-}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
 PY=".venv/bin/python"
-BIDS="data/ON-Harmony"
-MASKS_REG="$BIDS/derivatives/synthseg_registered"
-TEST_CASES="data/splits/test_cases.json"
-RESULTS_DIR="${nnUNet_results}/${RUN_ID}"
-EVAL_DIR="eval/onharmony/${RUN_ID}"
 
-export nnUNet_raw="${nnUNet_raw}"
-export nnUNet_preprocessed="${nnUNet_preprocessed}"
-export nnUNet_results="${nnUNet_results}/${RUN_ID}"
-export NNUNET_PROJECT_ROOT="${PROJECT_ROOT}"
-export PYTHONPATH="${PYTHONPATH}"
+BIDS="${BIDS_ROOT}"
+TEST_CASES="${PROJECT_ROOT}/datasets/on-harmony/4_splits_on-harmony/test_cases.json"
 
-[ -f "$TEST_CASES" ] || { echo "ERROR: $TEST_CASES not found"; exit 1; }
-[ -d "$RESULTS_DIR" ] || { echo "ERROR: $RESULTS_DIR not found"; exit 1; }
-
-# ── Determine trainer from RUN_ID prefix (glob-style matching) ────────────────
-case "$_RAW" in
-    baseline*)   TRAINER="nnUNetTrainerOnHarmonyBaseline" ;;
-    v26_6*)      TRAINER="nnUNetTrainerOnHarmonyV26_6" ;;
-    synthseg_a*) TRAINER="nnUNetTrainerOnHarmonySynthSegA" ;;
-    synthseg_b*) TRAINER="nnUNetTrainerOnHarmonySynthSegB" ;;
-    *)           echo "ERROR: unknown method prefix '$_RAW' in RUN_ID='$RUN_ID'"; exit 1 ;;
-esac
-
-echo "[$(date '+%H:%M:%S')] Evaluating RUN_ID=${RUN_ID}  trainer=${TRAINER}"
-mkdir -p "$EVAL_DIR"
-
-export BIDS EVAL_DIR
-# ── Step 1: Assemble test images and GT ───────────────────────────────────────
-$PY - <<'PYEOF'
-import json, shutil, sys
-import numpy as np
-import nibabel as nib
-from pathlib import Path
-import os
-
-bids       = Path(os.environ.get("BIDS", "data/ON-Harmony"))
-masks_reg  = bids / "derivatives" / "synthseg_registered"
-eval_dir   = Path(os.environ.get("EVAL_DIR", "eval/onharmony/run"))
-test_cases = json.loads(Path("data/splits/test_cases.json").read_text())
-
-# FreeSurfer → 7-class remap (matches 01_convert_dataset.py)
-_MAX = 60
-_LUT = np.zeros(_MAX + 2, dtype=np.uint8)
-for fs_id, cls in {0:0,2:2,3:1,4:3,5:3,7:6,8:6,10:4,11:4,12:4,13:4,14:3,15:3,
-                   16:5,17:4,18:4,26:4,28:4,41:2,42:1,43:3,44:3,46:6,47:6,
-                   49:4,50:4,51:4,52:4,53:4,54:4,58:4,60:4}.items():
-    _LUT[min(fs_id, _MAX + 1)] = cls
-
-def remap_fs_labels(nib_img):
-    arr = np.asarray(nib_img.dataobj).astype(np.int32)
-    remapped = _LUT[np.clip(arr, 0, _MAX + 1)].astype(np.uint8)
-    return nib.Nifti1Image(remapped, nib_img.affine, nib_img.header)
-
-# GRE: OXF1PRI uses coil-specific naming; glob to find echo-1 mag
-def find_gre(session_dir):
-    swi = session_dir / "swi"
-    if not swi.exists():
-        return None
-    # Prefer simple echo-1 mag, then coil-prefixed
-    candidates = sorted(swi.glob("*echo-1*part-mag*GRE.nii.gz"))
-    return candidates[0] if candidates else None
-
-CONTRASTS = {
-    "T1w":          lambda sub, ses, bdir: bdir / sub / ses / "anat" / f"{sub}_{ses}_T1w.nii.gz",
-    "T2w":          lambda sub, ses, bdir: bdir / sub / ses / "anat" / f"{sub}_{ses}_T2w.nii.gz",
-    "bold":         lambda sub, ses, bdir: bdir / sub / ses / "func" / f"{sub}_{ses}_task-rest_bold.nii.gz",
-    "dwi_ap":       lambda sub, ses, bdir: bdir / sub / ses / "dwi"  / f"{sub}_{ses}_dir-AP_dwi.nii.gz",
-    "epi_ap":       lambda sub, ses, bdir: bdir / sub / ses / "fmap" / f"{sub}_{ses}_dir-AP_epi.nii.gz",
-    "gre_echo1_mag":lambda sub, ses, bdir: find_gre(bdir / sub / ses),
-}
-
-found, missing = 0, 0
-for contrast, img_fn in CONTRASTS.items():
-    img_dir = eval_dir / contrast / "images_native"
-    gt_dir  = eval_dir / contrast / "gt_native"
-    img_dir.mkdir(parents=True, exist_ok=True)
-    gt_dir.mkdir(parents=True, exist_ok=True)
-
-    for tc in test_cases:
-        sub, ses = tc["subject"], tc["session"]
-        src = img_fn(sub, ses, bids)
-        if src is None or not src.exists():
-            missing += 1
-            continue
-
-        case_id = f"{sub}_{ses}_{contrast}"
-        shutil.copy2(src, img_dir / f"{case_id}_0000.nii.gz")
-        found += 1
-
-        # GT in native space
-        if contrast == "T1w":
-            mask_src = bids / "derivatives" / "synthseg_masks" / sub / ses / "anat" / f"{sub}_{ses}_T1w_synthseg.nii.gz"
-            if mask_src.exists():
-                # REMAP FreeSurfer labels → 7-class (critical: synthseg_masks has FS IDs)
-                img7 = remap_fs_labels(nib.load(str(mask_src)))
-                nib.save(img7, str(gt_dir / f"{case_id}.nii.gz"))
-        else:
-            reg_seg = masks_reg / contrast / f"{sub}_{ses}_{contrast}_seg7.nii.gz"
-            if reg_seg.exists():
-                shutil.copy2(reg_seg, gt_dir / f"{case_id}.nii.gz")
-
-print(f"Step 1 complete: {found} images found, {missing} missing.")
-PYEOF
-
-export BIDS EVAL_DIR
-
-# ── Steps 2-5: Per contrast ───────────────────────────────────────────────────
-_NNUNET_RAW="${nnUNet_raw}"
-_NNUNET_PRE="${nnUNet_preprocessed}"
-_NNUNET_RES="${nnUNet_results}"
-_PYTHONPATH="${PROJECT_ROOT}/src/nnunet:${PROJECT_ROOT}/SynthSeg"
-
-for CONTRAST in T1w T2w bold dwi_ap epi_ap gre_echo1_mag; do
-    IMG_DIR="$EVAL_DIR/$CONTRAST/images_native"
-    GT_DIR="$EVAL_DIR/$CONTRAST/gt_native"
-
-    [ -d "$IMG_DIR" ] && N=$(ls "$IMG_DIR" | wc -l) || N=0
-    [ "$N" -eq 0 ] && { echo "  Skipping $CONTRAST (no images)"; continue; }
-
-    # Check if GT is available (skip evaluation for contrasts without GT yet)
-    [ -d "$GT_DIR" ] && NGT=$(ls "$GT_DIR" 2>/dev/null | wc -l) || NGT=0
-    if [ "$NGT" -eq 0 ]; then
-        echo "  Warning: $CONTRAST — no GT available (run 02_03_register_test_gt.sh). Skipping metrics."
-        GT_AVAILABLE=0
-    else
-        GT_AVAILABLE=1
-    fi
-
-    echo "[$(date '+%H:%M:%S')] $CONTRAST: $N images, $NGT GT masks"
-
-    # ── Step 2: Predict per fold (4 folds in parallel on 4 GPUs) ───────────
-    declare -A PIDS_FOLD
-    for FOLD in 0 1 2 3; do
-        PRED_DIR="$EVAL_DIR/$CONTRAST/predictions_1mm/fold_${FOLD}"
-        mkdir -p "$PRED_DIR"
-        run_job --name "onharmony_eval_${RUN_ID}_${CONTRAST}_fold${FOLD}" \
-            --gpus 1 --slot "${FOLD}" --wait \
-            --log "/tmp/predict_${RUN_ID}_${CONTRAST}_fold${FOLD}.log" -- \
-            bash -c "
-            export nnUNet_raw='${_NNUNET_RAW}'
-            export nnUNet_preprocessed='${_NNUNET_PRE}'
-            export nnUNet_results='${_NNUNET_RES}'
-            export NNUNET_PROJECT_ROOT='${PROJECT_ROOT}'
-            export PYTHONPATH='${_PYTHONPATH}:\${PYTHONPATH:-}'
-            cd '${PROJECT_ROOT}'
-            .venv/bin/nnUNetv2_predict \
-                -i '${IMG_DIR}' \
-                -o '${PRED_DIR}' \
-                -d 030 -c 3d_fullres \
-                -f ${FOLD} \
-                -tr '${TRAINER}' \
-                -p nnUNetPlans \
-                --save_probabilities
-        " &
-        PIDS_FOLD[$FOLD]=$!
-    done
-    for FOLD in 0 1 2 3; do wait "${PIDS_FOLD[$FOLD]}"; done
-    echo "[$(date '+%H:%M:%S')]   Predictions done: $CONTRAST"
-
-    # ── Step 3: Ensemble folds ──────────────────────────────────────────────
-    ENS_DIR="$EVAL_DIR/$CONTRAST/predictions_1mm/ensemble"
-    mkdir -p "$ENS_DIR"
-    .venv/bin/nnUNetv2_ensemble \
-        -i "$EVAL_DIR/$CONTRAST/predictions_1mm/fold_0" \
-           "$EVAL_DIR/$CONTRAST/predictions_1mm/fold_1" \
-           "$EVAL_DIR/$CONTRAST/predictions_1mm/fold_2" \
-           "$EVAL_DIR/$CONTRAST/predictions_1mm/fold_3" \
-        -o "$ENS_DIR" \
-        -np 8 \
-        > /tmp/ensemble_${RUN_ID}_${CONTRAST}.log 2>&1
-    echo "[$(date '+%H:%M:%S')]   Ensemble done: $CONTRAST"
-
-    # ── Step 4: Resample predictions to native space (SimpleITK NN) ────────
-    NATIVE_PRED_DIR="$EVAL_DIR/$CONTRAST/predictions_native"
-    mkdir -p "$NATIVE_PRED_DIR"
-    $PY - <<PYEOF2
-import SimpleITK as sitk
-from pathlib import Path
-
-ens_dir    = Path("$ENS_DIR")
-native_dir = Path("$NATIVE_PRED_DIR")
-img_dir    = Path("$IMG_DIR")
-
-for pred_1mm in sorted(ens_dir.glob("*.nii.gz")):
-    case_id = pred_1mm.stem.replace(".nii", "")
-    ref_path = img_dir / f"{case_id}_0000.nii.gz"
-    if not ref_path.exists():
-        print(f"  No native ref for {case_id}, skipping")
-        continue
-    pred = sitk.ReadImage(str(pred_1mm), sitk.sitkUInt8)
-    ref  = sitk.ReadImage(str(ref_path))
-    resampled = sitk.Resample(
-        pred, ref, sitk.Transform(),
-        sitk.sitkNearestNeighbor, 0, pred.GetPixelID()
-    )
-    sitk.WriteImage(resampled, str(native_dir / pred_1mm.name))
-print("Native-space resampling done: $CONTRAST")
-PYEOF2
-
-    # ── Step 5: Evaluate metrics in native space (only if GT available) ─────
-    if [ "$GT_AVAILABLE" -eq 1 ]; then
-        PLANS_FILE="$(find ${nnUNet_preprocessed}/Dataset030_OnHarmonyT1w -name 'nnUNetPlans.json' | head -1)"
-        .venv/bin/nnUNetv2_evaluate_folder \
-            "$GT_DIR" \
-            "$NATIVE_PRED_DIR" \
-            -djfile "${nnUNet_raw}/Dataset030_OnHarmonyT1w/dataset.json" \
-            -pfile "$PLANS_FILE" \
-            > "$EVAL_DIR/$CONTRAST/metrics.json" 2>/tmp/eval_${RUN_ID}_${CONTRAST}.log
-        echo "[$(date '+%H:%M:%S')]   Metrics computed: $CONTRAST"
-    else
-        echo "[$(date '+%H:%M:%S')]   Metrics skipped (no GT): $CONTRAST"
+# Standard layout (mirror chaos): the trained model is CO-LOCATED with its predictions under
+#   01_predictions/<model>/<train_contrast>/<nnUNet|auglab>/<RUN_ID>/DatasetXXX.../
+# Training contrast comes from the RUN_ID; discover which category dir actually holds this run
+# (nnUNet vs auglab) by looking for the trainer dir under each — same RUN_ID is unique.
+TRAIN_CONTRAST="$(echo "$RUN_ID" | grep -oE 'T[12]w' | head -1)"; TRAIN_CONTRAST="${TRAIN_CONTRAST:-T1w}"
+RUN_BASE=""; CATEGORY=""
+for CAT in nnUNet auglab; do
+    cand="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAIN_CONTRAST}/${CAT}/${RUN_ID}"
+    if ls -d "${cand}"/*/*__nnUNetPlans__3d_fullres >/dev/null 2>&1; then
+        RUN_BASE="$cand"; CATEGORY="$CAT"; break
     fi
 done
+[ -z "$RUN_BASE" ] && { echo "ERROR: no trained model for ${RUN_ID} under ${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAIN_CONTRAST}/{nnUNet,auglab}/"; exit 1; }
 
-echo ""
-echo "[$(date '+%H:%M:%S')] Evaluation complete → $EVAL_DIR"
-echo "Run 05_aggregate_results.py to summarise."
+RESULTS_DIR="${RUN_BASE}"                       # trained model lives here (co-located w/ predictions, chaos-style)
+export nnUNet_raw nnUNet_preprocessed
+export nnUNet_results="${RUN_BASE}"
+export NNUNET_PROJECT_ROOT="${PROJECT_ROOT}"
+
+[ -f "$TEST_CASES" ] || { echo "ERROR: $TEST_CASES not found"; exit 1; }
+
+# Trainer + dataset auto-discovered from the run dir.
+_TDIR="$(ls -d "${RESULTS_DIR}"/*/*__nnUNetPlans__3d_fullres 2>/dev/null | head -1)"
+[ -z "$_TDIR" ] && { echo "ERROR: no trainer dir under ${RESULTS_DIR}"; exit 1; }
+TRAINER="$(basename "${_TDIR}" | sed 's/__nnUNetPlans__3d_fullres$//')"
+DS_NAME="$(basename "$(dirname "${_TDIR}")")"
+DATASET_ID="$(echo "${DS_NAME}" | sed -E 's/^Dataset([0-9]+)_.*/\1/')"
+DJ="${nnUNet_raw}/${DS_NAME}/dataset.json"
+
+TESTSET="${PREDICTIONS_ROOT}/${MODEL_TYPE}/_test_set"                                   # shared, run-independent
+PRED_BASE="${RUN_BASE}"                                                                  # predictions co-located w/ model (chaos-style)
+METRICS_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAIN_CONTRAST}/${CATEGORY}_${RUN_ID}"     # per-run metrics
+CONTRAST_LIST="T1w T2w bold dwi_ap epi_ap gre_echo1_mag"
+
+# ════════════════════════════════════════════════════════════════════════════
+# LAUNCHER — assemble the shared test set once, then one GPU job per fold
+# ════════════════════════════════════════════════════════════════════════════
+if [ -z "$FOLD" ]; then
+    echo "[$(date '+%H:%M:%S')] LAUNCH eval ${RUN_ID}  trainer=${TRAINER}  -> ${TRAIN_CONTRAST}/${CATEGORY}"
+    export BIDS TEST_CASES TESTSET
+    # Shared cross-contrast test set (images 4D→3D + 31-class GT). Idempotent: built once,
+    # reused by every run/model (the test set is identical across them).
+    $PY - <<'PYEOF'
+import json, shutil, os
+import numpy as np, nibabel as nib
+from pathlib import Path
+bids       = Path(os.environ["BIDS"])
+testset    = Path(os.environ["TESTSET"])
+test_cases = json.loads(Path(os.environ["TEST_CASES"]).read_text())
+_FS_IDS_31 = [2,3,4,5,7,8,10,11,12,13,14,15,16,17,18,26,28,41,42,43,44,46,47,49,50,51,52,53,54,58,60]
+_MAXFS=max(_FS_IDS_31); _LUT=np.zeros(_MAXFS+2, np.uint8)
+for i,fs in enumerate(_FS_IDS_31): _LUT[fs]=i+1
+def remap(nib_img):
+    a=np.asarray(nib_img.dataobj).astype(np.int32)
+    return nib.Nifti1Image(_LUT[np.clip(a,0,_MAXFS+1)].astype(np.uint8), nib_img.affine, nib_img.header)
+def find_gre(sd):
+    swi=sd/"swi"
+    if not swi.exists(): return None
+    c=sorted(swi.glob("*echo-1*part-mag*GRE.nii.gz")); return c[0] if c else None
+CONTRASTS={"T1w":lambda s,e,b:b/s/e/"anat"/f"{s}_{e}_T1w.nii.gz",
+           "T2w":lambda s,e,b:b/s/e/"anat"/f"{s}_{e}_T2w.nii.gz",
+           "bold":lambda s,e,b:b/s/e/"func"/f"{s}_{e}_task-rest_bold.nii.gz",
+           "dwi_ap":lambda s,e,b:b/s/e/"dwi"/f"{s}_{e}_dir-AP_dwi.nii.gz",
+           "epi_ap":lambda s,e,b:b/s/e/"fmap"/f"{s}_{e}_dir-AP_epi.nii.gz",
+           "gre_echo1_mag":lambda s,e,b:find_gre(b/s/e)}
+found=0
+for contrast,fn in CONTRASTS.items():
+    idir=testset/contrast/"images_native"; idir.mkdir(parents=True,exist_ok=True)
+    rdir=testset/contrast/"images_ras";    rdir.mkdir(parents=True,exist_ok=True)
+    gdir=testset/contrast/"gt_native";     gdir.mkdir(parents=True,exist_ok=True)
+    for tc in test_cases:
+        s,e=tc["subject"],tc["session"]; src=fn(s,e,bids)
+        if src is None or not src.exists(): continue
+        cid=f"{s}_{e}_{contrast}"; out=idir/f"{cid}_0000.nii.gz"
+        if not out.exists():
+            n=nib.load(str(src))
+            if n.ndim>3:
+                arr=np.asarray(n.dataobj); v=arr.mean(axis=-1) if contrast=="bold" else arr[...,0]
+                nib.save(nib.Nifti1Image(v.astype(np.float32),n.affine,n.header),str(out))
+            else:
+                shutil.copy2(src,out)
+        # RAS-canonical copy = the PREDICTION input. nnU-Net does NOT reorient, and training data
+        # is RAS; feeding native LAS (bold/dwi/epi) mirrors the brain for the network, so only
+        # mirror-augmented models cope (artifact that inflates v26_6_2 over the rest). Reorienting
+        # to RAS makes every model see the orientation it was trained on. No-op for already-RAS
+        # contrasts (T1w/T2w/gre). Predictions are resampled back to native space for GT comparison.
+        rout=rdir/f"{cid}_0000.nii.gz"
+        if not rout.exists():
+            nib.save(nib.as_closest_canonical(nib.load(str(out))), str(rout))
+        found+=1
+        rel=src.relative_to(bids)
+        m=bids/"derivatives"/"synthseg_masks"/rel.parent/(rel.name[:-len(".nii.gz")]+"_synthseg.nii.gz")
+        gout=gdir/f"{cid}.nii.gz"
+        if m.exists() and not gout.exists():
+            nib.save(remap(nib.load(str(m))), str(gout))
+print(f"shared test set ready ({found} image refs).")
+PYEOF
+    echo "[$(date '+%H:%M:%S')] fanning out 4 per-fold GPU jobs"
+    for F in 0 1 2 3; do
+        run_job --name "onheval_${RUN_ID:0:26}_f${F}" --gpus 1 --slot "${F}" --time "${ONHEVAL_TIME:-01:00:00}" \
+            --log "${SCRATCH:-/tmp}/onheval_${RUN_ID}_fold${F}.log" -- \
+            bash "${HERE}/06_01_evaluate_testset.sh" "${RUN_ID}" "${F}"
+    done
+    echo "[$(date '+%H:%M:%S')] submitted. metrics → ${METRICS_DIR}/fold*/eval_all.csv"
+    exit 0
+fi
+
+# ════════════════════════════════════════════════════════════════════════════
+# WORKER (FOLD set) — 1-GPU job: predict+resample+eval THIS fold into standard dirs
+# ════════════════════════════════════════════════════════════════════════════
+export PYTHONPATH="${PROJECT_ROOT}/src/nnunet:${PROJECT_ROOT}/SynthSeg:${PYTHONPATH:-}"
+echo "[$(date '+%H:%M:%S')] WORKER ${RUN_ID} fold${FOLD} -> ${TRAIN_CONTRAST}/${CATEGORY} (-d ${DATASET_ID})"
+FOLD_METRICS="${METRICS_DIR}/fold${FOLD}"; mkdir -p "$FOLD_METRICS"
+
+for CONTRAST in $CONTRAST_LIST; do
+    IMG_DIR="${TESTSET}/${CONTRAST}/images_native"   # native geometry: resample ref + matches GT
+    IMG_RAS="${TESTSET}/${CONTRAST}/images_ras"       # RAS-canonical: prediction input (matches RAS training)
+    GT_DIR="${TESTSET}/${CONTRAST}/gt_native"
+    [ -d "$IMG_RAS" ] && N=$(ls "$IMG_RAS" 2>/dev/null | wc -l) || N=0
+    [ "$N" -eq 0 ] && { echo "  [fold${FOLD}] skip $CONTRAST (no images)"; continue; }
+    [ -d "$GT_DIR" ] && NGT=$(ls "$GT_DIR" 2>/dev/null | wc -l) || NGT=0
+
+    # Predict on the RAS-canonical input (so the network sees the orientation it was trained on).
+    # Raw nnU-Net output (RAS geometry + sidecar JSONs) is a throwaway intermediate → goes to
+    # transient node-local scratch. We persist only ONE dir per contrast: the prediction resampled
+    # back to NATIVE geometry (matches gt_native), exactly like chaos's single dir per test contrast.
+    PRED_RAW="${SLURM_TMPDIR:-${SCRATCH:-/tmp}}/onhpred_${RUN_ID}_f${FOLD}_${CONTRAST}"
+    rm -rf "$PRED_RAW"; mkdir -p "$PRED_RAW"
+    if ! .venv/bin/nnUNetv2_predict -i "$IMG_RAS" -o "$PRED_RAW" \
+            -d "${DATASET_ID}" -c 3d_fullres -f "${FOLD}" -tr "${TRAINER}" -p nnUNetPlans; then
+        echo "  ! [fold${FOLD}] predict failed for $CONTRAST (continuing)"; rm -rf "$PRED_RAW"; continue
+    fi
+
+    PRED_DIR="${PRED_BASE}/fold${FOLD}/${CONTRAST}"; mkdir -p "$PRED_DIR"
+    IN_DIR="$PRED_RAW" OUT_DIR="$PRED_DIR" REF_DIR="$IMG_DIR" $PY - <<'PYEOF2'
+import os, SimpleITK as sitk
+from pathlib import Path
+pd=Path(os.environ["IN_DIR"]); nd=Path(os.environ["OUT_DIR"]); idr=Path(os.environ["REF_DIR"])
+for p in sorted(pd.glob("*.nii.gz")):
+    cid=p.stem.replace(".nii",""); ref=idr/f"{cid}_0000.nii.gz"
+    if not ref.exists(): continue
+    pr=sitk.ReadImage(str(p),sitk.sitkUInt8); rf=sitk.ReadImage(str(ref))
+    sitk.WriteImage(sitk.Resample(pr,rf,sitk.Transform(),sitk.sitkNearestNeighbor,0,pr.GetPixelID()), str(nd/p.name))
+PYEOF2
+    rm -rf "$PRED_RAW"
+
+    if [ "$NGT" -gt 0 ]; then
+        $PY "${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/evaluate.py" \
+            --pred_dir "$PRED_DIR" --gt_dir "$GT_DIR" \
+            --out_csv "$FOLD_METRICS/${CONTRAST}_metrics.csv" --name "$CONTRAST" --dataset_json "$DJ" \
+            || echo "  ! [fold${FOLD}] eval failed for $CONTRAST (continuing)"
+    fi
+    echo "[$(date '+%H:%M:%S')]   [fold${FOLD}] done $CONTRAST"
+done
+
+present=()
+for c in $CONTRAST_LIST; do [ -f "$FOLD_METRICS/${c}_metrics.csv" ] && present+=("$c"); done
+if [ ${#present[@]} -gt 0 ]; then
+    $PY "${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/summarize_fold.py" \
+        "$FOLD_METRICS" "$RUN_ID" "$FOLD" --group-col contrast --groups-word Contrasts --groups "${present[@]}"
+    echo "[$(date '+%H:%M:%S')] [fold${FOLD}] complete → $FOLD_METRICS/eval_all.csv"
+else
+    echo "[$(date '+%H:%M:%S')] [fold${FOLD}] no metrics produced"
+fi

@@ -13,13 +13,12 @@ Writes to:  ../../2_nnUNet_brats2024-glioma/raw/Dataset050_BraTS2024Glioma/
 """
 
 import argparse
-import gzip
-import json
-import shutil
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
 from pathlib import Path
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]  # …/datasets/brats2024-glioma/
+sys.path.insert(0, str(DATASET_ROOT.parent / "00_commun_scripts" / "00_00_utils"))
+from nnunet_convert_lib import gzip_copy, run_threaded_conversion, write_dataset_json  # noqa: E402
 BIDS_ROOT    = DATASET_ROOT / "1_BIDS_brats2024-glioma" / "glioma-brain-brats2024"
 NNUNET_RAW   = DATASET_ROOT / "2_nnUNet_brats2024-glioma" / "raw"
 DERIV_DIR    = BIDS_ROOT / "derivatives" / "manual_masks"
@@ -31,14 +30,6 @@ CHANNEL_MAP = {
     "_T2w.nii":               "0002",   # T2w
     "_FLAIR.nii":             "0003",   # T2 FLAIR
 }
-
-
-def gzip_copy(src: Path, dst: Path) -> None:
-    """Copy src (.nii) to dst (.nii.gz), compressing on the fly."""
-    if dst.exists():
-        return
-    with open(src, "rb") as f_in, gzip.open(dst, "wb", compresslevel=1) as f_out:
-        shutil.copyfileobj(f_in, f_out)
 
 
 def convert_subject(sub_name: str, images_tr: Path, labels_tr: Path) -> str:
@@ -77,38 +68,21 @@ def main():
     subjects = sorted(p.name for p in BIDS_ROOT.glob("sub-*") if p.is_dir())
     print(f"Converting {len(subjects)} subjects with {args.jobs} workers …")
 
-    case_ids = []
-    failed   = []
-    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        futures = {pool.submit(convert_subject, sub, images_tr, labels_tr): sub
-                   for sub in subjects}
-        for i, fut in enumerate(as_completed(futures), 1):
-            sub = futures[fut]
-            try:
-                case_ids.append(fut.result())
-            except Exception as e:
-                failed.append((sub, str(e)))
-            if i % 100 == 0 or i == len(subjects):
-                print(f"  {i}/{len(subjects)}")
+    case_ids = run_threaded_conversion(
+        subjects, lambda s: convert_subject(s, images_tr, labels_tr),
+        args.jobs, progress_every=100)
 
-    if failed:
-        print(f"\nFAILED ({len(failed)}):")
-        for sub, err in failed:
-            print(f"  {sub}: {err}")
-        raise SystemExit(1)
-
-    dataset_json = {
-        "name": "BraTS2024Glioma",
-        "description": "BraTS 2024 Glioma Challenge Dataset",
-        "reference": "https://www.synapse.org/#!Synapse:syn51156910/wiki/",
-        "licence": "CC BY 4.0",
-        "release": "1.0",
-        "channel_names": {"0": "T1n", "1": "T1c", "2": "T2w", "3": "T2f"},
-        "labels": {"background": 0, "NCR": 1, "SNFH": 2, "ET": 3, "RC": 4},
-        "numTraining": len(case_ids),
-        "file_ending": ".nii.gz",
-    }
-    (out_dir / "dataset.json").write_text(json.dumps(dataset_json, indent=2))
+    write_dataset_json(
+        out_dir,
+        channel_names={"0": "T1n", "1": "T1c", "2": "T2w", "3": "T2f"},
+        labels={"background": 0, "NCR": 1, "SNFH": 2, "ET": 3, "RC": 4},
+        num_training=len(case_ids),
+        name="BraTS2024Glioma",
+        description="BraTS 2024 Glioma Challenge Dataset",
+        reference="https://www.synapse.org/#!Synapse:syn51156910/wiki/",
+        licence="CC BY 4.0",
+        release="1.0",
+    )
     print(f"\nDone. {len(case_ids)} cases → {out_dir}")
 
 

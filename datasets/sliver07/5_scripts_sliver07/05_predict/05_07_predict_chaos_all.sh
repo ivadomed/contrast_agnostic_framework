@@ -17,7 +17,8 @@ for wrapper in \
     05_03_predict_chaos_v26_6_2.sh \
     05_04_predict_chaos_synthseg_EM.sh \
     05_05_predict_chaos_auglab_default.sh \
-    05_06_predict_chaos_synthseg_noEM.sh ; do
+    05_06_predict_chaos_synthseg_noEM.sh \
+    05_08_predict_chaos_auglabAug_v26_6_2.sh ; do
     echo ""
     echo ">>> [$(date '+%H:%M:%S')] ${wrapper} (all folds)"
     bash "${HERE}/${wrapper}" "" all ct

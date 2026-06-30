@@ -28,8 +28,7 @@ def test_bash_syntax(script):
 def test_scripts_dir_has_expected_steps():
     """Every numbered step dir (01–07) must exist."""
     expected = ["00_utils", "01_create_splits", "02_convert_to_nnunet",
-                "03_preprocess", "04_train", "05_predict", "06_evaluate",
-                "07_benchmark"]
+                "03_preprocess", "04_train", "05_predict", "06_evaluate"]
     for name in expected:
         assert (SCRIPTS_DIR / name).exists(), f"Missing step dir: {name}"
 

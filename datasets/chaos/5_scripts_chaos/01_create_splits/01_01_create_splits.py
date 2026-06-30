@@ -30,10 +30,12 @@ from __future__ import annotations
 
 import json
 import random
-import shutil
+import sys
 from pathlib import Path
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(DATASET_ROOT.parent / "00_commun_scripts" / "00_00_utils"))
+from splits_lib import kfold_splits, write_splits_final      # noqa: E402
 BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "chaos-abdominal"
 NNUNET_PRE   = DATASET_ROOT / "2_nnUNet_chaos" / "preprocessed"
 SPLITS_DIR   = DATASET_ROOT / "4_splits_chaos"
@@ -81,19 +83,10 @@ def main() -> None:
     print(f"MR CV pool      : {len(mr_cv)} → {N_FOLDS}-fold CV")
     print(f"CT liver test   : {len(ct_cases)} (all CT, never trained)")
 
-    # N_FOLDS-fold CV over the MR-CV pool (subject-level).
-    chunk = len(mr_cv) // N_FOLDS
-    sizes = [chunk + (1 if i < len(mr_cv) % N_FOLDS else 0) for i in range(N_FOLDS)]
-    folds, off = [], 0
-    for sz in sizes:
-        folds.append(mr_cv[off:off + sz]); off += sz
-
-    splits = []
-    for k in range(N_FOLDS):
-        val   = sorted(folds[k])
-        train = sorted(c for i, f in enumerate(folds) if i != k for c in f)
-        splits.append({"train": train, "val": val})
-        print(f"  Fold {k}: {len(train)} train, {len(val)} val")
+    # N_FOLDS-fold subject-level CV over the MR-CV pool (shared chunking; see splits_lib).
+    splits = kfold_splits(mr_cv, N_FOLDS)
+    for k, s in enumerate(splits):
+        print(f"  Fold {k}: {len(s['train'])} train, {len(s['val'])} val")
 
     # Sanity: no train/val overlap, no holdout contamination.
     for k, s in enumerate(splits):
@@ -101,10 +94,9 @@ def main() -> None:
         assert not (set(s["train"] + s["val"]) & set(mr_test)), f"fold {k} holdout leak"
     print("Sanity checks passed (no overlap, no holdout contamination).")
 
-    SPLITS_DIR.mkdir(parents=True, exist_ok=True)
-    splits_path = SPLITS_DIR / "splits_final.json"
-    splits_path.write_text(json.dumps(splits, indent=2))
-    print(f"Written: {splits_path}")
+    # Write splits_final.json to 4_splits/ and copy into the nnUNet preprocessed dir.
+    splits_path = write_splits_final(splits, SPLITS_DIR, NNUNET_PRE, NNUNET_DATASET)
+    print(f"Written: {splits_path}  (+ copied into {NNUNET_PRE / NNUNET_DATASET})")
 
     test_meta = {
         "mr_internal_test": mr_test,
@@ -116,12 +108,6 @@ def main() -> None:
     test_path = SPLITS_DIR / "test_cases.json"
     test_path.write_text(json.dumps(test_meta, indent=2))
     print(f"Written: {test_path}")
-
-    # Copy splits to nnUNet preprocessed dir (created here if absent; nnUNet reads it there).
-    pre_ds = NNUNET_PRE / NNUNET_DATASET
-    pre_ds.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(splits_path, pre_ds / "splits_final.json")
-    print(f"Copied splits_final.json → {pre_ds / 'splits_final.json'}")
     print("\nDone.")
 
 

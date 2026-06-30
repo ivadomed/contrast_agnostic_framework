@@ -1,0 +1,883 @@
+[10:51:22] evaluate auglab/chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 | ALL FOLDS (parallel)
+[10:51:22] evaluate auglab/chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 fold2 | modalities: ct mri
+[10:51:22] evaluate auglab/chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 fold1 | modalities: ct mri
+[10:51:22] evaluate auglab/chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 fold3 | modalities: ct mri
+[10:51:22] evaluate auglab/chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 fold0 | modalities: ct mri
+Submitted batch job 5362373
+Submitted batch job 5362374
+Submitted batch job 5362375
+Submitted batch job 5362376
+Submitted batch job 5362377
+Submitted batch job 5362378
+Submitted batch job 5362379
+Submitted batch job 5362380
+# Evaluation — chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.0967±0.0758 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8076±0.1023 | 0.8752±0.0534 | 0.8032±0.1045 | 0.7917±0.1043 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 287.63±20.50 | 265.29±41.42 | 248.13±58.00 | 309.88±52.41 |
+| mri | 49.54±71.28 | 28.11±22.61 | 38.01±61.57 | 39.77±51.46 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/fold3/eval_summary.md
+[11:16:09] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/fold3/
+# Evaluation — chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0007±0.0046 | 0.0668±0.0648 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8841±0.0458 | 0.8953±0.0425 | 0.8598±0.0629 | 0.8122±0.1075 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 259.72±32.79 | 290.66±38.55 | 281.80±51.54 | 278.51±39.03 |
+| mri | 40.58±57.13 | 31.21±37.68 | 37.35±57.68 | 34.87±34.98 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/fold2/eval_summary.md
+[11:19:21] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/fold2/
+# Evaluation — chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.0885±0.0766 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8619±0.0676 | 0.8948±0.0450 | 0.8674±0.0596 | 0.8451±0.1058 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 300.04±32.14 | 275.83±42.19 | 259.16±49.59 | 302.50±54.61 |
+| mri | 40.77±64.59 | 26.77±22.54 | 28.00±48.84 | 16.36±20.11 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/fold1/eval_summary.md
+[11:23:05] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/fold1/
+# Evaluation — chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0004 | 0.0648±0.0633 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8694±0.0699 | 0.8807±0.0511 | 0.8349±0.1069 | 0.8094±0.1227 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 285.87±25.13 | 265.79±45.74 | 260.29±46.30 | 361.42±62.19 |
+| mri | 28.71±49.15 | 35.03±46.31 | 50.40±75.76 | 32.21±41.46 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/fold0/eval_summary.md
+[11:25:13] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/fold0/
+[11:25:13] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514/
+[11:25:13] evaluate auglab/chaos_t1in_auglab_default_20260611_120000 | ALL FOLDS (parallel)
+[11:25:13] evaluate auglab/chaos_t1in_auglab_default_20260611_120000 fold1 | modalities: ct mri
+[11:25:13] evaluate auglab/chaos_t1in_auglab_default_20260611_120000 fold0 | modalities: ct mri
+[11:25:13] evaluate auglab/chaos_t1in_auglab_default_20260611_120000 fold3 | modalities: ct mri
+[11:25:13] evaluate auglab/chaos_t1in_auglab_default_20260611_120000 fold2 | modalities: ct mri
+Submitted batch job 5362709
+Submitted batch job 5362710
+Submitted batch job 5362711
+Submitted batch job 5362712
+Submitted batch job 5362713
+Submitted batch job 5362714
+Submitted batch job 5362715
+Submitted batch job 5362716
+# Evaluation — chaos_t1in_auglab_default_20260611_120000 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.2176±0.0957 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8378±0.0944 | 0.8961±0.0411 | 0.7960±0.1119 | 0.7014±0.2323 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 283.83±22.46 | 260.30±39.13 | 257.29±48.24 | 315.76±46.49 |
+| mri | 40.43±62.67 | 32.35±41.47 | 47.05±73.38 | 43.19±55.33 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/fold3/eval_summary.md
+[11:47:51] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/fold3/
+# Evaluation — chaos_t1in_auglab_default_20260611_120000 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.1060±0.0759 | 0.0001±0.0011 | 0.0000±0.0000 |
+| mri | 0.8680±0.0809 | 0.8908±0.0488 | 0.8224±0.1455 | 0.8081±0.1437 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 269.99±28.56 | 261.97±35.88 | 284.85±30.98 | 336.40±71.48 |
+| mri | 45.52±58.05 | 31.67±27.29 | 39.64±53.31 | 48.09±70.14 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/fold0/eval_summary.md
+[11:53:43] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/fold0/
+# Evaluation — chaos_t1in_auglab_default_20260611_120000 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0005±0.0039 | 0.0999±0.0674 | 0.0000±0.0000 | 0.0001±0.0006 |
+| mri | 0.7612±0.2055 | 0.8905±0.0510 | 0.8132±0.1383 | 0.7858±0.1335 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 263.68±24.30 | 283.65±44.62 | 246.69±42.80 | 299.05±44.32 |
+| mri | 74.74±82.96 | 34.44±39.41 | 40.57±58.64 | 42.80±59.81 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/fold2/eval_summary.md
+[12:04:55] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/fold2/
+# Evaluation — chaos_t1in_auglab_default_20260611_120000 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.1231±0.1004 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8602±0.0782 | 0.8897±0.0445 | 0.8121±0.1115 | 0.7298±0.1766 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 281.32±28.74 | 288.75±50.05 | 274.08±36.77 | 332.97±55.32 |
+| mri | 37.54±58.02 | 38.57±37.77 | 43.42±66.23 | 64.23±63.87 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/fold1/eval_summary.md
+[12:09:12] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/fold1/
+[12:09:12] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_auglab_default_20260611_120000/
+[12:09:12] evaluate auglab/chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 | ALL FOLDS (parallel)
+[12:09:12] evaluate auglab/chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 fold0 | modalities: ct mri
+[12:09:12] evaluate auglab/chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 fold1 | modalities: ct mri
+[12:09:12] evaluate auglab/chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 fold2 | modalities: ct mri
+[12:09:12] evaluate auglab/chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 fold3 | modalities: ct mri
+Submitted batch job 5363459
+Submitted batch job 5363460
+Submitted batch job 5363461
+Submitted batch job 5363462
+Submitted batch job 5363463
+Submitted batch job 5363464
+Submitted batch job 5363465
+Submitted batch job 5363466
+# Evaluation — chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.2802±0.2467 | 0.3158±0.1051 | 0.0695±0.1163 | 0.0085±0.0315 |
+| mri | 0.4770±0.2986 | 0.5078±0.1993 | 0.5245±0.2178 | 0.2576±0.2861 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 226.25±60.58 | 252.40±36.01 | 264.63±45.36 | 285.13±55.23 |
+| mri | 195.72±71.36 | 137.79±43.70 | 137.58±63.18 | 210.19±85.46 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/fold1/eval_summary.md
+[12:34:29] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/fold1/
+# Evaluation — chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.1900±0.1657 | 0.2738±0.0883 | 0.0078±0.0222 | 0.1568±0.0975 |
+| mri | 0.6231±0.1700 | 0.5143±0.2169 | 0.5717±0.2581 | 0.2960±0.2270 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 227.61±43.46 | 243.99±33.27 | 248.30±46.07 | 266.75±41.34 |
+| mri | 88.00±69.11 | 123.68±39.01 | 131.33±74.15 | 130.98±63.19 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/fold2/eval_summary.md
+[12:35:01] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/fold2/
+# Evaluation — chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0309±0.0784 | 0.2002±0.0776 | 0.1132±0.1303 | 0.0024±0.0161 |
+| mri | 0.6078±0.1809 | 0.5559±0.1864 | 0.5873±0.1409 | 0.2153±0.1668 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 256.17±60.32 | 243.67±32.84 | 248.74±42.23 | 291.24±62.68 |
+| mri | 124.97±75.36 | 120.09±43.26 | 153.81±57.32 | 170.97±66.33 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/fold0/eval_summary.md
+[12:38:13] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/fold0/
+# Evaluation — chaos_t1in_synthseg_noEM_train100_val000_20260611_120000 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.1998±0.1908 | 0.2729±0.0752 | 0.1384±0.1697 | 0.0105±0.0438 |
+| mri | 0.6645±0.1937 | 0.6710±0.1610 | 0.5574±0.2312 | 0.3223±0.2520 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 218.09±67.72 | 246.21±33.65 | 238.42±46.04 | 312.03±38.65 |
+| mri | 73.72±67.95 | 86.14±44.69 | 144.10±78.14 | 174.83±45.05 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/fold3/eval_summary.md
+[12:48:21] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/fold3/
+[12:48:21] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in/auglab_chaos_t1in_synthseg_noEM_train100_val000_20260611_120000/
+[12:48:21] evaluate nnUNet/chaos_t2spir_baseline_20260620_111146 | ALL FOLDS (parallel)
+[12:48:21] evaluate nnUNet/chaos_t2spir_baseline_20260620_111146 fold0 | modalities: ct mri
+[12:48:21] evaluate nnUNet/chaos_t2spir_baseline_20260620_111146 fold1 | modalities: ct mri
+[12:48:21] evaluate nnUNet/chaos_t2spir_baseline_20260620_111146 fold2 | modalities: ct mri
+[12:48:21] evaluate nnUNet/chaos_t2spir_baseline_20260620_111146 fold3 | modalities: ct mri
+Submitted batch job 5364455
+Submitted batch job 5364456
+Submitted batch job 5364457
+Submitted batch job 5364458
+Submitted batch job 5364459
+Submitted batch job 5364460
+Submitted batch job 5364461
+Submitted batch job 5364462
+# Evaluation — chaos_t2spir_baseline_20260620_111146 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0237±0.0909 | 0.2478±0.1390 | 0.0309±0.1057 | 0.0187±0.0713 |
+| mri | 0.4916±0.3524 | 0.5742±0.3439 | 0.3966±0.3243 | 0.1870±0.2581 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 236.76±39.07 | 295.44±44.47 | 266.56±54.67 | 276.12±63.00 |
+| mri | 121.32±62.72 | 93.88±65.04 | 97.25±65.60 | 153.31±49.19 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/fold1/eval_summary.md
+[13:21:41] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/fold1/
+# Evaluation — chaos_t2spir_baseline_20260620_111146 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0003 | 0.3537±0.1080 | 0.0003±0.0028 | 0.0285±0.0748 |
+| mri | 0.5017±0.3504 | 0.5995±0.3221 | 0.4431±0.3489 | 0.3326±0.2903 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 254.66±39.82 | 272.10±32.45 | 229.04±62.75 | 261.71±76.08 |
+| mri | 124.65±64.25 | 83.84±64.44 | 92.71±73.31 | 147.50±60.68 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/fold3/eval_summary.md
+[13:53:12] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/fold3/
+# Evaluation — chaos_t2spir_baseline_20260620_111146 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0231±0.0860 | 0.1236±0.1336 | 0.0161±0.0521 | 0.0507±0.0843 |
+| mri | 0.4613±0.3660 | 0.4705±0.3902 | 0.4153±0.3788 | 0.2845±0.3237 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 277.58±42.80 | 320.29±43.21 | 279.79±36.75 | 217.71±72.73 |
+| mri | 130.74±63.56 | 93.02±54.54 | 104.43±56.69 | 157.86±41.35 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/fold2/eval_summary.md
+[13:59:36] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/fold2/
+# Evaluation — chaos_t2spir_baseline_20260620_111146 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0047±0.0291 | 0.1181±0.0954 | 0.0049±0.0258 | 0.0538±0.0781 |
+| mri | 0.4381±0.3672 | 0.5446±0.3666 | 0.3233±0.3438 | 0.2159±0.3065 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 221.17±33.65 | 301.02±35.12 | 261.49±54.51 | 232.98±51.98 |
+| mri | 121.74±61.63 | 89.17±74.17 | 130.77±62.03 | 158.22±50.83 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/fold0/eval_summary.md
+[14:08:08] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/fold0/
+[14:08:08] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_baseline_20260620_111146/
+[14:08:08] evaluate nnUNet/chaos_t2spir_v26_6_2_train050_val100_20260620_112122 | ALL FOLDS (parallel)
+[14:08:08] evaluate nnUNet/chaos_t2spir_v26_6_2_train050_val100_20260620_112122 fold1 | modalities: ct mri
+[14:08:08] evaluate nnUNet/chaos_t2spir_v26_6_2_train050_val100_20260620_112122 fold0 | modalities: ct mri
+[14:08:08] evaluate nnUNet/chaos_t2spir_v26_6_2_train050_val100_20260620_112122 fold2 | modalities: ct mri
+[14:08:08] evaluate nnUNet/chaos_t2spir_v26_6_2_train050_val100_20260620_112122 fold3 | modalities: ct mri
+Submitted batch job 5366483
+Submitted batch job 5366484
+Submitted batch job 5366485
+Submitted batch job 5366486
+Submitted batch job 5366487
+Submitted batch job 5366488
+Submitted batch job 5366489
+Submitted batch job 5366490
+# Evaluation — chaos_t2spir_v26_6_2_train050_val100_20260620_112122 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.5291±0.1654 | 0.5079±0.1243 | 0.6269±0.1841 | 0.3335±0.1387 |
+| mri | 0.8516±0.1135 | 0.9069±0.0638 | 0.8567±0.1164 | 0.8518±0.1231 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 225.72±62.89 | 247.16±40.35 | 216.58±88.52 | 254.92±51.24 |
+| mri | 46.18±65.67 | 39.10±46.63 | 40.95±68.64 | 38.25±69.97 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/fold0/eval_summary.md
+[15:24:42] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/fold0/
+# Evaluation — chaos_t2spir_v26_6_2_train050_val100_20260620_112122 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.4406±0.1894 | 0.5747±0.1479 | 0.5222±0.2055 | 0.2457±0.1297 |
+| mri | 0.8188±0.1561 | 0.9081±0.0506 | 0.8270±0.1685 | 0.8318±0.1431 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 248.51±51.30 | 235.80±42.87 | 219.14±69.10 | 275.48±48.02 |
+| mri | 54.74±69.21 | 49.43±69.95 | 46.16±76.82 | 52.32±84.39 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/fold3/eval_summary.md
+[15:25:14] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/fold3/
+# Evaluation — chaos_t2spir_v26_6_2_train050_val100_20260620_112122 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.4154±0.2123 | 0.5829±0.1864 | 0.3967±0.2488 | 0.2513±0.1238 |
+| mri | 0.8389±0.1391 | 0.9148±0.0401 | 0.8292±0.1561 | 0.8847±0.0856 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 236.42±56.44 | 254.21±49.30 | 226.68±74.45 | 302.47±35.88 |
+| mri | 55.73±74.56 | 30.38±33.81 | 53.25±72.99 | 28.41±56.44 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/fold2/eval_summary.md
+[15:26:50] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/fold2/
+# Evaluation — chaos_t2spir_v26_6_2_train050_val100_20260620_112122 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.4704±0.1917 | 0.4850±0.1268 | 0.5554±0.2312 | 0.2777±0.1010 |
+| mri | 0.8467±0.1256 | 0.9108±0.0395 | 0.8524±0.1419 | 0.8472±0.1309 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 256.08±61.48 | 249.17±35.54 | 248.30±75.29 | 298.07±43.43 |
+| mri | 42.96±60.29 | 36.88±44.12 | 44.68±75.43 | 33.22±67.97 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/fold1/eval_summary.md
+[15:28:26] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/fold1/
+[15:28:26] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/nnUNet_chaos_t2spir_v26_6_2_train050_val100_20260620_112122/
+[15:28:26] evaluate auglab/chaos_t2spir_synthseg_EM_20260620_112357 | ALL FOLDS (parallel)
+[15:28:26] evaluate auglab/chaos_t2spir_synthseg_EM_20260620_112357 fold1 | modalities: ct mri
+[15:28:26] evaluate auglab/chaos_t2spir_synthseg_EM_20260620_112357 fold0 | modalities: ct mri
+[15:28:26] evaluate auglab/chaos_t2spir_synthseg_EM_20260620_112357 fold2 | modalities: ct mri
+[15:28:26] evaluate auglab/chaos_t2spir_synthseg_EM_20260620_112357 fold3 | modalities: ct mri
+Submitted batch job 5367316
+Submitted batch job 5367317
+Submitted batch job 5367318
+Submitted batch job 5367319
+Submitted batch job 5367320
+Submitted batch job 5367321
+Submitted batch job 5367322
+Submitted batch job 5367323
+# Evaluation — chaos_t2spir_synthseg_EM_20260620_112357 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.1326±0.0987 | 0.0000±0.0000 | 0.0006±0.0061 |
+| mri | 0.7995±0.1377 | 0.8329±0.1116 | 0.7977±0.1510 | 0.7577±0.1634 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 223.06±46.48 | 250.02±30.43 | 223.83±48.28 | 270.28±31.48 |
+| mri | 59.17±74.05 | 52.82±44.39 | 64.85±75.03 | 58.33±76.97 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/fold3/eval_summary.md
+[15:44:39] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/fold3/
+# Evaluation — chaos_t2spir_synthseg_EM_20260620_112357 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.0458±0.0532 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8468±0.0498 | 0.8331±0.0845 | 0.8298±0.0991 | 0.6728±0.1823 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 269.66±38.85 | 279.62±38.80 | 278.20±28.64 | 305.30±31.70 |
+| mri | 51.14±53.32 | 59.55±54.02 | 54.13±68.58 | 72.75±71.97 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/fold2/eval_summary.md
+[15:48:23] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/fold2/
+# Evaluation — chaos_t2spir_synthseg_EM_20260620_112357 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.1127±0.0950 | 0.0000±0.0000 | 0.0002±0.0014 |
+| mri | 0.8234±0.0982 | 0.8566±0.0603 | 0.8539±0.0449 | 0.7268±0.1664 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 268.05±45.62 | 293.69±37.12 | 263.17±48.96 | 288.35±30.53 |
+| mri | 49.83±61.28 | 49.22±39.77 | 39.87±45.51 | 63.52±62.45 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/fold1/eval_summary.md
+[15:49:59] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/fold1/
+# Evaluation — chaos_t2spir_synthseg_EM_20260620_112357 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.2489±0.1197 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8254±0.0824 | 0.8340±0.1008 | 0.7952±0.1108 | 0.6960±0.2268 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 224.72±58.91 | 275.59±34.91 | 238.55±58.36 | 310.42±31.68 |
+| mri | 51.09±59.73 | 51.69±40.08 | 61.97±67.19 | 57.16±74.10 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/fold0/eval_summary.md
+[15:50:31] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/fold0/
+[15:50:31] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_EM_20260620_112357/
+[15:50:31] evaluate auglab/chaos_t2spir_synthseg_noEM_20260620_112515 | ALL FOLDS (parallel)
+[15:50:31] evaluate auglab/chaos_t2spir_synthseg_noEM_20260620_112515 fold0 | modalities: ct mri
+[15:50:31] evaluate auglab/chaos_t2spir_synthseg_noEM_20260620_112515 fold2 | modalities: ct mri
+[15:50:31] evaluate auglab/chaos_t2spir_synthseg_noEM_20260620_112515 fold3 | modalities: ct mri
+[15:50:31] evaluate auglab/chaos_t2spir_synthseg_noEM_20260620_112515 fold1 | modalities: ct mri
+Submitted batch job 5367660
+Submitted batch job 5367661
+Submitted batch job 5367662
+Submitted batch job 5367663
+Submitted batch job 5367664
+Submitted batch job 5367665
+Submitted batch job 5367666
+Submitted batch job 5367667
+# Evaluation — chaos_t2spir_synthseg_noEM_20260620_112515 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.1327±0.1805 | 0.2855±0.0891 | 0.0838±0.1249 | 0.0062±0.0258 |
+| mri | 0.6120±0.2189 | 0.6973±0.1881 | 0.5492±0.2166 | 0.4590±0.2186 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 206.49±55.68 | 254.25±36.03 | 212.05±49.45 | 277.89±49.89 |
+| mri | 89.81±76.66 | 90.08±54.79 | 136.69±67.73 | 118.62±52.93 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/fold2/eval_summary.md
+[16:18:58] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/fold2/
+# Evaluation — chaos_t2spir_synthseg_noEM_20260620_112515 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.1343±0.1602 | 0.2133±0.0769 | 0.1221±0.1634 | 0.0040±0.0175 |
+| mri | 0.6685±0.1367 | 0.5714±0.1963 | 0.5788±0.1837 | 0.2966±0.1840 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 233.17±51.50 | 262.02±33.94 | 214.45±59.79 | 277.84±47.45 |
+| mri | 82.96±73.40 | 116.34±46.04 | 114.31±65.68 | 119.75±62.14 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/fold0/eval_summary.md
+# Evaluation — chaos_t2spir_synthseg_noEM_20260620_112515 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0681±0.1327 | 0.1406±0.0914 | 0.0907±0.1226 | 0.0123±0.0468 |
+| mri | 0.6280±0.1722 | 0.5503±0.1829 | 0.5448±0.2484 | 0.2799±0.1997 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 234.92±51.40 | 253.96±34.23 | 221.99±61.01 | 268.03±46.80 |
+| mri | 97.60±72.66 | 117.00±48.03 | 121.94±68.66 | 121.29±72.51 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/fold1/eval_summary.md
+[16:19:30] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/fold0/
+[16:19:30] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/fold1/
+# Evaluation — chaos_t2spir_synthseg_noEM_20260620_112515 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.2826±0.2142 | 0.2623±0.0876 | 0.1567±0.1571 | 0.0609±0.0757 |
+| mri | 0.6741±0.2189 | 0.6350±0.1701 | 0.6039±0.2845 | 0.2737±0.1945 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 231.50±47.29 | 239.53±35.55 | 234.14±30.98 | 287.13±52.26 |
+| mri | 104.69±90.76 | 106.47±49.26 | 115.32±72.98 | 128.80±65.98 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/fold3/eval_summary.md
+[16:20:04] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/fold3/
+[16:20:04] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_synthseg_noEM_20260620_112515/
+[16:20:04] evaluate auglab/chaos_t2spir_auglab_default_20260620_112240 | ALL FOLDS (parallel)
+[16:20:04] evaluate auglab/chaos_t2spir_auglab_default_20260620_112240 fold0 | modalities: ct mri
+[16:20:04] evaluate auglab/chaos_t2spir_auglab_default_20260620_112240 fold1 | modalities: ct mri
+[16:20:04] evaluate auglab/chaos_t2spir_auglab_default_20260620_112240 fold3 | modalities: ct mri
+[16:20:04] evaluate auglab/chaos_t2spir_auglab_default_20260620_112240 fold2 | modalities: ct mri
+Submitted batch job 5367802
+Submitted batch job 5367803
+Submitted batch job 5367804
+Submitted batch job 5367805
+Submitted batch job 5367806
+Submitted batch job 5367807
+Submitted batch job 5367808
+Submitted batch job 5367809
+# Evaluation — chaos_t2spir_auglab_default_20260620_112240 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0001±0.0008 | 0.1757±0.0920 | 0.0000±0.0000 | 0.0001±0.0007 |
+| mri | 0.8664±0.0556 | 0.8993±0.0309 | 0.8358±0.1178 | 0.8325±0.1351 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 269.87±35.74 | 287.26±37.77 | 280.65±42.21 | 323.09±42.18 |
+| mri | 55.75±66.63 | 43.03±41.33 | 71.59±89.76 | 54.64±86.94 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/fold0/eval_summary.md
+[16:44:53] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/fold0/
+# Evaluation — chaos_t2spir_auglab_default_20260620_112240 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0010±0.0067 | 0.1079±0.0722 | 0.0000±0.0000 | 0.0000±0.0003 |
+| mri | 0.8852±0.0311 | 0.8737±0.0467 | 0.8504±0.0930 | 0.8500±0.1195 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 252.96±43.77 | 311.88±37.92 | 292.37±41.19 | 312.36±52.50 |
+| mri | 32.13±46.51 | 38.17±35.48 | 72.00±90.79 | 53.38±64.21 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/fold2/eval_summary.md
+[16:50:45] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/fold2/
+# Evaluation — chaos_t2spir_auglab_default_20260620_112240 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.2235±0.0712 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.7893±0.1704 | 0.8097±0.1101 | 0.7988±0.1272 | 0.6365±0.2720 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 261.94±34.48 | 273.72±35.80 | 292.36±30.22 | 316.56±52.56 |
+| mri | 80.95±84.91 | 61.67±57.93 | 92.09±96.52 | 64.48±62.01 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/fold3/eval_summary.md
+[16:53:58] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/fold3/
+# Evaluation — chaos_t2spir_auglab_default_20260620_112240 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.1475±0.1136 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8385±0.1053 | 0.8805±0.0539 | 0.8474±0.0942 | 0.7975±0.1457 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 253.94±42.42 | 320.29±51.28 | 316.48±52.50 | 306.84±48.89 |
+| mri | 54.49±69.61 | 33.31±30.93 | 69.26±87.57 | 60.34±69.33 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/fold1/eval_summary.md
+[17:01:59] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/fold1/
+[17:01:59] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglab_default_20260620_112240/
+[17:01:59] evaluate auglab/chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 | ALL FOLDS (parallel)
+[17:01:59] evaluate auglab/chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 fold2 | modalities: ct mri
+[17:01:59] evaluate auglab/chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 fold1 | modalities: ct mri
+[17:01:59] evaluate auglab/chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 fold0 | modalities: ct mri
+[17:01:59] evaluate auglab/chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 fold3 | modalities: ct mri
+Submitted batch job 5368101
+Submitted batch job 5368102
+Submitted batch job 5368103
+Submitted batch job 5368104
+Submitted batch job 5368105
+Submitted batch job 5368106
+Submitted batch job 5368107
+Submitted batch job 5368108
+# Evaluation — chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 fold 0 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.1863±0.1338 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8717±0.0475 | 0.9024±0.0368 | 0.8639±0.0880 | 0.8359±0.1281 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 270.94±58.28 | 244.77±41.36 | 256.36±52.99 | 302.49±48.44 |
+| mri | 55.99±66.74 | 29.17±33.94 | 35.20±63.32 | 48.17±79.39 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/fold0/eval_summary.md
+[17:23:30] fold0 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/fold0/
+# Evaluation — chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 fold 3 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.2129±0.1361 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.7713±0.1503 | 0.8689±0.0805 | 0.8623±0.0627 | 0.7477±0.1646 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 236.08±49.80 | 224.12±32.67 | 248.83±32.09 | 288.27±30.03 |
+| mri | 62.97±65.50 | 33.89±31.54 | 50.26±69.44 | 43.80±45.72 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/fold3/eval_summary.md
+[17:24:02] fold3 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/fold3/
+# Evaluation — chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 fold 1 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.1230±0.0947 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8837±0.0328 | 0.8839±0.0633 | 0.8593±0.0776 | 0.8487±0.0901 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 240.04±56.61 | 295.26±39.14 | 249.39±42.57 | 270.00±42.00 |
+| mri | 39.26±47.42 | 46.75±50.41 | 54.13±72.08 | 35.08±45.92 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/fold1/eval_summary.md
+[17:25:06] fold1 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/fold1/
+# Evaluation — chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633 fold 2 | AMOS CT+MRI | chaos-trained models
+
+Predictions from chaos-trained models (chaos label IDs remapped → AMOS IDs).
+Modalities: ct, mri | Organs: left_kidney, liver, right_kidney, spleen
+
+## Dice (↑)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 0.0000±0.0000 | 0.0844±0.0734 | 0.0000±0.0000 | 0.0000±0.0000 |
+| mri | 0.8739±0.0554 | 0.8803±0.0678 | 0.8414±0.0899 | 0.8554±0.1151 |
+
+## HD95 mm (↓)
+
+| modality | left_kidney | liver | right_kidney | spleen |
+|---|---|---|---|---|
+| ct | 272.89±47.62 | 283.98±51.86 | 252.31±45.57 | 284.30±38.39 |
+| mri | 42.26±49.03 | 40.56±37.87 | 47.50±61.75 | 38.05±69.01 |
+
+→ /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/fold2/eval_summary.md
+[17:27:14] fold2 done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/fold2/
+[17:27:14] all folds done → /project/aip-jcohen/paulh/mri_synthesis_project/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir/auglab_chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633/
+ALL AMOS CT EVALS DONE Mon Jun 22 05:27:14 PM MDT 2026

@@ -16,10 +16,39 @@ already passed.
   `9_tests_<dataset>`
 - [ ] `datasets/validate_standard_dataset_structure.py` passes cleanly for
   this dataset
-- [ ] `8_results_<dataset>/` has the three sub-result dirs:
-  `01_predictions/`, `02_metrics/`, `03_aggregated_results/`
+- [ ] `8_results_<dataset>/` has the two REQUIRED sub-result dirs
+  `01_predictions/` and `02_metrics/` (validator enforces these);
+  `03_aggregated_results/` is optional. (All datasets are now on this layout —
+  the legacy `01_results/` + `02_nnUNet_results/` trees, formerly used by
+  on-harmony, were migrated/archived on 2026-06-29.)
 - [ ] `01_predictions/` has one subdir per model family (`nnUNet/`, `auglab/`,
-  …) — never run IDs directly at the top level
+  …) — never run IDs directly at the top level. For a **cross-dataset eval
+  dataset** there is an extra `<model_type>/<contrast>/` level above the family
+  dirs — see §14.
+
+---
+
+## 1b. Image geometry / orientation  ⚠️ critical for cross-dataset eval
+
+A model applied to a new dataset sees the **voxel array**, and nnU-Net/SimpleITK
+honour the affine — but any step that compares in array space (and visual QA)
+breaks if the new dataset's stored orientation differs from the datasets the
+model was trained/validated on. AMOS shipped CT as `LAS` and MRI as `RAS` while
+chaos/sliver07 are `LPS`, so predictions came out Y-flipped until reoriented.
+
+- [ ] Every image's stored orientation matches the reference datasets'
+  canonical convention. Check with
+  `nib.aff2axcodes(nib.load(f).affine)` — for the chaos/sliver07 family this is
+  `('L', 'P', 'S')`. Do this for **images and segmentation masks**, all modalities.
+- [ ] If orientation differs, reorient **losslessly** (axis permute/flip only —
+  `nibabel.as_reoriented` / `ornt_transform`, NOT resampling) so it is label-safe
+  and image+mask stay aligned. Sanity-check anatomy after (e.g. spine posterior).
+- [ ] `0_raw_<dataset>/` is left **pristine** — reorientation writes to BIDS /
+  nnUNet trees only (temp-file + atomic replace if `1_BIDS` hard-links `0_raw`).
+- [ ] Reorientation is a numbered, idempotent pipeline step (e.g.
+  `03_preprocess/03_00_reorient_to_lps.py`), not a one-off — and BIDSify notes it.
+- [ ] Voxel spacing / intensity ranges are sane vs the reference dataset
+  (CT in HU, MRI arbitrary — matters for any intensity-based step).
 
 ---
 
@@ -121,11 +150,15 @@ Every run ID must follow exactly:
 - [ ] `nnUNet_wandb_project` uses `${WANDB_PROJECT:-mri_synthesis_seg_${DATASET_NAME}}`
   — not a hardcoded string
 - [ ] `AUGLAB_VAL_PARAMS_GPU_JSON` is exported (even if empty) so the env var
-  is always defined inside the systemd slice
+  is always defined inside the job environment
 - [ ] `DATASET_ID` default matches the actual nnUNet dataset number for this
   dataset
-- [ ] `PYTHONPATH` inside the `set_slot` subprocess includes the scripts dir
-  so trainers are importable without installing the package
+- [ ] `PYTHONPATH` passed into the job includes the scripts dir so trainers are
+  importable without installing the package
+- [ ] **Jobs are dispatched via `run_job`, never `set_slot`/raw `sbatch`.** On
+  Vulcan `run_job` auto-routes to Slurm (`scripts/job_runner/`); the old
+  `set_slot`/systemd-slice workstation path is dead. Pipeline scripts must stay
+  backend-neutral (see project `CLAUDE.md`).
 
 ---
 
@@ -161,28 +194,30 @@ Every run ID must follow exactly:
 
 ## 10. Evaluate scripts (`06_evaluate/`)
 
-Script numbering convention (match CHAOS as the reference):
+Script roles (match CHAOS as the reference — exact numbers vary by dataset):
 ```
-06_00_evaluate.py          — core evaluate function (Python)
-06_01_evaluate_run.sh      — evaluate a single run (all folds or one fold)
-06_02_aggregate_results.py — cross-run aggregation + heatmaps
-06_02_aggregate_results.sh — shell wrapper that calls the Python script
-06_03_predict_eval_all_exps.sh   — batch: predict + evaluate all experiments
-06_04_predict_eval_batch2.sh     — batch: second experiment batch
-06_05_predict_eval_batch3.sh     — batch: third experiment batch (folds 2/3)
+06_00_evaluate*.py             — core evaluate function (Dice/HD95)
+06_01_evaluate_run.sh          — evaluate a single run (all folds or one fold)
+06_0X_evaluate_all_*.sh        — run 06_01 for every run (per contrast/source);
+                                 reads run IDs from a config, runs them in PARALLEL
+06_03_aggregate_results.{py,sh}  — single-dataset cross-run aggregation + heatmaps
+06_10_aggregate_from_config.sh — config-driven aggregator (shared:
+                                 scripts/evaluate/aggregate_from_config.py) — the
+                                 mechanism behind cross-dataset roll-ups
+configs/*.yaml                 — per-contrast / cross-dataset aggregation configs
 ```
 
-- [ ] Script names follow the numbered convention above
-- [ ] `06_01_evaluate_run.sh` usage header says `06_01_evaluate_run.sh`, not
-  an old renamed version
-- [ ] Example RUN_IDs in `06_01_evaluate_run.sh` use current canonical names
-- [ ] `06_02_aggregate_results.py` docstring example uses `--run_keys` (not
-  `--run_ids`) and shows a current canonical `{category}_{RUN_ID}` key
-- [ ] All batch scripts (`06_03`, `06_04`, `06_05`) with hardcoded or default
-  RUN_IDs use canonical names with dataset prefix and prob encoding
-- [ ] For **test-only / both** datasets: evaluate scripts for foreign models
-  read from `01_predictions/{source_dataset}_models/` or equivalent namespacing
-  so foreign and own predictions never collide
+- [ ] `06_01_evaluate_run.sh` usage header names itself correctly (not an old
+  renamed version) and its example RUN_IDs are current canonical names
+- [ ] Aggregation scripts `source env.sh` then `cd "${PROJECT_ROOT}"` — **no
+  hardcoded absolute paths** (a `cd /home/<old-host>/...` line silently breaks
+  the script on a different machine; this happened in AMOS `06_03`)
+- [ ] `_all_` / batch scripts submit method×fold jobs **in parallel** (background
+  each method + `wait`), not one method at a time — there is no reason to gate
+  one independent job on another on Slurm
+- [ ] For **test-only / cross-dataset** datasets: evaluate scripts for foreign
+  models read from `01_predictions/<model_type>/<contrast>/...` (see §14) so
+  foreign and own predictions never collide
 
 ---
 
@@ -221,21 +256,63 @@ Script numbering convention (match CHAOS as the reference):
 
 ---
 
-## 14. Cross-dataset evaluation (for `DATASET_ROLE=both`)
+## 14. Cross-dataset / test-only eval dataset (e.g. evaluating CHAOS models)
 
-When a dataset evaluates models trained on another dataset:
+This is the shape AMOS and SLIVER07 use. Read this section start-to-finish when
+adding a new dataset that exists to evaluate **foreign (chaos-trained) models**.
 
-- [ ] Predictions from foreign models live under
-  `01_predictions/{source_dataset}_models/{category}/{RUN_ID}/` — not mixed
-  with own predictions at the top level
-- [ ] Metrics from foreign models live under
-  `02_metrics/{source_dataset}_models_{category}_{RUN_ID}/` — clearly namespaced
-- [ ] Dedicated predict scripts exist for each foreign model family
-  (e.g. `05_0X_predict_chaos_<method>.sh`)
-- [ ] Dedicated evaluate scripts exist for each foreign model family
-  (e.g. `06_0X_evaluate_chaos_models.sh`)
-- [ ] Aggregate script handles own vs. foreign runs separately or labels them
-  clearly in the report
+### Layout — note the `<model_type>/<contrast>/` levels
+Predictions and metrics are namespaced by the **source-dataset model family** and
+the **training contrast**. General form (chaos is the only current instance):
+```
+01_predictions/{source_dataset}_model/<contrast>/<category>/<RUN_ID>/fold{k}/<test_item>/
+02_metrics/{source_dataset}_model/<contrast>/<category>_<RUN_ID>/fold{k}/eval_*.csv
+```
+where `{source_dataset}_model` is the value of `<SOURCE>_MODEL_TYPE` — e.g.
+`chaos_model` (note: **singular** `_model`, not `_models`); `<contrast>` ∈
+{`t1in`, `t2spir`, …}; `<category>` ∈ {`nnUNet`, `auglab`}.
+
+- [ ] Predictions/metrics follow the general form above (NOT run IDs at the top
+  level, and the `<contrast>` level is present — earlier drafts of this checklist
+  omitted it). If `DATASET_ROLE=both`, the dataset's **own** models live under a
+  different `<model_type>` (e.g. `<this_dataset>_model`) so own vs. foreign
+  predictions never collide.
+
+### env.sh cross-dataset source vars  (general `<SOURCE>_*`; chaos shown as the instance)
+- [ ] `<SOURCE>_MODEL_TYPE` (e.g. `CHAOS_MODEL_TYPE=chaos_model`),
+  `<SOURCE>_DATASET_ROOT`, `<SOURCE>_PREDICTIONS_ROOT`, `<SOURCE>_NNUNET_RAW`
+  are set.
+- [ ] **Per-contrast** vars are switchable: `<SOURCE>_TRAINING_CONTRAST`,
+  `<SOURCE>_DATASET_ID`, `<SOURCE>_DS_NAME`, `<SOURCE>_DATASET_JSON` default to
+  `t1in` and are overridden by a sibling `env_<contrast>.sh` (e.g.
+  `env_t2spir.sh` pre-exports them, then re-sources `env.sh`). Mirror this for
+  any additional contrast.
+- [ ] `CE_EXTRA_PYTHONPATH` adds the source dataset's scripts dir so the foreign
+  trainer classes resolve (no new trainers/shim needed for a pure eval dataset).
+
+### Per-contrast predict + evaluate
+- [ ] Dedicated predict scripts per foreign method, **per contrast**
+  (`05_0X_predict_chaos_<method>.sh`, `05_1X_predict_chaos_t2spir_<method>.sh`),
+  plus an `_all` wrapper per contrast that fans them out **in parallel**.
+- [ ] Predict scripts set `nnUNet_results` to the **source** model dir (via the
+  `CHAOS_*` vars), not this dataset's own.
+- [ ] `_all` evaluate wrapper per contrast (e.g. `06_0X_evaluate_all_t2spir.sh`)
+  pre-exports the contrast vars and runs `06_01` for each run in parallel.
+
+### Cross-dataset roll-up (the combined heatmaps)
+- [ ] For the new dataset to appear in the **combined** cross-dataset tables, add
+  it as a `source` (with `column_prefix`/`column_rename`) **and** to
+  `column_order` in BOTH
+  `chaos/.../06_evaluate/configs/cross_dataset_t1in_01_results.yaml` and
+  `cross_dataset_t2spir_01_results.yaml`. Forgetting this is silent — the
+  aggregation just omits your columns.
+- [ ] After eval, re-run `06_10_aggregate_from_config.sh <cross_dataset_*.yaml>`
+  to refresh `chaos/.../02_metrics/chaos_model/<contrast>/04_01_cross_dataset_*`.
+
+### Re-running after the source/data changes
+- [ ] If the new dataset's **images change** (e.g. a reorientation fix, §1b),
+  ALL contrast branches that consume them (t1in *and* t2spir) are stale and must
+  be re-predicted + re-evaluated + re-aggregated — not just the one you touched.
 
 ---
 
@@ -277,4 +354,15 @@ ls datasets/<dataset>/8_results_<dataset>/01_predictions/nnUNet/ \
  echo "DATASET_NAME=$DATASET_NAME" && \
  echo "DATASET_ROLE=$DATASET_ROLE" && \
  echo "WANDB_PROJECT=$WANDB_PROJECT")
+
+# 7. Orientation matches the reference family (§1b) — should all print ('L','P','S')
+.venv/bin/python - <<'PY'
+import glob, nibabel as nib
+for f in glob.glob("datasets/<dataset>/1_BIDS_<dataset>/**/*.nii.gz", recursive=True)[:20]:
+    print(nib.aff2axcodes(nib.load(f).affine), f)
+PY
+
+# 8. Cross-dataset eval dataset is wired into the combined roll-ups (§14)
+grep -l "<dataset>" \
+  datasets/chaos/5_scripts_chaos/06_evaluate/configs/cross_dataset_*.yaml
 ```

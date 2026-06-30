@@ -304,7 +304,9 @@ class WandbLogger:
             mode=self.mode,
             resume=_resume,
         )
-        self.run.config.update({"JobID": get_cluster_job_id()})
+        # allow_val_change: on resume the Slurm job id legitimately differs from the
+        # original run's — without this, wandb raises ConfigError and the job dies at init.
+        self.run.config.update({"JobID": get_cluster_job_id()}, allow_val_change=True)
         self.wandb_init_step = self.run.step
 
     def update_config(self, config: dict):

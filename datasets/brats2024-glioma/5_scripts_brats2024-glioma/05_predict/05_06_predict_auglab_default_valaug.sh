@@ -12,4 +12,4 @@ METHOD="auglab_default_valaug"
 TRAINER="nnUNetTrainerBraTS2024GliomaAugLabDefaultValAug"
 DATASET_ID="051"
 CATEGORY="auglab"   # common derives nnUNet_results from CATEGORY → 01_predictions/auglab/
-source "$(dirname "$0")/05_predict_common.sh" "$@"
+source "$(dirname "$0")/05_01_predict_common.sh" "$@"

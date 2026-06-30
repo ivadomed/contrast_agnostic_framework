@@ -30,10 +30,12 @@ from __future__ import annotations
 
 import json
 import random
-import shutil
+import sys
 from pathlib import Path
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]          # …/brats2024-glioma/
+sys.path.insert(0, str(DATASET_ROOT.parent / "00_commun_scripts" / "00_00_utils"))
+from splits_lib import kfold_splits, write_splits_final      # noqa: E402
 BIDS_ROOT    = DATASET_ROOT / "1_BIDS_brats2024-glioma" / "glioma-brain-brats2024"
 NNUNET_RAW   = DATASET_ROOT / "2_nnUNet_brats2024-glioma" / "raw"
 NNUNET_PRE   = DATASET_ROOT / "2_nnUNet_brats2024-glioma" / "preprocessed"
@@ -74,22 +76,10 @@ def main() -> None:
     print(f"Test : {len(test_cases)} cases")
     print(f"Train+val: {len(trainval)} cases → {N_FOLDS}-fold CV")
 
-    # 4-fold CV on trainval
-    chunk = len(trainval) // N_FOLDS
-    # Distribute remainder across first folds (at most +1 case per fold)
-    fold_sizes = [chunk + (1 if i < len(trainval) % N_FOLDS else 0) for i in range(N_FOLDS)]
-    fold_val_cases: list[list[str]] = []
-    offset = 0
-    for sz in fold_sizes:
-        fold_val_cases.append(trainval[offset:offset + sz])
-        offset += sz
-
-    splits = []
-    for k in range(N_FOLDS):
-        val_ids   = sorted(fold_val_cases[k])
-        train_ids = sorted(c for i, fold in enumerate(fold_val_cases) if i != k for c in fold)
-        splits.append({"train": train_ids, "val": val_ids})
-        print(f"  Fold {k}: {len(train_ids)} train, {len(val_ids)} val")
+    # 4-fold subject-level CV on trainval (shared chunking; see splits_lib).
+    splits = kfold_splits(trainval, N_FOLDS)
+    for k, s in enumerate(splits):
+        print(f"  Fold {k}: {len(s['train'])} train, {len(s['val'])} val")
 
     # Sanity checks
     for k, split in enumerate(splits):
@@ -99,21 +89,13 @@ def main() -> None:
         assert not test_contam, f"Fold {k} test contamination: {test_contam}"
     print("Sanity checks passed (no overlap, no test contamination).")
 
-    # Write to 4_splits_brats2024-glioma/
-    SPLITS_DIR.mkdir(parents=True, exist_ok=True)
-    splits_path = SPLITS_DIR / "splits_final.json"
-    splits_path.write_text(json.dumps(splits, indent=2))
-    print(f"Written: {splits_path}")
+    # Write splits_final.json to 4_splits/ and copy into the nnUNet preprocessed dir.
+    splits_path = write_splits_final(splits, SPLITS_DIR, NNUNET_PRE, DATASET_NAME)
+    print(f"Written: {splits_path}  (+ copied into {NNUNET_PRE / DATASET_NAME})")
 
     test_path = SPLITS_DIR / "test_cases.json"
     test_path.write_text(json.dumps(sorted(test_cases), indent=2))
     print(f"Written: {test_path}")
-
-    # Copy splits_final.json to nnUNet preprocessed dir (where nnUNet reads it)
-    pre_ds = NNUNET_PRE / DATASET_NAME
-    pre_ds.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(splits_path, pre_ds / "splits_final.json")
-    print(f"Copied splits_final.json → {pre_ds / 'splits_final.json'}")
 
     print("\nDone.")
 
