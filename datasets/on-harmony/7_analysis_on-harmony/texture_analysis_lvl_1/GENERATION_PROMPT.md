@@ -67,9 +67,13 @@ not re-window it).
 
 ## Output layout (create under this analysis dir)
 
+Let `KEY` = the source filename with `_0000.nii.gz` removed — i.e. it **includes the `_T1w`
+suffix**, e.g. `sub-03286_ses-NOT2ING001_T1w`. Use `KEY` verbatim for both the folder and
+the file stem (the metrics script keys volumes by exactly this):
+
 ```
 datasets/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/data/generated/
-  <method>/<sub-XXXX_ses-YYYY>/<sub-XXXX_ses-YYYY>_run-00.nii.gz ... _run-09.nii.gz
+  <method>/<KEY>/<KEY>_run-00.nii.gz ... <KEY>_run-09.nii.gz
 ```
 - `<method>` ∈ {palette, synthseg_em, synthseg_noem, auglab_default}
 - Each `run-NN` is an **independent stochastic draw** (different RNG seed per variant).
