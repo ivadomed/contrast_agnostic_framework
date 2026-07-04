@@ -46,8 +46,9 @@ log = logging.getLogger(__name__)
 
 THIS_DIR      = Path(__file__).resolve().parent
 ANALYSIS_ROOT = THIS_DIR.parent                                  # texture_analysis_lvl_1/
-# repo root = .../mri_synthesis_project (parents: scripts→lvl1→7_analysis→on-harmony→datasets→root)
-PROJECT_ROOT  = THIS_DIR.parents[5]
+# repo root = .../mri_synthesis_project. THIS_DIR is scripts/; parents[0]=lvl1,
+# [1]=7_analysis, [2]=on-harmony, [3]=datasets, [4]=repo root.
+PROJECT_ROOT  = THIS_DIR.parents[4]
 
 DEFAULT_GENERATED = ANALYSIS_ROOT / "data" / "generated"
 DEFAULT_DS        = PROJECT_ROOT / "datasets" / "on-harmony" / "2_nnUNet_on-harmony" / "raw" / "Dataset031_OnHarmonyT1w31"

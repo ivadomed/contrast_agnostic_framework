@@ -94,7 +94,7 @@ def main():
     counts = {m: 0 for m in args.methods}
     for vi, vpath in enumerate(vols):
         stem = vpath.name.replace("_0000.nii.gz", "")           # sub-XXXX_ses-YYYY_T1w
-        subj = stem.replace("_T1w", "")                          # sub-XXXX_ses-YYYY
+        subj = stem                                              # canonical KEY (incl. _T1w)
         lpath = LABELS_TR / f"{stem}.nii.gz"
         if not lpath.exists():
             print(f"[rank {args.rank}] MISSING LABEL for {stem}, skipping", flush=True)
