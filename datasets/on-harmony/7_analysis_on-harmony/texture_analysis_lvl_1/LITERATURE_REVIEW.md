@@ -58,26 +58,41 @@ advantage worth stating in the paper.
 
 ---
 
-## Adopted metric set (kept deliberately tight)
+## Adopted metric set (kept deliberately tight — every metric directly citable)
 
-Two complementary, contrast-**and**-inversion-invariant metrics, computed **per 31-class ROI**
-and pooled:
+Audited each candidate for whether it is a *named, canonical* metric we can justify with a
+one-line citation. Two clear the bar; the gradient-correlation I initially considered does
+**not** (see "Rejected", below). Both adopted metrics are contrast-**and**-inversion-invariant
+and computed **per 31-class ROI**, then pooled:
 
-1. **Within-ROI Mutual Information** — `MI(source, synth)` inside each anatomical class.
-   The literature-standard content-preservation measure. Invariant to any functional
-   (monotone/inverted/nonlinear) intensity remap. High iff synth intensity is a deterministic
-   function of source within the tissue (PALETTE); ≈ 0 for spatially-independent GMM noise
-   (SynthSeg). *The rigorous one.*
-2. **Gradient/edge preservation** — Pearson correlation of **gradient-magnitude** maps,
-   `corr(|∇source|, |∇synth|)`, within ROI. FSIM-family; uses magnitude → inversion-invariant.
-   *The intuitive "do the edges survive?" one.*
+1. **(Normalized) Mutual Information — NMI** — `NMI(source, synth)` inside each anatomical class.
+   The canonical "same anatomy, different intensity mapping" measure: MI for multimodal
+   similarity = **Maes et al. 1997**; overlap-invariant **NMI = Studholme et al. 1999**.
+   Invariant to any functional (monotone/inverted/nonlinear) intensity remap. High iff synth
+   intensity is a deterministic function of source within the tissue (PALETTE); ≈ 0 for
+   spatially-independent GMM noise (SynthSeg). *The content-preservation anchor.*
+2. **|Local Normalized Cross-Correlation| — |LNCC|** — windowed source↔synth correlation
+   within ROI. The primary similarity metric of ANTs/SyN registration (**Avants et al. 2008**);
+   NCC is explicitly *invariant to linear brightness/contrast change*. We take `|·|` because
+   PALETTE's signed-α can invert contrast locally. *The local-structure anchor.*
 
-*(Optional 3rd if space allows: `|LNCC|` — local, linear-invariant structural similarity.)*
+*(Optional 3rd, if we want a metric whose name is literally "texture":* **LBP histogram
+similarity** — Local Binary Patterns, **Ojala et al. 2002**; rank/threshold-based, so more
+intensity-invariant than GLCM — GLCM operates on raw intensities and is contrast-dependent,
+so it is *not* suitable here. Computed slice-wise.)
 
-**Boundary-artifact handling:** compute per-ROI on **eroded** masks (drop 1–2 boundary voxels).
-PALETTE's Voronoi sub-parcellation only *adds* false edges at region borders — it never
-*removes* real ones — so eroding borders removes that confound. Framed as **recall of source
-texture**, not symmetric similarity.
+**Rejected — gradient-magnitude correlation.** `corr(|∇source|, |∇synth|)` is intuitive but is
+**not a named, citable metric** — it would be our own construction. The adjacent *named*
+gradient metrics (FSIM, GMSD) are contrast-*sensitive*, so they penalize the intended contrast
+change and don't fit. Dropped in favor of the two canonical measures above.
+
+**Design choices we state transparently (standard-practice, not a cited protocol):**
+- **Per-ROI computation** using the 31-class anatomical labels — to localize preservation to
+  tissue classes (and tie to the crush-case story).
+- **Eroded ROI masks** (drop 1–2 boundary voxels via `binary_erosion`). PALETTE's Voronoi
+  sub-parcellation only *adds* false edges at region borders — it never *removes* real ones —
+  so eroding borders removes that confound. Framed as **recall of source texture**, not
+  symmetric similarity.
 
 **Controls (defend against a "rigged metric" critique):**
 - `auglab_default` and `gamma`/hist-eq — other *image-driven* augs; should also score high
@@ -107,6 +122,19 @@ augs preserve texture too. The point is the **joint** picture:
 ---
 
 ## Sources
+
+**Adopted-metric citations (primary):**
+- **MI for multimodal registration** — Maes et al. 1997, *Multimodality image registration by
+  maximization of mutual information*, IEEE TMI. (corroborated: https://pmc.ncbi.nlm.nih.gov/articles/PMC6560247/)
+- **Normalized MI (overlap-invariant)** — Studholme et al. 1999, *An overlap invariant entropy
+  measure of 3D medical image alignment*, Pattern Recognition.
+- **LNCC / cross-correlation in registration** — Avants et al. 2008, *Symmetric diffeomorphic
+  image registration with cross-correlation* (ANTs/SyN), Medical Image Analysis.
+  https://www.sciencedirect.com/science/article/abs/pii/S1361841507000606
+- **LBP (texture; more intensity-robust than GLCM)** — Ojala et al. 2002, IEEE TPAMI.
+  https://www.sciencedirect.com/science/article/abs/pii/S1047320315001583
+
+**Landscape / framing (secondary):**
 - Similarity/quality metrics for MR image-to-image translation — https://www.nature.com/articles/s41598-025-87358-0 · https://arxiv.org/html/2405.08431v1
 - HiFi-Syn (structure-preserving MR synthesis) — https://arxiv.org/pdf/2311.12461
 - SAMScore (content structural similarity) — https://arxiv.org/html/2305.15367v2
