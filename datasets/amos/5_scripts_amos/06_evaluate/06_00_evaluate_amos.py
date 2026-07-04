@@ -51,6 +51,7 @@ def main() -> None:
     ap.add_argument("--name", default="",
                     help="Tag stored in the 'group' column (e.g. 'ct' or 'mri')")
     ap.add_argument("--workers", type=int, default=8)
+    eval_metrics.add_fov_args(ap)
     args = ap.parse_args()
 
     triples = [(organ, chaos_id, amos_id)
@@ -58,7 +59,8 @@ def main() -> None:
     note = "chaos pred-ids remapped to AMOS GT-ids per organ (see ORGAN_MAP)"
     eval_metrics.run_evaluation(
         pred_dir=args.pred_dir, gt_dir=args.gt_dir, out_csv=args.out_csv,
-        name=args.name, triples=triples, workers=args.workers, summary_note=note)
+        name=args.name, triples=triples, workers=args.workers, summary_note=note,
+        fov=eval_metrics.fov_from_args(args))
 
 
 if __name__ == "__main__":

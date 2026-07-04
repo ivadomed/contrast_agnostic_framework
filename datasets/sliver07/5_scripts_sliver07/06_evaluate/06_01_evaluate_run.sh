@@ -62,6 +62,20 @@ METRICS_BASE="${METRICS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${C
 [ -d "$GT_DIR" ]    || { echo "ERROR: GT dir missing: $GT_DIR — run 05_00_build_test_inputs.py" >&2; exit 1; }
 [ -f "$EVALUATE_PY" ] || { echo "ERROR: evaluate script not found: $EVALUATE_PY" >&2; exit 1; }
 
+# ── CHAOS FOV restriction ────────────────────────────────────────────────────
+# Full-torso CT. SLIVER07 has no kidneys (liver only), so the CHAOS-equivalent slab
+# is anchored on the LIVER (GT id 1) using CHAOS liver margins. Disable with FOV=0.
+FOV="${FOV:-1}"
+FOV_JSON="${CHAOS_DATASET_ROOT}/5_scripts_chaos/06_evaluate/chaos_fov_margins.json"
+fov_flags() {   # $1 = anchor name, $2 = comma-sep GT anchor ids
+    [ "$FOV" != "1" ] && return 0
+    [ -f "$FOV_JSON" ] || { echo "ERROR: FOV margins JSON missing: $FOV_JSON — run chaos 06_30_measure_chaos_fov.sh" >&2; exit 1; }
+    local mm
+    mm=$(.venv/bin/python -c "import json;d=json.load(open('$FOV_JSON'))['${CHAOS_TRAINING_CONTRAST}']['$1'];print(d['sup_mm'],d['inf_mm'])") \
+        || { echo "ERROR: no FOV margins for contrast=${CHAOS_TRAINING_CONTRAST} anchor=$1 in $FOV_JSON" >&2; exit 1; }
+    echo "--fov_anchor_gt_ids $2 --fov_sup_mm ${mm% *} --fov_inf_mm ${mm#* }"
+}
+
 eval_fold() {
     local F="$1" SLOT="$2"
     local PRED_DIR="${PRED_BASE}/fold${F}/ct"
@@ -82,7 +96,7 @@ eval_fold() {
         --labels liver \
         --name ct \
         --out_csv "${EVAL_DIR}/ct_metrics.csv" \
-        --workers 4
+        --workers 4 $(fov_flags liver 1)
 
     # Merge ct CSV → eval_all.csv (consumed by 06_03_aggregate) + summary (shared)
     .venv/bin/python "${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/summarize_fold.py" \

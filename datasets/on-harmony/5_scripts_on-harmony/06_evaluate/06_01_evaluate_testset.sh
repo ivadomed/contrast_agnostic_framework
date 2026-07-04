@@ -14,12 +14,15 @@
 #       Predicts every contrast for its fold → resamples to native → shared evaluate.py
 #       (Dice+HD95) → summarize_fold → fold{k}/eval_all.csv (group=test contrast).
 set -euo pipefail
-source "$(dirname "$0")/../00_utils/env.sh"
+# Resolve HERE (this script's dir) BEFORE any cd, so it stays correct even when the
+# script is invoked as a bare relative filename (e.g. `bash 06_01_evaluate_testset.sh`).
+# The launcher hands this absolute path to run_job for the per-fold worker jobs.
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${HERE}/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
 
 RUN_ID="${1:?Usage: $0 <RUN_ID> [FOLD]}"
 FOLD="${2:-}"
-HERE="$(cd "$(dirname "$0")" && pwd)"
 PY=".venv/bin/python"
 
 BIDS="${BIDS_ROOT}"

@@ -34,4 +34,11 @@ PREDICT_FOLD_DEFAULT="all"
 PREDICT_TIME="00:45:00"
 PREDICT_EXTRA_FLAGS="-npp 12 -nps 6"
 
+# chimera item (05_20): full-torso CT grid (up to ~244 M voxels) → the 5-class softmax
+# export is large and OOMs at 110 G with -nps 6 (one baseline fold did). Cut the export
+# workers so peak stays under the packable 110 G default (no oversized mem request).
+for _a in "$@"; do
+    if [ "$_a" = "chimera" ]; then PREDICT_EXTRA_FLAGS="-npp 6 -nps 2"; fi
+done
+
 source "${PROJECT_ROOT}/datasets/00_commun_scripts/00_02_predict/predict_common.sh" "$@"

@@ -56,6 +56,23 @@ EVALUATE_PY="${PROJECT_ROOT}/datasets/trusted/5_scripts_trusted/06_evaluate/06_0
 PRED_BASE="${PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 METRICS_BASE="${METRICS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}"
 
+# ── CHAOS FOV restriction ────────────────────────────────────────────────────
+# CT is a full torso: restrict scoring to the CHAOS-equivalent slab anchored on the
+# kidneys (TRUSTED GT id 1). US is already a tight per-kidney crop, so it is NOT
+# FOV-restricted (a slab would be a no-op or clip the single kidney). Margins from
+# chaos 06_30 (median mm). Disable with FOV=0 for the legacy full-volume eval.
+FOV="${FOV:-1}"
+FOV_JSON="${CHAOS_DATASET_ROOT}/5_scripts_chaos/06_evaluate/chaos_fov_margins.json"
+fov_flags() {   # $1 = anchor name, $2 = comma-sep GT anchor ids
+    [ "$FOV" != "1" ] && return 0
+    [ -f "$FOV_JSON" ] || { echo "ERROR: FOV margins JSON missing: $FOV_JSON — run chaos 06_30_measure_chaos_fov.sh" >&2; exit 1; }
+    local mm
+    mm=$(.venv/bin/python -c "import json;d=json.load(open('$FOV_JSON'))['${CHAOS_TRAINING_CONTRAST}']['$1'];print(d['sup_mm'],d['inf_mm'])") \
+        || { echo "ERROR: no FOV margins for contrast=${CHAOS_TRAINING_CONTRAST} anchor=$1 in $FOV_JSON" >&2; exit 1; }
+    echo "--fov_anchor_gt_ids $2 --fov_sup_mm ${mm% *} --fov_inf_mm ${mm#* }"
+}
+item_fov_flags() { [ "$1" = "ct" ] && fov_flags kidney 1; }   # only CT gets FOV
+
 [ -d "$PRED_BASE" ] || { echo "ERROR: no predictions at $PRED_BASE" >&2; exit 1; }
 
 eval_fold() {
@@ -86,7 +103,7 @@ eval_fold() {
             --gt_dir   "$GT_DIR" \
             --name     "$item" \
             --out_csv  "${EVAL_DIR}/${item}_metrics.csv" \
-            --workers  1 &
+            --workers  1 $(item_fov_flags "$item") &
         pids+=($!)
     done
     [ ${#pids[@]} -gt 0 ] && wait "${pids[@]}"

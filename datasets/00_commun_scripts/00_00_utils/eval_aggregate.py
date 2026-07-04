@@ -16,12 +16,57 @@ This module reads only `<run_dir>/fold*/eval_all.csv` (columns group,case,label,
 dice,hd95) — the same contract every dataset's 06_01_evaluate_run.sh writes.
 """
 import csv
+import re
 import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+
+
+# ── run-name label bolding ────────────────────────────────────────────────────
+# Highlight the synth-method token inside long run-id labels, in both markdown
+# tables and heatmap y-labels. Mirrors scripts/evaluate/aggregate_from_config.py
+# (the cross-dataset roll-up) so per-dataset and combined reports look consistent.
+# Longest-first so overlapping patterns don't shadow each other.
+_BOLD_RE = re.compile(r'synthseg_noEM|synthseg_EM|auglab_default|auglabAug|v26_6_2|\(Ours\)|baseline')
+
+
+def _segment_label(s: str) -> list:
+    """Split a label into [(text, is_bold), …] segments on the method tokens."""
+    segs, last = [], 0
+    for m in _BOLD_RE.finditer(s):
+        if m.start() > last:
+            segs.append((s[last:m.start()], False))
+        segs.append((m.group(), True))
+        last = m.end()
+    if last < len(s):
+        segs.append((s[last:], False))
+    return segs or [(s, False)]
+
+
+def _label_md(s: str) -> str:
+    """Markdown: wrap method tokens in **bold**."""
+    return "".join(f"**{t}**" if bold else t for t, bold in _segment_label(s))
+
+
+def _label_mathtext(s: str) -> str:
+    """matplotlib mathtext: bold the method-token substrings within a tick label."""
+    return "".join((r"$\mathbf{" + t.replace("_", r"\_") + r"}$") if bold else t
+                   for t, bold in _segment_label(s))
+
+
+def _best_per_col(mat: np.ndarray, metric: str) -> list:
+    """Row index of the best value per column (-1 if all-NaN). Dice → max, HD95 → min."""
+    best = []
+    for j in range(mat.shape[1]):
+        col = mat[:, j]
+        if np.any(np.isfinite(col)):
+            best.append(int(np.nanargmax(col)) if metric == "dice" else int(np.nanargmin(col)))
+        else:
+            best.append(-1)
+    return best
 
 
 # ── loaders ──────────────────────────────────────────────────────────────────
@@ -150,7 +195,7 @@ def build_report(runs: dict, out_path: Path, title: str) -> None:
                     m, s, n = cross_fold_stats(per_fold)
                     cells.append(fmt_cell(m, s, prec))
                     n_folds = max(n_folds, n)
-                lines.append(f"| {run_id} | " + " | ".join(cells) + f" | {n_folds} |")
+                lines.append(f"| {_label_md(run_id)} | " + " | ".join(cells) + f" | {n_folds} |")
             lines.append("")
 
     # Summary: mean across all contrasts per label per experiment
@@ -170,7 +215,7 @@ def build_report(runs: dict, out_path: Path, title: str) -> None:
             m, s, n = cross_fold_stats(all_fold_vals)
             cells.append(fmt_cell(m, s, 4))
             n_folds = max(n_folds, n)
-        lines.append("| " + run_id + " | " + " | ".join(cells) + f" | {n_folds} |")
+        lines.append("| " + _label_md(run_id) + " | " + " | ".join(cells) + f" | {n_folds} |")
     lines.append("")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -197,7 +242,8 @@ def build_modality_summary(runs: dict, md_path: Path, heatmap_dir: Path, title: 
         f"Generated: {now}  |  Experiments: {len(run_ids)}  |  Modalities: {', '.join(all_contrasts)}",
         "",
         "Each cell is the **cross-fold, cross-class average** (mean over all labels and "
-        "folds). The `all` column averages across modalities. — = no finite data.",
+        "folds). The `all` column averages across modalities. **Bold** = best per column. "
+        "— = no finite data.",
         "",
     ]
 
@@ -215,11 +261,18 @@ def build_modality_summary(runs: dict, md_path: Path, heatmap_dir: Path, title: 
 
         fmt = (lambda v: "—" if not np.isfinite(v) else f"{v*100:.1f}") if prec == 4 \
             else (lambda v: "—" if not np.isfinite(v) else f"{v:.1f}")
+        best = _best_per_col(mat, metric)                    # bold best per column
         lines += [f"## {mtitle}", "",
                   "| experiment | " + " | ".join(cols) + " |",
                   "|" + "---|" * (len(cols) + 1)]
         for i, run_id in enumerate(run_ids):
-            lines.append(f"| {run_id} | " + " | ".join(fmt(mat[i, j]) for j in range(len(cols))) + " |")
+            cells = []
+            for j in range(len(cols)):
+                s = fmt(mat[i, j])
+                if s != "—" and best[j] == i:
+                    s = f"**{s}**"
+                cells.append(s)
+            lines.append(f"| {_label_md(run_id)} | " + " | ".join(cells) + " |")
         lines.append("")
 
     md_path.parent.mkdir(parents=True, exist_ok=True)
@@ -260,9 +313,14 @@ def save_heatmaps(matrices: dict, run_ids: list, cols: list, out_dir: Path,
         masked = np.ma.masked_invalid(mat)
         im = ax.imshow(masked, aspect="auto", cmap=cmap)
         ax.set_xticks(range(len(cols)), cols)
-        ax.set_yticks(range(len(run_ids)), run_ids)
+        # slight rotation so long modality labels (e.g. "chimera (us-kidney)") don't
+        # collide with the neighbouring tick; harmless for short labels (ct/us/…).
+        for _lbl in ax.get_xticklabels():
+            _lbl.set_rotation(20); _lbl.set_ha("right")
+        ax.set_yticks(range(len(run_ids)), [_label_mathtext(r) for r in run_ids])
         ax.tick_params(axis='y', labelsize=7)
         ax.set_title(f"{mtitle} — {subtitle}")
+        best = _best_per_col(mat, metric)              # bold the best cell per column
         # annotate each cell; pick text colour by the cell's actual luminance
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
@@ -272,7 +330,8 @@ def save_heatmaps(matrices: dict, run_ids: list, cols: list, out_dir: Path,
                     r, g, b, _ = im.cmap(im.norm(v))
                     lum = 0.299 * r + 0.587 * g + 0.114 * b
                     ax.text(j, i, txt, ha="center", va="center", fontsize=8,
-                            color="white" if lum < 0.5 else "black")
+                            color="white" if lum < 0.5 else "black",
+                            fontweight="bold" if best[j] == i else "normal")
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
         ax.set_xlabel("modality"); ax.set_ylabel("experiment")
         fig.tight_layout()

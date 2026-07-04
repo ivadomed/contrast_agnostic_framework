@@ -127,6 +127,14 @@ launch_fold() {
         export OMP_NUM_THREADS=${OMP_NUM_THREADS:-4}
         export MKL_NUM_THREADS=${MKL_NUM_THREADS:-4}
         export OPENBLAS_NUM_THREADS=${OPENBLAS_NUM_THREADS:-4}
+        # blosc2 (nnUNet 2.7 .b2nd reader) defaults nthreads = physical cores (64 on the
+        # L40S nodes). Uncapped, each of N DA workers spawns ~64 blosc threads →
+        # N*64+ threads → pthread_create hits the cgroup PID/thread limit and the whole
+        # training dies at epoch 0 with 'RuntimeError: can't start new thread'
+        # (bit us on open-ms with DA_WORKERS=12, 2026-07-02). Cap to 1 — decompression
+        # stays fast and thread count becomes ~O(N workers).
+        export BLOSC2_NTHREADS=${BLOSC2_NTHREADS:-1}
+        export BLOSC_NTHREADS=${BLOSC_NTHREADS:-1}
         export OMP_WAIT_POLICY=passive
         export NNUNET_NUM_EPOCHS='${NNUNET_NUM_EPOCHS:-${NNUNET_NUM_EPOCHS_DEFAULT}}'
         ${_iters_export}

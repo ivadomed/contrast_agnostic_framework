@@ -1,0 +1,114 @@
+[
+  {
+    "train": [
+      "patient02",
+      "patient04",
+      "patient05",
+      "patient07",
+      "patient09",
+      "patient11",
+      "patient13",
+      "patient14",
+      "patient15",
+      "patient17",
+      "patient18",
+      "patient19",
+      "patient20",
+      "patient25",
+      "patient26",
+      "patient30"
+    ],
+    "val": [
+      "patient01",
+      "patient03",
+      "patient06",
+      "patient08",
+      "patient16",
+      "patient23"
+    ]
+  },
+  {
+    "train": [
+      "patient01",
+      "patient03",
+      "patient04",
+      "patient06",
+      "patient07",
+      "patient08",
+      "patient09",
+      "patient11",
+      "patient13",
+      "patient14",
+      "patient16",
+      "patient18",
+      "patient19",
+      "patient20",
+      "patient23",
+      "patient25"
+    ],
+    "val": [
+      "patient02",
+      "patient05",
+      "patient15",
+      "patient17",
+      "patient26",
+      "patient30"
+    ]
+  },
+  {
+    "train": [
+      "patient01",
+      "patient02",
+      "patient03",
+      "patient04",
+      "patient05",
+      "patient06",
+      "patient08",
+      "patient11",
+      "patient14",
+      "patient15",
+      "patient16",
+      "patient17",
+      "patient20",
+      "patient23",
+      "patient25",
+      "patient26",
+      "patient30"
+    ],
+    "val": [
+      "patient07",
+      "patient09",
+      "patient13",
+      "patient18",
+      "patient19"
+    ]
+  },
+  {
+    "train": [
+      "patient01",
+      "patient02",
+      "patient03",
+      "patient05",
+      "patient06",
+      "patient07",
+      "patient08",
+      "patient09",
+      "patient13",
+      "patient15",
+      "patient16",
+      "patient17",
+      "patient18",
+      "patient19",
+      "patient23",
+      "patient26",
+      "patient30"
+    ],
+    "val": [
+      "patient04",
+      "patient11",
+      "patient14",
+      "patient20",
+      "patient25"
+    ]
+  }
+]

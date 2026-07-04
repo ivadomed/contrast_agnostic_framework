@@ -1,0 +1,80 @@
+{
+  "_unit": "mm",
+  "_definition": "sup_mm/inf_mm = median CHAOS distance from the anchor organ's S-I bbox to the image FOV edge; the crop statistic is the median.",
+  "_generated_from": {
+    "t1in": "Dataset060_CHAOS_MR_T1in",
+    "t2spir": "Dataset061_CHAOS_MR_T2spir"
+  },
+  "t1in": {
+    "kidney": {
+      "sup_mm": 117.0,
+      "inf_mm": 18.0,
+      "n": 16,
+      "sup_mm_stats": {
+        "min": 5.5,
+        "median": 117.0,
+        "mean": 109.7,
+        "max": 162.0
+      },
+      "inf_mm_stats": {
+        "min": 0.0,
+        "median": 18.0,
+        "mean": 23.8,
+        "max": 96.0
+      }
+    },
+    "liver": {
+      "sup_mm": 27.0,
+      "inf_mm": 50.0,
+      "n": 16,
+      "sup_mm_stats": {
+        "min": 0.0,
+        "median": 27.0,
+        "mean": 32.0,
+        "max": 72.0
+      },
+      "inf_mm_stats": {
+        "min": 0.0,
+        "median": 50.0,
+        "mean": 54.3,
+        "max": 112.0
+      }
+    }
+  },
+  "t2spir": {
+    "kidney": {
+      "sup_mm": 99.0,
+      "inf_mm": 31.5,
+      "n": 16,
+      "sup_mm_stats": {
+        "min": 46.2,
+        "median": 99.0,
+        "mean": 102.4,
+        "max": 135.0
+      },
+      "inf_mm_stats": {
+        "min": 0.0,
+        "median": 31.5,
+        "mean": 36.5,
+        "max": 92.4
+      }
+    },
+    "liver": {
+      "sup_mm": 9.0,
+      "inf_mm": 79.6,
+      "n": 16,
+      "sup_mm_stats": {
+        "min": 0.0,
+        "median": 9.0,
+        "mean": 15.2,
+        "max": 54.0
+      },
+      "inf_mm_stats": {
+        "min": 27.0,
+        "median": 79.6,
+        "mean": 75.6,
+        "max": 117.0
+      }
+    }
+  }
+}

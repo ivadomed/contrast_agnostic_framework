@@ -50,13 +50,15 @@ def main() -> None:
     ap.add_argument("--name", default="",
                     help="Tag stored in the 'group' column (e.g. 'ct' or 'us')")
     ap.add_argument("--workers", type=int, default=8)
+    eval_metrics.add_fov_args(ap)
     args = ap.parse_args()
 
     triples = [(organ, pred_id, gt_id) for organ, (pred_id, gt_id) in ORGAN_MAP.items()]
     note = "chaos right_kidney(2)+left_kidney(3) MERGED → 'kidney' vs TRUSTED binary GT(1)"
     eval_metrics.run_evaluation(
         pred_dir=args.pred_dir, gt_dir=args.gt_dir, out_csv=args.out_csv,
-        name=args.name, triples=triples, workers=args.workers, summary_note=note)
+        name=args.name, triples=triples, workers=args.workers, summary_note=note,
+        fov=eval_metrics.fov_from_args(args))
 
 
 if __name__ == "__main__":

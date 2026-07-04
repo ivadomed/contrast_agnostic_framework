@@ -81,6 +81,7 @@ def main() -> None:
     ap.add_argument("--label_map", default=None,
                     help="cross-space map {name:[pred_id,gt_id]} as JSON file or inline")
     ap.add_argument("--workers", type=int, default=8, help="parallel worker processes")
+    eval_metrics.add_fov_args(ap)
     args = ap.parse_args()
 
     if args.label_map:
@@ -94,7 +95,8 @@ def main() -> None:
 
     eval_metrics.run_evaluation(
         pred_dir=args.pred_dir, gt_dir=args.gt_dir, out_csv=args.out_csv,
-        name=args.name, triples=triples, workers=args.workers, summary_note=note)
+        name=args.name, triples=triples, workers=args.workers, summary_note=note,
+        fov=eval_metrics.fov_from_args(args))
 
 
 if __name__ == "__main__":
