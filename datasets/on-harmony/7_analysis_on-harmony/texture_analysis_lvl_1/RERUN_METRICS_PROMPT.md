@@ -1,68 +1,61 @@
-# Prompt — Re-run Level-1 metrics with the new NGF metric
+# Prompt — Run the Level-1 texture-metric analysis (census + NMI, blur + no-blur)
 
 > Paste below the divider to the Claude on the 4-GPU `set_slot` machine.
-> **No regeneration needed** — the 3360 volumes under `data/generated/` are unchanged.
-> Just `git pull` to get the updated scripts, then recompute.
+> Run **after** both volume sets exist: `data/generated/` (with-blur) and
+> `data/generated_noblur/` (ablation). Scripts arrive via GitHub — just `git pull`.
 
 ---
 
-## Why we're re-running
+## What this computes
 
-The first pass used whole-ROI |LNCC| as the texture metric. It gave the right *direction*
-(PALETTE > SynthSeg on all 84 subjects, p≈1.7e-15) but **compressed** the effect (PALETTE
-0.48 vs SynthSeg 0.39 vs gamma 0.98), because a 9³ window straddles PALETTE's own Voronoi
-sub-region boundaries and charges it for the coarse contrast restructuring that is its
-*intended* behavior.
+Level-1 texture / structure preservation: for each generated volume vs its source T1w, per
+anatomical ROI. The claim is **categorical**: image-driven augmentations (PALETTE, auglab_default)
+preserve texture; label-generative SynthSeg destroys it (sits on the floor).
 
-We've added a better, more faithful, verbatim-citable primary metric:
+**Metrics** (see `LITERATURE_REVIEW.md` — do not change definitions):
+- **census_r1 / census_r2 (PRIMARY texture)** — `|corr( rank(source), rank(synth) )|` on the
+  eroded ROI, rank = census/rank transform (Zabih & Woodfill 1994; LBP ordinal family). Contrast-
+  invariant (monotone) + inversion-invariant (`|·|`). **Floor = 0.** Radii r∈{1,2} reported for
+  robustness; r=1 is the stringent headline.
+- **NMI (secondary, content)** — Studholme normalized MI.
+- Inline controls `gamma`, `histeq` = pure monotone remaps → census ≈ 1.0 (anchors the top).
 
-**NGF — canonical Normalized Gradient Fields** (Haber & Modersitzki 2006): per-voxel
-`⟨n_η(∇src), n_η(∇syn)⟩²` with `n_η(I)=∇I/√(|∇I|²+η²)`, averaged over the eroded ROI. Measures
-whether edges/texture point the same way (contrast- and inversion-invariant, squared handles
-α<0). η (edge param) is set to the **source noise level as the paper prescribes**: η = √1.5 ×
-Donoho–Johnstone wavelet-MAD estimate (`skimage.restoration.estimate_sigma`, needs **PyWavelets**).
-The script auto-computes NGF across an **η grid ×{0.5,1,2}** (`NGF_ETA_MULTS`) for robustness →
-columns `ngf_e0p5` / `ngf` (headline) / `ngf_e2p0`; random orientations give the **1/3 floor**.
-Validated on synthetic phantoms (identity→~0.96, gamma→~0.95, PALETTE-like→~0.89, noise→~0.33;
-`--sanity` PASSES).
+No noise estimation, no η, no PyWavelets — census needs none of that. (`scikit-image` is only used
+for the histeq control.)
 
-NMI stays as a secondary content-preservation number; |LNCC| is kept only as a robustness
-appendix. **Do not change any metric definitions** — they're pre-registered and validated.
+## Run
 
-## What to run
-
-0. **Install PyWavelets** into the venv (needed by `estimate_sigma`): `.venv/bin/pip install PyWavelets`.
-1. `git pull` (gets the updated `scripts/`).
-2. Self-test (must PASS — note the new NGF rows):
+1. `git pull`.
+2. Self-test (must PASS — census_r1: identity/gamma/inverted→~1, noise→~0):
    ```
    .venv/bin/python .../texture_analysis_lvl_1/scripts/compute_texture_metrics.py --sanity --device cuda
    ```
-3. Full re-run (recompute → aggregate → plot; volumes already exist):
+3. Full analysis (both sets + controls → aggregate → plot):
    ```
    bash .../texture_analysis_lvl_1/scripts/run_texture_lvl1.sh
    ```
-   It re-shards compute across `set_slot 0..3`, overwriting `outputs/data/metrics_rank*.csv`
-   with the NGF column added, then rebuilds tables + plots. Minutes of compute.
+   It computes the **blur** set (`data/generated/`), the **noblur** set (`data/generated_noblur/`),
+   and the `ref` controls, each sharded across `set_slot 0..3`, then aggregates + plots the
+   combined result (blur vs no-blur side by side). Minutes of compute. Logs in `/tmp/texlvl1/`.
 
 ## Expected result (correctness check — verify, don't force)
 
-In `outputs/tables/summary.md`, the **NGF** column should show:
-- **synthseg_em / synthseg_noem ≈ 0.33** (at the random/no-texture 1/3 floor — texture destroyed),
-- **palette** clearly above the floor, up near the image-driven controls (its blur is mild, so it
-  is *not* dragged down; read it relative to the floor, not as an absolute — canonical NGF even
-  scores identity <1),
-- **gamma / histeq / auglab_default** highest (image-driven controls preserve texture).
-- `stats.md`: PALETTE ≫ SynthSeg on NGF, large positive effect, tiny p.
+`outputs/tables/summary.md`, **census_r1** column:
+- **synthseg_em / synthseg_noem ≈ 0** (no-texture floor — texture destroyed), in **both** sets,
+- **palette** and **auglab_default** far above the floor (image-driven, texture preserved);
+  in the **noblur** set both rise (blur removed), PALETTE ≈ auglab (Voronoi costs little),
+- **gamma / histeq ≈ 1.0** (set=ref) — pure monotone remaps, metric sanity.
+- `stats.md`: PALETTE ≫ SynthSeg, rank-biserial ≈ +1, tiny p, in **both** sets.
 
-If SynthSeg's NGF is **not** near the 1/3 floor, or PALETTE is **not** clearly above it, flag it —
-don't tune η/erosion/anything to force it (that would be p-hacking; the metric is fixed).
-
-The **η-robustness grid is automatic** now — `summary.md` has `ngf_e0p5`/`ngf`/`ngf_e2p0`
-columns and `plots/eta_robustness.png` shows the direction holds across η. Nothing manual to do.
+Absolutes are **moderate and read relatively** (census r=1 is locally stringent — even the
+accepted auglab baseline isn't near 1). The result is the **categorical gap** (image-driven ≫
+SynthSeg ≈ 0), robust across r and across blur/no-blur. If SynthSeg is **not** near 0, or PALETTE
+is **not** clearly above it, flag it — do **not** tune anything to force it.
 
 ## Report back
 
-- `outputs/tables/summary.md` and `stats.md` (paste them — NGF η-grid + NMI + LNCC),
-- confirm the PNGs in `outputs/plots/` (violin_/heatmap_ × ngf/nmi/lncc, plus `eta_robustness.png`),
-- combined CSV row count and any volumes skipped,
-- any code tweak you had to make.
+- `outputs/tables/summary.md` and `stats.md` (paste — both sets),
+- confirm the PNGs in `outputs/plots/` (headline_census_r1, violin/heatmap per set, radius_robustness),
+- combined CSV row counts per set and any volumes skipped (shape mismatch ⇒ generation broke
+  alignment — flag, don't work around),
+- any code tweak you made.

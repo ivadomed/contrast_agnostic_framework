@@ -2,39 +2,34 @@
 """
 Level-1 texture / structure-preservation metrics (input-space, network-free).
 
-For each generated volume (PALETTE / SynthSeg-EM / SynthSeg-noEM / auglab_default) and
-each of the 31 anatomical ROIs, measure how much of the SOURCE T1w's structure/texture
-survives in the augmented volume, using two directly-citable, contrast-AND-inversion-
-invariant metrics (see ../LITERATURE_REVIEW.md):
+For each generated volume and each of the 31 anatomical ROIs, measure how much of the SOURCE
+T1w's texture survives in the augmented volume, using two contrast-AND-inversion-invariant,
+citable metrics (see ../LITERATURE_REVIEW.md):
 
-  * NGF   — canonical Normalized Gradient Fields similarity ⟨n_η(∇src),n_η(∇syn)⟩² ∈ [0,1].
-            PRIMARY texture metric (Haber & Modersitzki 2006, verbatim). Edge-orientation
-            match, contrast/inversion-invariant; η = √1.5×(Donoho-Johnstone wavelet-MAD noise
-            estimate on the fg-cropped source), reported across an η grid ×{0.5,1,2} for
-            robustness (cols ngf_e0p5 / ngf / ngf_e2p0; 'ngf' = ×1.0 headline). Random
-            orientations → 1/3 floor; read relatively: preserved (PALETTE) ≫ destroyed ≈ floor.
-  * NMI   — Studholme normalized mutual information  = (H(X)+H(Y))/H(X,Y) ∈ [1,2]. Secondary
-            content-preservation. (Maes 1997 / Studholme 1999)
-  * |LNCC|— |local normalized cross-correlation|, box window. (Avants 2008 / ANTs). Robustness
-            appendix only — conflates coarse contrast layout with fine texture.
+  * CENSUS — |corr( rank(source), rank(synth) )| within the eroded ROI.  PRIMARY texture metric.
+             rank = census/rank transform (Zabih & Woodfill 1994; LBP ordinal family, Ojala
+             2002): each voxel → fraction of neighbours it exceeds. Invariant to monotone remaps
+             by construction; |·| handles PALETTE's α<0 inversion. Floor = 0 (independent rank
+             fields → 0 correlation). Reported across window radii r ∈ {1,2} (columns
+             census_r1 / census_r2) for robustness; r=1 is the stringent headline.
+  * NMI    — Studholme normalized mutual information (H(X)+H(Y))/H(X,Y) ∈ [1,2]. Secondary
+             content-preservation (Maes 1997 / Studholme 1999).
 
-Two INLINE positive controls are also scored directly from the source (no pre-generated
-volumes needed): `gamma` and `histeq` — image-driven ops that SHOULD preserve texture,
-proving the metric rewards any texture-preservation, not something tuned to PALETTE.
+Read RELATIVELY: image-driven augs (PALETTE, auglab_default, gamma) sit far above the 0 floor;
+generative SynthSeg sits on it. Absolutes are moderate (census is locally stringent).
 
-Metrics are computed on ERODED ROI masks (drop boundary voxels → removes PALETTE's
-Voronoi boundary-artifact confound). Output is one long-format CSV.
+Inline positive controls scored from the source (no volumes needed): `gamma`, `histeq` — pure
+monotone remaps, so census → 1.0 (anchors the "perfect preservation" top and guards against a
+rigged metric).
 
-Volumes must be voxel-aligned to their source (guaranteed by the generation step).
+`--set-label` tags rows (blur / noblur / ref) so both generated sets combine into one table.
+Volumes must be voxel-aligned to their source (guaranteed by generation).
 
 Usage
 -----
-  # self-test the metric math (no data needed; run this first):
-  python compute_texture_metrics.py --sanity
-
-  # full run, one GPU, sharded (launch 4 of these, rank 0..3, via set_slot 0..3):
+  python compute_texture_metrics.py --sanity                      # metric self-test, no data
   python compute_texture_metrics.py --device cuda --rank 0 --world-size 4 \
-      --output-csv .../outputs/data/metrics_rank0.csv
+      --generated-root .../data/generated --set-label blur --output-csv .../metrics_blur_rank0.csv
 """
 from __future__ import annotations
 
@@ -52,8 +47,7 @@ log = logging.getLogger(__name__)
 
 THIS_DIR      = Path(__file__).resolve().parent
 ANALYSIS_ROOT = THIS_DIR.parent                                  # texture_analysis_lvl_1/
-# repo root = .../mri_synthesis_project. THIS_DIR is scripts/; parents[0]=lvl1,
-# [1]=7_analysis, [2]=on-harmony, [3]=datasets, [4]=repo root.
+# parents[0]=lvl1, [1]=7_analysis, [2]=on-harmony, [3]=datasets, [4]=repo root.
 PROJECT_ROOT  = THIS_DIR.parents[4]
 
 DEFAULT_GENERATED = ANALYSIS_ROOT / "data" / "generated"
@@ -66,75 +60,36 @@ GENERATED_METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default"
 CONTROL_METHODS   = ["gamma", "histeq"]          # synthesised inline from source
 GAMMA_VALUES      = [0.5, 1.5, 2.5]
 
-MIN_VOX   = 50        # ROI smaller than this (after erosion) → skip
-EPS       = 1e-7
-# NGF edge parameter η. Set to an ESTIMATE OF SOURCE-IMAGE NOISE, as the NGF paper prescribes
-# (Haber & Modersitzki 2006: ε ≈ image noise level): η_base = √1.5 × σ̂, where σ̂ is the
-# Donoho-Johnstone wavelet-MAD noise estimate (skimage.restoration.estimate_sigma; Donoho &
-# Johnstone 1994) on the foreground-cropped source, and √1.5 converts intensity-σ → central-
-# difference gradient units. We report NGF across an η GRID (η_base × {0.5,1,2}) so the
-# PALETTE≫SynthSeg result cannot be pinned on the η choice; the ×1.0 value is the headline.
-NGF_ETA_MULTS     = [0.5, 1.0, 2.0]
-_GRAD_NOISE_SCALE = 1.5 ** 0.5          # E[|∇_centraldiff(noise)|²] = 1.5·σ²  → ε = √1.5·σ
-
-
-def _ngf_col(mult: float) -> str:
-    return "ngf" if mult == 1.0 else "ngf_e" + str(mult).replace(".", "p")
+MIN_VOX    = 50        # ROI smaller than this (after erosion) → skip
+EPS        = 1e-7
+RANK_RADII = [1, 2]    # census window radii reported (robustness grid)
 
 
 # ─────────────────────────── metric core (torch) ────────────────────────────
-def _box_filter(x: torch.Tensor, win: int) -> torch.Tensor:
-    """Mean over a win^3 box, stride 1, edge-safe. x: (1,1,D,H,W)."""
-    return F.avg_pool3d(x, kernel_size=win, stride=1, padding=win // 2,
-                        count_include_pad=False)
+def rank_transform(x: torch.Tensor, r: int) -> torch.Tensor:
+    """Census/rank transform: fraction of (2r+1)^3−1 neighbours that x exceeds. x,→ (D,H,W).
+    Strict `>` (ties not counted) so flat regions → near-constant field → ~0 correlation."""
+    out = torch.zeros_like(x)
+    cnt = 0
+    for dz in range(-r, r + 1):
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                if dz == dy == dx == 0:
+                    continue
+                out += (x > torch.roll(x, (dz, dy, dx), (0, 1, 2))).float()
+                cnt += 1
+    return out / cnt
 
 
-def lncc_map(x: torch.Tensor, y: torch.Tensor, win: int) -> torch.Tensor:
-    """Per-voxel local normalized cross-correlation. x,y: (1,1,D,H,W) → (D,H,W).
-    Robustness-appendix metric (conflates coarse contrast layout with fine texture)."""
-    mu_x, mu_y = _box_filter(x, win), _box_filter(y, win)
-    var_x = _box_filter(x * x, win) - mu_x * mu_x
-    var_y = _box_filter(y * y, win) - mu_y * mu_y
-    cov   = _box_filter(x * y, win) - mu_x * mu_y
-    cc    = cov / (torch.sqrt(var_x.clamp_min(0) * var_y.clamp_min(0)) + EPS)
-    return cc[0, 0].clamp(-1.0, 1.0)
-
-
-def _grad(x: torch.Tensor) -> torch.Tensor:
-    """Central-difference spatial gradient. x: (D,H,W) → (3,D,H,W)."""
-    g = torch.zeros(3, *x.shape, device=x.device, dtype=x.dtype)
-    g[0, 1:-1]       = (x[2:]      - x[:-2])      * 0.5
-    g[1, :, 1:-1]    = (x[:, 2:]   - x[:, :-2])   * 0.5
-    g[2, :, :, 1:-1] = (x[:, :, 2:] - x[:, :, :-2]) * 0.5
-    return g
-
-
-def ngf_map(gs: torch.Tensor, gy: torch.Tensor, eta: float) -> torch.Tensor:
-    """Canonical Normalized Gradient Fields similarity (Haber & Modersitzki 2006).
-
-    n_η(I) = ∇I / sqrt(|∇I|² + η²);  per-voxel similarity = ⟨n_η(src), n_η(syn)⟩²  ∈ [0,1].
-    Squared → inversion-invariant (handles PALETTE's α<0). η (edge parameter) suppresses
-    noise gradients, so smooth voxels of BOTH images contribute ~0. gs, gy: (3,D,H,W).
-
-    Interpretation: random gradient orientations → E[cos²]=1/3 floor; identical structure → 1
-    where the image has edges (and <1 in smooth voxels, since |n_η|<1 there — so even identity
-    averages below 1). Reported RELATIVELY: preserved (PALETTE) ≫ destroyed (SynthSeg) ≈ floor.
-    """
-    ns = gs / torch.sqrt((gs * gs).sum(0, keepdim=True) + eta ** 2)
-    ny = gy / torch.sqrt((gy * gy).sum(0, keepdim=True) + eta ** 2)
-    return ((ns * ny).sum(0)) ** 2                                     # (D,H,W)
-
-
-def _estimate_eta(source: torch.Tensor, fg: torch.Tensor) -> float:
-    """η_base = √1.5 × Donoho-Johnstone wavelet-MAD noise estimate on the fg-cropped source."""
-    from skimage.restoration import estimate_sigma
-    s = source.detach().cpu().numpy()
-    idx = np.where(fg.detach().cpu().numpy())
-    if idx[0].size:
-        sl = tuple(slice(int(i.min()), int(i.max()) + 1) for i in idx)
-        s = s[sl]
-    sigma = float(estimate_sigma(s))
-    return max(sigma * _GRAD_NOISE_SCALE, EPS)
+def abscorr(a: torch.Tensor, b: torch.Tensor, m: torch.Tensor) -> float:
+    """|Pearson correlation| of a,b over boolean mask m. |·| → inversion-invariant."""
+    av, bv = a[m], b[m]
+    av = av - av.mean()
+    bv = bv - bv.mean()
+    denom = av.norm() * bv.norm()
+    if denom < EPS:
+        return float("nan")
+    return abs(float((av * bv).sum() / denom))
 
 
 def nmi_1d(xv: torch.Tensor, yv: torch.Tensor, bins: int) -> float:
@@ -146,7 +101,7 @@ def nmi_1d(xv: torch.Tensor, yv: torch.Tensor, bins: int) -> float:
         return ((v - vmin) / (vmax - vmin) * (bins - 1)).round().long().clamp(0, bins - 1)
 
     xi, yi = quant(xv), quant(yv)
-    if xi is None or yi is None:               # constant region → undefined
+    if xi is None or yi is None:
         return float("nan")
     joint = torch.bincount(xi * bins + yi, minlength=bins * bins).float().reshape(bins, bins)
     joint /= joint.sum()
@@ -170,51 +125,40 @@ def erode(mask: torch.Tensor, iters: int) -> torch.Tensor:
 
 
 # ─────────────────────────── per-volume computation ─────────────────────────
-def metrics_for_pair(source: torch.Tensor, synth: torch.Tensor, labels: torch.Tensor,
-                     bins: int, win: int, erode_iters: int,
-                     eta_base: float | None = None) -> list[dict]:
-    """source/synth/labels: (D,H,W) on device. Returns one row-dict per ROI.
-
-    eta_base: precomputed NGF noise η for this source (cached across its variants); if None,
-    estimated here. NGF is reported for each η in NGF_ETA_MULTS × eta_base (grid robustness);
-    the ×1.0 column is 'ngf' (headline)."""
-    cc = lncc_map(source[None, None], synth[None, None], win)          # (D,H,W) robustness
-    gs, gy = _grad(source), _grad(synth)
-    if eta_base is None:
-        eta_base = _estimate_eta(source, labels > 0)
-    ngf_maps = {mult: ngf_map(gs, gy, eta_base * mult) for mult in NGF_ETA_MULTS}
+def metrics_for_pair(source, synth, labels, bins, erode_iters, src_ranks=None):
+    """source/synth/labels: (D,H,W) on device. src_ranks: {r: rank_transform(source,r)} cached
+    across a source's variants (computed here if None). Returns one row-dict per ROI."""
+    if src_ranks is None:
+        src_ranks = {r: rank_transform(source, r) for r in RANK_RADII}
+    syn_ranks = {r: rank_transform(synth, r) for r in RANK_RADII}
     rows = []
     for roi in range(1, 32):                                           # 31 classes
         m = erode(labels == roi, erode_iters)
         n = int(m.sum().item())
         if n < MIN_VOX:
             continue
-        row = dict(
-            roi_id=roi, n_vox=n,
-            nmi=nmi_1d(source[m], synth[m], bins),                     # secondary (content)
-            lncc=float(cc[m].abs().mean().item()),                     # robustness appendix
-        )
-        for mult in NGF_ETA_MULTS:                                     # PRIMARY texture metric + η grid
-            row[_ngf_col(mult)] = float(ngf_maps[mult][m].mean())
+        row = dict(roi_id=roi, n_vox=n, nmi=nmi_1d(source[m], synth[m], bins))
+        for r in RANK_RADII:
+            row[f"census_r{r}"] = abscorr(src_ranks[r], syn_ranks[r], m)
         rows.append(row)
     return rows
 
 
 # ─────────────────────────── I/O helpers ────────────────────────────────────
-def _load(path: Path, device, order: int) -> torch.Tensor:
+def _load(path: Path, device) -> torch.Tensor:
     import nibabel as nib
     arr = np.asarray(nib.load(str(path)).get_fdata(), dtype=np.float32)
     return torch.from_numpy(arr).to(device)
 
 
-def _foreground_norm01(x: torch.Tensor, fg: torch.Tensor) -> torch.Tensor:
+def _foreground_norm01(x, fg):
     vals = x[fg]
     lo, hi = torch.quantile(vals, 0.01), torch.quantile(vals, 0.99)
     return ((x - lo) / (hi - lo + EPS)).clamp(0, 1)
 
 
-def make_control(source: torch.Tensor, labels: torch.Tensor, kind: str, param) -> torch.Tensor:
-    """Inline positive control synthesised from the source."""
+def make_control(source, labels, kind, param):
+    """Inline positive control synthesised from the source (monotone remap → census→1)."""
     fg = labels > 0
     s01 = _foreground_norm01(source, fg)
     if kind == "gamma":
@@ -227,53 +171,48 @@ def make_control(source: torch.Tensor, labels: torch.Tensor, kind: str, param) -
 
 
 # ─────────────────────────── task enumeration ───────────────────────────────
-def list_source_keys(images_dir: Path) -> dict[str, Path]:
-    keys = {}
-    for p in sorted(images_dir.glob("*_0000.nii.gz")):
-        keys[p.name[:-len("_0000.nii.gz")]] = p       # sub-XXXX_ses-YYYY_T1w
-    return keys
+def list_source_keys(images_dir: Path):
+    return {p.name[:-len("_0000.nii.gz")]: p
+            for p in sorted(images_dir.glob("*_0000.nii.gz"))}   # sub-XXXX_ses-YYYY_T1w
 
 
-def build_tasks(generated_root: Path, source_keys: dict, methods: list[str]) -> list[tuple]:
+def build_tasks(generated_root: Path, source_keys: dict, methods):
     """Each task = (method, key, variant, synth_path|None)."""
     tasks = []
     for method in methods:
         if method in CONTROL_METHODS:
             for key in source_keys:
-                variants = GAMMA_VALUES if method == "gamma" else [0]
-                for v in variants:
+                for v in (GAMMA_VALUES if method == "gamma" else [0]):
                     tasks.append((method, key, v, None))
             continue
         mdir = generated_root / method
         for key in source_keys:
-            vol_dir = mdir / key
-            for synth in sorted(vol_dir.glob(f"{key}_run-*.nii.gz")):
+            for synth in sorted((mdir / key).glob(f"{key}_run-*.nii.gz")):
                 variant = int(synth.stem.split("run-")[-1].split(".")[0])
                 tasks.append((method, key, variant, synth))
     return tasks
 
 
 # ─────────────────────────── sanity self-test ───────────────────────────────
-def run_sanity(device, bins, win, erode_iters) -> int:
+def run_sanity(device, bins, erode_iters) -> int:
     torch.manual_seed(0)
-    D = 40
-    # smooth random source (spatially correlated → has texture)
-    base = torch.randn(1, 1, D, D, D, device=device)
-    source = _box_filter(base, 5)[0, 0]
+    D = 44
+
+    def boxf(x, w):
+        return F.avg_pool3d(x[None, None], w, 1, w // 2, count_include_pad=False)[0, 0]
+
+    source = boxf(torch.randn(D, D, D, device=device), 5)
     source = (source - source.min()) / (source.max() - source.min() + EPS)
     labels = torch.zeros(D, D, D, dtype=torch.long, device=device)
-    labels[5:35, 5:35, 5:20] = 1
-    labels[5:35, 5:35, 20:35] = 2
+    labels[5:39, 5:39, 5:22] = 1
+    labels[5:39, 5:39, 22:39] = 2
 
-    # piecewise-affine "PALETTE-like": random spatial blocks, each a signed-affine remap of
-    # the source (monotone within block, block edges where source is smooth).
-    def palette_like(x, nblocks=6):
-        centers = torch.rand(nblocks, 3, device=device) * D
-        coords  = torch.stack(torch.meshgrid(*[torch.arange(D, device=device)] * 3,
-                                             indexing="ij"), -1).float()
+    def palette_like(x, nb=6):
+        centers = torch.rand(nb, 3, device=device) * D
+        coords  = torch.stack(torch.meshgrid(*[torch.arange(D, device=device)] * 3, indexing="ij"), -1).float()
         lab = ((coords[..., None, :] - centers) ** 2).sum(-1).argmin(-1)
         out = x.clone()
-        for b in range(nblocks):
+        for b in range(nb):
             mb = lab == b
             if mb.sum() < 10:
                 continue
@@ -282,36 +221,40 @@ def run_sanity(device, bins, win, erode_iters) -> int:
             out[mb] = mu + alpha * (x[mb] - x[mb].mean())
         return out
 
+    # palette-like is high-variance on a phantom (few random blocks) — average several draws so
+    # the sanity tests the METRIC (piecewise-monotone remap separates from noise), not a fragile
+    # single-draw absolute. Real PALETTE numbers come from real volumes, not this.
+    palette_draws = [palette_like(source) for _ in range(4)]
     cases = {
         "identity":     source.clone(),
         "gamma":        source.clamp_min(0) ** 2.0,
-        "palette-like": palette_like(source),
-        "noise":        torch.rand(D, D, D, device=device),      # independent noise
+        "inverted":     1.0 - source,
+        "noise":        torch.rand(D, D, D, device=device),
     }
-    print(f"{'case':14s} {'NGF(mean)':>10s} {'NMI(mean)':>10s} {'|LNCC|(mean)':>12s}")
-    results = {}
+    print(f"{'case':16s} {'census_r1':>10s} {'census_r2':>10s} {'NMI':>8s}")
+    res = {}
     for name, synth in cases.items():
-        rows = metrics_for_pair(source, synth, labels, bins, win, erode_iters)
-        ngf  = float(np.nanmean([r["ngf"] for r in rows]))
-        nmi  = float(np.nanmean([r["nmi"] for r in rows]))
-        lncc = float(np.nanmean([r["lncc"] for r in rows]))
-        results[name] = (ngf, nmi, lncc)
-        print(f"{name:14s} {ngf:10.3f} {nmi:10.3f} {lncc:12.3f}")
+        rows = metrics_for_pair(source, synth, labels, bins, erode_iters)
+        res[name] = (float(np.nanmean([r["census_r1"] for r in rows])),
+                     float(np.nanmean([r["census_r2"] for r in rows])),
+                     float(np.nanmean([r["nmi"] for r in rows])))
+        print(f"{name:16s} {res[name][0]:10.3f} {res[name][1]:10.3f} {res[name][2]:8.3f}")
+    pal = float(np.mean([np.nanmean([r["census_r1"] for r in
+                 metrics_for_pair(source, d, labels, bins, erode_iters)]) for d in palette_draws]))
+    print(f"{'palette-like(avg4)':16s} {pal:10.3f}")
 
-    ok = True
-    # Canonical NGF: identity high (but <1 due to η), noise ≈ 1/3 floor, palette ≫ floor.
     checks = [
-        ("identity NGF high",              results["identity"][0] > 0.85),
-        ("gamma NGF high",                 results["gamma"][0]    > 0.80),
-        ("palette-like NGF ≫ floor",       results["palette-like"][0] > 0.55),
-        ("noise NGF ≈ 1/3 floor",          0.20 < results["noise"][0] < 0.45),
-        ("palette ≫ noise (separation)",   results["palette-like"][0] > results["noise"][0] + 0.2),
-        ("identity NMI≈2",                 results["identity"][1] > 1.90),
+        ("identity census≈1",         res["identity"][0] > 0.95),
+        ("gamma census≈1 (monotone)", res["gamma"][0]    > 0.95),
+        ("inverted census≈1 (|·|)",   res["inverted"][0] > 0.95),
+        ("noise census≈0 floor",      res["noise"][0]    < 0.15),
+        ("palette-like ≫ noise floor", pal > res["noise"][0] + 0.15),
+        ("identity NMI≈2",            res["identity"][2] > 1.90),
     ]
     print()
+    ok = True
     for label, passed in checks:
-        print(f"  [{'PASS' if passed else 'FAIL'}] {label}")
-        ok &= passed
+        print(f"  [{'PASS' if passed else 'FAIL'}] {label}"); ok &= passed
     print(f"\nSANITY {'PASSED' if ok else 'FAILED'}")
     return 0 if ok else 1
 
@@ -323,28 +266,27 @@ def main():
     p.add_argument("--images-dir", type=Path, default=DEFAULT_IMAGES)
     p.add_argument("--labels-dir", type=Path, default=DEFAULT_LABELS)
     p.add_argument("--output-csv", type=Path, default=DEFAULT_OUT)
-    p.add_argument("--methods", type=str, default=",".join(GENERATED_METHODS + CONTROL_METHODS))
+    p.add_argument("--methods", type=str, default=",".join(GENERATED_METHODS))
+    p.add_argument("--set-label", type=str, default="blur", help="tag rows: blur / noblur / ref")
     p.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     p.add_argument("--mi-bins", type=int, default=64)
-    p.add_argument("--lncc-window", type=int, default=9)
     p.add_argument("--erode-iters", type=int, default=1)
     p.add_argument("--rank", type=int, default=0)
     p.add_argument("--world-size", type=int, default=1)
-    p.add_argument("--limit", type=int, default=None, help="debug: cap #tasks")
-    p.add_argument("--sanity", action="store_true", help="run metric self-test and exit")
+    p.add_argument("--limit", type=int, default=None)
+    p.add_argument("--sanity", action="store_true")
     args = p.parse_args()
 
     device = torch.device(args.device)
-
     if args.sanity:
-        sys.exit(run_sanity(device, args.mi_bins, args.lncc_window, args.erode_iters))
+        sys.exit(run_sanity(device, args.mi_bins, args.erode_iters))
 
     import pandas as pd
     methods = [m.strip() for m in args.methods.split(",") if m.strip()]
     source_keys = list_source_keys(args.images_dir)
     if not source_keys:
-        log.error("No source images found in %s", args.images_dir); sys.exit(1)
-    log.info("Found %d source volumes; methods=%s", len(source_keys), methods)
+        log.error("No source images in %s", args.images_dir); sys.exit(1)
+    log.info("set=%s  methods=%s  sources=%d", args.set_label, methods, len(source_keys))
 
     tasks = build_tasks(args.generated_root, source_keys, methods)
     tasks = tasks[args.rank::args.world_size]
@@ -352,37 +294,35 @@ def main():
         tasks = tasks[:args.limit]
     log.info("Rank %d/%d: %d tasks", args.rank, args.world_size, len(tasks))
 
-    label_cache: dict[str, torch.Tensor] = {}
-    source_cache: dict[str, torch.Tensor] = {}
-    eta_cache: dict[str, float] = {}                                   # NGF η per source (reused across variants)
+    source_cache, label_cache, rank_cache = {}, {}, {}
     out_rows = []
     for i, (method, key, variant, synth_path) in enumerate(tasks):
         try:
             if key not in source_cache:
-                source_cache[key] = _load(args.images_dir / f"{key}_0000.nii.gz", device, 1)
-                label_cache[key]  = _load(args.labels_dir / f"{key}.nii.gz", device, 0).round().long()
-                eta_cache[key]    = _estimate_eta(source_cache[key], label_cache[key] > 0)
+                source_cache[key] = _load(args.images_dir / f"{key}_0000.nii.gz", device)
+                label_cache[key]  = _load(args.labels_dir / f"{key}.nii.gz", device).round().long()
+                rank_cache[key]   = {r: rank_transform(source_cache[key], r) for r in RANK_RADII}
             source, labels = source_cache[key], label_cache[key]
 
             if method in CONTROL_METHODS:
                 synth = make_control(source, labels, method, variant)
             else:
-                synth = _load(synth_path, device, 1)
+                synth = _load(synth_path, device)
                 if synth.shape != source.shape:
-                    log.warning("SHAPE MISMATCH %s vs source %s — skipping %s/%s/%s",
-                                tuple(synth.shape), tuple(source.shape), method, key, variant)
+                    log.warning("SHAPE MISMATCH %s %s: %s vs %s — skip",
+                                method, key, tuple(synth.shape), tuple(source.shape))
                     continue
 
             for r in metrics_for_pair(source, synth, labels, args.mi_bins,
-                                      args.lncc_window, args.erode_iters,
-                                      eta_base=eta_cache[key]):
-                sub, ses = key.split("_ses-")[0], "ses-" + key.split("_ses-")[1].replace("_T1w", "")
-                out_rows.append(dict(method=method, subject=sub, session=ses,
-                                     variant=variant, **r))
+                                      args.erode_iters, src_ranks=rank_cache[key]):
+                sub = key.split("_ses-")[0]
+                ses = "ses-" + key.split("_ses-")[1].replace("_T1w", "")
+                out_rows.append(dict(set=args.set_label, method=method,
+                                     subject=sub, session=ses, variant=variant, **r))
         except Exception as e:                                        # noqa: BLE001
             log.warning("FAILED %s/%s/%s: %s", method, key, variant, e)
         if (i + 1) % 200 == 0:
-            log.info("  %d/%d tasks done", i + 1, len(tasks))
+            log.info("  %d/%d done", i + 1, len(tasks))
 
     df = pd.DataFrame(out_rows)
     args.output_csv.parent.mkdir(parents=True, exist_ok=True)

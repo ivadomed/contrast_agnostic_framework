@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 """
-Plot Level-1 texture metrics.
+Plot Level-1 texture metrics (census + NMI), split by set (blur / noblur).
 
-Reads the long CSV(s) from compute_texture_metrics.py and produces:
-  1. violin/box of each metric per method       (the vertical-axis proof:
-     SynthSeg near the texture-destroying floor, PALETTE + image-driven controls high),
-  2. per-method × 31-ROI heatmap for each metric (preservation is uniform across anatomy).
+Reads the long CSV shard(s) from compute_texture_metrics.py and produces:
+  1. headline bar — census_r1 mean per method, grouped by set (blur vs noblur), with the 0 floor;
+  2. per-set violins of census_r1 per method;
+  3. per-set heatmaps census_r1 per ROI × method;
+  4. radius robustness — census_r1 vs census_r2 per method (blur set).
 
-The 2×2 (texture × contrast-coverage) figure is assembled separately, once the
-contrast-manifold re-run provides the coverage axis — not produced here.
+The 2×2 (texture × contrast-coverage) figure is assembled separately once the manifold re-run
+provides the coverage axis.
 
 Usage:
-  python plot_texture_metrics.py --input "outputs/data/metrics_rank*.csv" \
+  python plot_texture_metrics.py --input "outputs/data/metrics_*_rank*.csv" \
       --output-dir outputs/plots --labels-json <Dataset031 dataset.json>
 """
 from __future__ import annotations
@@ -27,97 +28,113 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-METRICS = {"ngf":  "NGF (texture, ↑; 1/3=no-texture floor)",
-           "nmi":  "NMI  (content preservation, ↑)",
-           "lncc": "|LNCC|  (robustness appendix, ↑)"}
-ETA_GRID_COLS = [("ngf_e0p5", 0.5), ("ngf", 1.0), ("ngf_e2p0", 2.0)]   # η robustness
-# order: ours, then competitors, then controls
+PRIMARY = "census_r1"
 METHOD_ORDER = ["palette", "synthseg_em", "synthseg_noem", "auglab_default", "gamma", "histeq"]
+SET_ORDER = ["blur", "noblur", "ref"]
 
 
-def load(input_glob: str) -> pd.DataFrame:
-    files = sorted(glob.glob(input_glob))
+def load(g):
+    files = sorted(glob.glob(g))
     if not files:
-        raise SystemExit(f"No CSVs match {input_glob}")
-    return pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
+        raise SystemExit(f"No CSVs match {g}")
+    df = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
+    if "set" not in df.columns:
+        df["set"] = "blur"
+    return df
 
 
-def roi_names(labels_json: Path | None) -> dict[int, str]:
-    if labels_json is None or not labels_json.exists():
+def roi_names(j):
+    if j is None or not Path(j).exists():
         return {}
-    labels = json.load(open(labels_json)).get("labels", {})
-    return {int(v): k for k, v in labels.items() if int(v) != 0}
+    return {int(v): k for k, v in json.load(open(j)).get("labels", {}).items() if int(v) != 0}
 
 
-def order_present(df) -> list[str]:
+def mpresent(df):
     return [m for m in METHOD_ORDER if m in set(df.method)]
 
 
-def plot_violins(df, out_dir):
-    methods = order_present(df)
-    per_vol = df.groupby(["method", "subject", "session", "roi_id"], as_index=False)[list(METRICS)].mean()
-    for metric, label in METRICS.items():
-        data = [per_vol[per_vol.method == m][metric].dropna().values for m in methods]
-        fig, ax = plt.subplots(figsize=(1.4 * len(methods) + 2, 4.5))
+def spresent(df):
+    return [s for s in SET_ORDER if s in set(df["set"])]
+
+
+def color_for(m):
+    return "#2166ac" if m == "palette" else ("#b2182b" if m.startswith("synthseg") else "#7a7a7a")
+
+
+def per_vol(df):
+    return df.groupby(["set", "method", "subject", "session", "roi_id"], as_index=False)[
+        ["census_r1", "census_r2", "nmi"]].mean()
+
+
+def plot_headline(df, out):
+    methods, sets = mpresent(df), spresent(df)
+    pv = per_vol(df)
+    x = np.arange(len(methods)); w = 0.8 / max(1, len(sets))
+    fig, ax = plt.subplots(figsize=(1.4 * len(methods) + 2, 4.8))
+    for i, s in enumerate(sets):
+        ys = [pv[(pv["set"] == s) & (pv.method == m)][PRIMARY].mean() for m in methods]
+        ax.bar(x + i * w, ys, w, label=f"set={s}", edgecolor="k", linewidth=0.4,
+               color=[color_for(m) for m in methods], alpha=0.65 if s != "blur" else 1.0)
+    ax.axhline(0.0, color="k", lw=0.8)
+    ax.set_xticks(x + w * (len(sets) - 1) / 2); ax.set_xticklabels(methods, rotation=25, ha="right")
+    ax.set_ylabel("census_r1  (texture, ↑; 0 = no-texture floor)")
+    ax.set_title("Texture preservation (census |corr|) — image-driven ≫ SynthSeg")
+    ax.legend(fontsize=8); ax.grid(axis="y", alpha=0.3); fig.tight_layout()
+    fig.savefig(out / "headline_census_r1.png", dpi=150); plt.close(fig)
+
+
+def plot_violins(df, out):
+    pv = per_vol(df)
+    for s in spresent(df):
+        methods = [m for m in mpresent(df)
+                   if len(pv[(pv["set"] == s) & (pv.method == m)][PRIMARY].dropna())]
+        if not methods:
+            continue
+        data = [pv[(pv["set"] == s) & (pv.method == m)][PRIMARY].dropna().values for m in methods]
+        fig, ax = plt.subplots(figsize=(1.3 * len(methods) + 2, 4.5))
         parts = ax.violinplot(data, showmedians=True, showextrema=False)
         for i, m in enumerate(methods):
-            color = "#2166ac" if m == "palette" else ("#b2182b" if m.startswith("synthseg") else "#999999")
-            parts["bodies"][i].set_facecolor(color)
-            parts["bodies"][i].set_alpha(0.65)
-        ax.set_xticks(range(1, len(methods) + 1))
-        ax.set_xticklabels(methods, rotation=25, ha="right")
-        ax.set_ylabel(label)
-        ax.set_title(f"Texture preservation — {metric.upper()}")
-        ax.grid(axis="y", alpha=0.3)
-        fig.tight_layout()
-        fig.savefig(out_dir / f"violin_{metric}.png", dpi=150)
-        plt.close(fig)
+            parts["bodies"][i].set_facecolor(color_for(m)); parts["bodies"][i].set_alpha(0.6)
+        ax.set_xticks(range(1, len(methods) + 1)); ax.set_xticklabels(methods, rotation=25, ha="right")
+        ax.set_ylabel("census_r1 (↑)"); ax.set_title(f"Texture preservation — set={s}")
+        ax.grid(axis="y", alpha=0.3); fig.tight_layout()
+        fig.savefig(out / f"violin_census_r1_{s}.png", dpi=150); plt.close(fig)
 
 
-def plot_heatmaps(df, out_dir, names):
-    methods = order_present(df)
-    per_roi = (df.groupby(["roi_id", "method"], as_index=False)[list(METRICS)].mean())
-    rois = sorted(per_roi.roi_id.unique())
-    ylabels = [names.get(r, str(r)) for r in rois]
-    for metric in METRICS:
+def plot_heatmaps(df, out, names):
+    pv = per_vol(df)
+    for s in spresent(df):
+        sub = pv[pv["set"] == s]
+        methods = [m for m in mpresent(df) if m in set(sub.method)]
+        rois = sorted(sub.roi_id.unique())
+        if not rois or not methods:
+            continue
         mat = np.full((len(rois), len(methods)), np.nan)
         for i, r in enumerate(rois):
             for j, m in enumerate(methods):
-                sel = per_roi[(per_roi.roi_id == r) & (per_roi.method == m)]
-                if len(sel):
-                    mat[i, j] = sel[metric].values[0]
+                v = sub[(sub.roi_id == r) & (sub.method == m)][PRIMARY]
+                if len(v):
+                    mat[i, j] = v.mean()
         fig, ax = plt.subplots(figsize=(1.3 * len(methods) + 3, 0.32 * len(rois) + 2))
-        vmin = {"nmi": 1.0, "ngf": 1.0 / 3}.get(metric, 0.0)
-        vmax = 2.0 if metric == "nmi" else 1.0
-        im = ax.imshow(mat, aspect="auto", cmap="viridis", vmin=vmin, vmax=vmax)
+        im = ax.imshow(mat, aspect="auto", cmap="viridis", vmin=0.0, vmax=1.0)
         ax.set_xticks(range(len(methods))); ax.set_xticklabels(methods, rotation=25, ha="right")
-        ax.set_yticks(range(len(rois)));    ax.set_yticklabels(ylabels, fontsize=7)
-        ax.set_title(f"{metric.upper()} per ROI × method")
-        fig.colorbar(im, ax=ax, shrink=0.6, label=metric.upper())
-        fig.tight_layout()
-        fig.savefig(out_dir / f"heatmap_{metric}.png", dpi=150)
-        plt.close(fig)
+        ax.set_yticks(range(len(rois))); ax.set_yticklabels([names.get(r, str(r)) for r in rois], fontsize=7)
+        ax.set_title(f"census_r1 per ROI × method — set={s}")
+        fig.colorbar(im, ax=ax, shrink=0.6, label="census_r1"); fig.tight_layout()
+        fig.savefig(out / f"heatmap_census_r1_{s}.png", dpi=150); plt.close(fig)
 
 
-def plot_eta_robustness(df, out_dir):
-    """NGF vs η multiplier, one line per method — shows the PALETTE≫SynthSeg direction holds."""
-    cols = [c for c, _ in ETA_GRID_COLS if c in df.columns]
-    if len(cols) < 2:
-        return
-    methods = order_present(df)
-    per_vol = df.groupby(["method", "subject", "session", "roi_id"], as_index=False)[cols].mean()
-    xs = [mult for c, mult in ETA_GRID_COLS if c in df.columns]
-    fig, ax = plt.subplots(figsize=(6, 4.5))
-    for m in methods:
-        sub = per_vol[per_vol.method == m]
-        ys = [sub[c].mean() for c, _ in ETA_GRID_COLS if c in df.columns]
-        color = "#2166ac" if m == "palette" else ("#b2182b" if m.startswith("synthseg") else "#999999")
-        ax.plot(xs, ys, marker="o", label=m, color=color)
-    ax.axhline(1.0 / 3, ls="--", c="k", alpha=0.5, label="1/3 floor")
-    ax.set_xscale("log", base=2); ax.set_xticks(xs); ax.set_xticklabels([str(x) for x in xs])
-    ax.set_xlabel("η multiplier (× MAD noise estimate)"); ax.set_ylabel("NGF (mean)")
-    ax.set_title("NGF η-robustness"); ax.legend(fontsize=7); ax.grid(alpha=0.3)
-    fig.tight_layout(); fig.savefig(out_dir / "eta_robustness.png", dpi=150); plt.close(fig)
+def plot_radius_robustness(df, out):
+    pv = per_vol(df); methods = mpresent(df)
+    sub = pv[pv["set"] == (spresent(df)[0])]  # first set (blur)
+    x = np.arange(len(methods))
+    fig, ax = plt.subplots(figsize=(1.4 * len(methods) + 2, 4.5))
+    ax.bar(x - 0.2, [sub[sub.method == m]["census_r1"].mean() for m in methods], 0.4, label="r=1")
+    ax.bar(x + 0.2, [sub[sub.method == m]["census_r2"].mean() for m in methods], 0.4, label="r=2")
+    ax.set_xticks(x); ax.set_xticklabels(methods, rotation=25, ha="right")
+    ax.set_ylabel("census |corr| (↑)"); ax.set_title(f"Census radius robustness (set={spresent(df)[0]})")
+    ax.legend(); ax.grid(axis="y", alpha=0.3); fig.tight_layout()
+    fig.savefig(out / "radius_robustness.png", dpi=150); plt.close(fig)
 
 
 def main():
@@ -127,13 +144,13 @@ def main():
     p.add_argument("--labels-json", type=Path, default=None)
     args = p.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-
     df = load(args.input)
     names = roi_names(args.labels_json)
+    plot_headline(df, args.output_dir)
     plot_violins(df, args.output_dir)
     plot_heatmaps(df, args.output_dir, names)
-    plot_eta_robustness(df, args.output_dir)
-    print(f"Wrote violin_*.png, heatmap_*.png, eta_robustness.png → {args.output_dir}")
+    plot_radius_robustness(df, args.output_dir)
+    print(f"Wrote headline / violin / heatmap / radius_robustness PNGs → {args.output_dir}")
 
 
 if __name__ == "__main__":

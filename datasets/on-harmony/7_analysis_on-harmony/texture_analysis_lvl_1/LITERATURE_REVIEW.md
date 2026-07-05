@@ -79,6 +79,18 @@ are clearer for reviewers than four.)*
 auglab (0.52, *no* Voronoi) → the Voronoi parcellation costs only ~0.08; it does **not** destroy
 texture. (`synthseg_noem` still transferring at time of writing; expected at the floor too.)
 
+### No-blur ablation (both sets reported)
+
+Because census r=1 is sensitive to blur, we also generate a **no-blur** version of *every* method
+(blur/resolution disabled symmetrically — `data/generated_noblur/`) and report it **alongside**
+the with-blur (training-config) set. This isolates the *contrast transformation's* texture
+preservation from the method-agnostic blur augmentation. The with-blur set is the **headline**
+(it is what the model trains on); the no-blur set is a labeled **mechanism ablation**. Expectation:
+image-driven methods rise in the no-blur set (blur removed) while SynthSeg stays on the 0 floor
+(it has no source texture to blur) — confirming that (a) blur, not the parcellation, is the main
+contributor to PALETTE's moderate with-blur absolute, and (b) the categorical gap is invariant to
+blur. Analysis runs over both sets in one table (`set` = blur / noblur / ref).
+
 ---
 
 ## Honest caveats (state these in the paper)
