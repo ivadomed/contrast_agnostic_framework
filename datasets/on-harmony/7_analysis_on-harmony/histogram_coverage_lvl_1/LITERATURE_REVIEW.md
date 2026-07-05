@@ -1,5 +1,17 @@
 # Histogram-Manifold Coverage — Literature Review & Metric Grounding
 
+> **⚠ UPDATE 2026-07-05 — design finalised after discussion; parts of the body below are superseded.**
+> The literature *landscape* here still holds, but three specifics changed (source of truth =
+> `GROUNDING_AUDIT.md` §2.4–2.5):
+> 1. **Feature space:** 7-region `regional_hist_64` → **31-class regional histograms** (1984-dim), matching
+>    Pillar 1 (`Dataset031`). Real parcellated via each scan's **own per-modality synthseg → FreeSurfer→31**
+>    (old code wrongly used the T1w seg for all modalities).
+> 2. **Metric set:** PRDC-all-four → **Coverage only** (Naeem 2020), **per (scanner×contrast) group at the
+>    cluster's local k-NN scale → macro-averaged**, + **Vendi** (global). Precision/Recall/Density dropped.
+> 3. **Reference:** pooled-real-with-balancing → **per-group + macro-average** (balancing removed; it was the
+>    crude version of what per-group does correctly).
+
+
 **Purpose.** This is the second explanatory pillar of the PALETTE paper. Pillar 1 (texture,
 `../texture_analysis_lvl_1/`) shows PALETTE *preserves* real anatomical texture where SynthSeg destroys
 it. Pillar 2 (this analysis) asks a distributional question: **when we synthesise augmentations from T1w,
