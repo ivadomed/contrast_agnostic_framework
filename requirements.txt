@@ -9,4 +9,7 @@ wandb
 numpy
 scipy
 matplotlib
+scikit-image
+PyWavelets
+pandas
 pytest

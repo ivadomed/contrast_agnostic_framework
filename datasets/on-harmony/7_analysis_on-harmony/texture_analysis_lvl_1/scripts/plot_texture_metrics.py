@@ -27,8 +27,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-METRICS = {"nmi": "NMI  (structure preservation, ↑)",
-           "lncc": "|LNCC|  (local structure, ↑)"}
+METRICS = {"ngf":  "NGF (texture, ↑; 1/3=no-texture floor)",
+           "nmi":  "NMI  (content preservation, ↑)",
+           "lncc": "|LNCC|  (robustness appendix, ↑)"}
+ETA_GRID_COLS = [("ngf_e0p5", 0.5), ("ngf", 1.0), ("ngf_e2p0", 2.0)]   # η robustness
 # order: ours, then competitors, then controls
 METHOD_ORDER = ["palette", "synthseg_em", "synthseg_noem", "auglab_default", "gamma", "histeq"]
 
@@ -85,7 +87,7 @@ def plot_heatmaps(df, out_dir, names):
                 if len(sel):
                     mat[i, j] = sel[metric].values[0]
         fig, ax = plt.subplots(figsize=(1.3 * len(methods) + 3, 0.32 * len(rois) + 2))
-        vmin = 1.0 if metric == "nmi" else 0.0
+        vmin = {"nmi": 1.0, "ngf": 1.0 / 3}.get(metric, 0.0)
         vmax = 2.0 if metric == "nmi" else 1.0
         im = ax.imshow(mat, aspect="auto", cmap="viridis", vmin=vmin, vmax=vmax)
         ax.set_xticks(range(len(methods))); ax.set_xticklabels(methods, rotation=25, ha="right")
@@ -95,6 +97,27 @@ def plot_heatmaps(df, out_dir, names):
         fig.tight_layout()
         fig.savefig(out_dir / f"heatmap_{metric}.png", dpi=150)
         plt.close(fig)
+
+
+def plot_eta_robustness(df, out_dir):
+    """NGF vs η multiplier, one line per method — shows the PALETTE≫SynthSeg direction holds."""
+    cols = [c for c, _ in ETA_GRID_COLS if c in df.columns]
+    if len(cols) < 2:
+        return
+    methods = order_present(df)
+    per_vol = df.groupby(["method", "subject", "session", "roi_id"], as_index=False)[cols].mean()
+    xs = [mult for c, mult in ETA_GRID_COLS if c in df.columns]
+    fig, ax = plt.subplots(figsize=(6, 4.5))
+    for m in methods:
+        sub = per_vol[per_vol.method == m]
+        ys = [sub[c].mean() for c, _ in ETA_GRID_COLS if c in df.columns]
+        color = "#2166ac" if m == "palette" else ("#b2182b" if m.startswith("synthseg") else "#999999")
+        ax.plot(xs, ys, marker="o", label=m, color=color)
+    ax.axhline(1.0 / 3, ls="--", c="k", alpha=0.5, label="1/3 floor")
+    ax.set_xscale("log", base=2); ax.set_xticks(xs); ax.set_xticklabels([str(x) for x in xs])
+    ax.set_xlabel("η multiplier (× MAD noise estimate)"); ax.set_ylabel("NGF (mean)")
+    ax.set_title("NGF η-robustness"); ax.legend(fontsize=7); ax.grid(alpha=0.3)
+    fig.tight_layout(); fig.savefig(out_dir / "eta_robustness.png", dpi=150); plt.close(fig)
 
 
 def main():
@@ -109,7 +132,8 @@ def main():
     names = roi_names(args.labels_json)
     plot_violins(df, args.output_dir)
     plot_heatmaps(df, args.output_dir, names)
-    print(f"Wrote violin_*.png, heatmap_*.png → {args.output_dir}")
+    plot_eta_robustness(df, args.output_dir)
+    print(f"Wrote violin_*.png, heatmap_*.png, eta_robustness.png → {args.output_dir}")
 
 
 if __name__ == "__main__":

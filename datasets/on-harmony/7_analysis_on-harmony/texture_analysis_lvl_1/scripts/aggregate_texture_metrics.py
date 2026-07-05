@@ -27,7 +27,9 @@ import numpy as np
 import pandas as pd
 from scipy.stats import wilcoxon
 
-METRICS  = ["nmi", "lncc"]
+# All numeric metric columns (ngf_e0p5/ngf/ngf_e2p0 = NGF η-grid; nmi secondary; lncc robustness).
+METRICS      = ["ngf_e0p5", "ngf", "ngf_e2p0", "nmi", "lncc"]
+STAT_METRICS = ["ngf", "nmi", "lncc"]    # headline NGF (η×1.0) + secondary + robustness
 REFERENCE = "palette"
 COMPARE_AGAINST = ["synthseg_em", "synthseg_noem"]
 
@@ -72,22 +74,28 @@ def main():
     with open(args.output_dir / "summary.md", "w") as fh:
         fh.write("# Level-1 texture metrics — per-method summary\n\n")
         fh.write("Mean over all (volume × ROI) units, after averaging variants. "
-                 "NMI ∈ [1,2] (higher=more structure preserved); |LNCC| ∈ [0,1].\n\n")
-        fh.write("| method | NMI mean | NMI median | \\|LNCC\\| mean | \\|LNCC\\| median |\n")
-        fh.write("|---|---|---|---|---|\n")
+                 "**NGF** = canonical Normalized Gradient Fields (PRIMARY texture; **1/3 = "
+                 "random/no-texture floor**, →1 = preserved; read relatively). `ngf`=headline "
+                 "(η×1.0); `ngf_e0p5`/`ngf_e2p0`=η×0.5/×2 robustness grid. NMI ∈ [1,2] "
+                 "(secondary content); |LNCC| ∈ [0,1] (robustness appendix).\n\n")
+        cols = " | ".join(f"{m.upper()} mean | {m.upper()} median" for m in METRICS)
+        fh.write(f"| method | {cols} |\n")
+        fh.write("|---|" + "---|" * (2 * len(METRICS)) + "\n")
         for m in summ.index:
-            fh.write(f"| {m} | {summ.loc[m,('nmi','mean')]:.3f} | {summ.loc[m,('nmi','median')]:.3f} "
-                     f"| {summ.loc[m,('lncc','mean')]:.3f} | {summ.loc[m,('lncc','median')]:.3f} |\n")
+            vals = " | ".join(f"{summ.loc[m,(mt,'mean')]:.3f} | {summ.loc[m,(mt,'median')]:.3f}"
+                              for mt in METRICS)
+            fh.write(f"| {m} | {vals} |\n")
 
     # 3. per-method × ROI table (mean over volumes)
     per_roi = per_vol.groupby(["roi_id", "method"])[METRICS].mean().reset_index()
-    per_roi.pivot(index="roi_id", columns="method", values="nmi").to_csv(args.output_dir / "per_roi_nmi.csv")
-    per_roi.pivot(index="roi_id", columns="method", values="lncc").to_csv(args.output_dir / "per_roi_lncc.csv")
+    for mt in METRICS:
+        per_roi.pivot(index="roi_id", columns="method", values=mt).to_csv(
+            args.output_dir / f"per_roi_{mt}.csv")
 
     # 4. paired Wilcoxon: per-volume mean over ROIs, PALETTE vs competitors
     vol_mean = per_vol.groupby(["method", "subject", "session"], as_index=False)[METRICS].mean()
     stats_rows = []
-    for metric in METRICS:
+    for metric in STAT_METRICS:
         ref = vol_mean[vol_mean.method == REFERENCE].set_index(["subject", "session"])[metric]
         for comp in COMPARE_AGAINST:
             other = vol_mean[vol_mean.method == comp].set_index(["subject", "session"])[metric]

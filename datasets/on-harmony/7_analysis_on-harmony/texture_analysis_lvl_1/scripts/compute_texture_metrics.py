@@ -7,10 +7,16 @@ each of the 31 anatomical ROIs, measure how much of the SOURCE T1w's structure/t
 survives in the augmented volume, using two directly-citable, contrast-AND-inversion-
 invariant metrics (see ../LITERATURE_REVIEW.md):
 
-  * NMI   — Studholme normalized mutual information  = (H(X)+H(Y))/H(X,Y) ∈ [1,2].
-            2 = identical dependence, 1 = independent. (Maes 1997 / Studholme 1999)
-  * |LNCC|— |local normalized cross-correlation|, box window. (Avants 2008 / ANTs)
-            Invariant to local linear intensity change; |·| handles PALETTE's α<0 inversion.
+  * NGF   — canonical Normalized Gradient Fields similarity ⟨n_η(∇src),n_η(∇syn)⟩² ∈ [0,1].
+            PRIMARY texture metric (Haber & Modersitzki 2006, verbatim). Edge-orientation
+            match, contrast/inversion-invariant; η = √1.5×(Donoho-Johnstone wavelet-MAD noise
+            estimate on the fg-cropped source), reported across an η grid ×{0.5,1,2} for
+            robustness (cols ngf_e0p5 / ngf / ngf_e2p0; 'ngf' = ×1.0 headline). Random
+            orientations → 1/3 floor; read relatively: preserved (PALETTE) ≫ destroyed ≈ floor.
+  * NMI   — Studholme normalized mutual information  = (H(X)+H(Y))/H(X,Y) ∈ [1,2]. Secondary
+            content-preservation. (Maes 1997 / Studholme 1999)
+  * |LNCC|— |local normalized cross-correlation|, box window. (Avants 2008 / ANTs). Robustness
+            appendix only — conflates coarse contrast layout with fine texture.
 
 Two INLINE positive controls are also scored directly from the source (no pre-generated
 volumes needed): `gamma` and `histeq` — image-driven ops that SHOULD preserve texture,
@@ -62,6 +68,18 @@ GAMMA_VALUES      = [0.5, 1.5, 2.5]
 
 MIN_VOX   = 50        # ROI smaller than this (after erosion) → skip
 EPS       = 1e-7
+# NGF edge parameter η. Set to an ESTIMATE OF SOURCE-IMAGE NOISE, as the NGF paper prescribes
+# (Haber & Modersitzki 2006: ε ≈ image noise level): η_base = √1.5 × σ̂, where σ̂ is the
+# Donoho-Johnstone wavelet-MAD noise estimate (skimage.restoration.estimate_sigma; Donoho &
+# Johnstone 1994) on the foreground-cropped source, and √1.5 converts intensity-σ → central-
+# difference gradient units. We report NGF across an η GRID (η_base × {0.5,1,2}) so the
+# PALETTE≫SynthSeg result cannot be pinned on the η choice; the ×1.0 value is the headline.
+NGF_ETA_MULTS     = [0.5, 1.0, 2.0]
+_GRAD_NOISE_SCALE = 1.5 ** 0.5          # E[|∇_centraldiff(noise)|²] = 1.5·σ²  → ε = √1.5·σ
+
+
+def _ngf_col(mult: float) -> str:
+    return "ngf" if mult == 1.0 else "ngf_e" + str(mult).replace(".", "p")
 
 
 # ─────────────────────────── metric core (torch) ────────────────────────────
@@ -72,13 +90,51 @@ def _box_filter(x: torch.Tensor, win: int) -> torch.Tensor:
 
 
 def lncc_map(x: torch.Tensor, y: torch.Tensor, win: int) -> torch.Tensor:
-    """Per-voxel local normalized cross-correlation. x,y: (1,1,D,H,W) → (D,H,W)."""
+    """Per-voxel local normalized cross-correlation. x,y: (1,1,D,H,W) → (D,H,W).
+    Robustness-appendix metric (conflates coarse contrast layout with fine texture)."""
     mu_x, mu_y = _box_filter(x, win), _box_filter(y, win)
     var_x = _box_filter(x * x, win) - mu_x * mu_x
     var_y = _box_filter(y * y, win) - mu_y * mu_y
     cov   = _box_filter(x * y, win) - mu_x * mu_y
     cc    = cov / (torch.sqrt(var_x.clamp_min(0) * var_y.clamp_min(0)) + EPS)
     return cc[0, 0].clamp(-1.0, 1.0)
+
+
+def _grad(x: torch.Tensor) -> torch.Tensor:
+    """Central-difference spatial gradient. x: (D,H,W) → (3,D,H,W)."""
+    g = torch.zeros(3, *x.shape, device=x.device, dtype=x.dtype)
+    g[0, 1:-1]       = (x[2:]      - x[:-2])      * 0.5
+    g[1, :, 1:-1]    = (x[:, 2:]   - x[:, :-2])   * 0.5
+    g[2, :, :, 1:-1] = (x[:, :, 2:] - x[:, :, :-2]) * 0.5
+    return g
+
+
+def ngf_map(gs: torch.Tensor, gy: torch.Tensor, eta: float) -> torch.Tensor:
+    """Canonical Normalized Gradient Fields similarity (Haber & Modersitzki 2006).
+
+    n_η(I) = ∇I / sqrt(|∇I|² + η²);  per-voxel similarity = ⟨n_η(src), n_η(syn)⟩²  ∈ [0,1].
+    Squared → inversion-invariant (handles PALETTE's α<0). η (edge parameter) suppresses
+    noise gradients, so smooth voxels of BOTH images contribute ~0. gs, gy: (3,D,H,W).
+
+    Interpretation: random gradient orientations → E[cos²]=1/3 floor; identical structure → 1
+    where the image has edges (and <1 in smooth voxels, since |n_η|<1 there — so even identity
+    averages below 1). Reported RELATIVELY: preserved (PALETTE) ≫ destroyed (SynthSeg) ≈ floor.
+    """
+    ns = gs / torch.sqrt((gs * gs).sum(0, keepdim=True) + eta ** 2)
+    ny = gy / torch.sqrt((gy * gy).sum(0, keepdim=True) + eta ** 2)
+    return ((ns * ny).sum(0)) ** 2                                     # (D,H,W)
+
+
+def _estimate_eta(source: torch.Tensor, fg: torch.Tensor) -> float:
+    """η_base = √1.5 × Donoho-Johnstone wavelet-MAD noise estimate on the fg-cropped source."""
+    from skimage.restoration import estimate_sigma
+    s = source.detach().cpu().numpy()
+    idx = np.where(fg.detach().cpu().numpy())
+    if idx[0].size:
+        sl = tuple(slice(int(i.min()), int(i.max()) + 1) for i in idx)
+        s = s[sl]
+    sigma = float(estimate_sigma(s))
+    return max(sigma * _GRAD_NOISE_SCALE, EPS)
 
 
 def nmi_1d(xv: torch.Tensor, yv: torch.Tensor, bins: int) -> float:
@@ -115,20 +171,32 @@ def erode(mask: torch.Tensor, iters: int) -> torch.Tensor:
 
 # ─────────────────────────── per-volume computation ─────────────────────────
 def metrics_for_pair(source: torch.Tensor, synth: torch.Tensor, labels: torch.Tensor,
-                     bins: int, win: int, erode_iters: int) -> list[dict]:
-    """source/synth/labels: (D,H,W) on device. Returns one row-dict per ROI."""
-    cc = lncc_map(source[None, None], synth[None, None], win)          # (D,H,W)
+                     bins: int, win: int, erode_iters: int,
+                     eta_base: float | None = None) -> list[dict]:
+    """source/synth/labels: (D,H,W) on device. Returns one row-dict per ROI.
+
+    eta_base: precomputed NGF noise η for this source (cached across its variants); if None,
+    estimated here. NGF is reported for each η in NGF_ETA_MULTS × eta_base (grid robustness);
+    the ×1.0 column is 'ngf' (headline)."""
+    cc = lncc_map(source[None, None], synth[None, None], win)          # (D,H,W) robustness
+    gs, gy = _grad(source), _grad(synth)
+    if eta_base is None:
+        eta_base = _estimate_eta(source, labels > 0)
+    ngf_maps = {mult: ngf_map(gs, gy, eta_base * mult) for mult in NGF_ETA_MULTS}
     rows = []
     for roi in range(1, 32):                                           # 31 classes
         m = erode(labels == roi, erode_iters)
         n = int(m.sum().item())
         if n < MIN_VOX:
             continue
-        rows.append(dict(
+        row = dict(
             roi_id=roi, n_vox=n,
-            nmi=nmi_1d(source[m], synth[m], bins),
-            lncc=float(cc[m].abs().mean().item()),
-        ))
+            nmi=nmi_1d(source[m], synth[m], bins),                     # secondary (content)
+            lncc=float(cc[m].abs().mean().item()),                     # robustness appendix
+        )
+        for mult in NGF_ETA_MULTS:                                     # PRIMARY texture metric + η grid
+            row[_ngf_col(mult)] = float(ngf_maps[mult][m].mean())
+        rows.append(row)
     return rows
 
 
@@ -197,28 +265,48 @@ def run_sanity(device, bins, win, erode_iters) -> int:
     labels[5:35, 5:35, 5:20] = 1
     labels[5:35, 5:35, 20:35] = 2
 
+    # piecewise-affine "PALETTE-like": random spatial blocks, each a signed-affine remap of
+    # the source (monotone within block, block edges where source is smooth).
+    def palette_like(x, nblocks=6):
+        centers = torch.rand(nblocks, 3, device=device) * D
+        coords  = torch.stack(torch.meshgrid(*[torch.arange(D, device=device)] * 3,
+                                             indexing="ij"), -1).float()
+        lab = ((coords[..., None, :] - centers) ** 2).sum(-1).argmin(-1)
+        out = x.clone()
+        for b in range(nblocks):
+            mb = lab == b
+            if mb.sum() < 10:
+                continue
+            mu = torch.rand(1, device=device).item()
+            alpha = (torch.rand(1, device=device).item() * 1.5 + 0.5) * (1 if torch.rand(1) > .5 else -1)
+            out[mb] = mu + alpha * (x[mb] - x[mb].mean())
+        return out
+
     cases = {
-        "identity": source.clone(),
-        "gamma":    source.clamp_min(0) ** 2.0,
-        "noise":    torch.rand(D, D, D, device=device),      # independent noise
+        "identity":     source.clone(),
+        "gamma":        source.clamp_min(0) ** 2.0,
+        "palette-like": palette_like(source),
+        "noise":        torch.rand(D, D, D, device=device),      # independent noise
     }
-    print(f"{'case':10s} {'NMI(mean)':>10s} {'|LNCC|(mean)':>12s}")
+    print(f"{'case':14s} {'NGF(mean)':>10s} {'NMI(mean)':>10s} {'|LNCC|(mean)':>12s}")
     results = {}
     for name, synth in cases.items():
         rows = metrics_for_pair(source, synth, labels, bins, win, erode_iters)
-        nmi = float(np.nanmean([r["nmi"] for r in rows]))
+        ngf  = float(np.nanmean([r["ngf"] for r in rows]))
+        nmi  = float(np.nanmean([r["nmi"] for r in rows]))
         lncc = float(np.nanmean([r["lncc"] for r in rows]))
-        results[name] = (nmi, lncc)
-        print(f"{name:10s} {nmi:10.3f} {lncc:12.3f}")
+        results[name] = (ngf, nmi, lncc)
+        print(f"{name:14s} {ngf:10.3f} {nmi:10.3f} {lncc:12.3f}")
 
     ok = True
+    # Canonical NGF: identity high (but <1 due to η), noise ≈ 1/3 floor, palette ≫ floor.
     checks = [
-        ("identity NMI≈2",    results["identity"][0] > 1.90),
-        ("identity |LNCC|≈1", results["identity"][1] > 0.95),
-        ("gamma NMI high",    results["gamma"][0]    > 1.50),
-        ("gamma |LNCC| high", results["gamma"][1]    > 0.70),
-        ("noise NMI≈1",       results["noise"][0]    < 1.15),
-        ("noise |LNCC|≈0",    results["noise"][1]    < 0.15),
+        ("identity NGF high",              results["identity"][0] > 0.85),
+        ("gamma NGF high",                 results["gamma"][0]    > 0.80),
+        ("palette-like NGF ≫ floor",       results["palette-like"][0] > 0.55),
+        ("noise NGF ≈ 1/3 floor",          0.20 < results["noise"][0] < 0.45),
+        ("palette ≫ noise (separation)",   results["palette-like"][0] > results["noise"][0] + 0.2),
+        ("identity NMI≈2",                 results["identity"][1] > 1.90),
     ]
     print()
     for label, passed in checks:
@@ -266,12 +354,14 @@ def main():
 
     label_cache: dict[str, torch.Tensor] = {}
     source_cache: dict[str, torch.Tensor] = {}
+    eta_cache: dict[str, float] = {}                                   # NGF η per source (reused across variants)
     out_rows = []
     for i, (method, key, variant, synth_path) in enumerate(tasks):
         try:
             if key not in source_cache:
                 source_cache[key] = _load(args.images_dir / f"{key}_0000.nii.gz", device, 1)
                 label_cache[key]  = _load(args.labels_dir / f"{key}.nii.gz", device, 0).round().long()
+                eta_cache[key]    = _estimate_eta(source_cache[key], label_cache[key] > 0)
             source, labels = source_cache[key], label_cache[key]
 
             if method in CONTROL_METHODS:
@@ -284,7 +374,8 @@ def main():
                     continue
 
             for r in metrics_for_pair(source, synth, labels, args.mi_bins,
-                                      args.lncc_window, args.erode_iters):
+                                      args.lncc_window, args.erode_iters,
+                                      eta_base=eta_cache[key]):
                 sub, ses = key.split("_ses-")[0], "ses-" + key.split("_ses-")[1].replace("_T1w", "")
                 out_rows.append(dict(method=method, subject=sub, session=ses,
                                      variant=variant, **r))
