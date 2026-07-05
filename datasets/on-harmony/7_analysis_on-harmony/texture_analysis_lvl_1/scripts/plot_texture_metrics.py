@@ -67,18 +67,28 @@ def per_vol(df):
 
 
 def plot_headline(df, out):
-    methods, sets = mpresent(df), spresent(df)
     pv = per_vol(df)
+    # exclude the monotone controls from the bars — they define the ceiling reference line
+    methods = [m for m in mpresent(df) if m not in ("gamma", "histeq")]
+    sets = [s for s in spresent(df) if s != "ref"]
     x = np.arange(len(methods)); w = 0.8 / max(1, len(sets))
     fig, ax = plt.subplots(figsize=(1.4 * len(methods) + 2, 4.8))
     for i, s in enumerate(sets):
         ys = [pv[(pv["set"] == s) & (pv.method == m)][PRIMARY].mean() for m in methods]
         ax.bar(x + i * w, ys, w, label=f"set={s}", edgecolor="k", linewidth=0.4,
                color=[color_for(m) for m in methods], alpha=0.65 if s != "blur" else 1.0)
-    ax.axhline(0.0, color="k", lw=0.8)
+    # ceiling = monotone-remap controls (gamma/histeq); floor = SynthSeg (or 0)
+    ctrl = pv[pv.method.isin(["gamma", "histeq"])][PRIMARY]
+    ss   = pv[pv.method.str.startswith("synthseg")][PRIMARY]
+    if len(ctrl):
+        c = ctrl.mean(); ax.axhline(c, color="green", ls="--", lw=1.2,
+                                    label=f"monotone ceiling ≈ {c:.2f}")
+    floor = ss.mean() if len(ss) else 0.0
+    ax.axhline(floor, color="red", ls=":", lw=1.2, label=f"SynthSeg floor ≈ {floor:.2f}")
+    ax.set_ylim(0, 1)
     ax.set_xticks(x + w * (len(sets) - 1) / 2); ax.set_xticklabels(methods, rotation=25, ha="right")
-    ax.set_ylabel("census_r1  (texture, ↑; 0 = no-texture floor)")
-    ax.set_title("Texture preservation (census |corr|) — image-driven ≫ SynthSeg")
+    ax.set_ylabel("census_r1  (texture, ↑)")
+    ax.set_title("Texture preservation (census |corr|) — read vs floor & ceiling")
     ax.legend(fontsize=8); ax.grid(axis="y", alpha=0.3); fig.tight_layout()
     fig.savefig(out / "headline_census_r1.png", dpi=150); plt.close(fig)
 

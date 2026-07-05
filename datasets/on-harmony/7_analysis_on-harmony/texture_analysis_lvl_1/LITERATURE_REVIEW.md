@@ -65,31 +65,50 @@ are clearer for reviewers than four.)*
 
 ---
 
-## Results (real data — preliminary 2-subject spot check; full run pending)
+## Results (full run — 84 subjects × 10 variants/method, both sets)
 
-`|corr(rank·)|`, r=1, mean over ROIs:
+census_r1 = PRIMARY texture (rank/census |corr|; mean over ROIs, variants averaged):
 
-| method | census \|corr\| | reading |
-|---|---|---|
-| auglab_default (image-driven baseline) | **0.52** | texture preserved |
-| **PALETTE (ours)** | **0.44** | texture preserved |
-| synthseg_em | **0.04** | at the 0 floor — texture destroyed |
+| method | set | census_r1 | census_r2 | NMI | reading |
+|---|---|---|---|---|---|
+| gamma (monotone control)  | ref    | 0.963 | 0.974 | 1.727 | **ceiling** — pure remap |
+| histeq (monotone control) | ref    | 0.963 | 0.973 | 1.720 | **ceiling** — pure remap |
+| **PALETTE (ours)**        | noblur | **0.680** | 0.663 | 1.623 | texture preserved |
+| **PALETTE (ours)**        | blur   | **0.546** | 0.558 | 1.384 | texture preserved |
+| auglab_default            | noblur | 0.567 | 0.581 | 1.407 | texture preserved |
+| auglab_default            | blur   | 0.428 | 0.460 | 1.315 | texture preserved |
+| synthseg_em               | blur/noblur | 0.054 / 0.095 | 0.082 / 0.137 | 1.12 | **floor** — destroyed |
+| synthseg_noem             | blur/noblur | 0.030 / 0.030 | 0.050 / 0.054 | 1.12 | **floor** — destroyed |
 
-**Categorical gap (~10×)** between image-driven and generative. PALETTE (0.44, *with* Voronoi) ≈
-auglab (0.52, *no* Voronoi) → the Voronoi parcellation costs only ~0.08; it does **not** destroy
-texture. (`synthseg_noem` still transferring at time of writing; expected at the floor too.)
+**Significance:** paired Wilcoxon PALETTE vs each SynthSeg — rank-biserial **+1.000** (PALETTE
+higher on **all 84 subjects**), **p = 1.71e-15**, for *every* comparison (both sets × both radii ×
+both metrics; no exceptions). 840 volumes/method scored per set, 0 skipped, 0 shape mismatches
+(alignment intact); ~28.4/31 ROIs pass the 50-voxel floor.
 
-### No-blur ablation (both sets reported)
+**Reading the scale — floor and ceiling (this pre-empts "why not 1?").** The metric's practical
+ceiling on real discretized 3-D data is **~0.96, not 1.0**: even the pure monotone-remap controls
+(gamma/histeq) top out at 0.963 — because of rank ties, the census neighbourhood at volume/ROI
+edges, and the p1/p99 intensity-normalization clamp flattening the tails. So the reference band is
+**floor ≈ 0.03 (SynthSeg) → ceiling ≈ 0.96 (monotone remap)**, and PALETTE (0.55–0.68) sits in the
+*upper* part of it, at or above the accepted AugLab baseline. PALETTE is below the ceiling because
+it genuinely does more than a monotone remap (Voronoi fragmentation + mild blur) — real, intended
+augmentation strength, not a metric flaw.
 
-Because census r=1 is sensitive to blur, we also generate a **no-blur** version of *every* method
-(blur/resolution disabled symmetrically — `data/generated_noblur/`) and report it **alongside**
-the with-blur (training-config) set. This isolates the *contrast transformation's* texture
-preservation from the method-agnostic blur augmentation. The with-blur set is the **headline**
-(it is what the model trains on); the no-blur set is a labeled **mechanism ablation**. Expectation:
-image-driven methods rise in the no-blur set (blur removed) while SynthSeg stays on the 0 floor
-(it has no source texture to blur) — confirming that (a) blur, not the parcellation, is the main
-contributor to PALETTE's moderate with-blur absolute, and (b) the categorical gap is invariant to
-blur. Analysis runs over both sets in one table (`set` = blur / noblur / ref).
+**What census actually measures (the framing that makes the absolute a non-issue):** not "what %
+of texture survived", but **whether the synthetic image's local structure is *derived from the
+real anatomy* (correlated) or *invented* (independent of it)**. PALETTE at 0.55 = strongly derived
+from real tissue; SynthSeg at 0.03 = statistically independent of the anatomy (pure fabrication).
+Real texture cues to learn vs none — that categorical distinction is what matters for a segmenter.
+
+### No-blur ablation (confirmed)
+
+The symmetric no-blur set (blur/resolution disabled for every method, `data/generated_noblur/`)
+isolates the contrast transformation from method-agnostic blur. As predicted: image-driven methods
+**rise** when blur is removed (PALETTE 0.55→0.68, auglab 0.43→0.57), while SynthSeg **stays on the
+floor** (no source texture to blur). This confirms (a) **blur, not the Voronoi parcellation, is the
+main contributor** to PALETTE's moderate with-blur absolute (in no-blur, PALETTE 0.68 ≈ auglab 0.57
+→ Voronoi costs little), and (b) the **categorical gap is invariant to blur**. The with-blur set is
+the headline (what the model trains on); no-blur is the labeled mechanism ablation.
 
 ---
 
@@ -134,8 +153,8 @@ blur. Analysis runs over both sets in one table (`set` = blur / noblur / ref).
   practice choices. We do **not** claim "100% literature-grounded end-to-end" (no real method is).
 - **Not hacked:** the metric was chosen on *principle* (contrast+inversion invariance, texture
   literature) and validated on *controls* (identity→1, gamma→1, inverted→1, noise→0) **before**
-  any real PALETTE/SynthSeg volume was seen; the real-data spot check then confirmed the predicted
-  direction. Free parameters (r) are reported as a grid, not selected.
+  any real PALETTE/SynthSeg volume was seen; the full real-data run (84 subjects) then confirmed
+  the predicted direction (p=1.71e-15). Free parameters (r) are reported as a grid, not selected.
 
 ---
 
