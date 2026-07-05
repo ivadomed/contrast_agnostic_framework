@@ -13,3 +13,8 @@ scikit-image
 PyWavelets
 pandas
 pytest
+
+# Distributional generative-model metrics (histogram-coverage analysis, Pillar 2)
+prdc
+vendi-score
+umap-learn
