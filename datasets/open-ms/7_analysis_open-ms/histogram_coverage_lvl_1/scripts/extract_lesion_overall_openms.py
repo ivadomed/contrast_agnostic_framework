@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 """
 Stage 2 (open-ms Pillar-2): extract the open-ms coverage feature = [MS-lesion histogram,
-overall brain histogram] = 2 regions × 64 bins = 128-dim. open-ms ships only sparse lesion
-labels (no anatomical parcellation), so — deliberately — we use the labels we actually have:
-  region 0 = LESION  (FLAIR `dseg` mask; binary; co-registered → applies to every contrast)
-  region 1 = BRAIN   (co-registered brainmask; "overall" intensity distribution)
+overall (whole-image) histogram] = 2 regions × 64 bins = 128-dim.
+
+open-ms provides ONLY sparse binary MS lesion labels. Its brainmask is a computed brain-extraction,
+NOT a provided annotation, so we deliberately do NOT use it — we use only the labels open-ms
+actually annotates:
+  region 0 = LESION   (FLAIR `dseg` mask; binary; co-registered → applies to every contrast)
+  region 1 = OVERALL  (whole image, no mask; the overall intensity distribution)
 
 This is the honest, annotation-faithful open-ms analog of on-harmony's 31-region histograms
-(limited to 2 regions, by design). One global p1–p99 normalisation over the brain preserves
-where lesion intensities sit relative to the brain (bright FLAIR lesions vs dark T1w lesions).
+(2 regions, by design). One global p1–p99 normalisation over the whole image preserves where lesion
+intensities sit relative to the rest (bright FLAIR lesions vs dark T1w lesions).
 
-  --mode real            : open-ms FLAIR/T1w/T2w scans (all co-registered → shared masks).
-  --mode synth --source X: generated volumes (key ends _X); masks from the source subject.
+  --mode real            : open-ms FLAIR/T1w/T2w scans (co-registered → shared lesion mask).
+  --mode synth --source X: generated volumes (key ends _X); lesion mask from the source subject.
 
 Usage:
   run_job --gpus 0 --cpus 16 --mem 16G --wait -- .venv/bin/python extract_lesion_overall_openms.py \\
@@ -40,13 +43,12 @@ THIS = Path(__file__).resolve()
 ANALYSIS = THIS.parents[1]
 REPO = THIS.parents[5]
 BIDS = REPO / "datasets/open-ms/1_BIDS_open-ms/open-ms-brain"
-RAW = REPO / "datasets/open-ms/0_raw_open-ms"
 LESION_DIR = BIDS / "derivatives" / "manual_masks"
 GENERATED = ANALYSIS / "data" / "generated"
 METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default"]
 CONTRASTS = ("FLAIR", "T1w", "T2w")
 SCANNER = "openms"
-REGIONS = ["lesion", "brain"]
+REGIONS = ["lesion", "overall"]
 MIN_VOXELS = 50
 
 
@@ -55,41 +57,28 @@ def feature_cols(n_bins: int):
 
 
 def lesion_path(sub: str) -> Optional[Path]:
-    p = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_dseg.nii.gz"   # FLAIR lesion mask, per subject
+    p = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_dseg.nii.gz"   # only annotation open-ms provides
     return p if p.exists() else None
 
 
-def brain_path(sub: str) -> Optional[Path]:
-    p = RAW / sub.replace("sub-", "") / "brainmask.nii.gz"       # 0_raw uses 'patientNN'
-    return p if p.exists() else None
-
-
-def _resample_to(mask_nii, ref_nii):
-    if mask_nii.shape[:3] != ref_nii.shape[:3] or not np.allclose(mask_nii.affine, ref_nii.affine, atol=1e-3):
-        mask_nii = resample_from_to(mask_nii, ref_nii, order=0)
-    return np.round(mask_nii.get_fdata()).astype(np.int32)
-
-
-def compute_features(img_path, lesion_p, brain_p, n_bins) -> Optional[np.ndarray]:
+def compute_features(img_path, lesion_p, n_bins) -> Optional[np.ndarray]:
     try:
         img_nii = nib.as_closest_canonical(nib.load(str(img_path)))
         arr = img_nii.get_fdata(dtype=np.float32)
         if arr.ndim == 4:
             arr = arr[..., 0]
         ref = nib.Nifti1Image(arr, img_nii.affine)
-        lesion = _resample_to(nib.as_closest_canonical(nib.load(str(lesion_p))), ref) > 0
-        brain = _resample_to(nib.as_closest_canonical(nib.load(str(brain_p))), ref) > 0
-        if brain.sum() < 500:
-            brain = arr > (arr.max() * 0.05)                     # fallback foreground
-        bvals = arr[brain]
-        if bvals.size < 500:
-            return None
-        p1, p99 = np.percentile(bvals, 1), np.percentile(bvals, 99)
+        les_nii = nib.as_closest_canonical(nib.load(str(lesion_p)))
+        if les_nii.shape[:3] != ref.shape[:3] or not np.allclose(les_nii.affine, ref.affine, atol=1e-3):
+            les_nii = resample_from_to(les_nii, ref, order=0)
+        lesion = np.round(les_nii.get_fdata()).astype(np.int32) > 0
+
+        p1, p99 = np.percentile(arr, 1), np.percentile(arr, 99)     # over the whole image (no mask)
         if p99 <= p1:
             return None
         norm = np.clip((arr - p1) / (p99 - p1), 0.0, 1.0)
         feats = []
-        for m in (lesion, brain):
+        for m in (lesion, np.ones_like(lesion, dtype=bool)):        # lesion, then OVERALL (all voxels)
             if m.sum() < MIN_VOXELS:
                 feats.append(np.zeros(n_bins, np.float32))
             else:
@@ -107,12 +96,12 @@ def discover_real():
     for c in CONTRASTS:
         for img in sorted(BIDS.glob(f"sub-*/anat/*_{c}.nii.gz")):
             sub = img.name.replace(f"_{c}.nii.gz", "")
-            les, br = lesion_path(sub), brain_path(sub)
-            if les is None or br is None:
+            les = lesion_path(sub)
+            if les is None:
                 skip += 1; continue
-            tasks.append({"path": img, "lesion": les, "brain": br, "subject": sub,
+            tasks.append({"path": img, "lesion": les, "subject": sub,
                           "modality_id": c, "image_path": str(img)})
-    log.info("Real scans with lesion+brain masks: %d (skipped %d)", len(tasks), skip)
+    log.info("Real scans with lesion mask: %d (skipped %d)", len(tasks), skip)
     return tasks
 
 
@@ -125,21 +114,21 @@ def discover_synth(source, methods):
         for case in sorted(p for p in mdir.iterdir() if p.is_dir() and p.name.endswith(f"_{source}")):
             key = case.name
             sub = key.rsplit("_", 1)[0]
-            les, br = lesion_path(sub), brain_path(sub)
-            if les is None or br is None:
+            les = lesion_path(sub)
+            if les is None:
                 miss.add(key); continue
             for nii in sorted(case.glob(f"{key}_run-*.nii.gz")):
                 run = nii.stem.split("_run-")[-1].replace(".nii", "")
-                tasks.append({"path": nii, "lesion": les, "brain": br, "method": method,
+                tasks.append({"path": nii, "lesion": les, "method": method,
                               "subject": sub, "session": source, "key": key, "run": run})
     if miss:
-        log.warning("No masks for %d keys: %s", len(miss), sorted(miss)[:3])
+        log.warning("No lesion mask for %d keys: %s", len(miss), sorted(miss)[:3])
     return tasks
 
 
 def _worker(a):
-    i, img, les, br, nb = a
-    return i, compute_features(img, les, br, nb)
+    i, img, les, nb = a
+    return i, compute_features(img, les, nb)
 
 
 def main():
@@ -164,7 +153,7 @@ def main():
     rows: list[Optional[dict]] = [None] * len(tasks)
     n_fail = 0
     with ProcessPoolExecutor(max_workers=args.n_workers) as pool:
-        futs = {pool.submit(_worker, (i, str(t["path"]), str(t["lesion"]), str(t["brain"]), args.n_bins)): i
+        futs = {pool.submit(_worker, (i, str(t["path"]), str(t["lesion"]), args.n_bins)): i
                 for i, t in enumerate(tasks)}
         for done, fut in enumerate(as_completed(futs), 1):
             i, feat = fut.result()

@@ -4,12 +4,13 @@ Stage 1 (open-ms Pillar-2): generate source-aligned augmented copies of the open
 the EXACT AugLab GPU training operators (spatial OFF), for the 4 methods
 (palette, synthseg_em, synthseg_noem, auglab_default). Mirrors the on-harmony texture generator.
 
-open-ms has NO anatomical parcellation — only sparse lesion labels + a brainmask. So the seg
-passed to the transforms is a 2-region composite built from the labels we actually have:
-    background = 0,  brain = 1 (brainmask & ~lesion),  lesion = 2
-This is the SAME 2 regions the coverage feature uses. SynthSeg-style generation therefore fills
-brain-as-one-tissue + lesion (coarse — by design, since open-ms lacks dense anatomy; that is the
-point of testing on a sparse-annotation dataset); PALETTE's label-free core is unaffected.
+open-ms provides ONLY sparse lesion labels (its brainmask is a computed brain-extraction, not an
+annotation, so we do not use it). The seg passed to the transforms is therefore the lesion mask only:
+    background = 0,  lesion = 1
+SynthSeg-EM estimates its per-label GMM from the REAL image intensities, so it still fills the whole
+image sensibly from a coarse label map; SynthSeg-noEM (pure parametric) is expected to be poor on
+these sparse labels — that is the point of testing on a sparse-annotation dataset. PALETTE's
+label-free core is unaffected.
 
 Sources: FLAIR and T1w (co-registered → same masks). Output (key encodes contrast):
   <out-root>/<method>/<key>/<key>_run-NN.nii.gz     key = sub-patientNN_<CONTRAST>
@@ -51,16 +52,15 @@ def _mask_to(mask_nii, ref_nii):
 
 
 def list_sources(contrasts):
-    """[(key, image, lesion, brainmask)] for scans that have both masks."""
+    """[(key, image, lesion)] for scans that have a lesion mask."""
     items = []
     for c in contrasts:
         for img in sorted(BIDS.glob(f"sub-*/anat/*_{c}.nii.gz")):
             sub = img.name.replace(f"_{c}.nii.gz", "")
             les = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_dseg.nii.gz"
-            br = RAW / sub.replace("sub-", "") / "brainmask.nii.gz"
-            if not les.exists() or not br.exists():
-                print(f"MISSING mask(s) for {img.name}, skipping", flush=True); continue
-            items.append((img.name.replace(".nii.gz", ""), img, les, br))
+            if not les.exists():
+                print(f"MISSING lesion mask for {img.name}, skipping", flush=True); continue
+            items.append((img.name.replace(".nii.gz", ""), img, les))
     return items
 
 
@@ -96,16 +96,14 @@ def main():
         print(f"[rank {args.rank}] built '{m}'", flush=True)
 
     counts = {m: 0 for m in args.methods}
-    for ii, (key, img_path, les_path, br_path) in enumerate(items):
+    for ii, (key, img_path, les_path) in enumerate(items):
         img_nii = nib.load(str(img_path))
         src_affine, src_shape = img_nii.affine, img_nii.shape
         img = img_nii.get_fdata(dtype=np.float32)
 
         lesion = _mask_to(nib.load(str(les_path)), img_nii) > 0
-        brain = _mask_to(nib.load(str(br_path)), img_nii) > 0
-        seg = np.zeros(img.shape, dtype=np.int64)            # composite: brain=1, lesion=2
-        seg[brain] = 1
-        seg[lesion] = 2
+        seg = np.zeros(img.shape, dtype=np.int64)            # lesion-only: background=0, lesion=1
+        seg[lesion] = 1
 
         img_t = torch.from_numpy(zscore(img))[None, None].to(device)
         lbl_t = torch.from_numpy(seg)[None, None].to(device)
