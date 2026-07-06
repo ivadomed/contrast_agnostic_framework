@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
-# run_job backend: Slurm (Vulcan). Submits each call as its own sbatch job —
+# run_job backend: Slurm. Cluster-neutral — used on both Vulcan and Killarney
+# (and any other Slurm cluster). Submits each call as its own sbatch job —
 # true fire-and-forget (the scheduler keeps it alive, not this shell), since
 # there's no persistent multi-GPU session to background into the way
 # set_slot has. --wait maps to `sbatch --wait` to block until the job
 # finishes (needed for call sites that today background+wait on a *group* of
 # launches, e.g. "launch 4 folds, wait for all 4 before the next step").
 #
-# GPU resource name + per-node specs confirmed via
-#   sinfo -o "%G" --Node | sort -u   ->  gpu:l40s:4
-#   sinfo -o "%N %c %m %G"           ->  64 CPUs / ~503G mem / 4 GPUs per node
-# on 2026-06-19. Re-confirm with the same commands if this ever looks stale —
-# never trust these numbers blindly (see CLAUDE.md).
+# Only the GPU gres type (RUN_JOB_GPU_TYPE) is cluster-specific; everything
+# else (cpus/mem-per-gpu, account, time) is env-parametrised with defaults
+# below. Do NOT fork a per-cluster copy of this file — export the
+# RUN_JOB_* vars instead (e.g. in a per-cluster env.sh sourced before
+# run_job.sh) so this stays the single backend-neutral interface.
+#
+# Per-node specs confirmed via
+#   sinfo -o "%G" --Node | sort -u   and   sinfo -o "%N %c %m %G"
+# Vulcan (2026-06-19): gpu:l40s:4, 64 CPUs / ~503G mem / 4 GPUs per node.
+# Killarney (2026-07-06): gpu:l40s:4 (kn001-168, 64 CPU/515000M/4 GPU) and
+#   gpu:h100:8 (kn169-178, 48+ CPU/2060000M/8 GPU) — defaults below target
+#   the l40s nodes (same 16 cpu/gpu, ~110G/gpu math as Vulcan). Re-confirm
+#   with the same commands if this ever looks stale — never trust these
+#   numbers blindly (see CLAUDE.md).
 #
 # WandB: Slurm compute nodes have no internet access, so jobs submitted here
 # run with WANDB_MODE=offline. Sync later from the login node with
@@ -22,6 +32,7 @@
 : "${RUN_JOB_MEM_PER_GPU:=110G}"    # ~503G/node / 4 GPUs, with headroom
 : "${RUN_JOB_CPUS_DEFAULT:=4}"      # used when --gpus 0 (CPU-only jobs)
 : "${RUN_JOB_MEM_DEFAULT:=16G}"
+: "${RUN_JOB_GPU_TYPE:=l40s}"       # gres GPU type; set empty for clusters using plain "gpu:N"
 
 run_job() {
     local name="job" gpus=0 cpus="" mem="" time="${RUN_JOB_TIME_DEFAULT}" log="" wait_flag=0
@@ -58,7 +69,7 @@ run_job() {
         echo "#SBATCH --cpus-per-task=${cpus}"
         echo "#SBATCH --mem=${mem}"
         if [ "${gpus}" -gt 0 ]; then
-            echo "#SBATCH --gres=gpu:l40s:${gpus}"
+            echo "#SBATCH --gres=gpu${RUN_JOB_GPU_TYPE:+:$RUN_JOB_GPU_TYPE}:${gpus}"
         fi
         echo "#SBATCH --output=${log}"
         echo "export WANDB_MODE=offline"

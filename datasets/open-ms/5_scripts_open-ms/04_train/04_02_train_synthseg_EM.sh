@@ -13,7 +13,7 @@ METHOD="synthseg_EM_train100_val000"
 TRAINER="nnUNetTrainerOpenMSAugLabDefault"
 DATASET_ID="070"
 DA_WORKERS=8
-LOG_DIR="/tmp/nnunet_open-ms_synthseg_EM"
+LOG_DIR="${RESULTS_DIR}/_logs/nnunet_open-ms_synthseg_EM"
 export nnUNet_compile=1
 export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 

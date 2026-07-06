@@ -4,15 +4,27 @@
 # Not part of the run_job abstraction — this is a manual bootstrap step for
 # rebuilding .venv from scratch, kept here only so the command is logged.
 set -euo pipefail
-cd /project/aip-jcohen/paulh/mri_synthesis_project
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 module load python/3.11
+[ -d .venv ] || virtualenv --no-download .venv
 source .venv/bin/activate
+pip install --no-cache-dir --no-index --upgrade pip
 export PIP_CACHE_DIR="$SCRATCH/pip_cache"
 WHEELS="$SCRATCH/nnunet_wheels"
 
 echo "=== base ML stack (wheelhouse, no internet needed) ==="
+# kornia pinned <0.8: AugLab's GPU transforms do `from kornia.core import Tensor`,
+# an alias kornia dropped in 0.8.x (kornia.core.Tensor no longer exists there;
+# confirmed by hand on Killarney 2026-07-06 — 0.8.3 breaks the import, 0.7.2 has it).
+# triton: NOT a declared torch dependency (`pip show torch` lists none), but
+# nnUNet_compile=1 uses torch.compile's inductor backend, which hard-requires it
+# ("torch._inductor.exc.TritonMissing") — without it every GPU fold dies at the
+# first train_step, Epoch 0, ~15s in. This was the open-ms Killarney blocker
+# (2026-07-06): all 24 Vulcan folds crashed the same way, invisible there because
+# their sbatch stdout went to a node-local /tmp path wiped at job end (see the six
+# open-ms 04_0*_train_*.sh LOG_DIR fix). Confirmed fix: install triton explicitly.
 pip install --no-cache-dir --no-index \
-    "torch==2.12.1" torchvision numpy scipy matplotlib pytest hydra-core wandb nibabel kornia
+    "torch==2.12.1" torchvision numpy scipy matplotlib pytest hydra-core wandb nibabel "kornia==0.7.2" "triton==3.6.0"
 
 echo "=== monai (pinned 1.5.2) + curated 'all' extras (wheelhouse) ==="
 # Plain "monai[all]" backtracks to a non-functional monai==0.1.0: the wheelhouse
@@ -70,6 +82,7 @@ cp src/nnunet/patches/nnunet_logger.py "${SITE_PKGS}/nnunetv2/training/logging/n
 cp datasets/brats2024-glioma/5_scripts_brats2024-glioma/02_nnunet/BraTS2024GliomaTrainers.py "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
 cp datasets/chaos/5_scripts_chaos/02_nnunet/CHAOSTrainers.py "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
 cp datasets/on-harmony/5_scripts_on-harmony/02_nnunet/OnHarmonyTrainers.py "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
+cp datasets/open-ms/5_scripts_open-ms/02_nnunet/OpenMSTrainers.py "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
 
 echo "=== verification ==="
 export NNUNET_PROJECT_ROOT="$(pwd)"
@@ -80,6 +93,7 @@ import auglab, nnunetv2
 from nnunetv2.training.nnUNetTrainer.BraTS2024GliomaTrainers import nnUNetTrainerBraTS2024GliomaV26_6_2
 from nnunetv2.training.nnUNetTrainer.CHAOSTrainers import nnUNetTrainerCHAOSV26_6_2
 from nnunetv2.training.nnUNetTrainer.OnHarmonyTrainers import nnUNetTrainerOnHarmonyV26_6_2
+from nnunetv2.training.nnUNetTrainer.OpenMSTrainers import nnUNetTrainerOpenMSV26_6_2
 from nnunetv2.training.nnUNetTrainer.nnUNetTrainerDAExt import nnUNetTrainerDAExt
 from nnunetv2.training.nnUNetTrainer.nnUNetTrainerTest import nnUNetTrainerTest
 from nnunetv2.training.logging.nnunet_logger import WandbLogger

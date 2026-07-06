@@ -11,7 +11,7 @@ METHOD="auglab_default"
 TRAINER="nnUNetTrainerOpenMSAugLabDefault"
 DATASET_ID="070"
 DA_WORKERS=8
-LOG_DIR="/tmp/nnunet_open-ms_auglab_default"
+LOG_DIR="${RESULTS_DIR}/_logs/nnunet_open-ms_auglab_default"
 export nnUNet_compile=1
 export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 
