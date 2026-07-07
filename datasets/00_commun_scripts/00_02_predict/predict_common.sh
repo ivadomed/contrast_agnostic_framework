@@ -124,9 +124,14 @@ predict_fold() {
     # default — needed for datasets with very large volumes (e.g. TRUSTED 3D US,
     # ~620 M voxels, OOMs at the 110 G default). Empty → omit, use the run_job default.
     local _mem_args=(); [ -n "${PREDICT_MEM:-}" ] && _mem_args=(--mem "${PREDICT_MEM}")
+    # Log to shared storage under _OUT_BASE (always set, unlike the per-dataset
+    # RESULTS_DIR var), not /tmp: on Slurm /tmp is node-local and wiped at job end,
+    # silently losing any crash traceback (see CLAUDE.md gotchas — bit us hard on
+    # open-ms's 04_0X_train_*.sh scripts the same way).
+    mkdir -p "${_OUT_BASE}/_logs"
     run_job --name "${PREDICT_JOB_PREFIX}_${METHOD}_fold${F}" \
         --gpus 1 --slot "${SLOT}" "${_time_args[@]}" "${_mem_args[@]}" \
-        --log "/tmp/${PREDICT_LOG_PREFIX}_${METHOD}_${RUN_ID}_fold${F}.log" --wait -- \
+        --log "${_OUT_BASE}/_logs/${PREDICT_LOG_PREFIX}_${METHOD}_${RUN_ID}_fold${F}.log" --wait -- \
         bash -c "
         export nnUNet_raw='${_JOB_RAW}'
         export nnUNet_preprocessed='${_JOB_PREP}'
