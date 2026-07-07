@@ -72,7 +72,16 @@ run_job() {
             echo "#SBATCH --gres=gpu${RUN_JOB_GPU_TYPE:+:$RUN_JOB_GPU_TYPE}:${gpus}"
         fi
         echo "#SBATCH --output=${log}"
+        # nnUNet_wandb_mode, NOT WANDB_MODE: this project's WandbLogger patch
+        # (src/nnunet/patches/nnunet_logger.py) reads its own nnUNet_wandb_mode
+        # var (default "online"), ignoring the generic wandb-SDK WANDB_MODE
+        # entirely. Setting only WANDB_MODE here silently no-ops: wandb.init()
+        # still runs mode="online" -> tries to authenticate -> every fold dies
+        # at trainer __init__ with "No API key configured" before Epoch 0
+        # (found on Killarney 2026-07-06 launching the open-ms matrix). Set
+        # both so it's correct however a given run reads it.
         echo "export WANDB_MODE=offline"
+        echo "export nnUNet_wandb_mode=offline"
         printf '%q ' "$@"
         echo
     } > "${script}"

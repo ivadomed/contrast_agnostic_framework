@@ -182,10 +182,16 @@ elif [ "${GPUS_PER_FOLD}" = "1" ]; then
         launch_fold "${SINGLE_FOLD}" "${SINGLE_SLOT:-${SINGLE_FOLD}}" "${SINGLE_GPU:-0}" &
         PIDS[0]=$!
     else
-        for FOLD in 0 1 2 3; do
+        # TRAIN_FOLDS (optional, default "0 1 2 3"): space-separated fold list, e.g.
+        # TRAIN_FOLDS="0 1 2" to skip fold 3 (opt-in override — every other call site
+        # is unaffected unless it explicitly sets this).
+        read -ra _FOLDS <<< "${TRAIN_FOLDS:-0 1 2 3}"
+        _n_folds=${#_FOLDS[@]}
+        for _i in "${!_FOLDS[@]}"; do
+            FOLD="${_FOLDS[$_i]}"
             launch_fold "${FOLD}" "${FOLD}" "${FOLD}" &
             PIDS[$FOLD]=$!
-            if [ "${FOLD}" -lt 3 ]; then sleep "${LAUNCH_STAGGER_S}"; fi
+            if [ "${_i}" -lt $((_n_folds - 1)) ]; then sleep "${LAUNCH_STAGGER_S}"; fi
         done
     fi
     if [ "${LAUNCH_WAIT:-0}" = "1" ]; then
