@@ -44,6 +44,13 @@ import re
 import numpy as np
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]
+                       / "datasets" / "00_commun_scripts" / "00_00_utils"))
+from eval_folds import filter_fold_dirs  # noqa: E402 — single source of truth, see eval_folds.py
+# Significance testing lives in the dedicated companion script
+# datasets/00_commun_scripts/00_03_evaluate/significance_from_config.py (same
+# config, run separately) — not embedded here.
+
 _PREFIXES = ("nnUNet_", "auglab_", "")
 
 # ── multi-source helpers ─────────────────────────────────────────────────────
@@ -69,7 +76,7 @@ def load_run_from_sources(sources: list, key: str) -> tuple:
         if run_dir is None:
             continue
         n_folds = 0
-        for fold_dir in sorted(run_dir.glob("fold*")):
+        for fold_dir in filter_fold_dirs(sorted(run_dir.glob("fold*"))):
             csv_path = fold_dir / "eval_all.csv"
             if not csv_path.exists():
                 continue
@@ -135,7 +142,7 @@ def resolve_run_dir(metrics_dir: Path, key: str) -> Path | None:
 
 def load_run(run_dir: Path) -> dict:
     data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
-    for fold_dir in sorted(run_dir.glob("fold*")):
+    for fold_dir in filter_fold_dirs(sorted(run_dir.glob("fold*"))):
         csv_path = fold_dir / "eval_all.csv"
         if not csv_path.exists():
             continue
@@ -150,7 +157,8 @@ def load_run(run_dir: Path) -> dict:
 
 
 def count_eval_folds(run_dir: Path) -> int:
-    return sum(1 for fd in sorted(run_dir.glob("fold*")) if (fd / "eval_all.csv").exists())
+    return sum(1 for fd in filter_fold_dirs(sorted(run_dir.glob("fold*")))
+               if (fd / "eval_all.csv").exists())
 
 
 def cross_fold_stats(per_fold: dict) -> tuple:

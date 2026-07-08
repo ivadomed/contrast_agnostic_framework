@@ -149,7 +149,10 @@ predict_fold() {
 if [ "$FOLD" = "all" ]; then
     echo "[$(date '+%H:%M:%S')] predict ${METHOD} | run=${RUN_ID} | ALL FOLDS (parallel, fold→slot) | ckpt=${CHECKPOINT}"
     echo "  items: ${ITEMS[*]}"
-    for F in 0 1 2 3; do predict_fold "$F" "$F" "$F" & done
+    # PREDICT_FOLDS (optional, default "0 1 2 3"): space-separated fold list — set to
+    # e.g. "0 1 2" for a run trained on fewer folds (see TRAIN_FOLDS in train_common.sh
+    # for the training-side equivalent). Opt-in override, every other call site unaffected.
+    for F in ${PREDICT_FOLDS:-0 1 2 3}; do predict_fold "$F" "$F" "$F" & done
     wait
     echo "[$(date '+%H:%M:%S')] all folds done → ${_OUT_BASE}/${RUN_ID}/"
 else

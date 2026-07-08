@@ -1,6 +1,9 @@
 # open-ms — FLAIR-trained models, cross-contrast (texture-advantage experiment).
 # STANDARD layout (same as chaos/on-harmony): consumed by the shared aggregator
-# scripts/evaluate/aggregate_from_config.py via 06_10_aggregate_from_config.sh.
+# scripts/evaluate/aggregate_from_config.py via 06_10_aggregate_from_config.sh, and
+# by the companion significance_from_config.py via 06_11_significance_from_config.sh
+# (same config, run separately — pass --ref explicitly there, see 06_11's header:
+# the "auglabAug"+"v26_6_2" auto-pick would otherwise match the noisefill run too).
 # Eval (06_01) writes fold*/eval_all.csv under metrics_dir/{category}_{run_id}/.
 title: "open-ms — FLAIR-trained models, cross-contrast (texture advantage)"
 metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"

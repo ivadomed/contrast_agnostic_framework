@@ -36,7 +36,7 @@ BIDS = REPO / "datasets/open-ms/1_BIDS_open-ms/open-ms-brain"
 RAW = REPO / "datasets/open-ms/0_raw_open-ms"
 LESION_DIR = BIDS / "derivatives" / "manual_masks"
 DEFAULT_CONFIGS = REPO / "datasets/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/configs"
-METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default"]
+METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default", "v26_6_2_noisefill_v2"]
 SOURCES = ["FLAIR", "T1w"]
 
 
@@ -72,7 +72,9 @@ def main():
     ap.add_argument("--methods", nargs="+", default=METHODS, choices=METHODS)
     ap.add_argument("--sources", nargs="+", default=SOURCES)
     ap.add_argument("--config-dir", type=Path, default=DEFAULT_CONFIGS)
-    ap.add_argument("--out-root", type=Path, default=ANALYSIS / "data" / "generated")
+    # shared by both open-ms Pillar-1 (texture_analysis_lvl_1) and Pillar-2 (this coverage
+    # analysis) — lives one level up, at 7_analysis_open-ms/data/, not under this pillar.
+    ap.add_argument("--out-root", type=Path, default=REPO / "datasets/open-ms/7_analysis_open-ms/data/generated")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--seed-base", type=int, default=1000)
     ap.add_argument("--overwrite", action="store_true")

@@ -25,9 +25,16 @@ import numpy as np
 import pandas as pd
 from scipy.stats import wilcoxon
 
-METRICS   = ["census_r1", "census_r2", "nmi"]
+# Candidate metric columns, in preferred display order. Only those actually present in the
+# loaded CSVs are used (see metrics_present) — so on-harmony (census_r1/r2/nmi) and open-ms
+# (which also emits census_local8, the cancellation-robust local census) both work unmodified.
+CANDIDATE_METRICS = ["census_r1", "census_local8", "census_r2", "nmi"]
 REFERENCE = "palette"
 COMPARE_AGAINST = ["synthseg_em", "synthseg_noem"]
+
+
+def metrics_present(df) -> list:
+    return [m for m in CANDIDATE_METRICS if m in df.columns]
 
 
 def load(input_glob: str) -> pd.DataFrame:
@@ -57,6 +64,8 @@ def main():
     args = p.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     df = load(args.input)
+    METRICS = metrics_present(df)     # only metric columns actually in the CSVs (see above)
+    print(f"Metrics present: {METRICS}")
 
     # 1. average variants → per (set, method, subject, session, roi)
     keys = ["set", "method", "subject", "session", "roi_id"]
@@ -67,15 +76,29 @@ def main():
     summ.to_csv(args.output_dir / "summary.csv")
     with open(args.output_dir / "summary.md", "w") as fh:
         fh.write("# Level-1 texture metrics — per method × set\n\n")
-        fh.write("Mean over all (volume × ROI) units, variants averaged. "
-                 "**census_r1** = PRIMARY texture (rank/census correlation; **0 = no-texture "
-                 "floor**, →1 = preserved; read relatively). census_r2 = radius-2 robustness. "
-                 "NMI ∈ [1,2] = content.\n\n")
-        cols = " | ".join(f"{m} mean" for m in METRICS)
+        fh.write("Mean AND median over all (volume × ROI) units, variants averaged. "
+                 "**Caution: this table POOLS every ROI together per method/set** (e.g. open-ms's "
+                 "`lesion` and `foreground` regions). When a method's ROIs behave very differently "
+                 "(seen for `synthseg_noem`: lesion≈0.12 vs foreground≈0.005 — a ~20x gap), the "
+                 "pooled mean/median here is a blend of two different populations, not a clean "
+                 "single number — median does NOT fix this, it only dampens it. Treat this table "
+                 "as a rough headline and read `per_roi_<metric>.csv` (ROI reported separately) "
+                 "for the real comparison. Median is still reported because, within a single ROI, "
+                 "the per-subject distribution can be right-skewed (small-n, floor-bounded metric) "
+                 "and mean/median can diverge for that reason too — check per-ROI before trusting "
+                 "either number. **census_r1** = PRIMARY texture (rank/census correlation; **0 = "
+                 "no-texture floor**, →1 = preserved; read relatively). census_r2 = radius-2 "
+                 "robustness. **census_local8** = cancellation-robust LOCAL census (|corr| within "
+                 "8³ blocks, averaged) — use for palette-vs-auglab, where whole-ROI census is "
+                 "confounded by PALETTE's signed per-region contrast. NMI ∈ [1,2] = content "
+                 "(on-harmony only; dropped for open-ms — spatially blind, not a texture metric)."
+                 "\n\n")
+        cols = " | ".join(f"{m} mean | {m} median" for m in METRICS)
         fh.write(f"| method | set | {cols} |\n")
-        fh.write("|---|---|" + "---|" * len(METRICS) + "\n")
+        fh.write("|---|---|" + "---|---|" * len(METRICS) + "\n")
         for (method, s) in summ.index:
-            vals = " | ".join(f"{summ.loc[(method, s), (m, 'mean')]:.3f}" for m in METRICS)
+            vals = " | ".join(f"{summ.loc[(method, s), (m, 'mean')]:.3f} | "
+                              f"{summ.loc[(method, s), (m, 'median')]:.3f}" for m in METRICS)
             fh.write(f"| {method} | {s} | {vals} |\n")
 
     # 3. per (roi × method × set) tables

@@ -6,8 +6,8 @@ advantage — SynthSeg is texture-blind, so it should lose most on (a) cross-con
 (FLAIR→T2W→T1W, lesions progressively more iso-intense) and (b) SMALL lesions, and in the
 detection rate (catastrophic misses), even where bulk voxel-Dice looks close.
 
-For each (method, test-contrast) it reports, pooled over the 4 folds × 8 held-out test
-patients:
+For each (method, test-contrast) it reports, pooled over folds 0-2 (EVAL_FOLD_INDICES,
+see datasets/00_commun_scripts/00_00_utils/eval_folds.py) × 8 held-out test patients:
   * voxel Dice (per patient, mean)
   * lesion-wise detection: a GT connected-component is "detected" if ≥ MIN_OVERLAP of its
     voxels are predicted positive. Reports sensitivity overall and stratified by lesion
@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -34,6 +35,10 @@ DATASET_ROOT = Path(__file__).resolve().parents[2]            # datasets/open-ms
 PRED_BASE = DATASET_ROOT / "8_results_open-ms/01_predictions/open_ms_model/flair/auglab"
 GT_BASE = DATASET_ROOT / "2_nnUNet_open-ms/raw/Dataset070_OpenMS_FLAIR"
 CONTRASTS = ["flair", "t2w", "t1w"]
+
+sys.path.insert(0, str(DATASET_ROOT.parent / "00_commun_scripts" / "00_00_utils"))
+from eval_folds import EVAL_FOLD_INDICES  # noqa: E402 — single source of truth, see eval_folds.py
+
 MIN_OVERLAP = 0.10          # GT lesion detected if >=10% of its voxels predicted positive
 SIZE_BINS = [(0, 50, "small(<50)"), (50, 500, "med(50-500)"), (500, 10**9, "large(>=500)")]
 
@@ -67,7 +72,7 @@ def analyze_run(run_id):
     for contrast in CONTRASTS:
         gt_dir = GT_BASE / f"labelsTs_{contrast}"
         dices, lesions, fps = [], [], 0
-        for fold in range(4):
+        for fold in EVAL_FOLD_INDICES:
             pdir = PRED_BASE / run_id / f"fold{fold}" / contrast
             if not pdir.exists():
                 continue
@@ -85,7 +90,7 @@ def analyze_run(run_id):
                 les, fp = lesionwise(p, g)
                 lesions.extend(les); fps += fp
         res[contrast] = {"dice": dices, "lesions": lesions, "fp": fps,
-                         "n_pred_vols": sum(1 for fold in range(4)
+                         "n_pred_vols": sum(1 for fold in EVAL_FOLD_INDICES
                                             for _ in (PRED_BASE / run_id / f"fold{fold}" / contrast).glob("*.nii.gz")
                                             if (PRED_BASE / run_id / f"fold{fold}" / contrast).exists())}
     return res
@@ -112,7 +117,7 @@ def main():
     data = {name: analyze_run(rid) for name, rid in runs.items()}
 
     rows = []
-    print(f"\n{'='*78}\nopen-ms lesion-wise comparison (pooled over 4 folds × held-out test patients)")
+    print(f"\n{'='*78}\nopen-ms lesion-wise comparison (pooled over folds 0-2 × held-out test patients)")
     print(f"detection = >={int(MIN_OVERLAP*100)}% of a GT lesion's voxels predicted positive\n{'='*78}")
     for contrast in CONTRASTS:
         print(f"\n### test contrast: {contrast.upper()}")

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Evaluate one open-ms prediction run: every fold × every contrast (flair/t2w/t1w),
 # scoring the `lesion` label against the per-contrast held-out GT (labelsTs_<contrast>).
-# Writes <contrast>_metrics.csv + eval_all.csv per fold under
+# Writes <contrast>_metrics.csv + eval_all.csv + eval_summary.md per fold under
 #   8_results_open-ms/02_metrics/<MODEL_TYPE>/<TRAINING_CONTRAST>/<CATEGORY>_<RUN_ID>/fold{F}/
+# via the shared per-fold summariser (00_commun_scripts/00_03_evaluate/summarize_fold.py —
+# same one chaos/amos use), not a bespoke concatenation.
 #
 # Usage: bash 06_01_evaluate_run.sh <RUN_ID> <CATEGORY:nnUNet|auglab> [FOLD(default all)]
 set -euo pipefail
@@ -19,13 +21,17 @@ DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 OUT_BASE="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}"
 
-if [ "${FOLD_ARG}" = "all" ]; then FOLDS="0 1 2 3"; else FOLDS="${FOLD_ARG}"; fi
+# "0 1 2": matches EVAL_FOLDS in datasets/00_commun_scripts/00_00_utils/eval_folds.py
+# (the single source of truth the aggregators cap to) — kept in sync by hand since bash
+# and python don't share one file. Older runs may have fold3 predictions; they're simply
+# never evaluated here, consistent with every run being compared on the same 3 folds.
+if [ "${FOLD_ARG}" = "all" ]; then FOLDS="0 1 2"; else FOLDS="${FOLD_ARG}"; fi
 
 # Metric computation (MONAI Dice+HD95, ~60s per fold×contrast) is real CPU work — too
-# slow for the login node (~12 min for 4 folds × 3 contrasts). Route through run_job as
-# one CPU-only compute-node job per invocation, matching the "never run substantial work
-# on a login node" rule (see CLAUDE.md). --log goes under OUT_BASE (shared storage), not
-# /tmp, for the same reason the training/predict logs were moved there.
+# slow for the login node. Route through run_job as one CPU-only compute-node job per
+# invocation, matching the "never run substantial work on a login node" rule (see
+# CLAUDE.md). --log goes under OUT_BASE (shared storage), not /tmp, for the same reason
+# the training/predict logs were moved there.
 mkdir -p "${OUT_BASE}/_logs"
 run_job --name "openms_eval_${CATEGORY}_${RUN_ID}" --gpus 0 --cpus 8 --mem 16G --time 1:00:00 \
     --log "${OUT_BASE}/_logs/eval_${RUN_ID}.log" --wait -- bash -c "
@@ -44,8 +50,9 @@ for F in ${FOLDS}; do
     done
     OUT_FOLD='${OUT_BASE}'/fold\${F}
     if ls \"\${OUT_FOLD}\"/*_metrics.csv >/dev/null 2>&1; then
-        { head -1 \"\$(ls \"\${OUT_FOLD}\"/*_metrics.csv | head -1)\";
-          for f in \"\${OUT_FOLD}\"/*_metrics.csv; do tail -n +2 \"\$f\"; done; } > \"\${OUT_FOLD}/eval_all.csv\"
+        .venv/bin/python datasets/00_commun_scripts/00_03_evaluate/summarize_fold.py \
+            \"\${OUT_FOLD}\" '${RUN_ID}' \"\${F}\" \
+            --groups ${ITEMS[*]} --group-col contrast --groups-word Contrasts
     fi
 done
 echo '→ ${OUT_BASE}'

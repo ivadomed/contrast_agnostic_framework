@@ -10,7 +10,9 @@ scripts now import from here and supply only their title + which outputs to buil
 Data shape produced by load_run():
     {metric: {contrast: {label: {fold: [values]}}}}
 where metric ∈ {"dice", "hd95"}, contrast is the CSV `group` column (a modality),
-label is the CSV `label` column, fold is "fold0".."fold3".
+label is the CSV `label` column, fold is one of EVAL_FOLDS ("fold0".."fold2" —
+see eval_folds.py; any fold beyond that, e.g. fold3 from older 4-fold runs, is
+silently excluded so every run is compared on the same 3-fold basis).
 
 This module reads only `<run_dir>/fold*/eval_all.csv` (columns group,case,label,
 dice,hd95) — the same contract every dataset's 06_01_evaluate_run.sh writes.
@@ -23,6 +25,8 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+
+from eval_folds import EVAL_FOLDS, filter_fold_dirs
 
 
 # ── run-name label bolding ────────────────────────────────────────────────────
@@ -72,17 +76,18 @@ def _best_per_col(mat: np.ndarray, metric: str) -> list:
 # ── loaders ──────────────────────────────────────────────────────────────────
 
 def load_run(metrics_dir: Path) -> dict:
-    """Return {metric: {contrast: {label: {fold: [values]}}}} for all fold CSVs.
+    """Return {metric: {contrast: {label: {fold: [values]}}}} for fold CSVs.
 
     metrics_dir is a single run's directory containing fold0/, fold1/, … each
-    with an eval_all.csv.
+    with an eval_all.csv. Only folds in EVAL_FOLDS (fold0-2) are read — see
+    eval_folds.py for why.
     """
     data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
-    for fold_dir in sorted(metrics_dir.glob("fold*")):
+    for fold_dir in filter_fold_dirs(sorted(metrics_dir.glob("fold*"))):
         csv_path = fold_dir / "eval_all.csv"
         if not csv_path.exists():
             continue
-        fold = fold_dir.name  # "fold0", "fold1", …
+        fold = fold_dir.name  # "fold0", "fold1", "fold2"
         with csv_path.open() as f:
             for row in csv.DictReader(f):
                 contrast = row["group"]
@@ -174,7 +179,7 @@ def build_report(runs: dict, out_path: Path, title: str) -> None:
         f"Generated: {now}  |  Experiments: {len(run_ids)}  |  "
         f"Contrasts: {', '.join(all_contrasts)}  |  Labels: {', '.join(all_labels)}",
         f"",
-        f"Values are **cross-fold mean±std** (fold-level means averaged across folds 0-3).",
+        f"Values are **cross-fold mean±std** (fold-level means averaged across folds 0-2).",
         f"— = no finite values available.",
         f"",
     ]
