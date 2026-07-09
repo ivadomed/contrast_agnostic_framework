@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Train srcsm (SRCSM SemRandConv-3D, Thaler et al. 2025) on open-ms FLAIR — an added 7th
-# comparison arm (AugLab-category, reuses the auglab_default trainer). 4 folds, 1 GPU/fold, 2000 epochs.
+# comparison arm (AugLab-category, reuses the auglab_default trainer). 3 folds (0 1 2), 1 GPU/fold, 2000 epochs.
 #
 # Usage:
 #   bash 04_20_train_srcsm.sh                          # auto RUN_ID
