@@ -49,9 +49,8 @@ First line of institution2 address\\
 \maketitle
 \input{sec/0_abstract}    
 \input{sec/1_intro}
-\input{sec/2_related_work}
-% \input{sec/2_formatting}   % author-kit formatting guide (kept for reference)
-% \input{sec/3_finalcopy}    % author-kit final-copy guide (kept for reference)
+\input{sec/2_formatting}
+\input{sec/3_finalcopy}
 {
     \small
     \bibliographystyle{ieeenat_fullname}

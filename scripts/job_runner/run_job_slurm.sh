@@ -33,6 +33,9 @@
 : "${RUN_JOB_CPUS_DEFAULT:=4}"      # used when --gpus 0 (CPU-only jobs)
 : "${RUN_JOB_MEM_DEFAULT:=16G}"
 : "${RUN_JOB_GPU_TYPE:=l40s}"       # gres GPU type; set empty for clusters using plain "gpu:N"
+: "${RUN_JOB_EXCLUDE_NODES:=}"      # optional comma-separated nodelist to avoid (e.g. a
+                                    # node just found to throw CUDA ECC errors) — maps to
+                                    # sbatch --exclude; empty (default) omits the flag
 
 run_job() {
     local name="job" gpus=0 cpus="" mem="" time="${RUN_JOB_TIME_DEFAULT}" log="" wait_flag=0
@@ -70,6 +73,9 @@ run_job() {
         echo "#SBATCH --mem=${mem}"
         if [ "${gpus}" -gt 0 ]; then
             echo "#SBATCH --gres=gpu${RUN_JOB_GPU_TYPE:+:$RUN_JOB_GPU_TYPE}:${gpus}"
+        fi
+        if [ -n "${RUN_JOB_EXCLUDE_NODES}" ]; then
+            echo "#SBATCH --exclude=${RUN_JOB_EXCLUDE_NODES}"
         fi
         echo "#SBATCH --output=${log}"
         # nnUNet_wandb_mode, NOT WANDB_MODE: this project's WandbLogger patch

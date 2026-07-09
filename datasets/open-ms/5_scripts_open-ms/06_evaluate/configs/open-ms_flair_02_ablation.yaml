@@ -1,0 +1,32 @@
+# open-ms — FLAIR-trained causal-ablation ladders (mechanism decomposition of
+# PALETTE's advantage over SynthSeg-EM: K-means clustering vs. Voronoi
+# sub-parcellation vs. real-texture fill). Two ladders back to back:
+#   rows 1-6  baseline-anchored (no AugLab intensity stack) + real SynthSeg
+#             comparators for context (K-means+noise ~= SynthSeg-EM's own
+#             mean+noise-fill mechanism, but partitioned by intensity
+#             clustering instead of anatomical labels)
+#   rows 7-10 auglab-anchored (full AugLab intensity stack held fixed)
+# Same eval_all.csv sources as 01_results.yaml (06_01), just a focused subset
+# + fixed ladder ordering (column_order keeps flair/t2w/t1w instead of
+# alphabetical). Consumed by 06_10 (aggregate_from_config.py) and 06_11
+# (significance_from_config.py, same config, pass --ref explicitly — see that
+# script's header for the substring-ambiguity gotcha).
+title: "open-ms — FLAIR-trained, causal-ablation ladders (PALETTE mechanism decomposition)"
+metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+output_prefix: "02_ablation"
+in_domain_contrast: flair
+column_order: [flair, t2w, t1w]
+
+runs:
+  # --- baseline-anchored ladder + real SynthSeg comparators ---
+  - open-ms_flair_baseline_20260706_061243
+  - open-ms_flair_synthseg_noEM_train100_val000_20260706_061243
+  - open-ms_flair_synthseg_EM_train100_val000_20260706_061243
+  - open-ms_flair_v26_6_2_noisefill_v2_no_voronoi_train050_val100_20260708_075800
+  - open-ms_flair_v26_6_2_noisefill_v2_train050_val100_20260708_075823
+  - open-ms_flair_v26_6_2_train050_val100_20260706_061243
+  # --- auglab-anchored ladder ---
+  - open-ms_flair_auglab_default_20260706_061243
+  - open-ms_flair_auglabAug_v26_6_2_noisefill_v2_no_voronoi_train025_val100_20260707_065414
+  - open-ms_flair_auglabAug_v26_6_2_noisefill_v2_train025_val100_20260707_065409
+  - open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243

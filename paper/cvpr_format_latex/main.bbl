@@ -1,0 +1,227 @@
+\begin{thebibliography}{30}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Alpher(2002)]{Alpher02}
+FirstName Alpher.
+\newblock Frobnication.
+\newblock \emph{IEEETPAMI}, 12\penalty0 (1):\penalty0 234--778, 2002.
+
+\bibitem[Alpher and Fotheringham-Smythe(2003)]{Alpher03}
+FirstName Alpher and FirstName Fotheringham-Smythe.
+\newblock Frobnication revisited.
+\newblock \emph{Journal of Foo}, 13\penalty0 (1):\penalty0 234--778, 2003.
+
+\bibitem[Alpher et~al.(2004)Alpher, Fotheringham-Smythe, and Gamow]{Alpher04}
+FirstName Alpher, FirstName Fotheringham-Smythe, and FirstName Gamow.
+\newblock Can a machine frobnicate?
+\newblock \emph{Journal of Foo}, 14\penalty0 (1):\penalty0 234--778, 2004.
+
+\bibitem[Badea and Popa(2024)]{badea2024generalizable}
+Liviu Badea and Maria Popa.
+\newblock Toward generalizable multiple sclerosis lesion segmentation models.
+\newblock \emph{arXiv preprint arXiv:2410.19623}, 2024.
+
+\bibitem[Bao et~al.(2024)Bao, Zhou, Li, and Luo]{bao2024structaware}
+Jie Bao, Zhixin Zhou, Wen~Jung Li, and Rui Luo.
+\newblock Structure-aware stylized image synthesis for robust medical image
+  segmentation.
+\newblock \emph{arXiv preprint arXiv:2412.04296}, 2024.
+
+\bibitem[Billot et~al.(2023)Billot, Greve, Puonti, Thielscher, Van~Leemput,
+  Fischl, Dalca, and Iglesias]{billot2023synthseg}
+Benjamin Billot, Douglas~N. Greve, Oula Puonti, Axel Thielscher, Koen
+  Van~Leemput, Bruce Fischl, Adrian~V. Dalca, and Juan~Eugenio Iglesias.
+\newblock {SynthSeg}: Segmentation of brain {MRI} scans of any contrast and
+  resolution without retraining.
+\newblock \emph{Medical Image Analysis}, 86:\penalty0 102789, 2023.
+
+\bibitem[Caselles-Ballester et~al.(2026)Caselles-Ballester, Mart\'{i}nez-Heras,
+  Pontillo, Mendelsohn, Marr\'{o}n, Garc\'{i}a~Fern\'{a}ndez, Subirats,
+  Stutters, Chataway, Barkhof, Llufriu, and Prados]{caselles2026timelesseg}
+Vicent Caselles-Ballester, Eloy Mart\'{i}nez-Heras, Giuseppe Pontillo, Zoe
+  Mendelsohn, Elena~M. Marr\'{o}n, Juan~Luis Garc\'{i}a~Fern\'{a}ndez, Laia
+  Subirats, Jon Stutters, Jeremy Chataway, Frederik Barkhof, Sara Llufriu, and
+  Ferran Prados.
+\newblock {TimeLesSeg}: Unified contrast-agnostic cross-sectional and
+  longitudinal {MS} lesion segmentation via a stochastic generative model.
+\newblock \emph{arXiv preprint arXiv:2605.07955}, 2026.
+
+\bibitem[Cerri et~al.(2021)Cerri, Puonti, Meier, Wuerfel, Muehlau, Siebner, and
+  Van~Leemput]{cerri2021samseg}
+Stefano Cerri, Oula Puonti, Dominik~S. Meier, Jens Wuerfel, Mark Muehlau,
+  Hartwig~R. Siebner, and Koen Van~Leemput.
+\newblock A contrast-adaptive method for simultaneous whole-brain and lesion
+  segmentation in multiple sclerosis.
+\newblock \emph{NeuroImage}, 225:\penalty0 117471, 2021.
+
+\bibitem[Chen et~al.(2024)Chen, Zhu, Ao, Caprara, Sutter, R\"{a}tsch,
+  Konukoglu, and Susmelj]{chen2024diffusionsdg}
+Boqi Chen, Yuanzhi Zhu, Yunke Ao, Sebastiano Caprara, Reto Sutter, Gunnar
+  R\"{a}tsch, Ender Konukoglu, and Anna Susmelj.
+\newblock Generalizable single-source cross-modality medical image segmentation
+  via invariant causal mechanisms.
+\newblock \emph{arXiv preprint arXiv:2411.05223}, 2024.
+
+\bibitem[Isensee et~al.(2021)Isensee, Jaeger, Kohl, Petersen, and
+  Maier-Hein]{isensee2021nnunet}
+Fabian Isensee, Paul~F. Jaeger, Simon A.~A. Kohl, Jens Petersen, and Klaus~H.
+  Maier-Hein.
+\newblock {nnU-Net}: a self-configuring method for deep learning-based
+  biomedical image segmentation.
+\newblock \emph{Nature Methods}, 18\penalty0 (2):\penalty0 203--211, 2021.
+
+\bibitem[Laso et~al.(2023)Laso, Cerri, Sorby-Adams, Guo, Mateen, Goebl, Wu,
+  Liu, Li, Young, Billot, Puonti, et~al.]{laso2024wmhsynthseg}
+Pablo Laso, Stefano Cerri, Annabel Sorby-Adams, Jennifer Guo, Farrah Mateen,
+  Philipp Goebl, Jiaming Wu, Peirong Liu, Hongwei Li, Sean~I. Young, Benjamin
+  Billot, Oula Puonti, et~al.
+\newblock Quantifying white matter hyperintensity and brain volumes in
+  heterogeneous clinical and low-field portable {MRI}.
+\newblock \emph{arXiv preprint arXiv:2312.05119}, 2023.
+
+\bibitem[LastName(2014{\natexlab{a}})]{Authors14}
+FirstName LastName.
+\newblock The frobnicatable foo filter, 2014{\natexlab{a}}.
+\newblock Face and Gesture submission ID 324. Supplied as supplemental material
+  {\tt fg324.pdf}.
+
+\bibitem[LastName(2014{\natexlab{b}})]{Authors14b}
+FirstName LastName.
+\newblock Frobnication tutorial, 2014{\natexlab{b}}.
+\newblock Supplied as supplemental material {\tt tr.pdf}.
+
+\bibitem[Lesjak et~al.(2018)Lesjak, Galimzianova, Koren, Luka\v{c},
+  Van~Leemput, and \v{S}piclin]{lesjak2018openms}
+\v{Z}iga Lesjak, Alfiia Galimzianova, Ale\v{s} Koren, Matja\v{z} Luka\v{c},
+  Koen Van~Leemput, and \v{Z}iga \v{S}piclin.
+\newblock A novel public {MR} image dataset of multiple sclerosis patients with
+  lesion segmentations based on multi-rater consensus.
+\newblock \emph{Neuroinformatics}, 16\penalty0 (1):\penalty0 51--63, 2018.
+
+\bibitem[Li et~al.(2018)Li, Yang, Song, and Hospedales]{li2018mldg}
+Da Li, Yongxin Yang, Yi-Zhe Song, and Timothy~M. Hospedales.
+\newblock Learning to generalize: Meta-learning for domain generalization.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence}, 2018.
+
+\bibitem[Li et~al.(2024)Li, Li, Chen, Ou, Shu, and Miao]{li2024raffesdg}
+Heng Li, Haojin Li, Jianyu Chen, Mingyang Ou, Hai Shu, and Heng Miao.
+\newblock {RaffeSDG}: Random frequency filtering enabled single-source domain
+  generalization for medical image segmentation.
+\newblock \emph{arXiv preprint arXiv:2405.01228}, 2024.
+
+\bibitem[Liu et~al.(2021)Liu, Chen, Qin, Dou, and Heng]{liu2021feddg}
+Quande Liu, Cheng Chen, Jing Qin, Qi Dou, and Pheng-Ann Heng.
+\newblock {FedDG}: Federated domain generalization on medical image
+  segmentation via episodic learning in continuous frequency space.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, 2021.
+
+\bibitem[Molinier et~al.(2026)Molinier, M\"{o}ller, Dagonneau, Curto-Vilalta,
+  Graf, Atad, Rueckert, Kirschke, and Cohen-Adad]{molinier2026auglab}
+Nathan Molinier, Hendrik M\"{o}ller, Thomas Dagonneau, Anna Curto-Vilalta,
+  Robert Graf, Matan Atad, Daniel Rueckert, Jan~S. Kirschke, and Julien
+  Cohen-Adad.
+\newblock One sequence to segment them all: Efficient data augmentation for
+  {CT} and {MRI} cross-domain {3D} spine segmentation.
+\newblock \emph{arXiv preprint arXiv:2605.03098}, 2026.
+
+\bibitem[Nam et~al.(2024)Nam, Syazwany, Kim, and Lee]{nam2024madgnet}
+Ju-Hyeon Nam, Nur~Suriza Syazwany, Su~Jung Kim, and Sang-Chul Lee.
+\newblock Modality-agnostic domain generalizable medical image segmentation by
+  multi-frequency in multi-scale attention.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, 2024.
+
+\bibitem[Ouyang et~al.(2023)Ouyang, Chen, Li, Li, Qin, Bai, and
+  Rueckert]{ouyang2022gin}
+Cheng Ouyang, Chen Chen, Surui Li, Zeju Li, Chen Qin, Wenjia Bai, and Daniel
+  Rueckert.
+\newblock Causality-inspired single-source domain generalization for medical
+  image segmentation.
+\newblock \emph{IEEE Trans. Med. Imaging}, 42\penalty0 (4):\penalty0
+  1095--1106, 2023.
+
+\bibitem[Qiao et~al.(2024)Qiao, Wang, Qu, Su, Jiang, and Guo]{qiao2024ras}
+Qiang Qiao, Wenyu Wang, Meixia Qu, Kun Su, Bin Jiang, and Qiang Guo.
+\newblock Medical image segmentation via single-source domain generalization
+  with random amplitude spectrum synthesis.
+\newblock In \emph{Medical Image Computing and Computer Assisted Intervention
+  (MICCAI)}, 2024.
+
+\bibitem[Sengupta et~al.(2025)Sengupta, Chakrabarty, Ravi, Avinash, and
+  Soni]{sengupta2025synthfm}
+Sourya Sengupta, Satrajit Chakrabarty, Keerthi~Sravan Ravi, Gopal Avinash, and
+  Ravi Soni.
+\newblock {SynthFM}: Training modality-agnostic foundation models for medical
+  image segmentation without real medical data.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, 2025.
+
+\bibitem[Shin et~al.(2023)Shin, Kim, Kim, Jun, Eo, and Hwang]{shin2023sdcuda}
+Hyungseob Shin, Hyeongyu Kim, Sewon Kim, Yohan Jun, Taejoon Eo, and Dosik
+  Hwang.
+\newblock {SDC-UDA}: Volumetric unsupervised domain adaptation framework for
+  slice-direction continuous cross-modality medical image segmentation.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, 2023.
+
+\bibitem[Su et~al.(2023)Su, Yao, Yang, Wang, Sun, and Huang]{su2023slaug}
+Zixian Su, Kai Yao, Xi Yang, Qiufeng Wang, Jie Sun, and Kaizhu Huang.
+\newblock Rethinking data augmentation for single-source domain generalization
+  in medical image segmentation.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence}, 2023.
+
+\bibitem[Thaler et~al.(2025)Thaler, Urschler, Kozinski, Gsell, Plank, and
+  Stern]{thaler2025semrandconv}
+Franz Thaler, Martin Urschler, Mateusz Kozinski, Matthias A.~F. Gsell, Gernot
+  Plank, and Darko Stern.
+\newblock Semantic-aware random convolution and source matching for domain
+  generalization in medical image segmentation.
+\newblock \emph{IEEE Access}, 2025.
+
+\bibitem[Valabregue et~al.(2026)Valabregue, Khemir, Badinet, Rousseau, Auzias,
+  and Dorent]{valabregue2026siam}
+Romain Valabregue, Ines Khemir, Eric Badinet, Fran\c{c}ois Rousseau, Guillaume
+  Auzias, and Reuben Dorent.
+\newblock {SIAM}: Head and brain {MRI} segmentation from few high-quality
+  templates via synthetic training.
+\newblock \emph{arXiv preprint arXiv:2605.02737}, 2026.
+
+\bibitem[Wang et~al.(2020)Wang, Yu, Li, Yang, Fu, and Heng]{wang2020dofe}
+Shujun Wang, Lequan Yu, Kang Li, Xin Yang, Chi-Wing Fu, and Pheng-Ann Heng.
+\newblock {DoFE}: Domain-oriented feature embedding for generalizable fundus
+  image segmentation on unseen datasets.
+\newblock \emph{IEEE Trans. Med. Imaging}, 39\penalty0 (12):\penalty0
+  4237--4248, 2020.
+
+\bibitem[Xu et~al.(2021)Xu, Liu, Yang, Raffel, and Niethammer]{xu2021randconv}
+Zhenlin Xu, Deyi Liu, Junlin Yang, Colin Raffel, and Marc Niethammer.
+\newblock Robust and generalizable visual representation learning via random
+  convolutions.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2021.
+
+\bibitem[Zhang et~al.(2020)Zhang, Wang, Yang, Sanford, Harmon, Turkbey, Wood,
+  Roth, Myronenko, Xu, and Xu]{zhang2020bigaug}
+Ling Zhang, Xiaosong Wang, Dong Yang, Thomas Sanford, Stephanie Harmon, Baris
+  Turkbey, Bradford~J. Wood, Holger Roth, Andriy Myronenko, Daguang Xu, and
+  Ziyue Xu.
+\newblock Generalizing deep learning for medical image segmentation to unseen
+  domains via deep stacked transformations.
+\newblock \emph{IEEE Trans. Med. Imaging}, 39\penalty0 (7):\penalty0
+  2531--2540, 2020.
+
+\bibitem[Zhao et~al.(2024)Zhao, Dong, Yu, Zhao, Bo, and Xu]{zhao2024morestyle}
+Haoyu Zhao, Wenhui Dong, Rui Yu, Zhou Zhao, Du Bo, and Yongchao Xu.
+\newblock {MoreStyle}: Relax low-frequency constraint of fourier-based image
+  reconstruction in generalizable medical image segmentation.
+\newblock In \emph{Medical Image Computing and Computer Assisted Intervention
+  (MICCAI)}, 2024.
+
+\end{thebibliography}
