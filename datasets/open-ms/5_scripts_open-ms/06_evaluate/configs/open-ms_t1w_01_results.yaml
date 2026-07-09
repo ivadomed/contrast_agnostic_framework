@@ -2,7 +2,7 @@
 # STANDARD layout: consumed by 06_10_aggregate_from_config.sh (aggregate) and
 # 06_11_significance_from_config.sh (paired Wilcoxon; pass --ref explicitly).
 # Eval (06_13→06_01) writes fold*/eval_all.csv under metrics_dir/{category}_{run_id}/.
-title: "open-ms — T1w-trained models, cross-contrast (6-method suite)"
+title: "open-ms — T1w-trained models, cross-contrast (7-method suite incl. srcsm)"
 metrics_dir: "${METRICS_ROOT}/open_ms_model/t1w"
 output_prefix: "01_results"
 in_domain_contrast: t1w
@@ -14,3 +14,4 @@ runs:
   - open-ms_t1w_synthseg_EM_train100_val000_20260708_083611
   - open-ms_t1w_v26_6_2_train050_val100_20260708_083641
   - open-ms_t1w_auglabAug_v26_6_2_train025_val100_20260708_083711
+#  - open-ms_t1w_srcsm_<TIMESTAMP>  # added 7th arm — fill in after training

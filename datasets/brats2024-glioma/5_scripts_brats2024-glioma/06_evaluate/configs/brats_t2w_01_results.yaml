@@ -1,4 +1,4 @@
-title: "BraTS 2024 Glioma T2w — results"
+title: "BraTS 2024 Glioma T2w — results (incl. srcsm 7th arm)"
 metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t2w"
 output_prefix: "03_01_results"
 in_domain_contrast: t2w
@@ -10,3 +10,4 @@ runs:
   - brats2024-glioma_t2w_synthseg_EM_20260620_125354
   - brats2024-glioma_t2w_synthseg_noEM_20260620_125442
   - brats2024-glioma_t2w_auglabAug_v26_6_2_train025_val100_20260620_125531
+#  - brats2024-glioma_t2w_srcsm_<TIMESTAMP>  # fill in after training (7th arm)

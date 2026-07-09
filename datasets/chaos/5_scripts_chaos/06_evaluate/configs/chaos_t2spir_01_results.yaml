@@ -1,3 +1,4 @@
+# 7 comparison arms (6 standard + srcsm SemRandConv-3D, Thaler et al. 2025).
 title: "CHAOS T2spir — results"
 metrics_dir: "${METRICS_ROOT}/chaos_model/t2spir"
 output_prefix: "03_01_results"
@@ -10,3 +11,4 @@ runs:
   - chaos_t2spir_synthseg_noEM_20260620_112515
   - chaos_t2spir_auglab_default_20260620_112240
   - chaos_t2spir_baseline_20260620_111146
+#  - chaos_t2spir_srcsm_<TIMESTAMP>  # fill in after training

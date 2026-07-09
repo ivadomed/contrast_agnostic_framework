@@ -15,6 +15,7 @@ bash "${HERE}/04_21_train_t1n_auglab_default.sh" &
 bash "${HERE}/04_22_train_t1n_synthseg_EM.sh" &
 bash "${HERE}/04_23_train_t1n_synthseg_noEM.sh" &
 bash "${HERE}/04_24_train_t1n_auglabAug_v26_6_2_train025_val100.sh" &
+bash "${HERE}/04_26_train_t1n_srcsm.sh" &   # 7th comparison arm (SRCSM SemRandConv-3D)
 wait
 
 echo ""

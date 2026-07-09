@@ -17,6 +17,8 @@ METHOD_SCRIPTS=(
     "${HERE}/04_02_train_synthseg_EM.sh"
     "${HERE}/04_06_train_v26_6_2_train050_val100.sh"
     "${HERE}/04_03_train_auglabAug_v26_6_2_train025_val100.sh"
+    # srcsm = added 7th comparison arm (AugLab-category); can also be run standalone via 04_20_train_srcsm.sh
+    "${HERE}/04_20_train_srcsm.sh"
 )
 
 source "${PROJECT_ROOT}/datasets/00_commun_scripts/00_01_train/run_all_train_common.sh" "$@"

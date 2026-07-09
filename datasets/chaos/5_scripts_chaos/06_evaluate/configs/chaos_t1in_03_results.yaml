@@ -1,3 +1,4 @@
+# 7 comparison arms (6 standard + srcsm SemRandConv-3D, Thaler et al. 2025).
 title: "CHAOS T1in — results"
 metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
 output_prefix: "03_03_results"
@@ -10,3 +11,4 @@ runs:
   - chaos_t1in_synthseg_noEM_train100_val000_20260611_120000
   - chaos_t1in_auglab_default_20260611_120000
   - chaos_t1in_baseline_20260614_153230
+#  - chaos_t1in_srcsm_<TIMESTAMP>  # fill in after training
