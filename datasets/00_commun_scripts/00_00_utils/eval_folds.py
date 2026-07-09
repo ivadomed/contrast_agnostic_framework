@@ -2,7 +2,7 @@
 Single source of truth for which folds are included in evaluation/aggregation,
 shared across every dataset and experiment (imported by eval_aggregate.py, used
 by amos/brats2024-glioma/chaos/sliver07/trusted via aggregate_results.py; and by
-scripts/evaluate/aggregate_from_config.py, used by chaos/on-harmony/open-ms).
+datasets/00_commun_scripts/00_03_evaluate/aggregate_from_config.py, used by chaos/on-harmony/open-ms).
 
 Capped at folds 0-2 — this is the default AND ONLY behavior, not an opt-in. Any
 fold directory beyond this (e.g. fold3, present in older 4-fold training runs) is

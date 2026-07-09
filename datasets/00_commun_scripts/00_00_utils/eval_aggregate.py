@@ -31,7 +31,7 @@ from eval_folds import EVAL_FOLDS, filter_fold_dirs
 
 # ── run-name label bolding ────────────────────────────────────────────────────
 # Highlight the synth-method token inside long run-id labels, in both markdown
-# tables and heatmap y-labels. Mirrors scripts/evaluate/aggregate_from_config.py
+# tables and heatmap y-labels. Mirrors datasets/00_commun_scripts/00_03_evaluate/aggregate_from_config.py
 # (the cross-dataset roll-up) so per-dataset and combined reports look consistent.
 # Longest-first so overlapping patterns don't shadow each other.
 _BOLD_RE = re.compile(r'synthseg_noEM|synthseg_EM|auglab_default|auglabAug|v26_6_2|\(Ours\)|baseline')

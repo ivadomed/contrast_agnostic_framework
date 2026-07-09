@@ -6,7 +6,7 @@
 #   bash 06_10_aggregate_from_config.sh configs/open-ms_flair_01_results.yaml
 #
 # The config specifies which runs to include, the metrics_dir, and the output
-# prefix. See configs/ for available configs and scripts/evaluate/aggregate_from_config.py
+# prefix. See configs/ for available configs and datasets/00_commun_scripts/00_03_evaluate/aggregate_from_config.py
 # for the full config format.
 set -euo pipefail
 source "$(dirname "$0")/../00_utils/env.sh"
@@ -26,5 +26,5 @@ if [[ "$CONFIG" != /* ]]; then
 fi
 
 echo "[$(date '+%H:%M:%S')] aggregating from ${CONFIG}"
-.venv/bin/python "${PROJECT_ROOT}/scripts/evaluate/aggregate_from_config.py" "${CONFIG}"
+.venv/bin/python "${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/aggregate_from_config.py" "${CONFIG}"
 echo "[$(date '+%H:%M:%S')] done"

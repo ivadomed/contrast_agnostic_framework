@@ -44,8 +44,7 @@ import re
 import numpy as np
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]
-                       / "datasets" / "00_commun_scripts" / "00_00_utils"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "00_00_utils"))  # sibling: 00_commun_scripts/00_00_utils
 from eval_folds import filter_fold_dirs  # noqa: E402 — single source of truth, see eval_folds.py
 # Significance testing lives in the dedicated companion script
 # datasets/00_commun_scripts/00_03_evaluate/significance_from_config.py (same

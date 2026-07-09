@@ -182,10 +182,10 @@ elif [ "${GPUS_PER_FOLD}" = "1" ]; then
         launch_fold "${SINGLE_FOLD}" "${SINGLE_SLOT:-${SINGLE_FOLD}}" "${SINGLE_GPU:-0}" &
         PIDS[0]=$!
     else
-        # TRAIN_FOLDS (optional, default "0 1 2 3"): space-separated fold list, e.g.
-        # TRAIN_FOLDS="0 1 2" to skip fold 3 (opt-in override — every other call site
-        # is unaffected unless it explicitly sets this).
-        read -ra _FOLDS <<< "${TRAIN_FOLDS:-0 1 2 3}"
+        # TRAIN_FOLDS (optional, default "0 1 2"): space-separated fold list. Project
+        # policy is 3 folds only — we never train fold 3 (see CLAUDE.md "FOLD POLICY").
+        # Override explicitly only for a one-off (e.g. TRAIN_FOLDS="0 1 2 3").
+        read -ra _FOLDS <<< "${TRAIN_FOLDS:-0 1 2}"
         _n_folds=${#_FOLDS[@]}
         for _i in "${!_FOLDS[@]}"; do
             FOLD="${_FOLDS[$_i]}"

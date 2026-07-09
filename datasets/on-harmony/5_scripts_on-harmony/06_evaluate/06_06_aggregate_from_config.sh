@@ -17,4 +17,4 @@ CFG="${1:?Usage: $0 <config.yaml>}"
 [[ "$CFG" != /* ]] && CFG="${HERE}/${CFG}"
 [ -f "$CFG" ] || { echo "ERROR: config not found: $CFG" >&2; exit 1; }
 
-.venv/bin/python "${PROJECT_ROOT}/scripts/evaluate/aggregate_from_config.py" "${CFG}"
+.venv/bin/python "${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/aggregate_from_config.py" "${CFG}"

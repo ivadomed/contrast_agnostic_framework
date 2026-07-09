@@ -63,10 +63,8 @@ from eval_folds import EVAL_FOLD_INDICES  # noqa: E402 — single source of trut
 from stat_tests import wilcoxon_p, holm, fmt_p  # noqa: E402 — shared math, see stat_tests.py
 
 # Reuse run-dir resolution from the aggregator so resolution stays identical.
-# NOT a sibling file: aggregate_from_config.py lives at scripts/evaluate/, this
-# file at datasets/00_commun_scripts/00_03_evaluate/ — parents[3] from here is
-# the repo root (00_03_evaluate -> 00_commun_scripts -> datasets -> root).
-_AGG = Path(__file__).resolve().parents[3] / "scripts" / "evaluate" / "aggregate_from_config.py"
+# aggregate_from_config.py is now a sibling in this same dir (00_03_evaluate/).
+_AGG = Path(__file__).resolve().parent / "aggregate_from_config.py"
 _spec = importlib.util.spec_from_file_location("aggregate_from_config", _AGG)
 _agg = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_agg)

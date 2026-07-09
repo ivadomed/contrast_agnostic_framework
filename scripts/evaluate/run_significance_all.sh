@@ -11,7 +11,8 @@ set -euo pipefail
 : "${PROJECT_ROOT:=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 export PROJECT_ROOT
 PY="${PROJECT_ROOT}/.venv/bin/python"
-SIG="${PROJECT_ROOT}/scripts/evaluate/significance_from_config.py"
+# Canonical significance script lives in the shared dataset-pipeline layer (00_commun_scripts).
+SIG="${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/significance_from_config.py"
 
 CONFIGS=(
   "datasets/chaos/5_scripts_chaos/06_evaluate/configs/cross_dataset_t1in_01_results.yaml"

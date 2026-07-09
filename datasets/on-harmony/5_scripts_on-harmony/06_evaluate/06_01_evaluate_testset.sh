@@ -3,7 +3,7 @@
 # STANDARD results layout (identical to chaos/brats):
 #   predictions → PREDICTIONS_ROOT/<model>/<train_contrast>/<category>/<RUN_ID>/fold{k}/<test_contrast>/
 #   metrics     → METRICS_ROOT/<model>/<train_contrast>/<category>_<RUN_ID>/fold{k}/eval_all.csv
-# Aggregate across runs with the SHARED scripts/evaluate/aggregate_from_config.py via
+# Aggregate across runs with the SHARED datasets/00_commun_scripts/00_03_evaluate/aggregate_from_config.py via
 # 06_06_aggregate_from_config.sh — exactly the same as chaos.
 #
 # TWO MODES:

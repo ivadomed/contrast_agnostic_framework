@@ -16,7 +16,12 @@ CATEGORY="${2:?need CATEGORY (nnUNet|auglab)}"
 FOLD_ARG="${3:-all}"
 
 ITEMS=(flair t2w t1w)
-_DS_NAME="$(ls "${nnUNet_raw}" | grep '^Dataset0*70_' | head -1)"
+# DATASET_ID selects the nnUNet dataset providing the per-contrast GT (labelsTs_<contrast>)
+# + dataset.json. Defaults to 70 (FLAIR-trained); the T1w wrapper (06_13) pre-exports 71.
+# GT masks are byte-identical across the FLAIR/T1w datasets (same co-registered consensus
+# masks), so this only affects provenance/paths, not the scores.
+DATASET_ID="${DATASET_ID:-70}"
+_DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset0*${DATASET_ID}_" | head -1)"
 DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 OUT_BASE="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}"
