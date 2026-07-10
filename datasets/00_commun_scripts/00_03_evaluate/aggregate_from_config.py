@@ -94,7 +94,7 @@ def load_run_from_sources(sources: list, key: str) -> tuple:
 # Substrings to highlight in bold within run-name labels.
 # Listed longest-first so overlapping patterns don't shadow each other.
 _BOLD_RE = re.compile(
-    r'synthseg_noEM|synthseg_EM|auglab_default|auglabAug|v26_6_2|\(Ours\)|baseline'
+    r'synthseg_noEM|synthseg_EM|auglab_default|auglabAug|v26_6_2|\(Ours\)|baseline|srcsm'
 )
 
 
