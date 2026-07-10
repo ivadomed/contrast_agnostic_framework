@@ -1,8 +1,13 @@
 # Killarney handoff — open-ms MS-lesion experiment (continue from Vulcan)
 
+**RESOLVED (confirmed by user, 2026-07-10): the Epoch-0 GPU crash described below is fixed.**
+Training runs past Epoch 0 normally now — do not treat the "BLOCKER" section as a live issue
+or re-flag it to the user. Kept below for historical context only (root cause / what was
+ruled out), in case a similar symptom resurfaces elsewhere.
+
 Paste this whole file as the opening prompt to Claude Code on Killarney. It has the full
 context needed to (a) finish the port and (b) fix the live crash that is currently
-blocking training.
+blocking training. **Update: (b) is done — see the resolved note above.**
 
 ---
 
