@@ -5,7 +5,7 @@
 #             comparators for context (K-means+noise ~= SynthSeg-EM's own
 #             mean+noise-fill mechanism, but partitioned by intensity
 #             clustering instead of anatomical labels)
-#   rows 7-10 auglab-anchored (full AugLab intensity stack held fixed)
+#   rows 7-11 auglab-anchored (full AugLab intensity stack held fixed)
 # Same eval_all.csv sources as 01_results.yaml (06_01), just a focused subset
 # + fixed ladder ordering (column_order keeps flair/t2w/t1w instead of
 # alphabetical). Consumed by 06_10 (aggregate_from_config.py) and 06_11
@@ -29,4 +29,5 @@ runs:
   - open-ms_flair_auglab_default_20260706_061243
   - open-ms_flair_auglabAug_v26_6_2_noisefill_v2_no_voronoi_train025_val100_20260707_065414
   - open-ms_flair_auglabAug_v26_6_2_noisefill_v2_train025_val100_20260707_065409
+  - open-ms_flair_auglabAug_v26_6_2_noisefill_train025_val100_20260706_061243
   - open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243

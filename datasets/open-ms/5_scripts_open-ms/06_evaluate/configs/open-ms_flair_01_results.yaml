@@ -16,8 +16,5 @@ runs:
   - open-ms_flair_synthseg_EM_train100_val000_20260706_061243
   - open-ms_flair_auglab_default_20260706_061243
   - open-ms_flair_v26_6_2_train050_val100_20260706_061243
-  - open-ms_flair_auglabAug_v26_6_2_noisefill_train025_val100_20260706_061243
-  - open-ms_flair_auglabAug_v26_6_2_noisefill_v2_no_voronoi_train025_val100_20260707_065414
-  - open-ms_flair_auglabAug_v26_6_2_noisefill_v2_train025_val100_20260707_065409
   - open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243
   - open-ms_flair_srcsm_20260709_072043  # added 7th arm
