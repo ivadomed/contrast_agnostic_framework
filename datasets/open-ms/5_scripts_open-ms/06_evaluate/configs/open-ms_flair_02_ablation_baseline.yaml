@@ -16,7 +16,7 @@ column_order: [flair, t2w, t1w]
 
 runs:
   - open-ms_flair_baseline_20260706_061243
-  - open-ms_flair_v26_6_2_noisefill_v2_no_voronoi_train050_val100_20260708_075800
+  - open-ms_flair_baseline_kmeans_label_remap_train050_val100_20260708_075800
   - open-ms_flair_synthseg_EM_train100_val000_20260706_061243
-  - open-ms_flair_v26_6_2_noisefill_v2_train050_val100_20260708_075823
+  - open-ms_flair_baseline_kmeans_label_remap_voronoi_train050_val100_20260708_075823
   - open-ms_flair_v26_6_2_train050_val100_20260706_061243
