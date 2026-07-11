@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # Train SRCSM (SemRandConv-3D, Thaler et al. 2025) augmentation on BraTS 2024 Glioma T1n.
 # 7th comparison arm (additional to the 6 usual methods); reuses the AugLab-default trainer.
-# 4 folds, 1 GPU per fold, 2500 epochs.
+# 3 folds (0 1 2), 1 GPU per fold, 2500 epochs.
 #
 # Usage:
 #   bash 04_26_train_t1n_srcsm.sh           # auto RUN_ID
 #   bash 04_26_train_t1n_srcsm.sh brats2024-glioma_t1n_srcsm_<TS>  # resume
-export RUN_JOB_TIME_DEFAULT="2-23:00:00"  # 2500 epochs × ~60s/ep ≈ 42h
+# NB: measured srcsm epoch time on BraTS is ~200s (not the ~60s originally guessed), so a
+# full 2500-epoch run needs ~137h and does NOT fit one 71h submission — it must be
+# checkpoint-resumed (re-run with the same RUN_ID). Made overridable so a resume can
+# request a longer wall, e.g. RUN_JOB_TIME_DEFAULT=4-00:00:00 bash 04_26_... <RUN_ID>.
+export RUN_JOB_TIME_DEFAULT="${RUN_JOB_TIME_DEFAULT:-2-23:00:00}"
 source "$(dirname "$0")/../00_utils/env.sh"
 
 METHOD="srcsm"

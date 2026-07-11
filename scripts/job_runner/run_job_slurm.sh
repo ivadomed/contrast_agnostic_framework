@@ -77,6 +77,12 @@ run_job() {
         if [ -n "${RUN_JOB_EXCLUDE_NODES}" ]; then
             echo "#SBATCH --exclude=${RUN_JOB_EXCLUDE_NODES}"
         fi
+        # Optional Slurm dependency passthrough (e.g. "afternotok:12345" to auto-resume
+        # a fold only if its predecessor fails/times out, or "afterany:..."). Empty
+        # (default) omits the flag entirely, so existing call sites are unaffected.
+        if [ -n "${RUN_JOB_DEPENDENCY:-}" ]; then
+            echo "#SBATCH --dependency=${RUN_JOB_DEPENDENCY}"
+        fi
         echo "#SBATCH --output=${log}"
         # nnUNet_wandb_mode, NOT WANDB_MODE: this project's WandbLogger patch
         # (src/nnunet/patches/nnunet_logger.py) reads its own nnUNet_wandb_mode

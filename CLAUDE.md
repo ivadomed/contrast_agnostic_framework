@@ -7,7 +7,7 @@
 | Machine | Type / backend | Role |
 |---|---|---|
 | **Vulcan** (AMII / Alliance) | Slurm cluster | **Primary.** All datasets + checkpoints live here; the main place to train/predict/eval. GitHub push works from here (done manually). Can be queue-congested when priority is low. |
-| **Killarney** (Alliance) | Slurm cluster (same as Vulcan) | **Overflow GPU.** Same cluster type; fewer datasets staged there (stage more if needed). Used when Vulcan priority runs low and we need more GPU. |
+| **Killarney** (Alliance) | Slurm cluster (same as Vulcan) | **Overflow GPU.** Same cluster type. Datasets staged there as of 2026-07-10: **chaos** (`1_BIDS_chaos/chaos-abdominal`, `2_nnUNet_chaos`) and **open-ms**. brats2024-glioma / on-harmony / others not yet staged — rsync from Vulcan first if needed there. Used when Vulcan priority runs low and we need more GPU. |
 | **romane** (NeuroPoly lab) | `set_slot` workstation | **Limited-use lab box, only 4 GPUs.** The original dev machine; used for smaller/interactive GPU jobs. |
 
 **SSH hosts + repo path per machine** (for rsync/ssh between them):

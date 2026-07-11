@@ -1,0 +1,22 @@
+# open-ms — FLAIR-trained, baseline-anchored causal-ablation ladder
+# (mechanism decomposition of PALETTE's advantage over SynthSeg-EM: K-means
+# clustering vs. Voronoi sub-parcellation vs. real-texture fill), plus the
+# real SynthSeg-EM run for context. No AugLab intensity stack on any rung.
+# Split out of the old combined open-ms_flair_02_ablation.yaml — see that
+# dataset's auglab-anchored counterpart: open-ms_flair_02_ablation_auglab.yaml.
+# Same eval_all.csv sources as 01_results.yaml (06_01). Consumed by 06_10
+# (aggregate_from_config.py) and 06_11 (significance_from_config.py, same
+# config, pass --ref explicitly — see that script's header for the
+# substring-ambiguity gotcha).
+title: "open-ms — FLAIR-trained, baseline-anchored causal-ablation ladder (PALETTE mechanism decomposition)"
+metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+output_prefix: "02_ablation_baseline"
+in_domain_contrast: flair
+column_order: [flair, t2w, t1w]
+
+runs:
+  - open-ms_flair_baseline_20260706_061243
+  - open-ms_flair_v26_6_2_noisefill_v2_no_voronoi_train050_val100_20260708_075800
+  - open-ms_flair_synthseg_EM_train100_val000_20260706_061243
+  - open-ms_flair_v26_6_2_noisefill_v2_train050_val100_20260708_075823
+  - open-ms_flair_v26_6_2_train050_val100_20260706_061243
