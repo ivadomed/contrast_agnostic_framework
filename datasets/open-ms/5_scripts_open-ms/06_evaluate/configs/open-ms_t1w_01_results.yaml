@@ -15,3 +15,4 @@ runs:
   - open-ms_t1w_v26_6_2_train050_val100_20260708_083641
   - open-ms_t1w_auglabAug_v26_6_2_train025_val100_20260708_083711
   - open-ms_t1w_srcsm_20260709_075121  # added 7th arm
+  - open-ms_t1w_auglabAug_v26_6_2_train050_val000_20260710_054525  # ablation: train050_val000

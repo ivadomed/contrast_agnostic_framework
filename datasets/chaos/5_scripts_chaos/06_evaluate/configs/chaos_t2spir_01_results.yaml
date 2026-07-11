@@ -12,3 +12,4 @@ runs:
   - chaos_t2spir_auglab_default_20260620_112240
   - chaos_t2spir_baseline_20260620_111146
 #  - chaos_t2spir_srcsm_<TIMESTAMP>  # fill in after training
+  - chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202  # ablation: train050_val000

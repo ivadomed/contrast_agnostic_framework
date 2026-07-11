@@ -4,7 +4,8 @@ Level-1 texture / structure-preservation metrics (input-space, network-free).
 
 For each generated volume and each of the 31 anatomical ROIs, measure how much of the SOURCE
 T1w's texture survives in the augmented volume, using two contrast-AND-inversion-invariant,
-citable metrics (see ../LITERATURE_REVIEW.md):
+citable metrics (see datasets/open-ms/7_analysis_open-ms/texture_analysis_lvl_1/LITERATURE_REVIEW.md
+— moved there since texture analysis is now run on open-ms):
 
   * CENSUS — |corr( rank(source), rank(synth) )| within the eroded ROI.  PRIMARY texture metric.
              rank = census/rank transform (Zabih & Woodfill 1994; LBP ordinal family, Ojala

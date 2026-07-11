@@ -5,7 +5,7 @@ Level-1 texture / structure-preservation metrics for open-ms (Pillar 1), network
 For each generated volume and each of 2 ROIs, measure how much of the SOURCE's texture
 survives in the generated volume, using contrast-AND-inversion-invariant census metrics
 (rank/census math copied verbatim from on-harmony's texture_analysis_lvl_1; see
-datasets/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/LITERATURE_REVIEW.md):
+../LITERATURE_REVIEW.md — now lives in this open-ms dir, moved from on-harmony):
 
   * census_r1  = |corr( rank_transform(source,1), rank_transform(synth,1) )| over the whole ROI.
                  PRIMARY for the texture-vs-texture-blind axis (image-driven ≫ SynthSeg floor).
