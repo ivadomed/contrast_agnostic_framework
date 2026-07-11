@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
-Diagnostic: is noisefill_v2 / synthseg_noem's above-floor NGF (0.5-0.65, vs the 0.333 chance
+Diagnostic: is baseline_kmeans_label_remap_voronoi / synthseg_noem's above-floor NGF (0.5-0.65, vs the 0.333 chance
 floor) genuine interior texture leakage, or a shared-ROI-mask-boundary artifact (every method's
 fill respects the same lesion/foreground mask edge, so the mask's own boundary contributes a
 "free" gradient-orientation match to ALL methods, textured or not)?
 
 Test: interior (eroded away from the ROI mask edge) vs boundary-shell NGF, mirroring the
 interior/shell decomposition already used to diagnose SynthSeg's blur artifact
-(diagnose_synthseg.py). If noisefill_v2/synthseg_noem's excess sits in the SHELL and their
+(diagnose_synthseg.py). If baseline_kmeans_label_remap_voronoi/synthseg_noem's excess sits in the SHELL and their
 INTERIOR already equals the chance floor, this is the same class of "shared macro boundary"
 confound, not new information.
 """
@@ -24,7 +24,7 @@ from compute_texture_metrics_openms import list_source_keys, foreground_mask, _l
 from compute_ngf_texture import ngf_scores
 
 GENERATED = REPO / "datasets/open-ms/7_analysis_open-ms/data/generated_noblur"
-METHODS = ["palette", "auglab_default", "synthseg_em", "synthseg_noem", "v26_6_2_noisefill_v2"]
+METHODS = ["palette", "auglab_default", "synthseg_em", "synthseg_noem", "baseline_kmeans_label_remap_voronoi"]
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

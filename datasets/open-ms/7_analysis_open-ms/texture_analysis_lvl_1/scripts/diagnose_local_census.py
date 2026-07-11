@@ -17,7 +17,7 @@ Test: block-wise LOCAL census. Tile the ROI into small cubes (mostly single-regi
 |corr| per block, average. This removes cross-region sign cancellation. Prediction:
   palette -> near ceiling (within-region texture preserved),
   auglab  -> moderate (genuine local texture alteration by RandomConv/Scharr/noise),
-  synthseg_* / noisefill_v2 -> floor (noise fill has no local texture).
+  synthseg_* / baseline_kmeans_label_remap_voronoi -> floor (noise fill has no local texture).
 i.e. palette > auglab > floor, matching design intent.
 
 Runs on the FINAL generated_noblur volumes (FLAIR source, all 30 subjects, run-00).
@@ -35,7 +35,7 @@ from compute_texture_metrics_openms import (
 )
 
 GENERATED = REPO / "datasets/open-ms/7_analysis_open-ms/data/generated_noblur"
-METHODS = ["palette", "auglab_default", "synthseg_em", "synthseg_noem", "v26_6_2_noisefill_v2"]
+METHODS = ["palette", "auglab_default", "synthseg_em", "synthseg_noem", "baseline_kmeans_label_remap_voronoi"]
 BLOCK_SIZES = [8, 16]        # cube edge (voxels)
 MIN_BLOCK_VOX = 64           # a block needs this many in-ROI voxels to count
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

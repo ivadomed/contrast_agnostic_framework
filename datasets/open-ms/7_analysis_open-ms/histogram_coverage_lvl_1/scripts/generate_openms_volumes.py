@@ -36,7 +36,7 @@ BIDS = REPO / "datasets/open-ms/1_BIDS_open-ms/open-ms-brain"
 RAW = REPO / "datasets/open-ms/0_raw_open-ms"
 LESION_DIR = BIDS / "derivatives" / "manual_masks"
 DEFAULT_CONFIGS = REPO / "datasets/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/configs"
-METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default", "v26_6_2_noisefill_v2"]
+METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default", "baseline_kmeans_label_remap_voronoi"]
 SOURCES = ["FLAIR", "T1w"]
 
 
