@@ -35,7 +35,7 @@ from compute_texture_metrics_openms import (
 )
 
 GENERATED = REPO / "datasets/open-ms/7_analysis_open-ms/data/generated_noblur"
-METHODS = ["palette", "auglab_default", "synthseg_em", "synthseg_noem", "v26_6_2_noisefill_v2"]
+METHODS = ["palette", "auglab_default", "synthseg_em", "synthseg_noem", "baseline_kmeans_label_remap_voronoi"]
 BLOCK_SIZES = [8, 16]        # cube edge (voxels)
 MIN_BLOCK_VOX = 64           # a block needs this many in-ROI voxels to count
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

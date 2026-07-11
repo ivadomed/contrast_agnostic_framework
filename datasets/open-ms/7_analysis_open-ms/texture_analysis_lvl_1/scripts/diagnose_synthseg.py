@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Diagnostic: why does synthseg_em/noem score above the noisefill_v2 floor on census_r1?
+Diagnostic: why does synthseg_em/noem score above the baseline_kmeans_label_remap_voronoi floor on census_r1?
 Two hypotheses tested on already-generated noblur volumes (FLAIR source, all 30 subjects):
-  H1 (blur/smoothing): synthseg's output is locally smoother than noisefill_v2's (evidence
+  H1 (blur/smoothing): synthseg's output is locally smoother than baseline_kmeans_label_remap_voronoi's (evidence
       of an internal blur/PSF/resample step not controlled by our blur_sigmas=0 knob).
   H2 (boundary-sharing, not texture): the excess census concentrates in a thin shell near
       the ROI boundary (shared anatomical geometry from the same lesion mask), not spread
@@ -22,7 +22,7 @@ from compute_texture_metrics_openms import (
 )
 
 GENERATED = REPO / "datasets/open-ms/7_analysis_open-ms/data/generated_noblur"
-METHODS = ["palette", "synthseg_em", "synthseg_noem", "v26_6_2_noisefill_v2", "auglab_default"]
+METHODS = ["palette", "synthseg_em", "synthseg_noem", "baseline_kmeans_label_remap_voronoi", "auglab_default"]
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load(p):
