@@ -59,10 +59,10 @@ lesion/foreground mask, spatial deform disabled), manufacturing a boundary-drive
 
 **Evidence (diagnostic, blur-on state):**
 - Local smoothness (mean |x − local-neighbour mean|, z-scored volumes): synthseg 0.04–0.09 vs
-  palette/noisefill/auglab 0.55–0.66 → SynthSeg output is ~10× smoother (the blur).
+  palette/kmeans_voronoi/auglab 0.55–0.66 → SynthSeg output is ~10× smoother (the blur).
 - Interior (eroded ×3) vs boundary-shell census, foreground: synthseg_em interior **0.077** vs
   shell **0.147** (+0.069 at the boundary) — its excess is boundary-driven; its interior already
-  equals the noisefill floor (0.078). palette shows the opposite (interior 0.425 > shell 0.314):
+  equals the kmeans_voronoi floor (0.078). palette shows the opposite (interior 0.425 > shell 0.314):
   its signal is real interior texture, not boundary.
 
 **Fix:** set `"apply_resolution": false` in the SynthSeg config block (threads through
@@ -172,7 +172,7 @@ of the isolated no-blur ablation. Plots: `ngf_headline_{flair,t1w}_blur.png`,
 §Confirmatory result.
 
 ## Config/consistency fixes applied
-- Spatial augmentation was ON for synthseg_em/noem/auglab_default but OFF for palette/noisefill in
+- Spatial augmentation was ON for synthseg_em/noem/auglab_default but OFF for palette/kmeans_voronoi in
   the shared on-harmony configs. Made open-ms-local copies with `p_rotation=p_scaling=0` for a
   controlled comparison (`data/configs_noblur_nospatial/`); shared on-harmony configs left untouched.
 - `aggregate_texture_metrics.py`: summary now reports median alongside mean, with a caution that the

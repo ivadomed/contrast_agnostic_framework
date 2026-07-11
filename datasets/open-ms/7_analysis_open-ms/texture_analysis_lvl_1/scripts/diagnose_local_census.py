@@ -17,7 +17,7 @@ Test: block-wise LOCAL census. Tile the ROI into small cubes (mostly single-regi
 |corr| per block, average. This removes cross-region sign cancellation. Prediction:
   palette -> near ceiling (within-region texture preserved),
   auglab  -> moderate (genuine local texture alteration by RandomConv/Scharr/noise),
-  synthseg_* / noisefill_v2 -> floor (noise fill has no local texture).
+  synthseg_* / baseline_kmeans_label_remap_voronoi -> floor (noise fill has no local texture).
 i.e. palette > auglab > floor, matching design intent.
 
 Runs on the FINAL generated_noblur volumes (FLAIR source, all 30 subjects, run-00).

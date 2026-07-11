@@ -7,7 +7,7 @@
 #       --ref open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243
 #
 # --ref: pass the EXACT reference run id explicitly whenever the run list also
-# contains ablation variants of it (e.g. "..._noisefill_...", "..._no_voronoi_...")
+# contains ablation variants that extend the same run id (e.g. "..._train050_val000")
 # — those share the "auglabAug"+"v26_6_2" substring the auto-picker looks for, so
 # auto-detection can silently pick the wrong run. See
 # datasets/00_commun_scripts/00_03_evaluate/significance_from_config.py for the
