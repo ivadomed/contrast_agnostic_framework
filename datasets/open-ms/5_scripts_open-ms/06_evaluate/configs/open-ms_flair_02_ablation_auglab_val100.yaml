@@ -1,21 +1,22 @@
-# open-ms — FLAIR-trained, auglab-anchored causal-ablation ladder
+# open-ms — FLAIR-trained, auglab-anchored causal-ablation ladder, @ train025_val100
 # (mechanism decomposition of PALETTE's advantage over SynthSeg-EM: K-means
-# clustering vs. Voronoi sub-parcellation vs. real-texture fill). Full AugLab
-# intensity stack held fixed on every rung.
-# Split out of the old combined open-ms_flair_02_ablation.yaml — see that
-# dataset's baseline-anchored counterpart: open-ms_flair_02_ablation_baseline.yaml.
+# clustering vs. per-label remap vs. Voronoi sub-parcellation vs. real-texture
+# fill). Full AugLab intensity stack held fixed on every rung. One of 4
+# parallel branches (baseline/auglab x val100/val000) — see
+# open-ms_flair_02_ablation_{baseline_val100,baseline_val000,auglab_val000}.yaml.
 # Same eval_all.csv sources as 01_results.yaml (06_01). Consumed by 06_10
 # (aggregate_from_config.py) and 06_11 (significance_from_config.py, same
 # config, pass --ref explicitly — see that script's header for the
 # substring-ambiguity gotcha).
-title: "open-ms — FLAIR-trained, auglab-anchored causal-ablation ladder (PALETTE mechanism decomposition)"
+title: "open-ms — FLAIR-trained, auglab-anchored causal-ablation ladder @ train025_val100 (PALETTE mechanism decomposition)"
 metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
-output_prefix: "02_ablation_auglab"
+output_prefix: "02_ablation_auglab_val100"
 in_domain_contrast: flair
 column_order: [flair, t2w, t1w]
 
 runs:
   - open-ms_flair_auglab_default_20260706_061243
+  - open-ms_flair_auglab_kmeans_train025_val100_20260711_065543
   - open-ms_flair_auglab_kmeans_label_remap_train025_val100_20260707_065414
   - open-ms_flair_auglab_kmeans_label_remap_voronoi_train025_val100_20260707_065409
   - open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243
