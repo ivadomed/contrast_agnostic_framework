@@ -1,0 +1,39 @@
+# CHAOS T1in — auglab-anchored causal-ablation ladder, @ train025_val000
+# (mechanism decomposition of PALETTE's advantage: K-means clustering vs.
+# per-label remap vs. Voronoi sub-parcellation vs. real-texture fill). Full
+# AugLab intensity stack held fixed on every rung. One of 4 parallel branches
+# (baseline/auglab x val000/val100) — see
+# chaos_t1in_02_ablation_{baseline_val000,baseline_val100,auglab_val100}.yaml.
+# Floor (auglab_default) is reused unchanged — it has no synthesis, so no
+# train/val ratio applies to it.
+#
+# The 3 middle rungs + the auglabAug_v26_6_2 headline row were all trained
+# together via nnUNetTrainerCHAOSAugLabDualVal
+# (datasets/chaos/5_scripts_chaos/02_nnunet/trainers/auglab_dualval.py) — ONE
+# training run per rung producing BOTH a "_val000_" and a "_val100_" RUN_ID
+# (see that trainer's module docstring). This config references each rung's
+# "_val000_" RUN_ID; chaos_t1in_02_ablation_auglab_val100.yaml references the
+# same physical runs' "_val100_" siblings. Unlike the baseline branch's
+# v26_6_2 headline row, no pre-existing val000 run of auglabAug_v26_6_2
+# existed before this ladder — today's ladder run is the first.
+#
+# NOTE (2026-07-15): all 4 new-ladder run ids below were launched today and
+# are still training (200 epochs, folds 0-2, CHAOS standard) — 06_10/06_11
+# will skip any run whose eval_all.csv doesn't exist yet, with a warning, and
+# pick it up automatically once predict+evaluate have run for it.
+#
+# Same eval_all.csv sources as 03_03_results.yaml (06_01). Consumed by 06_10
+# (aggregate_from_config.py) and 06_11 (significance_from_config.py, same
+# config, pass --ref explicitly — see that script's header for the
+# substring-ambiguity gotcha).
+title: "CHAOS T1in — auglab-anchored causal-ablation ladder @ train025_val000 (PALETTE mechanism decomposition)"
+metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+output_prefix: "02_ablation_auglab_val000"
+in_domain_contrast: t1in
+
+runs:
+  - chaos_t1in_auglab_default_20260611_120000
+  - chaos_t1in_auglab_kmeans_train025_val000_20260715_082120
+  - chaos_t1in_auglab_kmeans_label_remap_train025_val000_20260715_082200
+  - chaos_t1in_auglab_kmeans_label_remap_voronoi_train025_val000_20260715_082240
+  - chaos_t1in_auglabAug_v26_6_2_train025_val000_20260715_082320

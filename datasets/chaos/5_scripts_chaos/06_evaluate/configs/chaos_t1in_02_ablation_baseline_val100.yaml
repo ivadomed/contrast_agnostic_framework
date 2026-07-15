@@ -1,0 +1,41 @@
+# CHAOS T1in — baseline-anchored causal-ablation ladder, @ train050_val100
+# Same ladder as chaos_t1in_02_ablation_baseline_val000.yaml, just at the
+# train050_val100 setting. One of 4 parallel branches (baseline/auglab x
+# val000/val100) — see
+# chaos_t1in_02_ablation_{baseline_val000,auglab_val000,auglab_val100}.yaml.
+# Floor (baseline) is reused unchanged — it has no synth augmentation, so no
+# train/val ratio applies to it.
+#
+# The 3 middle rungs are the SAME physical training runs as the val000
+# branch's — each is a "_val100_" mirror RUN_ID materialized by
+# nnUNetTrainerCHAOSAugLabDualVal from that same run (see
+# datasets/chaos/5_scripts_chaos/02_nnunet/trainers/auglab_dualval.py) rather
+# than a separately-trained run. The v26_6_2 headline row is DIFFERENT from
+# the val000 branch's: it reuses the pre-existing, already-authoritative
+# chaos_t1in_v26_6_2_train050_val100 run (same one used in
+# chaos_t1in_03_results.yaml) instead of today's new-ladder mirror, since an
+# authoritative val100 result already existed for it before this ladder was
+# built (today's ladder run for v26_6_2 also produces its own "_val100_"
+# mirror as a DualVal byproduct — unused here, kept only for symmetry/sanity
+# checking).
+#
+# NOTE (2026-07-15): the 3 middle-rung run ids below were launched today and
+# are still training (200 epochs, folds 0-2, CHAOS standard) — 06_10/06_11
+# will skip any run whose eval_all.csv doesn't exist yet, with a warning, and
+# pick it up automatically once predict+evaluate have run for it.
+#
+# Same eval_all.csv sources as 03_03_results.yaml (06_01). Consumed by 06_10
+# (aggregate_from_config.py) and 06_11 (significance_from_config.py, same
+# config, pass --ref explicitly — see that script's header for the
+# substring-ambiguity gotcha).
+title: "CHAOS T1in — baseline-anchored causal-ablation ladder @ train050_val100 (PALETTE mechanism decomposition)"
+metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+output_prefix: "02_ablation_baseline_val100"
+in_domain_contrast: t1in
+
+runs:
+  - chaos_t1in_baseline_20260614_153230
+  - chaos_t1in_baseline_kmeans_train050_val100_20260715_081839
+  - chaos_t1in_baseline_kmeans_label_remap_train050_val100_20260715_081919
+  - chaos_t1in_baseline_kmeans_label_remap_voronoi_train050_val100_20260715_081959
+  - chaos_t1in_v26_6_2_train050_val100_20260615_213615
