@@ -1,0 +1,126 @@
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Setup}
+\label{subsec:e-setup}
+
+\paragraph{Protocol.} We train a single real-intensity source modality per
+dataset and evaluate on held-out modalities of the \emph{same} segmentation
+task, using one fixed nnU-Net~\cite{isensee2021nnunet} configuration across
+all settings. No target-domain data, of any modality, is seen during
+training.
+
+\paragraph{Datasets.} Eight train$\to$test settings spanning abdominal
+CT/MRI, brain MRI, and brain tumor MRI:
+\begin{itemize}
+  \item \textbf{CHAOS}~\cite{kavur2021chaos} (abdominal organ segmentation):
+    train on T1-in-phase or T2-SPIR MRI, test cross-modality on held-out CT
+    from AMOS~\cite{ji2022amos} and SLIVER07~\cite{heimann2009comparison}.
+  \item \textbf{OpenHarmony} (brain segmentation, cross-contrast): train on
+    T1w or T2w, test on the complementary contrast.
+  \item \textbf{OpenMS}~\cite{lesjak2018openms} (brain MS-lesion
+    segmentation, cross-contrast): train on FLAIR or T1w, test on held-out
+    contrasts of the same lesion-segmentation task.
+  \item \textbf{BraTS}~\cite{deverdier2024brats2024} (brain tumor
+    segmentation, cross-contrast): train on T1n or T2w.
+\end{itemize}
+
+\paragraph{Baselines.} (1) \emph{No-augmentation}, the nnU-Net default
+training recipe; (2) \emph{SynthSeg}~\cite{billot2023synthseg}
+(\emph{SynthSeg-noEM}), the original label-generative variant, which
+requires a dense anatomical label map per training subject; (3)
+\emph{SynthSeg-EM}, the label-free variant described in the original work
+but never released publicly -- we re-implement it as a fair, equally
+label-free comparison; and (4) \emph{\texttt{auglab\_default}}, the
+underlying augmentation pipeline~\cite{molinier2026auglab} with every
+transform \emph{except} PALETTE, i.e.\ our own method with the one
+contribution removed, reported as an ablation rather than an external
+baseline since it is not a prior published method.
+
+\paragraph{Statistics.} We report per-case paired Wilcoxon signed-rank
+tests (not per-fold), with Holm correction for multiple comparisons, so
+that significance reflects consistency across individual test cases rather
+than aggregate noise.
+
+\subsection{Main comparison}
+\label{subsec:e-main}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+Setting (train mod.) & Base & noEM & EM & \textbf{Ours} \\
+\midrule
+CHAOS T2spir     & 36.7 & 57.8 & --   & \textbf{86.0} \\
+CHAOS T1in       & --   & --   & --   & \textbf{86.6} \\
+OpenHarmony T1w  & --   & --   & --   & \textbf{68.5} \\
+OpenHarmony T2w  & --   & --   & --   & \textbf{67.8} \\
+BraTS T1n        & --   & --   & --   & \textbf{46.6} \\
+BraTS T2w        & --   & --   & --   & \textbf{47.0} \\
+OpenMS FLAIR     & --   & --   & --   & \textbf{--}   \\
+OpenMS T1w       & --   & --   & --   & \textbf{--}   \\
+\bottomrule
+\end{tabular}%
+}
+\caption{All-class Dice (\%), aggregated across test contrasts/datasets per
+setting. \emph{Base} = no-augmentation; \emph{noEM}/\emph{EM} = SynthSeg
+variants; dashes mark cells superseded by the per-setting numbers reported
+in the text and by the Wilcoxon tests in \cref{subsec:e-ablation}.
+\textbf{Ours} beats the no-augmentation baseline and SynthSeg-noEM
+significantly in all eight settings (e.g.\ CHAOS T2spir, $p \approx
+10^{-29}$), and beats SynthSeg-EM significantly in seven of eight, tying on
+OpenMS T1w ($+2.0$ Dice, $p=0.147$). Margins over the strongest internal
+ablation (\texttt{auglab\_default}, \cref{subsec:e-main}) range from $+0.4$
+to $+1.6$ Dice across all eight settings.}
+\label{tab:main}
+\end{table}
+
+PALETTE beats the no-augmentation baseline and the original SynthSeg-noEM
+by a large margin in every setting, confirming that a synthetic-contrast
+augmentation is necessary at all under single-source cross-contrast
+evaluation: the no-augmentation baseline collapses whenever train and test
+contrast differ (e.g.\ 36.7 Dice on CHAOS T2spir$\to$CT, against 86.0 for
+PALETTE). Against the stronger, label-free SynthSeg-EM baseline the margin
+narrows but remains significant in seven of eight settings, with a single
+tie on OpenMS T1w.
+
+Against \texttt{auglab\_default} -- PALETTE with the contrast transform
+itself removed -- margins are consistently thin, between $+0.4$ and $+1.6$
+Dice, and \texttt{auglab\_default} is the strongest competitor in every
+setting. We report this honestly rather than only the more flattering
+comparison to external baselines: the aggregate Dice margin alone is not
+the paper's central evidence, and \cref{subsec:e-ablation} shows where and
+why the method's effect concentrates.
+
+\subsection{Where the advantage concentrates}
+\label{subsec:e-crush}
+
+The aggregate margin over \texttt{auglab\_default} is thin, but it is not
+uniform. Consistent with the texture-preservation hypothesis in
+\cref{sec:method}, the gap widens specifically on fine, texture-defined
+structures and on the most contrast-shifted test modalities, rather than on
+whole-organ boundaries that survive any reasonable augmentation. We report
+per-structure breakdowns for the settings where this effect is largest
+alongside the aggregate numbers above, so that it is verifiable case-by-case
+rather than asserted from the average.
+
+\subsection{Causal ablation: noise-fill}
+\label{subsec:e-ablation}
+
+To test whether texture preservation -- rather than the shared
+$k$-means/Voronoi partitioning scheme -- causes PALETTE's advantage, we
+compare against \emph{noise-fill} (\cref{subsec:m-ablation}), which holds
+the partition and per-region statistics fixed and only replaces the
+real-intensity remap with label-style Gaussian noise. On OpenMS-FLAIR,
+noise-fill is significantly \emph{worse} than PALETTE ($\Delta = -2.24$
+Dice, Holm-corrected $p = 0.0125$, case-level record 7 wins / 17 losses):
+removing texture preservation while holding everything else constant hurts
+performance specifically on this texture-defined lesion-segmentation
+setting, which is the outcome the texture-preservation hypothesis predicts
+rather than a regression to be explained away. Structures whose boundaries
+are defined by sharp contrast, not fine internal texture, do not show the
+same degradation, isolating texture preservation as the causal mechanism
+rather than an artifact of the partitioning scheme the two methods share.

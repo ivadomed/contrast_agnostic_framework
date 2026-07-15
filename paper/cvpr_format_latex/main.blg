@@ -1,5 +1,46 @@
-This is BibTeX, Version 0.99d
-Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+This is BibTeX, Version 0.99d (TeX Live 2021 Gentoo Linux)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 The style file: ieeenat_fullname.bst
 Database file #1: main.bib
+You've used 29 entries,
+            2708 wiz_defined-function locations,
+            802 strings with 13388 characters,
+and the built_in function-call counts, 19126 in all, are:
+= -- 1472
+> -- 1936
+< -- 2
++ -- 647
+- -- 618
+* -- 1829
+:= -- 3136
+add.period$ -- 87
+call.type$ -- 29
+change.case$ -- 288
+chr.to.int$ -- 29
+cite$ -- 58
+duplicate$ -- 631
+empty$ -- 1058
+format.name$ -- 649
+if$ -- 3793
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 29
+newline$ -- 153
+num.names$ -- 116
+pop$ -- 587
+preamble$ -- 1
+purify$ -- 259
+quote$ -- 0
+skip$ -- 547
+stack$ -- 0
+substring$ -- 328
+swap$ -- 52
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 319
+warning$ -- 0
+while$ -- 105
+width$ -- 0
+write$ -- 365

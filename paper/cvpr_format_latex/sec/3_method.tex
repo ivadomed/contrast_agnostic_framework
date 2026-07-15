@@ -1,0 +1,86 @@
+\section{Method}
+\label{sec:method}
+
+We describe PALETTE (\S\ref{subsec:m-transform}), how it is applied during
+training (\S\ref{subsec:m-training}), and the causal ablation used to
+isolate texture preservation as the source of its effect
+(\S\ref{subsec:m-ablation}).
+
+\subsection{The PALETTE transform}
+\label{subsec:m-transform}
+
+Let $x$ denote the intensity volume of a training scan and $F \subset
+\Omega$ its foreground voxels (any label-free foreground mask, e.g.\ an
+intensity threshold; no anatomical label map is used). PALETTE applies
+three steps at every training iteration.
+
+\paragraph{1. Intensity partition.} We run 1-D $k$-means on the foreground
+intensities $\{x_v : v \in F\}$ with $k \in \{2, \dots, 6\}$ sampled
+per iteration, producing $k$ intensity classes $C_1, \dots, C_k$. This
+partition is unsupervised and requires no label map: it groups voxels by
+intensity alone, so the same operator applies unmodified to CT, T1, T2,
+FLAIR, or any other contrast.
+
+\paragraph{2. Spatial sub-parcellation.} Each intensity class $C_i$ is
+further subdivided into spatial sub-regions by a Voronoi tessellation seeded
+with points sampled within $C_i$, giving sub-regions $R_{i,1}, \dots,
+R_{i,m_i}$ that are contiguous in space as well as similar in intensity.
+This second partition breaks the spatial correlation of a purely
+intensity-based grouping: two voxels with the same intensity in different
+parts of the anatomy can land in different sub-regions and receive
+independent contrast perturbations.
+
+\paragraph{3. Signed affine remap.} For each sub-region $R$, let $\bar{x}_R$
+and $\mu_R$ denote its mean intensity and a resampled target mean, and draw
+$\alpha_R \sim \pm U(0.5, 2.0)$ (a magnitude in $[0.5, 2.0]$ with an
+independently sampled sign). Every voxel $v \in R$ is remapped as
+\begin{equation}
+  y_v = \mu_R + \alpha_R \, (x_v - \bar{x}_R).
+  \label{eq:affine}
+\end{equation}
+Because \cref{eq:affine} is a per-region affine function of the \emph{real}
+intensity $x_v$, it preserves the relative structure of the signal within
+each region: edges, gradients, and partial-volume transitions between
+adjacent voxels are scaled, not replaced. Only the region-to-region
+contrast relationship is randomized, and $\alpha_R < 0$ additionally allows
+local contrast inversions that no acquisition protocol produces on its own,
+widening the space of contrasts the network sees beyond what any single
+real sequence could supply.
+
+\subsection{Training protocol}
+\label{subsec:m-training}
+
+PALETTE is applied on-the-fly as one contrast-augmentation operator inside
+an existing GPU-accelerated nnU-Net augmentation
+pipeline~\cite{molinier2026auglab,isensee2021nnunet}, alongside that
+pipeline's standard spatial and artifact augmentations; it adds no learned
+parameters and no measurable training-time overhead. A single
+configuration -- the same $k$-range, sub-region count, and $\alpha$ range
+-- is tuned once and reused unchanged across every dataset and modality in
+\cref{sec:experiments}; no dataset receives its own hyperparameter sweep.
+
+\subsection{Causal ablation: isolating texture preservation}
+\label{subsec:m-ablation}
+
+PALETTE differs from label-generative synthesis (e.g.\ SynthSeg) along two
+axes at once: the partition it perturbs (unsupervised $k$-means $+$ Voronoi
+vs.\ a supplied anatomical label map) and the perturbation itself (an
+affine remap of real intensities vs.\ resampling from a per-label Gaussian
+mixture). Comparing PALETTE to SynthSeg directly therefore cannot attribute
+an advantage to either axis in isolation.
+
+We construct a controlled variant, \emph{noise-fill}, that holds the
+$k$-means/Voronoi partition and the per-region statistics $(\mu_R,
+\alpha_R)$ from \cref{eq:affine} exactly fixed, but fills each sub-region
+with samples drawn from a Gaussian with that region's $(\mu_R, \alpha_R
+\sigma_R)$ instead of remapping the real intensities inside it -- i.e.\ the
+same partitioning scheme, with SynthSeg-style noise substituted for the
+affine remap. Because the partition and target statistics are identical to
+PALETTE's own, any difference in downstream performance between PALETTE and
+noise-fill isolates the one variable that changed: whether real texture is
+preserved or discarded within each region. We report this comparison
+separately for texture-defined structures (identified by fine internal
+gradients or low boundary contrast) and boundary-defined structures
+(identified by a sharp, high-contrast border) in \cref{sec:experiments}, as
+the texture-preservation hypothesis predicts a widening gap specifically on
+the former.
