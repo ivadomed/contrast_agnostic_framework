@@ -38,6 +38,7 @@ try:
     from chaos.trainers.auglab_default import nnUNetTrainerCHAOSAugLabDefault  # noqa: F401
     from chaos.trainers.auglab_v26_6_2 import nnUNetTrainerCHAOSAugLabV26_6_2  # noqa: F401
     from chaos.trainers.auglab_valsynth import nnUNetTrainerCHAOSAugLabValSynth  # noqa: F401
+    from chaos.trainers.auglab_dualval import nnUNetTrainerCHAOSAugLabDualVal  # noqa: F401  # opt-in only, see module docstring
 except ImportError as e:
     import warnings
     warnings.warn(
