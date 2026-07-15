@@ -1,24 +1,9 @@
-\begin{thebibliography}{30}
+\begin{thebibliography}{34}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
-
-\bibitem[Alpher(2002)]{Alpher02}
-FirstName Alpher.
-\newblock Frobnication.
-\newblock \emph{IEEETPAMI}, 12\penalty0 (1):\penalty0 234--778, 2002.
-
-\bibitem[Alpher and Fotheringham-Smythe(2003)]{Alpher03}
-FirstName Alpher and FirstName Fotheringham-Smythe.
-\newblock Frobnication revisited.
-\newblock \emph{Journal of Foo}, 13\penalty0 (1):\penalty0 234--778, 2003.
-
-\bibitem[Alpher et~al.(2004)Alpher, Fotheringham-Smythe, and Gamow]{Alpher04}
-FirstName Alpher, FirstName Fotheringham-Smythe, and FirstName Gamow.
-\newblock Can a machine frobnicate?
-\newblock \emph{Journal of Foo}, 14\penalty0 (1):\penalty0 234--778, 2004.
 
 \bibitem[Badea and Popa(2024)]{badea2024generalizable}
 Liviu Badea and Maria Popa.
@@ -66,6 +51,43 @@ Boqi Chen, Yuanzhi Zhu, Yunke Ao, Sebastiano Caprara, Reto Sutter, Gunnar
   via invariant causal mechanisms.
 \newblock \emph{arXiv preprint arXiv:2411.05223}, 2024.
 
+\bibitem[de~Verdier et~al.(2024)de~Verdier, Saluja, Gagnon, LaBella, Baid,
+  Tahon, Foltyn-Dumitru, Zhang, Moawad, et~al.]{deverdier2024brats2024}
+Maria~Correia de Verdier, Rachit Saluja, Louis Gagnon, Dominic LaBella, Ujjwal
+  Baid, Nourel~Hoda Tahon, Martha Foltyn-Dumitru, Jikai Zhang, Ahmed~W. Moawad,
+  et~al.
+\newblock The 2024 brain tumor segmentation ({BraTS}) challenge: Glioma
+  segmentation on post-treatment {MRI}.
+\newblock \emph{arXiv preprint arXiv:2405.18368}, 2024.
+
+\bibitem[Fischl(2012)]{fischl2012freesurfer}
+Bruce Fischl.
+\newblock {FreeSurfer}.
+\newblock \emph{NeuroImage}, 62\penalty0 (2):\penalty0 774--781, 2012.
+
+\bibitem[Haber and Modersitzki(2006)]{haber2006ngf}
+Eldad Haber and Jan Modersitzki.
+\newblock Intensity gradient based registration and fusion of multi-modal
+  images.
+\newblock In \emph{Medical Image Computing and Computer-Assisted Intervention
+  (MICCAI)}, pages 726--733, 2006.
+
+\bibitem[Heimann et~al.(2009)Heimann, Van~Ginneken, Styner, Arzhaeva, Aurich,
+  Bauer, Beck, Becker, Beichel, Bekes, et~al.]{heimann2009comparison}
+Tobias Heimann, Bram Van~Ginneken, Martin~A Styner, Yulia Arzhaeva, Volker
+  Aurich, Christian Bauer, Andreas Beck, Christoph Becker, Reinhard Beichel,
+  Gy{\"o}rgy Bekes, et~al.
+\newblock Comparison and evaluation of methods for liver segmentation from {CT}
+  datasets.
+\newblock \emph{IEEE Transactions on Medical Imaging}, 28\penalty0
+  (8):\penalty0 1251--1265, 2009.
+
+\bibitem[Holm(1979)]{holm1979}
+Sture Holm.
+\newblock A simple sequentially rejective multiple test procedure.
+\newblock \emph{Scandinavian Journal of Statistics}, 6\penalty0 (2):\penalty0
+  65--70, 1979.
+
 \bibitem[Isensee et~al.(2021)Isensee, Jaeger, Kohl, Petersen, and
   Maier-Hein]{isensee2021nnunet}
 Fabian Isensee, Paul~F. Jaeger, Simon A.~A. Kohl, Jens Petersen, and Klaus~H.
@@ -73,6 +95,24 @@ Fabian Isensee, Paul~F. Jaeger, Simon A.~A. Kohl, Jens Petersen, and Klaus~H.
 \newblock {nnU-Net}: a self-configuring method for deep learning-based
   biomedical image segmentation.
 \newblock \emph{Nature Methods}, 18\penalty0 (2):\penalty0 203--211, 2021.
+
+\bibitem[Ji et~al.(2022)Ji, Bai, Ge, Yang, Zhu, Zhang, Li, Zhanng, Ma, Wan,
+  et~al.]{ji2022amos}
+Yuanfeng Ji, Haotian Bai, Chongjian Ge, Jie Yang, Ye Zhu, Ruimao Zhang, Zhen
+  Li, Lingyan Zhanng, Wanwan Ma, Xiang Wan, et~al.
+\newblock {AMOS}: A large-scale abdominal multi-organ benchmark for versatile
+  medical image segmentation.
+\newblock In \emph{Advances in Neural Information Processing Systems}, pages
+  36722--36732, 2022.
+
+\bibitem[Kavur et~al.(2021)Kavur, Gezer, Barı{\c{s}}, Aslan, Conze, Groza,
+  Pham, Chatterjee, Ernst, {\"O}zkan, et~al.]{kavur2021chaos}
+A.~Emre Kavur, N.~Sinem Gezer, Mustafa Barı{\c{s}}, Sinem Aslan, Pierre-Henri
+  Conze, Vladimir Groza, Duc~Duy Pham, Soumick Chatterjee, Philipp Ernst,
+  Sava{\c{s}} {\"O}zkan, et~al.
+\newblock {CHAOS} challenge -- combined ({CT-MR}) healthy abdominal organ
+  segmentation.
+\newblock \emph{Medical Image Analysis}, 69:\penalty0 101950, 2021.
 
 \bibitem[Laso et~al.(2023)Laso, Cerri, Sorby-Adams, Guo, Mateen, Goebl, Wu,
   Liu, Li, Young, Billot, Puonti, et~al.]{laso2024wmhsynthseg}
@@ -82,17 +122,6 @@ Pablo Laso, Stefano Cerri, Annabel Sorby-Adams, Jennifer Guo, Farrah Mateen,
 \newblock Quantifying white matter hyperintensity and brain volumes in
   heterogeneous clinical and low-field portable {MRI}.
 \newblock \emph{arXiv preprint arXiv:2312.05119}, 2023.
-
-\bibitem[LastName(2014{\natexlab{a}})]{Authors14}
-FirstName LastName.
-\newblock The frobnicatable foo filter, 2014{\natexlab{a}}.
-\newblock Face and Gesture submission ID 324. Supplied as supplemental material
-  {\tt fg324.pdf}.
-
-\bibitem[LastName(2014{\natexlab{b}})]{Authors14b}
-FirstName LastName.
-\newblock Frobnication tutorial, 2014{\natexlab{b}}.
-\newblock Supplied as supplemental material {\tt tr.pdf}.
 
 \bibitem[Lesjak et~al.(2018)Lesjak, Galimzianova, Koren, Luka\v{c},
   Van~Leemput, and \v{S}piclin]{lesjak2018openms}
@@ -199,6 +228,21 @@ Shujun Wang, Lequan Yu, Kang Li, Xin Yang, Chi-Wing Fu, and Pheng-Ann Heng.
   image segmentation on unseen datasets.
 \newblock \emph{IEEE Trans. Med. Imaging}, 39\penalty0 (12):\penalty0
   4237--4248, 2020.
+
+\bibitem[Warrington et~al.(2025)Warrington, Torchi, Mougin, Campbell, Ntata,
+  Craig, Assimopoulos, Alfaro-Almagro, Miller, Jenkinson, Morgan, and
+  Sotiropoulos]{warrington2025onharmony}
+Shaun Warrington, Andrea Torchi, Olivier Mougin, Jon Campbell, Asante Ntata,
+  Martin Craig, Stephania Assimopoulos, Fidel Alfaro-Almagro, Karla~L. Miller,
+  Mark Jenkinson, Paul~S. Morgan, and Stamatios~N. Sotiropoulos.
+\newblock A multi-site, multi-modal travelling-heads resource for brain {MRI}
+  harmonisation.
+\newblock \emph{Scientific Data}, 12:\penalty0 595, 2025.
+
+\bibitem[Wilcoxon(1945)]{wilcoxon1945}
+Frank Wilcoxon.
+\newblock Individual comparisons by ranking methods.
+\newblock \emph{Biometrics Bulletin}, 1\penalty0 (6):\penalty0 80--83, 1945.
 
 \bibitem[Xu et~al.(2021)Xu, Liu, Yang, Raffel, and Niethammer]{xu2021randconv}
 Zhenlin Xu, Deyi Liu, Junlin Yang, Colin Raffel, and Marc Niethammer.

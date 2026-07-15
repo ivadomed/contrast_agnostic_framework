@@ -1,0 +1,165 @@
+\section{Method}
+\label{sec:method}
+
+We describe PALETTE (\S\ref{subsec:m-transform}), how it is applied during
+training (\S\ref{subsec:m-training}), and the causal ablation used to
+isolate texture preservation as the source of its effect
+(\S\ref{subsec:m-ablation}).
+
+\subsection{The PALETTE transform}
+\label{subsec:m-transform}
+
+Let $x$ denote the intensity volume of a training scan, min-max normalised
+to $[0,1]$, and $F \subset \Omega$ its foreground voxels (an intensity
+threshold; $x_v > 0.01$ in our implementation). PALETTE applies four steps
+at every training iteration, illustrated end-to-end in
+\cref{fig:method-pipeline} on one real CHAOS (abdominal MRI) and one real
+OnHarmony (brain MRI) volume.
+
+\paragraph{1. Intensity partition.} We run 1-D $k$-means on the foreground
+intensities $\{x_v : v \in F\}$ with $k$ sampled per iteration from
+$\{2,\dots,6\}$, producing $k$ intensity classes $C_1, \dots, C_k$
+(\cref{fig:method-pipeline}, column 2). This partition is unsupervised and
+requires no anatomical label map: it groups voxels by intensity alone, so
+the same operator applies unmodified to any input image regardless of its
+modality or contrast --- CT, T1, T2, FLAIR, or otherwise. With probability $0.10$ this step is skipped and a single global
+remap is applied instead (step 3 below, with $C=1$).
+
+\paragraph{2. Spatial sub-parcellation.} Each intensity class $C_i$ is
+further subdivided into spatial sub-regions by a Voronoi partition
+seeded with points sampled within $C_i$ (\cref{fig:method-pipeline}, column
+3 shows the combined effect of this step and the remap of step 3), giving
+sub-regions $R_{i,1}, \dots, R_{i,m_i}$ that are contiguous in space as
+well as similar in intensity. This second partition breaks the spatial
+correlation of a purely intensity-based grouping: two voxels with the same
+intensity in different parts of the anatomy can land in different
+sub-regions and receive independent contrast perturbations. Each class is
+subdivided into $m_i$ sub-regions sampled from $\{2,\dots,10\}$ with
+probability $0.60$, and left as one region (no sub-split) with probability
+$0.40$.
+
+\paragraph{3. Signed affine remap.} For each sub-region $R$, let $\bar{x}_R$
+denote its mean intensity, $\mu_R \sim U(0,1)$ a resampled target mean, and
+draw $\alpha_R \sim \pm U(0.5, 2.0)$ (a magnitude in $[0.5, 2.0]$ with an
+independently sampled sign). Every voxel $v \in R$ is remapped as
+\begin{equation}
+  y_v = \mu_R + \alpha_R \, (x_v - \bar{x}_R).
+  \label{eq:affine}
+\end{equation}
+Because \cref{eq:affine} is a per-region affine function of the
+\emph{real} intensity $x_v$, it preserves the relative structure of the
+signal within each region: edges, gradients, and partial-volume transitions
+between adjacent voxels are scaled, not replaced. Only the region-to-region
+contrast relationship is randomized, and $\alpha_R < 0$ additionally allows
+local contrast inversions that no acquisition protocol produces on its own,
+widening the space of contrasts the network sees beyond what any single
+real sequence could supply. Background voxels are zeroed at this step (and
+remain zero through the rest of the pipeline). The result is optionally
+Gaussian-blurred (a $\sigma$ sampled from $\{0,0,0,0.3,0.5,0.8\}$, weighted
+toward no blur).
+
+\paragraph{4. Anatomical-label affine remap (optional).} Steps 1--3 are
+unsupervised: the $k$-means/Voronoi partition groups voxels by intensity
+and spatial proximity, which need not coincide with the true anatomical
+boundary between two structures. When two adjacent tissues happen to
+share similar intensity at a given training iteration, the partition can
+place both sides of a real label border inside the same region, so step 3
+assigns them the same target contrast and the boundary is, by chance,
+erased rather than randomized. This last step corrects for that: for each
+real anatomical label $\ell$ present in the volume, with probability
+$0.5$ (skipped below $4$ foreground voxels) we resample a fresh
+$(\mu_\ell, \alpha_\ell)$ and apply \cref{eq:affine} \emph{again},
+restricted to $\ell$'s voxels only, \textbf{on top of the step-3 output}
+-- i.e.\ this affine remap acts on the already-remapped (step 1--3)
+intensities, not on the original voxel values, so it composes with rather
+than replaces the unsupervised remap (\cref{fig:method-pipeline}, column
+4 shows the resulting per-label flat-remap value, computed prior to this
+step). Because the label assignment is independent of whatever
+$k$-means/Voronoi region a voxel fell into, this step reintroduces a
+full-strength contrast discontinuity exactly at the true label border
+regardless of whether the unsupervised partition happened to preserve it
+-- sharpening the boundary cue the segmentation network can rely on,
+rather than sharpening the underlying anatomy. The step only ever
+consumes the segmentation labels the network is already being trained to
+predict -- whatever labels happen to be annotated in the training set,
+including sparse or partial annotations -- so it requires no additional
+segmentation effort beyond what training already assumes. It is also
+optional: it can be disabled entirely (\texttt{label\_remap\_prob}$=0$),
+in which case PALETTE degrades gracefully to steps 1--3 alone, e.g.\ on
+an unlabelled dataset. A final foreground z-score normalisation is
+applied after an optional second blur pass (same $\sigma$ distribution as
+step 3), giving the training input shown in the last column of
+\cref{fig:method-pipeline}.
+
+\smallskip\noindent\emph{Per-step stochasticity, summarised:} step 1 is
+replaced by a single global remap with probability $0.10$; each
+intensity class is Voronoi-split with probability $0.60$ (else left as
+one region); step 3 is always applied to whatever partition results from
+steps 1--2; step 4 is applied independently per label with probability
+$0.5$.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/palette_method_figure}
+  \caption{The PALETTE pipeline applied to one real CHAOS T2SPIR volume
+  (top) and one real OnHarmony T1w volume (bottom). For display only, every
+  panel is min--max normalised to $[0,1]$ (the foreground z-score used at
+  training time is never applied for visualisation); no panel is generated
+  by an external model -- every value shown is a deterministic function of
+  the same real volume. Column 1: input. Column 2: \emph{$k$-means flat
+  remap} -- each $k$-means class is painted with the precomputed target
+  mean $\mu$ of \cref{eq:affine} for its dominant (largest) Voronoi
+  sub-region, i.e.\ the flat value that sub-region would take under the
+  transform, not an average of observed pixel intensities. Column 3: the
+  same flat-remap logic applied after Voronoi sub-parcellation, so each
+  sub-region is painted with its own precomputed $\mu$. Column 4: each
+  real anatomical label is additionally painted with its own precomputed
+  $\mu$, overwriting the column-3 value on that label's footprint. Column
+  5: final PALETTE training input, obtained by applying the signed affine
+  remap of \cref{eq:affine} with texture (not a flat fill) at both the
+  region level and, where labels are available, the anatomical-label
+  level. Columns 2--4 isolate the flat target value chosen \emph{before}
+  the transform is applied with texture; column 5 shows the texture the
+  transform actually produces once that value is used as its mean.}
+  \label{fig:method-pipeline}
+\end{figure*}
+
+\subsection{Training protocol}
+\label{subsec:m-training}
+
+PALETTE is applied on-the-fly as one contrast-augmentation operator inside
+an existing GPU-accelerated nnU-Net augmentation
+pipeline~\cite{molinier2026auglab,isensee2021nnunet}, alongside that
+pipeline's standard spatial and artifact augmentations; it adds no learned
+parameters and no measurable training-time overhead. A single
+configuration -- the same $k$-range, sub-region count, blur schedule, and
+$\alpha$ range given in \S\ref{subsec:m-transform} -- is tuned once and
+reused unchanged across every dataset and modality in
+\cref{sec:experiments}; no dataset receives its own hyperparameter sweep.
+
+\subsection{Causal ablation: isolating texture preservation}
+\label{subsec:m-ablation}
+
+PALETTE differs from label-generative synthesis (e.g.\ SynthSeg) along two
+axes at once: the partition it perturbs (unsupervised $k$-means $+$ Voronoi
+vs.\ a supplied anatomical label map as the sole generative substrate) and
+the perturbation itself (an affine remap of real intensities vs.\
+resampling from a per-label Gaussian mixture). Comparing PALETTE to
+SynthSeg directly therefore cannot attribute an advantage to either axis in
+isolation.
+
+We construct a controlled variant, \emph{noise-fill}, that holds the
+$k$-means/Voronoi partition and the per-region statistics $(\mu_R,
+\alpha_R)$ from \cref{eq:affine} exactly fixed, but fills each sub-region
+with samples drawn from a Gaussian with that region's $(\mu_R, \alpha_R
+\sigma_R)$ instead of remapping the real intensities inside it -- i.e.\ the
+same partitioning scheme, with SynthSeg-style noise substituted for the
+affine remap. Because the partition and target statistics are identical to
+PALETTE's own, any difference in downstream performance between PALETTE and
+noise-fill isolates the one variable that changed: whether real texture is
+preserved or discarded within each region. We report this comparison
+separately for texture-defined structures (identified by fine internal
+gradients or low boundary contrast) and boundary-defined structures
+(identified by a sharp, high-contrast border) in \cref{sec:experiments}, as
+the texture-preservation hypothesis predicts a widening gap specifically on
+the former.

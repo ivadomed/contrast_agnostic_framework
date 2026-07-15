@@ -38,19 +38,24 @@ layout but not texture. The lineage has been specialized to white-matter
 lesions~\cite{laso2024wmhsynthseg} and MS
 lesions~\cite{caselles2026timelesseg}, and sits alongside training-free
 per-scan generative fitting such as SAMSEG~\cite{cerri2021samseg}. We take
-SynthSeg's label-free (EM) and original (noEM) variants as our primary baseline;
-as the EM variant has no public code, a faithful re-implementation is itself a
-contribution.
+SynthSeg's original (noEM) variant --- which requires a dense anatomical label
+map --- and its EM variant --- which does not need a dense map but still uses
+the sparse task labels naturally available in a segmentation dataset to
+estimate its per-class intensity model --- as baselines; as the EM variant has
+no public code, a faithful re-implementation is itself a contribution.
 
 \subsection{Single-source intensity and appearance augmentation}
 \label{subsec:aug}
 
 A second line manufactures appearance diversity directly from the real image,
 with no generative label model. General-purpose libraries stack intensity,
-spatial and artifact transforms on an nnU-Net trainer; we build on one such GPU
-framework~\cite{molinier2026auglab,isensee2021nnunet}, which also serves as our
-augmentation-only ablation, and BigAug follows the same stacked-transform
-philosophy~\cite{zhang2020bigaug}. Closer to our operator are random-filter
+spatial and artifact transforms on an nnU-Net trainer; the recent Auglab
+pipeline~\cite{molinier2026auglab,isensee2021nnunet} is one such
+GPU-accelerated framework and is the strongest competitor in our experiments,
+and BigAug follows the same stacked-transform
+philosophy~\cite{zhang2020bigaug}. Our method inserts the PALETTE transform as
+one additional operator inside this pipeline, so the comparison against Auglab
+directly isolates the contribution of PALETTE. Closer to our operator are random-filter
 methods: GIN applies randomly re-initialized convolutions per forward pass to
 produce label-free appearance variants in true 3D with no trained
 parameters~\cite{ouyang2022gin}, RandConv establishes the principle for natural
@@ -69,7 +74,7 @@ region-wise in true 3D, but differs on both axes that define our operator: it
 delineates regions from the \emph{ground-truth label map}, reintroducing the
 task-label dependence we avoid, and applies a random convolution within each,
 which alters local gradients, whereas we partition label-free by $k$-means and
-Voronoi tessellation and apply an affine remap that leaves gradients intact.
+Voronoi partition and apply an affine remap that leaves gradients intact.
 Because the remap is affine and region-local, edges and texture survive while
 contrast is randomized, preserving exactly the signal label-generative synthesis
 discards, without any anatomical labels.

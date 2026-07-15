@@ -1,7 +1,32 @@
 \begin{abstract}
-The ABSTRACT is to be in fully justified italicized text, at the top of the left-hand column, below the author and affiliation information.
-Use the word ``Abstract'' as the title, in 12-point Times, boldface type, centered relative to the column, initially capitalized.
-The abstract is to be in 10-point, single-spaced type.
-Leave two blank lines after the Abstract, then begin the main text.
-Look at previous \confName abstracts to get a feel for style and length.
+Segmentation models for medical images are trained on one acquisition
+setting and deployed on others, and label-generative domain randomization
+(SynthSeg) addresses this by resampling intensities from a per-label
+Gaussian mixture over a dense anatomical label map -- an approach that is
+both label-driven (it requires exactly the expensive annotation the method
+is trying to reduce reliance on) and texture-destroying (it replaces real
+gradients and partial-volume detail with piecewise noise). We introduce
+PALETTE (Partition-based Affine Local-intEnsity Transform for
+Texture-prEserving augmentation), a single-source, label-free augmentation
+that partitions the foreground of a scan into intensity classes with
+unsupervised $k$-means, further subdivides each class into spatial
+sub-regions with a Voronoi partition, and applies a signed random
+affine remap $y = \mu + \alpha(x - \bar{x})$, $\alpha \in \pm
+U(0.5, 2.0)$, to the \emph{real} intensities within each sub-region.
+Because the transform remaps existing intensities rather than replacing
+them with sampled noise, edges, gradients, and partial-volume detail are
+preserved within each sub-region; only the region-to-region contrast
+relationship is randomized. Training a single nnU-Net configuration with
+PALETTE and evaluating across eight cross-contrast and cross-modality
+settings spanning abdominal CT/MRI, brain MRI, and brain tumor MRI, we
+show significant gains over a no-augmentation baseline and the original
+label-generative SynthSeg in all eight settings, and over a stronger
+SynthSeg variant we re-implement in seven of eight. Against Auglab, a
+recent published augmentation pipeline that is the strongest competitor and
+that our full method builds on, adding the PALETTE transform improves all
+eight settings and does so significantly in six. A
+causal ablation that holds the partition and per-region statistics fixed
+while replacing the real-intensity remap with label-style noise fill
+isolates texture preservation, rather than the shared partitioning scheme,
+as the source of the advantage.
 \end{abstract}
