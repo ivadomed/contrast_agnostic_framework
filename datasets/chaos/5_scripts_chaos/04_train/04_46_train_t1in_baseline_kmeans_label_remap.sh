@@ -11,14 +11,14 @@
 # 3 folds (0 1 2), 1 GPU per fold, 200 epochs (CHAOS standard).
 #
 # Usage:
-#   bash 04_46_train_t1in_baseline_kmeans_label_remap_dualval.sh
+#   bash 04_46_train_t1in_baseline_kmeans_label_remap.sh
 source "$(dirname "$0")/../00_utils/env.sh"
 
-METHOD="baseline_kmeans_label_remap_train050_dualval"
+METHOD="baseline_kmeans_label_remap_train050_val000"
 TRAINER="nnUNetTrainerCHAOSAugLabDualVal"
 DATASET_ID="060"
 DA_WORKERS="${DA_WORKERS:-0}"
-LOG_DIR="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/_logs/nnunet_chaos_t1in_baseline_kmeans_label_remap_train050_dualval"
+LOG_DIR="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/_logs/nnunet_chaos_t1in_baseline_kmeans_label_remap_train050_val000"
 export nnUNet_compile=0
 export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-200}"
 
