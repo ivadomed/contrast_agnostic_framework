@@ -24,6 +24,7 @@ archive/
 **/1_BIDS*/*
 *.tsv
 *.png
+!paper/cvpr_format_latex/figures/*.png
 *.dcm
 *.raw
 *.mhd
