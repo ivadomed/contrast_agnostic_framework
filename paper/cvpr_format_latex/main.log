@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021 Gentoo Linux) (preloaded format=pdflatex 2023.8.23)  15 JUL 2026 07:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021 Gentoo Linux) (preloaded format=pdflatex 2023.8.23)  15 JUL 2026 07:08
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -195,29 +195,36 @@ Package: natbib 2010/09/13 8.31b (PWD, AO)
 \bibsep=\skip53
 LaTeX Info: Redefining \cite on input line 694.
 \c@NAT@ctr=\count269
-) (./silence.sty
-Package: silence 2024/01/01 minimal stub silence package
-
+)
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
-tex/l3packages/xparse/xparse.sty
-(/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
-tex/l3kernel/expl3.sty
-Package: expl3 2021-02-18 L3 programming layer (loader) 
-
-(/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
-tex/l3backend/l3backend-pdftex.def
-File: l3backend-pdftex.def 2021-03-18 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count270
-\l__pdf_internal_box=\box49
-))
-(/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
-tex/l3packages/xparse/xparse-2020-10-01.sty
-(/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
-tex/l3packages/xparse/xparse-generic.tex))))
+tex/silence/silence.sty
+Package: silence 2012/07/02 v1.5b Selective filtering of warnings and error mes
+sages
+\sl@Save=\count270
+\sl@StateNumber=\count271
+\sl@MessageCount=\count272
+\sl@Casualties=\count273
+\sl@Filter=\toks21
+\sl@Message=\toks22
+\sl@UnexpandedMessage=\toks23
+\sl@Mess@ge=\toks24
+\sl@WarningCount=\count274
+\sl@WarningNumber=\count275
+\sl@WarningCasualties=\count276
+\sl@TempBOW=\toks25
+\sl@BankOfWarnings=\toks26
+LaTeX Info: Redefining \GenericWarning on input line 433.
+\sl@ErrorCount=\count277
+\sl@ErrorNumber=\count278
+\sl@ErrorCasualties=\count279
+\sl@TempBOE=\toks27
+\sl@BankOfErrors=\toks28
+LaTeX Info: Redefining \GenericError on input line 601.
+)
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/etoolbox/etoolbox.sty
 Package: etoolbox 2020/10/05 v2.5k e-TeX tools for LaTeX (JAW)
-\etb@tempcnta=\count271
+\etb@tempcnta=\count280
 )
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/caption/caption.sty
@@ -235,14 +242,14 @@ Package: caption3 2020/10/21 v2.2e caption3 kernel (AR)
 \caption@hangindent=\dimen169
 Package caption Info: Standard document class detected.
 )
-\c@caption@flags=\count272
-\c@continuedfloat=\count273
+\c@caption@flags=\count281
+\c@continuedfloat=\count282
 )
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/caption/subcaption.sty
 Package: subcaption 2020/10/07 v1.3j Sub-captions (AR)
-\c@subfigure=\count274
-\c@subtable=\count275
+\c@subfigure=\count283
+\c@subtable=\count284
 )
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/url/url.sty
@@ -250,34 +257,34 @@ tex/url/url.sty
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 CVPR 8.5 x 11-Inch Proceedings Style `cvpr.sty'.
-\cvprrulerbox=\box50
-\cvprrulercount=\count276
+\cvprrulerbox=\box49
+\cvprrulercount=\count285
 \cvprruleroffset=\dimen170
 \cv@lineheight=\dimen171
 \cv@boxheight=\dimen172
-\cv@tmpbox=\box51
-\cv@refno=\count277
-\cv@tot=\count278
-\cv@tmpc@=\count279
-\cv@tmpc=\count280
+\cv@tmpbox=\box50
+\cv@refno=\count286
+\cv@tot=\count287
+\cv@tmpc@=\count288
+\cv@tmpc=\count289
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/lineno/lineno.sty
 Package: lineno 2005/11/02 line numbers on paragraphs v4.41
-\linenopenalty=\count281
-\output=\toks21
-\linenoprevgraf=\count282
+\linenopenalty=\count290
+\output=\toks29
+\linenoprevgraf=\count291
 \linenumbersep=\dimen173
 \linenumberwidth=\dimen174
-\c@linenumber=\count283
-\c@pagewiselinenumber=\count284
-\c@LN@truepage=\count285
-\c@internallinenumber=\count286
-\c@internallinenumbers=\count287
+\c@linenumber=\count292
+\c@pagewiselinenumber=\count293
+\c@LN@truepage=\count294
+\c@internallinenumber=\count295
+\c@internallinenumbers=\count296
 \quotelinenumbersep=\dimen175
 \bframerule=\dimen176
 \bframesep=\dimen177
-\bframebox=\box52
+\bframebox=\box51
 LaTeX Info: Redefining \\ on input line 3056.
 )
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
@@ -285,10 +292,10 @@ tex/enumitem/enumitem.sty
 Package: enumitem 2019/06/20 v3.9 Customized lists
 \labelindent=\skip54
 \enit@outerparindent=\dimen178
-\enit@toks=\toks22
-\enit@inbox=\box53
-\enit@count@id=\count288
-\enitdp@description=\count289
+\enit@toks=\toks30
+\enit@inbox=\box52
+\enit@count@id=\count297
+\enitdp@description=\count298
 )) (./preamble.tex)
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/hyperref/hyperref.sty
@@ -344,8 +351,8 @@ tex/kvoptions/kvoptions.sty
 Package: kvoptions 2020-10-07 v3.14 Key value format for package options (HO)
 )
 \@linkdim=\dimen179
-\Hy@linkcounter=\count290
-\Hy@pagecounter=\count291
+\Hy@linkcounter=\count299
+\Hy@pagecounter=\count300
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/hyperref/pd1enc.def
@@ -366,7 +373,7 @@ Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 neric/etexcmds/etexcmds.sty
 Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
 )
-\Hy@SavedSpaceFactor=\count292
+\Hy@SavedSpaceFactor=\count301
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/hyperref/puenc.def
@@ -410,7 +417,7 @@ Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 86.
 ))
-\c@Hy@tempcnt=\count293
+\c@Hy@tempcnt=\count302
 LaTeX Info: Redefining \url on input line 4804.
 \XeTeXLinkMargin=\dimen180
 
@@ -418,7 +425,7 @@ LaTeX Info: Redefining \url on input line 4804.
 neric/bitset/bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
 )
-\Fld@menulength=\count294
+\Fld@menulength=\count303
 \Field@Width=\dimen181
 \Fld@charsize=\dimen182
 Package hyperref Info: Hyper figures OFF on input line 6075.
@@ -437,17 +444,17 @@ Package: atbegshi-ltx 2020/08/17 v1.0a Emulation of the original atbegshi packa
 ge
 with kernel methods
 )
-\Hy@abspage=\count295
-\c@Item=\count296
-\c@Hfootnote=\count297
+\Hy@abspage=\count304
+\c@Item=\count305
+\c@Hfootnote=\count306
 )
 Package hyperref Info: Driver (autodetected): hpdftex.
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/hyperref/hpdftex.def
 File: hpdftex.def 2021-02-27 v7.00k Hyperref driver for pdfTeX
-\Fld@listcount=\count298
-\c@bookmark@seq@number=\count299
+\Fld@listcount=\count307
+\c@bookmark@seq@number=\count308
 \Hy@SectionHShift=\skip55
 )
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
@@ -475,6 +482,12 @@ LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 4
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
+)
+(/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
+tex/l3backend/l3backend-pdftex.def
+File: l3backend-pdftex.def 2021-03-18 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count309
+\l__pdf_internal_box=\box53
 ) (./main.aux)
 \openout1 = `main.aux'.
 
@@ -500,17 +513,17 @@ LaTeX Font Info:    ... okay on input line 48.
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/co
 ntext/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count300
+\scratchcounter=\count310
 \scratchdimen=\dimen183
 \scratchbox=\box54
-\nofMPsegments=\count301
-\nofMParguments=\count302
-\everyMPshowfont=\toks23
-\MPscratchCnt=\count303
+\nofMPsegments=\count311
+\nofMParguments=\count312
+\everyMPshowfont=\toks31
+\MPscratchCnt=\count313
 \MPscratchDim=\dimen184
-\MPnumerator=\count304
-\makeMPintoPDFobject=\count305
-\everyMPtoPDFconversion=\toks24
+\MPnumerator=\count314
+\makeMPintoPDFobject=\count315
+\everyMPtoPDFconversion=\toks32
 )
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/epstopdf-pkg/epstopdf-base.sty
@@ -550,7 +563,7 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 neric/gettitlestring/gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count306
+\c@section@level=\count316
 )
 LaTeX Info: Redefining \ref on input line 48.
 LaTeX Info: Redefining \pageref on input line 48.
@@ -619,13 +632,13 @@ Package rerunfilecheck Info: File `main.brf' has not changed.
 (rerunfilecheck)             Checksum: F4C50CAE289A39CBD799CD997190B0CF;2522.
  ) 
 Here is how much of TeX's memory you used:
- 14507 strings out of 480884
- 237585 string characters out of 5900692
- 586838 words of memory out of 5000000
- 31433 multiletter control sequences out of 15000+600000
+ 14571 strings out of 480884
+ 237384 string characters out of 5900692
+ 586275 words of memory out of 5000000
+ 31505 multiletter control sequences out of 15000+600000
  434303 words of font info for 90 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 98i,11n,103p,1564b,554s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 98i,11n,102p,1564b,554s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/font
 s/enc/dvips/base/8r.enc}</cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr
 /share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></cvmfs/soft.comput
