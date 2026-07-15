@@ -63,14 +63,7 @@ PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${
 # predict-side flag): read predictions from .../fold{F}/exp_translation_NNN/<mod>/,
 # score against the translated GT labelsTs_<mod>_translation_NNN, and write metrics
 # under METRICS_ROOT/.../<contrast>/exp_translation_NNN/<cat>_<run>/. Unset → normal eval.
-#
-# Generic subdir passthrough (opt-in via PREDICT_OUTPUT_SUBDIR, same var name the
-# predict-side driver already uses — e.g. "val100" for a DualVal trainer's second
-# checkpoint, predicted into fold{F}/val100/<mod>/ to avoid colliding with the
-# val000/default prediction under fold{F}/<mod>/). No GT suffix — same ground
-# truth either way, only the prediction differs. EXP_TRANSLATION (above) takes
-# priority if both happen to be set, since they serve different purposes.
-EXP_SUBDIR="${PREDICT_OUTPUT_SUBDIR:-}"; GT_SUFFIX=""
+EXP_SUBDIR=""; GT_SUFFIX=""
 if [ -n "${EXP_TRANSLATION:-}" ]; then
     EXP_SUBDIR="exp_translation_${EXP_TRANSLATION}"
     GT_SUFFIX="_translation_${EXP_TRANSLATION}"

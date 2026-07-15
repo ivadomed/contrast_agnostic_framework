@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # Predict with v26_6_2 alone, trained by 04_48 with
-# nnUNetTrainerCHAOSAugLabDualVal — this ONE RUN_ID has TWO checkpoints,
-# predict it TWICE:
-#   val000 (clean-best, default):
-#     bash 05_38_predict_t1in_v26_6_2_dualval.sh <RUN_ID>
-#   val100 (synth-best) — override checkpoint AND output subdir so it doesn't
-#   collide with the val000 prediction:
-#     CHECKPOINT=checkpoint_best_val100.pth PREDICT_OUTPUT_SUBDIR=val100 \
-#       bash 05_38_predict_t1in_v26_6_2_dualval.sh <RUN_ID>
+# nnUNetTrainerCHAOSAugLabDualVal — training materializes TWO separate
+# mirror RUN_IDs at on_train_end (same <TS>, "_dualval_" swapped for
+# "_val000_"/"_val100_"), each a normal single-checkpoint run. Predict BOTH:
+#     bash 05_38_predict_t1in_v26_6_2_dualval.sh <RUN_ID with _val000_>
+#     bash 05_38_predict_t1in_v26_6_2_dualval.sh <RUN_ID with _val100_>
+# (no CHECKPOINT=/PREDICT_OUTPUT_SUBDIR= override needed — each mirror's own
+# checkpoint_best.pth is already the right one.)
 # Usage: bash 05_38_predict_t1in_v26_6_2_dualval.sh <RUN_ID> [FOLD] [MODALITY ...]
 set -euo pipefail
 METHOD="v26_6_2_train050_dualval"
