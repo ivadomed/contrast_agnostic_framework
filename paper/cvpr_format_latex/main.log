@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021 Gentoo Linux) (preloaded format=pdflatex 2023.8.23)  13 JUL 2026 13:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021 Gentoo Linux) (preloaded format=pdflatex 2023.8.23)  15 JUL 2026 07:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -612,28 +612,20 @@ Package pdftex.def Info: figures/palette_method_figure.png  used on input line
 \openout4 = `main.brf'.
 
 
-[8]) [9
-
-] (./main.aux)
+[8]) [9] (./main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: F9CE426637EDC66394CE64986F2CB414;2967.
-
-
-Package rerunfilecheck Warning: File `main.brf' has changed.
-(rerunfilecheck)                Rerun to get bibliographical references right.
-
-Package rerunfilecheck Info: Checksums for `main.brf':
-(rerunfilecheck)             Before: D41D8CD98F00B204E9800998ECF8427E;0
-(rerunfilecheck)             After:  F4C50CAE289A39CBD799CD997190B0CF;2522.
+Package rerunfilecheck Info: File `main.brf' has not changed.
+(rerunfilecheck)             Checksum: F4C50CAE289A39CBD799CD997190B0CF;2522.
  ) 
 Here is how much of TeX's memory you used:
- 14511 strings out of 480884
- 237659 string characters out of 5900692
- 587726 words of memory out of 5000000
- 31437 multiletter control sequences out of 15000+600000
- 435242 words of font info for 95 fonts, out of 8000000 for 9000
+ 14507 strings out of 480884
+ 237585 string characters out of 5900692
+ 586838 words of memory out of 5000000
+ 31433 multiletter control sequences out of 15000+600000
+ 434303 words of font info for 90 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 98i,11n,103p,1564b,558s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 98i,11n,103p,1564b,554s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/font
 s/enc/dvips/base/8r.enc}</cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr
 /share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></cvmfs/soft.comput
@@ -660,10 +652,10 @@ urw/helvetic/uhvr8a.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr
 a/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><
 /cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/t
 ype1/urw/times/utmri8a.pfb>
-Output written on main.pdf (9 pages, 1898753 bytes).
+Output written on main.pdf (9 pages, 1900340 bytes).
 PDF statistics:
- 337 PDF objects out of 1000 (max. 8388607)
- 300 compressed objects within 3 object streams
+ 383 PDF objects out of 1000 (max. 8388607)
+ 345 compressed objects within 4 object streams
  79 named destinations out of 1000 (max. 500000)
  142 words of extra memory for PDF output out of 10000 (max. 10000000)
 
