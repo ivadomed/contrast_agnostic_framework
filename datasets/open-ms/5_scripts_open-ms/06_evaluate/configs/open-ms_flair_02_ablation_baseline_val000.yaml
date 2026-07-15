@@ -1,0 +1,24 @@
+# open-ms — FLAIR-trained, baseline-anchored causal-ablation ladder, @ train050_val000
+# (unified train probability + clean, real-image validation via
+# nnUNetTrainerOpenMSAugLabDefault instead of the val-synth trainers). Same
+# ladder as open-ms_flair_02_ablation_baseline_val100.yaml, just at the
+# train050_val000 setting. Floor (baseline) is reused unchanged — it has no
+# synth augmentation, so no train/val ratio applies to it. One of 4 parallel
+# branches (baseline/auglab x val100/val000) — see
+# open-ms_flair_02_ablation_{baseline_val100,auglab_val100,auglab_val000}.yaml.
+# Same eval_all.csv sources as 01_results.yaml (06_01). Consumed by 06_10
+# (aggregate_from_config.py) and 06_11 (significance_from_config.py, same
+# config, pass --ref explicitly — see that script's header for the
+# substring-ambiguity gotcha).
+title: "open-ms — FLAIR-trained, baseline-anchored causal-ablation ladder @ train050_val000 (PALETTE mechanism decomposition)"
+metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+output_prefix: "02_ablation_baseline_val000"
+in_domain_contrast: flair
+column_order: [flair, t2w, t1w]
+
+runs:
+  - open-ms_flair_baseline_20260706_061243
+  - open-ms_flair_baseline_kmeans_train050_val000_20260711_065455
+  - open-ms_flair_baseline_kmeans_label_remap_train050_val000_20260711_062805
+  - open-ms_flair_baseline_kmeans_label_remap_voronoi_train050_val000_20260711_062857
+  - open-ms_flair_v26_6_2_train050_val000_20260711_062946
