@@ -27,5 +27,6 @@ try:
     from open_ms.trainers.auglab_default import nnUNetTrainerOpenMSAugLabDefault  # noqa: F401
     from open_ms.trainers.auglab_valsynth import nnUNetTrainerOpenMSAugLabValSynth  # noqa: F401
     from open_ms.trainers.v26_6_2 import nnUNetTrainerOpenMSV26_6_2              # noqa: F401
+    from open_ms.trainers.auglab_dualval import nnUNetTrainerOpenMSAugLabDualVal  # noqa: F401  # opt-in only, see module docstring
 except Exception as _e:  # pragma: no cover — discovery must not hard-crash nnU-Net import
     print(f"[OpenMSTrainers] import failed: {_e}")
