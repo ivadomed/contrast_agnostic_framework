@@ -38,7 +38,7 @@ Local-intEnsity Transform for Texture-prEserving augmentation}), a
 single-source augmentation that requires no label map at all. PALETTE
 partitions the foreground of a scan into intensity classes with unsupervised
 1-D $k$-means, further subdivides each class into spatial sub-regions with a
-Voronoi tessellation, and applies a signed random affine remap $y = \mu +
+Voronoi partition, and applies a signed random affine remap $y = \mu +
 \alpha(x-\bar{x})$, $\alpha \in \pm U(0.5, 2.0)$, to the \emph{real}
 intensities within each sub-region. Because the transform remaps existing
 intensities rather than replacing them with sampled noise, edges, gradients,
@@ -56,19 +56,22 @@ to. We test this bet directly. Training a single nnU-Net~\cite{isensee2021nnunet
 configuration with PALETTE, tuned once and reused unchanged across every
 dataset, we evaluate on eight cross-contrast and cross-modality settings
 spanning abdominal CT/MRI (CHAOS $\to$ AMOS/SLIVER07), brain MRI
-(OpenHarmony, OpenMS), and brain tumor MRI (BraTS), against a
-no-augmentation baseline and both variants of SynthSeg (the original,
-label-generative noEM variant, and a label-free EM variant for which no
-public implementation exists and which we re-implement as a fair baseline in
-its own right). PALETTE outperforms the no-augmentation baseline and
-SynthSeg-noEM significantly in all eight settings, and beats the
-stronger SynthSeg-EM baseline significantly in seven of eight. The margin on
-aggregate whole-organ Dice is often thin --- the setting is genuinely hard,
-and the strongest competing configuration is our own ablation without the
-PALETTE transform --- but the margin is large precisely where the texture
-argument predicts it should be: on fine, texture-defined structures and on
-the most contrast-shifted test modalities, where destroying real texture
-costs the most.
+(ON-Harmony, Open-MS), and brain tumor MRI (Brats2024-GLI), against a
+no-augmentation baseline, both variants of SynthSeg (the original,
+label-generative noEM variant, and an EM variant for which no public
+implementation exists and which we re-implement), and
+Auglab~\cite{molinier2026auglab}, a recent published augmentation pipeline
+that is the strongest competitor. PALETTE outperforms the no-augmentation
+baseline and SynthSeg-noEM by a large margin in all eight settings, and
+beats the stronger SynthSeg-EM baseline significantly in seven of eight.
+Because our full method applies PALETTE on top of the Auglab pipeline, the
+comparison against Auglab isolates exactly the PALETTE transform: it
+improves aggregate Dice in all eight settings and significantly in six. The
+margin on aggregate whole-organ Dice is often thin --- the setting is
+genuinely hard and Auglab is already strong --- but it is large precisely
+where the texture argument predicts: on fine, texture-defined structures and
+on the most contrast-shifted test modalities, where destroying real texture
+costs the most (e.g.\ MS lesions in FLAIR, $+8.9$ Dice).
 
 A thin average is not evidence for a mechanism; a mechanism claim needs a
 controlled test. We isolate texture preservation as the causal factor,
@@ -90,9 +93,9 @@ In summary, we make the following contributions:
     \item A systematic evaluation across eight cross-contrast and
     cross-modality segmentation settings (abdominal CT/MRI, brain MRI, brain
     tumor MRI) with a single, untuned-per-dataset configuration, against a
-    no-augmentation baseline and both variants of SynthSeg, including a
-    re-implementation of the label-free SynthSeg-EM variant for which no
-    public code exists.
+    no-augmentation baseline, both variants of SynthSeg (including a
+    re-implementation of the SynthSeg-EM variant for which no public code
+    exists), and Auglab, a recent published augmentation pipeline.
     \item A causal ablation isolating texture preservation, rather than the
     shared intensity/spatial partitioning scheme, as the source of PALETTE's
     advantage on texture-defined structures.

@@ -32,3 +32,5 @@ runs:
   - chaos_t2spir_synthseg_noEM_20260620_112515
   - chaos_t2spir_auglab_default_20260620_112240
   - chaos_t2spir_baseline_20260620_111146
+  - chaos_t2spir_srcsm_20260709_121945        # 7th arm — SRCSM (SemRandConv-3D)
+  - chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202  # extra ablation arm (train050_val000)

@@ -10,7 +10,7 @@ PALETTE (Partition-based Affine Local-intEnsity Transform for
 Texture-prEserving augmentation), a single-source, label-free augmentation
 that partitions the foreground of a scan into intensity classes with
 unsupervised $k$-means, further subdivides each class into spatial
-sub-regions with a Voronoi tessellation, and applies a signed random
+sub-regions with a Voronoi partition, and applies a signed random
 affine remap $y = \mu + \alpha(x - \bar{x})$, $\alpha \in \pm
 U(0.5, 2.0)$, to the \emph{real} intensities within each sub-region.
 Because the transform remaps existing intensities rather than replacing
@@ -20,8 +20,11 @@ relationship is randomized. Training a single nnU-Net configuration with
 PALETTE and evaluating across eight cross-contrast and cross-modality
 settings spanning abdominal CT/MRI, brain MRI, and brain tumor MRI, we
 show significant gains over a no-augmentation baseline and the original
-label-generative SynthSeg in all eight settings, and over a label-free
-SynthSeg variant we re-implement as a fair baseline in seven of eight. A
+label-generative SynthSeg in all eight settings, and over a stronger
+SynthSeg variant we re-implement in seven of eight. Against Auglab, a
+recent published augmentation pipeline that is the strongest competitor and
+that our full method builds on, adding the PALETTE transform improves all
+eight settings and does so significantly in six. A
 causal ablation that holds the partition and per-region statistics fixed
 while replacing the real-intensity remap with label-style noise fill
 isolates texture preservation, rather than the shared partitioning scheme,

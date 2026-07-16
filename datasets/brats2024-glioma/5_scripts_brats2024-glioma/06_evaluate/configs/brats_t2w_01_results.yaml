@@ -10,4 +10,4 @@ runs:
   - brats2024-glioma_t2w_synthseg_EM_20260620_125354
   - brats2024-glioma_t2w_synthseg_noEM_20260620_125442
   - brats2024-glioma_t2w_auglabAug_v26_6_2_train025_val100_20260620_125531
-#  - brats2024-glioma_t2w_srcsm_<TIMESTAMP>  # fill in after training (7th arm)
+  - brats2024-glioma_t2w_srcsm_20260709_122045  # 7th arm — SRCSM (SemRandConv-3D)

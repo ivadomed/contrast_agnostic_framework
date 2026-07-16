@@ -14,27 +14,35 @@ sliver07/trusted family uses the older CLI-args `aggregate_results.py`, which
 doesn't have a YAML config for this script to consume.
 
 Statistical model (why this is the right test):
-  * Unit of analysis = the test CASE, not the fold. Each external test case is
-    segmented by every fold's model; we average a case's Dice over its labels and
-    over the evaluated folds to get ONE score per (run, contrast, case). This
-    matters: treating each fold's re-scoring of the same patient as a separate
-    sample is pseudo-replication (the observations aren't independent) and
-    inflates apparent significance. Averaging across folds first gives the
-    honest, independent sample size — the number of held-out patients.
-  * Methods are compared PAIRED on the same cases -> Wilcoxon signed-rank test
-    (two-sided). Dice is bounded, skewed, and has floor effects at 0, so a
-    non-parametric paired test is the appropriate choice over a paired t-test.
-  * Folds are capped to EVAL_FOLD_INDICES (0-2 — see eval_folds.py), the single
-    source of truth shared with eval_aggregate.py and aggregate_from_config.py.
-    This is the default AND ONLY behavior, not an opt-in: any fold beyond that
-    (e.g. fold3 from older 4-fold runs) is silently excluded, so every run is
-    compared on the same footing.
+  * Unit of analysis = the test CASE, not the fold. A case's score = mean Dice over its
+    labels and over the evaluated folds → ONE score per (run, contrast, case). Treating
+    each fold's re-scoring of the same patient as a separate sample is pseudo-replication.
+  * Folds capped to EVAL_FOLD_INDICES (0-2 — see eval_folds.py), shared with the aggregator.
+  * ESTIMAND = macroΔ: the mean OVER CONTRASTS of each contrast's mean paired difference
+    (ref − competitor), i.e. EQUAL WEIGHT PER CONTRAST. This is exactly what the summary
+    table's `all` column reports, so the test and the table finally agree. The earlier
+    per-case *pooled* Wilcoxon weighted by case count (micro), which let one large external
+    set dominate (e.g. chaos t2spir: the n=20 CT set drowned the n=4 MR-contrast wins →
+    p=0.83 despite macroΔ=+1.3) — a real mismatch that misrepresented the truth.
+  * TEST = contrast-stratified paired SIGN-FLIP permutation on macroΔ. Under H0 (no method
+    difference) paired diffs are symmetric about 0, so flipping each case's sign is exact;
+    no normality assumption, correct for small/skewed samples. 95% CI = hierarchical
+    bootstrap (resample cases within each contrast). Holm-corrected across competitors.
 
-For each (reference run) vs (competitor run):
-  * per-contrast Wilcoxon on the shared cases,
-  * a pooled test over all held-out contrasts (each (case,contrast) a pair),
-  * effect size: median paired Dice difference + win/tie/loss counts,
-  * Holm-Bonferroni correction across the family of pooled per-competitor tests.
+Report sections per (reference vs each competitor):
+  * HEADLINE — OOD cross-contrast generalization: TRAINING (in-domain) contrast EXCLUDED
+    (per "cross-contrast generalization IS the headline"). macroΔ + bootstrap 95% CI +
+    ONE-SIDED directional ("ours > comp") sign-flip p, Holm-corrected (headline, since the
+    hypothesis is directional); two-sided p kept as a secondary column.
+  * IND — the in-domain (training) contrast only: shows the domain-randomization trade-off
+    (macroΔ < 0 vs a light-aug baseline like auglab_default is expected, not a failure).
+  * per-contrast mean Δ + raw (uncorrected) Wilcoxon p, in-domain contrast flagged.
+Requires `in_domain_contrast` in the config to split IND vs OOD; without it the headline
+falls back to all contrasts (and says so).
+
+NOTE: per-dataset tests are individually underpowered (few held-out cases); the CROSS-
+DATASET combined test (sign test + Stouffer over all datasets) is the paper's strongest
+statement — see datasets/00_commun_scripts/00_03_evaluate/meta_significance.py.
 
 The reference ("Ours") run is auto-selected as the run whose key contains both
 "auglabAug" and "v26_6_2" (the headline model) — CAUTION: ablation variants that
@@ -57,6 +65,7 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+from scipy.stats import norm
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "00_00_utils"))
 from eval_folds import EVAL_FOLD_INDICES  # noqa: E402 — single source of truth, see eval_folds.py
@@ -143,6 +152,7 @@ def main():
 
     runs = cfg.get("runs", [])
     column_order = cfg.get("column_order", None)
+    in_domain_contrast = cfg.get("in_domain_contrast", None)
     prefix = cfg.get("output_prefix", "significance")
     title = cfg.get("title", "Results")
 
@@ -171,53 +181,136 @@ def main():
     higher_better = args.metric == "dice"
     sign = 1.0 if higher_better else -1.0  # positive "diff" = ref is better
 
+    scale = 100 if higher_better else 1
+    unit = "Dice pts" if higher_better else "mm HD95"
+    rng = np.random.default_rng(0)      # reproducible bootstrap CI
+    B_BOOT = 5000
+
+    # In-domain (training) contrast. For multi-source configs the column is already prefixed
+    # (e.g. "chaos_t2spir"); in_domain_contrast is written to match. OOD = held-out contrasts
+    # that are NOT the training contrast; IND = the training contrast only.
+    in_dom = in_domain_contrast if (in_domain_contrast in cols) else None
+    ood_cols = [c for c in cols if c != in_dom]
+    ind_cols = [c for c in cols if c == in_dom]
+
+    def diff_arrays(comp, subset):
+        """List of per-contrast paired-diff arrays (ref − comp over shared cases)."""
+        out = []
+        for col in subset:
+            x, y = paired(data[ref], data[comp], col)
+            if len(x):
+                out.append(x - y)
+        return out
+
+    def macro_stat(arrs):
+        return float(np.mean([a.mean() for a in arrs])) if arrs else float("nan")
+
+    def macro_perm(arrs):
+        """Contrast-stratified paired SIGN-FLIP test on the macroΔ (analytic normal form).
+
+        macroΔ = mean over contrasts of that contrast's mean paired diff (equal weight per
+        contrast — the estimand the summary `all` column reports, so the test can't be
+        hijacked by case-count imbalance). Under H0 (no method difference) each paired diff
+        d flips sign with E[±d]=0, Var[±d]=d². The sign-flip null of macroΔ therefore has
+        mean 0 and Var = (1/K²) Σ_k (1/n_k²) Σ_i d_ki², closed-form (no simulation, no
+        Monte-Carlo floor). Z = macroΔ / sd → normal-approximation two-sided and one-sided
+        (ours-better) p. Returns (macroΔ*scale, two-sided p, one-sided p)."""
+        if not arrs:
+            return float("nan"), float("nan"), float("nan")
+        obs = macro_stat(arrs)
+        K = len(arrs)
+        var_T = sum((a ** 2).sum() / (a.size ** 2) for a in arrs) / (K ** 2)
+        sd = float(np.sqrt(var_T))
+        if sd == 0:
+            p_two = 1.0 if obs == 0 else 0.0
+            return obs * scale, p_two, (0.0 if (obs > 0) == higher_better and obs != 0 else 1.0)
+        z = obs / sd
+        p_two = float(2 * norm.sf(abs(z)))
+        p_one = float(norm.sf(z) if higher_better else norm.cdf(z))
+        return obs * scale, p_two, p_one
+
+    def macro_ci(arrs):
+        """Hierarchical bootstrap 95% CI of macroΔ (resample cases within each contrast)."""
+        if not arrs:
+            return float("nan"), float("nan")
+        per = np.empty((B_BOOT, len(arrs)))
+        for j, a in enumerate(arrs):
+            idx = rng.integers(0, a.size, size=(B_BOOT, a.size))
+            per[:, j] = a[idx].mean(axis=1)
+        lo, hi = np.percentile(per.mean(axis=1), [2.5, 97.5])
+        return lo * scale, hi * scale
+
+    def block_table(subset, heading, note):
+        # HEADLINE = one-sided directional ("ours better") p, Holm-corrected across
+        # competitors — justified because the hypothesis is directional (our method is
+        # designed to improve generalization). Two-sided p kept as a secondary column;
+        # note it, not the headline star, is what reveals a significant in-domain LOSS
+        # (there the one-sided "ours better" p is ~1 and correctly unstarred).
+        p1s, rows = [], []
+        for comp in competitors:
+            arrs = diff_arrays(comp, subset)
+            obs, p2, p1 = macro_perm(arrs)
+            lo, hi = macro_ci(arrs)
+            better = (lambda a: (a > 0).sum()) if higher_better else (lambda a: (a < 0).sum())
+            worse = (lambda a: (a < 0).sum()) if higher_better else (lambda a: (a > 0).sum())
+            nw = int(sum(better(a) for a in arrs)); nl = int(sum(worse(a) for a in arrs))
+            rows.append((comp, len(arrs), obs, lo, hi, p1, p2, nw, nl))
+            p1s.append(p1)
+        hp = holm(p1s)
+        out = [f"## {heading}", "", note, "",
+               "| competitor | #contr | macroΔ | 95% CI | **p (1-sided, ours>comp)** | Holm | p (2-sided) | case W/L |",
+               "|---|---|---|---|---|---|---|---|"]
+        for (comp, nc, obs, lo, hi, p1, p2, nw, nl), h in zip(rows, hp):
+            star = "**" if np.isfinite(h) and h < args.alpha else ""
+            ci = f"[{lo:+.2f}, {hi:+.2f}]" if np.isfinite(lo) else "—"
+            out.append(f"| {comp} | {nc} | {obs:+.2f} | {ci} | {fmt_p(p1)} | "
+                       f"{star}{fmt_p(h)}{star} | {fmt_p(p2)} | {nw}/{nl} |")
+        return out + [""]
+
     lines = [f"# {title} — paired significance ({args.metric})", "",
              f"Generated: {datetime.now():%Y-%m-%d %H:%M}",
-             f"Reference (Ours): `{ref}`  |  Folds: {', '.join(str(i) for i in EVAL_FOLD_INDICES)}", "",
-             "Two-sided Wilcoxon signed-rank on per-case scores (a case's score = mean over "
-             "its labels and folds 0-2). Unit = case, so the sample size is the number of "
-             "held-out cases, **not** the fold count. `Δ` = median paired difference "
-             f"(ref − competitor, in {'Dice pts' if higher_better else 'mm HD95'}); "
-             "W/T/L = cases where ref wins/ties/loses.", ""]
+             f"Reference (Ours): `{ref}`  |  Folds: {', '.join(str(i) for i in EVAL_FOLD_INDICES)}  |  "
+             f"In-domain (training) contrast: `{in_domain_contrast or 'n/a'}`", "",
+             "Per-dataset test = **contrast-stratified paired sign-flip test** (analytic normal "
+             "approximation — deterministic, no Monte-Carlo floor) on the "
+             f"**macroΔ** (mean over contrasts of each contrast's mean paired diff, ref − competitor, "
+             f"{unit}; equal weight per contrast, matching the summary `all` column — so one large "
+             "external test set can't dominate). 95% CI = hierarchical bootstrap (resample cases "
+             "within contrast). HEADLINE = **`p (1-sided, ours>comp)`** (Holm across competitors) — "
+             "the hypothesis is directional (our method is designed to improve generalization); "
+             "`p (2-sided)` is kept as a secondary column and is what flags a significant in-domain "
+             "LOSS (where the 1-sided 'ours better' p is ≈1 and correctly unstarred). `case W/L` = "
+             "held-out cases where ref wins/loses. Per-case scores are fold-0-2-capped means over labels.", ""]
 
-    # Pooled per-competitor test (the headline claim), Holm-corrected across competitors.
-    pooled_p, pooled_rows = [], []
-    for comp in competitors:
-        dx, wtl, deltas = [], [0, 0, 0], []
-        for col in cols:
-            xf, yf = paired(data[ref], data[comp], col)
-            dx.extend((xf - yf).tolist())
-            for a, b in zip(xf, yf):
-                d = sign * (a - b)
-                deltas.append(a - b)
-                wtl[0 if d > 0 else 2 if d < 0 else 1] += 1
-        ax = np.array(dx)
-        p = wilcoxon_p(ax, np.zeros_like(ax)) if len(ax) else float("nan")
-        med = float(np.median(deltas)) * (100 if higher_better else 1) if deltas else float("nan")
-        pooled_p.append(p)
-        pooled_rows.append((comp, len(ax), med, wtl))
+    # HEADLINE — OOD cross-contrast generalization (training contrast EXCLUDED).
+    lines += block_table(
+        ood_cols,
+        ("OOD cross-contrast generalization — training contrast EXCLUDED (headline)"
+         if in_dom else "All held-out contrasts (no in-domain contrast declared)"),
+        f"Held-out contrasts: {', '.join(ood_cols) if ood_cols else '(none)'}. "
+        "This is the paper's headline claim (cross-contrast generalization).")
 
-    holm_p = holm(pooled_p)
+    # IND — the training contrast only (shows the domain-randomization trade-off).
+    if ind_cols:
+        lines += block_table(
+            ind_cols, "IND in-domain — training contrast only",
+            f"In-domain contrast: {', '.join(ind_cols)}. Domain randomization can trade a little "
+            "in-domain accuracy for OOD robustness, so macroΔ < 0 here vs a light-aug baseline "
+            "(auglab_default) is an expected trade-off, not a failure.")
 
-    lines += ["## Pooled over all held-out contrasts (Ours vs each competitor)", "",
-              "| competitor | n pairs | Δ median | W/T/L | p-value | Holm-corrected |",
-              "|---|---|---|---|---|---|"]
-    for (comp, n, med, wtl), p, h in zip(pooled_rows, pooled_p, holm_p):
-        star = "**" if np.isfinite(h) and h < args.alpha else ""
-        lines.append(
-            f"| {comp} | {n} | {med:+.2f} | {wtl[0]}/{wtl[1]}/{wtl[2]} | "
-            f"{fmt_p(p)} | {star}{fmt_p(h)}{star} |")
-
-    # Per-contrast breakdown (raw p, uncorrected — exploratory, not the headline claim).
-    lines += ["", "## Per-contrast (raw p, uncorrected)", ""]
-    header = "| competitor | " + " | ".join(cols) + " |"
-    lines += [header, "|" + "---|" * (len(cols) + 1)]
+    # Per-contrast transparency: mean Δ + raw (uncorrected) Wilcoxon p, in-domain flagged.
+    lines += ["## Per-contrast mean Δ (ref − competitor) with raw Wilcoxon p", "",
+              "| competitor | " + " | ".join((f"{c} *" if c == in_dom else c) for c in cols) + " |",
+              "|" + "---|" * (len(cols) + 1)]
     for comp in competitors:
         cells = []
         for col in cols:
             x, y = paired(data[ref], data[comp], col)
-            cells.append(f"{fmt_p(wilcoxon_p(x, y))} (n={len(x)})")
+            cells.append(f"{np.mean(x - y) * scale:+.2f} ({fmt_p(wilcoxon_p(x, y))})" if len(x) else "—")
         lines.append(f"| {comp} | " + " | ".join(cells) + " |")
+    lines += ["", "_`*` = in-domain (training) contrast._", "",
+              "_Cross-dataset combined test (sign test + Stouffer over all datasets): "
+              "`scripts/evaluate/run_meta_significance.sh`._"]
 
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{prefix}_significance.md"

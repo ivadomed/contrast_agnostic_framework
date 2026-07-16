@@ -21,12 +21,12 @@ intensities $\{x_v : v \in F\}$ with $k$ sampled per iteration from
 $\{2,\dots,6\}$, producing $k$ intensity classes $C_1, \dots, C_k$
 (\cref{fig:method-pipeline}, column 2). This partition is unsupervised and
 requires no anatomical label map: it groups voxels by intensity alone, so
-the same operator applies unmodified to any input image regardless of its
-modality or contrast --- CT, T1, T2, FLAIR, or otherwise. With probability $0.10$ this step is skipped and a single global
+the same operator applies unmodified to CT, T1, T2, FLAIR, or any other
+contrast. With probability $0.10$ this step is skipped and a single global
 remap is applied instead (step 3 below, with $C=1$).
 
 \paragraph{2. Spatial sub-parcellation.} Each intensity class $C_i$ is
-further subdivided into spatial sub-regions by a Voronoi partition
+further subdivided into spatial sub-regions by a Voronoi tessellation
 seeded with points sampled within $C_i$ (\cref{fig:method-pipeline}, column
 3 shows the combined effect of this step and the remap of step 3), giving
 sub-regions $R_{i,1}, \dots, R_{i,m_i}$ that are contiguous in space as

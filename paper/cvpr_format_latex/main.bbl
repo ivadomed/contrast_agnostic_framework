@@ -1,4 +1,4 @@
-\begin{thebibliography}{29}
+\begin{thebibliography}{34}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -60,6 +60,18 @@ Maria~Correia de Verdier, Rachit Saluja, Louis Gagnon, Dominic LaBella, Ujjwal
   segmentation on post-treatment {MRI}.
 \newblock \emph{arXiv preprint arXiv:2405.18368}, 2024.
 
+\bibitem[Fischl(2012)]{fischl2012freesurfer}
+Bruce Fischl.
+\newblock {FreeSurfer}.
+\newblock \emph{NeuroImage}, 62\penalty0 (2):\penalty0 774--781, 2012.
+
+\bibitem[Haber and Modersitzki(2006)]{haber2006ngf}
+Eldad Haber and Jan Modersitzki.
+\newblock Intensity gradient based registration and fusion of multi-modal
+  images.
+\newblock In \emph{Medical Image Computing and Computer-Assisted Intervention
+  (MICCAI)}, pages 726--733, 2006.
+
 \bibitem[Heimann et~al.(2009)Heimann, Van~Ginneken, Styner, Arzhaeva, Aurich,
   Bauer, Beck, Becker, Beichel, Bekes, et~al.]{heimann2009comparison}
 Tobias Heimann, Bram Van~Ginneken, Martin~A Styner, Yulia Arzhaeva, Volker
@@ -69,6 +81,12 @@ Tobias Heimann, Bram Van~Ginneken, Martin~A Styner, Yulia Arzhaeva, Volker
   datasets.
 \newblock \emph{IEEE Transactions on Medical Imaging}, 28\penalty0
   (8):\penalty0 1251--1265, 2009.
+
+\bibitem[Holm(1979)]{holm1979}
+Sture Holm.
+\newblock A simple sequentially rejective multiple test procedure.
+\newblock \emph{Scandinavian Journal of Statistics}, 6\penalty0 (2):\penalty0
+  65--70, 1979.
 
 \bibitem[Isensee et~al.(2021)Isensee, Jaeger, Kohl, Petersen, and
   Maier-Hein]{isensee2021nnunet}
@@ -210,6 +228,21 @@ Shujun Wang, Lequan Yu, Kang Li, Xin Yang, Chi-Wing Fu, and Pheng-Ann Heng.
   image segmentation on unseen datasets.
 \newblock \emph{IEEE Trans. Med. Imaging}, 39\penalty0 (12):\penalty0
   4237--4248, 2020.
+
+\bibitem[Warrington et~al.(2025)Warrington, Torchi, Mougin, Campbell, Ntata,
+  Craig, Assimopoulos, Alfaro-Almagro, Miller, Jenkinson, Morgan, and
+  Sotiropoulos]{warrington2025onharmony}
+Shaun Warrington, Andrea Torchi, Olivier Mougin, Jon Campbell, Asante Ntata,
+  Martin Craig, Stephania Assimopoulos, Fidel Alfaro-Almagro, Karla~L. Miller,
+  Mark Jenkinson, Paul~S. Morgan, and Stamatios~N. Sotiropoulos.
+\newblock A multi-site, multi-modal travelling-heads resource for brain {MRI}
+  harmonisation.
+\newblock \emph{Scientific Data}, 12:\penalty0 595, 2025.
+
+\bibitem[Wilcoxon(1945)]{wilcoxon1945}
+Frank Wilcoxon.
+\newblock Individual comparisons by ranking methods.
+\newblock \emph{Biometrics Bulletin}, 1\penalty0 (6):\penalty0 80--83, 1945.
 
 \bibitem[Xu et~al.(2021)Xu, Liu, Yang, Raffel, and Niethammer]{xu2021randconv}
 Zhenlin Xu, Deyi Liu, Junlin Yang, Colin Raffel, and Marc Niethammer.

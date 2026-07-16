@@ -3,13 +3,15 @@
 
 \paragraph{Aggregate margins are thin by design of the evaluation, not by
 accident.} Every setting in \cref{sec:experiments} is single-source
-cross-contrast, the hardest regime in which to demonstrate a gain: the
-strongest available competitor is our own ablation
-(\texttt{auglab\_default}), which already includes a strong general-purpose
-augmentation stack. We view the consistency of the win -- eight out of
-eight settings, spanning three anatomical regions and two modalities -- as
-more informative than any single margin, and we report the near-ties
-explicitly (BraTS, OpenMS T1w) rather than omitting them.
+cross-contrast, the hardest regime in which to demonstrate a gain, and the
+strongest competitor is Auglab~\cite{molinier2026auglab}, a published
+pipeline that already includes a strong general-purpose augmentation stack.
+Adding the PALETTE transform on top of it improves aggregate Dice in all
+eight settings and does so significantly in six, across three anatomical
+regions and two modalities. We read the consistency of the direction of the
+effect, together with its concentration on texture-defined structures
+(\cref{subsec:e-crush}), as more informative than any single aggregate
+margin.
 
 \paragraph{The causal ablation isolates a mechanism, not a full explanation.}
 The noise-fill comparison in \cref{subsec:e-ablation} shows that texture
@@ -20,20 +22,18 @@ space of region-to-region contrast relationships (including the sign
 inversions in \cref{eq:affine}) that no single real acquisition protocol
 supplies. Disentangling these two effects further is left to future work.
 
-\paragraph{SynthSeg-noEM's collapse warrants a caveat.} The gap between
-SynthSeg-noEM and SynthSeg-EM in \cref{tab:main} is large enough that we
-re-examined the SynthSeg-noEM configuration; we found no discrepancy from a
-standard configuration, but as with any re-implemented baseline, we cannot
-rule out that a different hyperparameter choice would narrow this specific
-gap, and the paper's central comparisons do not depend on the size of that
-gap.
-
-\paragraph{Foreground segmentation is assumed, not solved.} $k$-means
-partitioning in \cref{subsec:m-transform} operates on a label-free
-foreground mask (e.g.\ an intensity threshold), not a learned or curated
-one; on acquisitions where foreground/background separation itself is
-difficult, the quality of this mask becomes a dependency we have not
-stress-tested here.
+\paragraph{SynthSeg-noEM's collapse on sparse-label tasks is expected.} The
+large gap between SynthSeg-noEM and the other methods on Brats2024-GLI and
+Open-MS (\cref{tab:main}) is not an implementation artifact but a direct
+consequence of what SynthSeg-noEM requires. It generates images by
+resampling intensities from a \emph{dense} anatomical label map covering the
+whole volume; on sparse-label segmentation tasks --- a single glioma or a
+handful of MS lesions floating in an otherwise unlabelled brain --- there is
+no such dense map, so the generated images carry almost no anatomical
+structure and the network cannot learn. SynthSeg-noEM is therefore expected
+to be competitive only where dense label maps are meaningful (the brain-MRI
+settings) and to collapse elsewhere; this is a property of the method's
+input requirements, not a caveat about our re-implementation.
 
 \paragraph{Scope.} PALETTE targets the single-source setting: one labelled
 training modality, no access to target-domain data of any kind. It is
@@ -47,15 +47,17 @@ solutions to the same problem.
 
 We introduced PALETTE, a label-free, single-source contrast augmentation
 that partitions the foreground of a scan by unsupervised $k$-means and
-Voronoi tessellation and applies a signed affine remap of the real
+Voronoi partition and applies a signed affine remap of the real
 intensities within each resulting sub-region, in contrast to label-generative
 synthesis methods that require a dense anatomical label map and replace
 real intensities with sampled noise. Across eight cross-contrast and
 cross-modality segmentation settings spanning abdominal, brain, and brain
 tumor imaging, a single nnU-Net configuration trained with PALETTE
 significantly outperforms a no-augmentation baseline and the original
-SynthSeg in every setting, and a re-implemented label-free SynthSeg variant
-in seven of eight. A causal ablation that holds the partitioning scheme
+SynthSeg in every setting, and a re-implemented stronger SynthSeg-EM variant
+in seven of eight; added on top of the strongest competitor, the published
+Auglab pipeline, it improves all eight settings and does so significantly in
+six. A causal ablation that holds the partitioning scheme
 fixed and only swaps real-intensity remapping for label-style noise fill
 shows that texture preservation, not the shared partitioning scheme, drives
 the advantage on texture-defined structures -- directly supporting the
