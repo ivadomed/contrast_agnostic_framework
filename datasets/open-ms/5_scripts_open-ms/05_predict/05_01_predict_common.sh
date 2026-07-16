@@ -11,9 +11,11 @@ PREDICT_LOG_PREFIX="predict"
 PREDICT_ITEMS_DEFAULT="flair t2w t1w"     # imagesTs_<item>/ dirs built by 02_00_convert.py
 PREDICT_FOLD_DEFAULT="all"
 PREDICT_DATASET_ID_DEFAULT="70"
-PREDICT_TIME="00:45:00"    # inference is minutes, not hours — don't inherit the
-                           # 60h training-time default (env.sh's RUN_JOB_TIME_DEFAULT),
-                           # a long walltime request tanks Slurm backfill priority
+PREDICT_TIME="${PREDICT_TIME:-00:45:00}"    # inference is minutes, not hours — don't
+                           # inherit the 60h training-time default (env.sh's
+                           # RUN_JOB_TIME_DEFAULT), a long walltime request tanks Slurm
+                           # backfill priority. Overridable (e.g. PREDICT_TIME=00:30:00
+                           # for a quick one-off) since it's a straight env passthrough.
 PREDICT_EXTRA_FLAGS=""
 
 source "${PROJECT_ROOT}/datasets/00_commun_scripts/00_02_predict/predict_common.sh" "$@"

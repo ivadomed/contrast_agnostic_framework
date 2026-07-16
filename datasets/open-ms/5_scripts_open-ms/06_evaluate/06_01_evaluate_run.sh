@@ -7,6 +7,14 @@
 # same one chaos/amos use), not a bespoke concatenation.
 #
 # Usage: bash 06_01_evaluate_run.sh <RUN_ID> <CATEGORY:nnUNet|auglab> [FOLD(default all)]
+# Optional env: CKPT_TAG (default "best") — set to "final" to evaluate a
+#   checkpoint_final prediction run (predict with CHECKPOINT=checkpoint_final.pth
+#   first; see 05_predict/05_01_predict_common.sh). "best" reads/writes the
+#   original flat paths unchanged; any other tag reads predictions from
+#   fold{F}/<tag>/<item> (see predict_common.sh's CKPT_SUBDIR) and writes metrics
+#   to a sibling <CATEGORY>_<RUN_ID>_<tag> dir so it never collides with, or
+#   overwrites, the checkpoint_best metrics for the same RUN_ID.
+# Optional env: EVAL_TIME (default 1:00:00) — run_job --time override.
 set -euo pipefail
 source "$(dirname "$0")/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
@@ -14,6 +22,7 @@ cd "${PROJECT_ROOT}"
 RUN_ID="${1:?need RUN_ID}"
 CATEGORY="${2:?need CATEGORY (nnUNet|auglab)}"
 FOLD_ARG="${3:-all}"
+CKPT_TAG="${CKPT_TAG:-best}"
 
 ITEMS=(flair t2w t1w)
 # DATASET_ID selects the nnUNet dataset providing the per-contrast GT (labelsTs_<contrast>)
@@ -24,7 +33,9 @@ DATASET_ID="${DATASET_ID:-70}"
 _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset0*${DATASET_ID}_" | head -1)"
 DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
-OUT_BASE="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}"
+_PRED_SUBDIR=""; [ "${CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${CKPT_TAG}/"
+_OUT_SUFFIX=""; [ "${CKPT_TAG}" != "best" ] && _OUT_SUFFIX="_${CKPT_TAG}"
+OUT_BASE="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}"
 
 # "0 1 2": matches EVAL_FOLDS in datasets/00_commun_scripts/00_00_utils/eval_folds.py
 # (the single source of truth the aggregators cap to) — kept in sync by hand since bash
@@ -38,13 +49,13 @@ if [ "${FOLD_ARG}" = "all" ]; then FOLDS="0 1 2"; else FOLDS="${FOLD_ARG}"; fi
 # CLAUDE.md). --log goes under OUT_BASE (shared storage), not /tmp, for the same reason
 # the training/predict logs were moved there.
 mkdir -p "${OUT_BASE}/_logs"
-run_job --name "openms_eval_${CATEGORY}_${RUN_ID}" --gpus 0 --cpus 8 --mem 16G --time 1:00:00 \
-    --log "${OUT_BASE}/_logs/eval_${RUN_ID}.log" --wait -- bash -c "
+run_job --name "openms_eval_${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}" --gpus 0 --cpus 8 --mem 16G --time "${EVAL_TIME:-1:00:00}" \
+    --log "${OUT_BASE}/_logs/eval_${RUN_ID}${_OUT_SUFFIX}.log" --wait -- bash -c "
 set -euo pipefail
 cd '${PROJECT_ROOT}'
 for F in ${FOLDS}; do
     for item in ${ITEMS[*]}; do
-        PRED_DIR='${PRED_BASE}'/fold\${F}/\${item}
+        PRED_DIR='${PRED_BASE}'/fold\${F}/${_PRED_SUBDIR}\${item}
         GT_DIR='${nnUNet_raw}/${_DS_NAME}'/labelsTs_\${item}
         [ -d \"\${PRED_DIR}\" ] || { echo \"  skip fold\${F}/\${item}: no preds (\${PRED_DIR})\"; continue; }
         OUT_CSV='${OUT_BASE}'/fold\${F}/\${item}_metrics.csv

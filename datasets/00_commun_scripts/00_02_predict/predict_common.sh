@@ -53,6 +53,14 @@ ITEMS=("$@"); [ ${#ITEMS[@]} -eq 0 ] && read -ra ITEMS <<< "${PREDICT_ITEMS_DEFA
 CHECKPOINT="${CHECKPOINT:-checkpoint_best.pth}"
 CATEGORY="${CATEGORY:-nnUNet}"
 
+# Checkpoint path tag: "best" (CHECKPOINT's default) keeps today's flat
+# fold{F}/<item> output layout completely unchanged — no back-compat break across
+# every dataset's existing predictions. Any other checkpoint (e.g. checkpoint_final.pth)
+# gets its own path segment (fold{F}/<tag>/<item>) so it can never collide with, or
+# overwrite, the checkpoint_best predictions for the same RUN_ID.
+_CKPT_TAG="$(basename "${CHECKPOINT}" .pth)"; _CKPT_TAG="${_CKPT_TAG#checkpoint_}"
+CKPT_SUBDIR=""; [ "${_CKPT_TAG}" != "best" ] && CKPT_SUBDIR="${_CKPT_TAG}"
+
 if [ "${PREDICT_MODE}" = "cross" ]; then
     DATASET_ID="${CHAOS_DATASET_ID:-60}"
     RUN_DIR="${CHAOS_PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
@@ -103,7 +111,7 @@ predict_fold() {
         # dir (e.g. imagesTs_<item>_translation_050); the subdir namespaces the output
         # (e.g. .../fold{F}/exp_translation_050/<item>/). Empty → normal behaviour.
         local INPUT_DIR="${_IN_BASE}${item}${PREDICT_INPUT_SUFFIX:-}"
-        local OUTPUT_DIR="${_OUT_BASE}/${RUN_ID}/fold${F}/${PREDICT_OUTPUT_SUBDIR:+${PREDICT_OUTPUT_SUBDIR}/}${item}"
+        local OUTPUT_DIR="${_OUT_BASE}/${RUN_ID}/fold${F}/${CKPT_SUBDIR:+${CKPT_SUBDIR}/}${PREDICT_OUTPUT_SUBDIR:+${PREDICT_OUTPUT_SUBDIR}/}${item}"
         if [ ! -d "$INPUT_DIR" ] || [ -z "$(ls -A "$INPUT_DIR" 2>/dev/null)" ]; then
             echo "  ! fold${F} skip ${item}: input dir missing/empty ($INPUT_DIR) — run 05_00_build_test_inputs.py" >&2
             continue

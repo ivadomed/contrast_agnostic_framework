@@ -1,0 +1,28 @@
+# open-ms — FLAIR-trained models, checkpoint_final ablation (vs. the usual
+# checkpoint_best used everywhere else — see open-ms_flair_01_results.yaml for the
+# checkpoint_best numbers on the same 6 methods).
+#
+# Predicted with CHECKPOINT=checkpoint_final.pth (see 05_predict/05_01_predict_common.sh),
+# which predict_common.sh routes to fold{F}/final/<item> (CKPT_SUBDIR) so it never
+# collides with the checkpoint_best predictions. Evaluated with CKPT_TAG=final (see
+# 06_01_evaluate_run.sh), which writes metrics to a sibling
+# metrics_dir/{category}_{run_id}_final/ dir — hence every run id below carries the
+# "_final" suffix; strip it to get the underlying training RUN_ID.
+#
+# Consumed by the shared aggregator (06_10_aggregate_from_config.sh) and the
+# companion significance_from_config.py (06_11, same config, run separately — pass
+# --ref explicitly, since this config's only auglabAug/v26_6_2 entry is itself an
+# ablation-named run and the "auglabAug"+"v26_6_2" auto-pick could still be fooled by
+# the "_final" suffix; see 06_11's header for the general rule).
+title: "open-ms — FLAIR-trained models, checkpoint_final ablation (6-method)"
+metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+output_prefix: "03_checkpoint_final_results"
+in_domain_contrast: flair
+
+runs:
+  - open-ms_flair_baseline_20260706_061243_final
+  - open-ms_flair_synthseg_noEM_train100_val000_20260706_061243_final
+  - open-ms_flair_synthseg_EM_train100_val000_20260706_061243_final
+  - open-ms_flair_auglab_default_20260706_061243_final
+  - open-ms_flair_auglabAug_v26_6_2_train050_val000_20260710_054455_final
+  - open-ms_flair_srcsm_20260709_072043_final

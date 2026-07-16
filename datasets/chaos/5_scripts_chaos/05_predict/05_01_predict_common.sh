@@ -15,7 +15,7 @@ PREDICT_LOG_PREFIX="predict"
 PREDICT_ITEMS_DEFAULT="t1in t1out t2spir ct"
 PREDICT_FOLD_DEFAULT="all"        # standardized: predict all 4 folds by default (matches eval + cross datasets)
 PREDICT_DATASET_ID_DEFAULT="60"
-PREDICT_TIME=""                 # chaos omits --time (uses run_job's default)
+PREDICT_TIME="01:00:00"         # inference is quick; 1h avoids run_job's 24h default
 PREDICT_EXTRA_FLAGS=""
 
 # ── Translation-robustness experiment (opt-in via EXP_TRANSLATION=NNN) ────────
