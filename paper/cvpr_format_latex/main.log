@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021 Gentoo Linux) (preloaded format=pdflatex 2023.8.23)  15 JUL 2026 07:08
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021 Gentoo Linux) (preloaded format=pdflatex 2023.8.23)  16 JUL 2026 09:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -613,32 +613,38 @@ LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 8
 tex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-<figures/palette_method_figure.png, id=163, 852.786pt x 366.168pt>
+<figures/palette_method_figure.png, id=167, 852.786pt x 366.168pt>
 File: figures/palette_method_figure.png Graphic file (type png)
 <use figures/palette_method_figure.png>
 Package pdftex.def Info: figures/palette_method_figure.png  used on input line 
 103.
 (pdftex.def)             Requested size: 496.85625pt x 213.3386pt.
-) (./sec/4_experiments.tex [4] [5 <./figures/palette_method_figure.png>] [6]) (
-./sec/5_discussion.tex [7]) (./main.bbl (./main.brf)
+) (./sec/4_experiments.tex [4] [5 <./figures/palette_method_figure.png>] [6]
+Overfull \hbox (47.11324pt too wide) in paragraph at lines 172--192
+ [][] 
+ []
+
+) (./sec/5_discussion.tex [7]) (./main.bbl (./main.brf)
 \tf@brf=\write4
 \openout4 = `main.brf'.
 
+ [8] [9]) [10
 
-[8]) [9] (./main.aux)
+]
+(./main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: F9CE426637EDC66394CE64986F2CB414;2967.
+(rerunfilecheck)             Checksum: 6736AD13475A3D08BB6F28360D76EE4A;3252.
 Package rerunfilecheck Info: File `main.brf' has not changed.
-(rerunfilecheck)             Checksum: F4C50CAE289A39CBD799CD997190B0CF;2522.
+(rerunfilecheck)             Checksum: 45501D7D589D998657C7B4D37CB8A0D0;2522.
  ) 
 Here is how much of TeX's memory you used:
- 14571 strings out of 480884
- 237384 string characters out of 5900692
- 586275 words of memory out of 5000000
- 31505 multiletter control sequences out of 15000+600000
+ 14582 strings out of 480884
+ 237541 string characters out of 5900692
+ 587275 words of memory out of 5000000
+ 31512 multiletter control sequences out of 15000+600000
  434303 words of font info for 90 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 98i,11n,102p,1564b,554s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 98i,11n,102p,1564b,579s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/font
 s/enc/dvips/base/8r.enc}</cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr
 /share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></cvmfs/soft.comput
@@ -665,10 +671,10 @@ urw/helvetic/uhvr8a.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr
 a/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><
 /cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/t
 ype1/urw/times/utmri8a.pfb>
-Output written on main.pdf (9 pages, 1900340 bytes).
+Output written on main.pdf (10 pages, 1906052 bytes).
 PDF statistics:
- 383 PDF objects out of 1000 (max. 8388607)
- 345 compressed objects within 4 object streams
- 79 named destinations out of 1000 (max. 500000)
- 142 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 400 PDF objects out of 1000 (max. 8388607)
+ 361 compressed objects within 4 object streams
+ 83 named destinations out of 1000 (max. 500000)
+ 150 words of extra memory for PDF output out of 10000 (max. 10000000)
 

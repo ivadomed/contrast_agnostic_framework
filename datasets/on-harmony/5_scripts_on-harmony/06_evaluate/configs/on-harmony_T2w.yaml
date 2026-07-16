@@ -14,5 +14,5 @@ runs:
   - on-harmony_T2w_synthseg_EM_20260624_191329
   - on-harmony_T2w_synthseg_noEM_20260624_191418
   - on-harmony_T2w_auglabAug_v26_6_2_train025_val100_20260624_191557
-  # 7th arm — SRCSM (SemRandConv-3D). Uncomment + fill in RUN_ID after training:
-  #  - on-harmony_T2w_srcsm_<TIMESTAMP>  # fill in after training
+  - on-harmony_T2w_srcsm_20260709_122145  # 7th arm — SRCSM (SemRandConv-3D)
+  - on-harmony_T2w_auglabAug_v26_6_2_train050_val000_20260710_040443  # ablation arm — train050/val000
