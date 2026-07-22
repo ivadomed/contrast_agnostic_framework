@@ -21,6 +21,14 @@ def create_dataset_structure(dataset_name):
         os.makedirs(os.path.join(base_path, "5_scripts_" + dataset_name, level), exist_ok=True)
     for level in level_2_results_structure:
         os.makedirs(os.path.join(base_path, "8_results_" + dataset_name, level), exist_ok=True)
+    # Drop a `.gitkeep` in every created dir so the (often data-only, gitignored)
+    # folder structure is preserved on GitHub. Force-add them with:
+    #   git add -f datasets/<dataset>/**/.gitkeep
+    # (see datasets/seed_skeleton_gitkeep.py to backfill existing datasets).
+    for dirpath, _dirnames, _files in os.walk(base_path):
+        keep = os.path.join(dirpath, ".gitkeep")
+        if not os.path.exists(keep):
+            open(keep, "a").close()
 
 if __name__ == "__main__":
     dataset_name = input("Enter the name of the dataset: ")
