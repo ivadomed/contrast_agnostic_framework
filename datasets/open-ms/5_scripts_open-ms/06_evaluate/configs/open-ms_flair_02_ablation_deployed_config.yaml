@@ -1,0 +1,32 @@
+# open-ms — FLAIR-trained, baseline-anchored causal-ablation ladder @ train050_val000
+# (same rungs 1-5 as open-ms_flair_02_ablation_baseline_val000.yaml: bare baseline ->
+# kmeans -> kmeans+label-remap -> kmeans+label-remap+voronoi -> v26_6_2 alone),
+# extended with the full OURS method (AugLab intensity stack + v26_6_2 contrast
+# synthesis) at both val settings — the "deployed-config ladder" pair referenced in
+# 04_33_train_auglabAug_v26_6_2_train050_val100.sh (same phrase used in the matching
+# brats2024-glioma/on-harmony train050_val100 wrapper headers) — to show whether
+# real-image (val000) vs synth-only (val100) validation matters for the deployed
+# config once the full AugLab stack is stacked on top of v26_6_2.
+#
+# UPDATE (2026-07-23): the val100 rung finished training (2000/2000 epochs, all 3
+# folds, RUN_ID open-ms_flair_auglabAug_v26_6_2_train050_val100_20260716_095413),
+# and has since been predicted + evaluated (05_32_predict_auglabAug_v26_6_2_train050_val100.sh
+# + 06_01_evaluate_run.sh) — both val000/val100 rungs are now present below.
+# Same eval_all.csv sources as 01_results.yaml (06_01). Consumed by 06_10
+# (aggregate_from_config.py) and 06_11 (significance_from_config.py, same
+# config, pass --ref explicitly — see that script's header for the
+# substring-ambiguity gotcha).
+title: "open-ms — FLAIR-trained, baseline-anchored causal-ablation ladder + deployed-config (OURS) val000/val100 pair"
+metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+output_prefix: "02_ablation_deployed_config"
+in_domain_contrast: flair
+column_order: [flair, t2w, t1w]
+
+runs:
+  - open-ms_flair_baseline_20260706_061243
+  - open-ms_flair_baseline_kmeans_train050_val000_20260711_065455
+  - open-ms_flair_baseline_kmeans_label_remap_train050_val000_20260711_062805
+  - open-ms_flair_baseline_kmeans_label_remap_voronoi_train050_val000_20260711_062857
+  - open-ms_flair_v26_6_2_train050_val000_20260711_062946
+  - open-ms_flair_auglabAug_v26_6_2_train050_val000_20260710_054455
+  - open-ms_flair_auglabAug_v26_6_2_train050_val100_20260716_095413
