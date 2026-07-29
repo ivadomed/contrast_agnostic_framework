@@ -18,7 +18,15 @@ CATEGORY="${2:?need CATEGORY (nnUNet|auglab)}"
 FOLD_ARG="${3:-all}"
 
 ITEMS=(flair t1w t2w)
-DJ="${OPENMS_DATASET_JSON}"
+# Derive DJ fresh from OPENMS_NNUNET_RAW + OPENMS_DS_NAME (NOT the pre-exported
+# OPENMS_DATASET_JSON) — a cluster override (scripts/cluster/tamia_env_mslesseg_openmscross.sh)
+# computes OPENMS_DATASET_JSON eagerly at source time from whatever OPENMS_DS_NAME
+# was current then; if a later per-contrast wrapper (env_t1w.sh / inline exports)
+# changes OPENMS_DS_NAME afterwards, that cached value goes stale (still points at
+# Dataset070_OpenMS_FLAIR's dataset.json instead of Dataset071_OpenMS_T1W's). Mirrors
+# open-ms's own 06_01_evaluate_run.sh, which derives its DJ the same way, never from
+# a cached var.
+DJ="${OPENMS_NNUNET_RAW}/${OPENMS_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${OPENMS_MODEL_TYPE}/${OPENMS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 OUT_BASE="${METRICS_ROOT}/${OPENMS_MODEL_TYPE}/${OPENMS_TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}"
 
