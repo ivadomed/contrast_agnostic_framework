@@ -1,0 +1,33 @@
+# brats2024-glioma T2w-TRAINED models -- combined cross-dataset results: own held-out
+# test set + brats-ssa2024's independent cohort. See cross_dataset_t1n_01_results.yaml
+# for the T1n analog and general notes.
+title: "brats2024-glioma T2w models -- own test set + brats-ssa2024 cross-dataset generalization"
+in_domain_contrast: brats_t2w
+output_prefix: "04_01_cross_dataset_t2w"
+output_dir: "${PROJECT_ROOT}/datasets/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w"
+
+column_order:
+  - brats_t1n
+  - brats_t1c
+  - brats_t2w
+  - brats_t2f
+  - brats-ssa_t1n
+  - brats-ssa_t1c
+  - brats-ssa_t2w
+  - brats-ssa_t2f
+
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/datasets/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w"
+    column_prefix: "brats_"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/brats-ssa2024/8_results_brats-ssa2024/02_metrics/brats2024_glioma_model/t2w"
+    column_prefix: "brats-ssa_"
+
+# Same 6-method suite as brats_t2w_01_results.yaml / brats-ssa_t2w_01_results.yaml
+# (srcsm arm excluded here, matching that config).
+runs:
+  - brats2024-glioma_t2w_baseline_20260620_125115
+  - brats2024-glioma_t2w_auglab_default_20260620_125306
+  - brats2024-glioma_t2w_synthseg_noEM_20260620_125442
+  - brats2024-glioma_t2w_synthseg_EM_20260620_125354
+  - brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val000_20260725_113540
+  - brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val100_20260725_113540

@@ -35,7 +35,10 @@ if [ "${FOLD_ARG}" = "all" ]; then FOLDS="0 1 2"; else FOLDS="${FOLD_ARG}"; fi
 [ -d "$PRED_BASE" ] || { echo "ERROR: no predictions at $PRED_BASE" >&2; exit 1; }
 
 mkdir -p "${OUT_BASE}/_logs"
-run_job --name "brats_ssa_eval_${CATEGORY}_${RUN_ID}" --gpus 0 --cpus 8 --mem 16G --time "${EVAL_TIME:-1:00:00}" \
+# --mem 48G (not the 16G default): BraTS's 240x240x155 volumes with 8 parallel HD95
+# surface-distance workers OOM-killed at 16G (confirmed 2026-07-29 on tamia). 48G is
+# ample headroom for 8.9M-voxel volumes -- nowhere near TRUSTED's 96G US case.
+run_job --name "brats_ssa_eval_${CATEGORY}_${RUN_ID}" --gpus 0 --cpus 8 --mem 48G --time "${EVAL_TIME:-1:00:00}" \
     --log "${OUT_BASE}/_logs/eval_${RUN_ID}.log" --wait -- bash -c "
 set -euo pipefail
 cd '${PROJECT_ROOT}'

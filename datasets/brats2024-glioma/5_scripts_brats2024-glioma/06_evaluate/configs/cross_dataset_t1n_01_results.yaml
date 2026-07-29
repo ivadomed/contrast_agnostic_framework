@@ -1,0 +1,37 @@
+# brats2024-glioma T1n-TRAINED models -- combined cross-dataset results: brats2024-glioma's
+# own held-out test set (in-domain t1n + cross-contrast t1c/t2w/t2f) AND brats-ssa2024's
+# independent 95-case Sub-Saharan Africa cohort (see datasets/brats-ssa2024/README.md).
+# Columns are prefixed by dataset so the two don't collide (brats_t1n, brats_t1c, ...,
+# brats-ssa_t1n, brats-ssa_t1c, ...) -- same section-14 cross-dataset roll-up pattern as
+# chaos/.../cross_dataset_t1in_01_results.yaml (amos/sliver07 sources) and
+# open-ms/.../cross_dataset_flair_01_results.yaml (mslesseg source).
+title: "brats2024-glioma T1n models -- own test set + brats-ssa2024 cross-dataset generalization"
+in_domain_contrast: brats_t1n
+output_prefix: "04_01_cross_dataset_t1n"
+output_dir: "${PROJECT_ROOT}/datasets/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1n"
+
+column_order:
+  - brats_t1n
+  - brats_t1c
+  - brats_t2w
+  - brats_t2f
+  - brats-ssa_t1n
+  - brats-ssa_t1c
+  - brats-ssa_t2w
+  - brats-ssa_t2f
+
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/datasets/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1n"
+    column_prefix: "brats_"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/brats-ssa2024/8_results_brats-ssa2024/02_metrics/brats2024_glioma_model/t1n"
+    column_prefix: "brats-ssa_"
+
+# Same 6-method suite as brats_t1n_01_results.yaml / brats-ssa_t1n_01_results.yaml
+# (srcsm arm never trained for T1n -- excluded here too, per that config's own note).
+runs:
+  - brats2024-glioma_t1n_baseline_20260622_044535
+  - brats2024-glioma_t1n_auglab_default_20260622_044535
+  - brats2024-glioma_t1n_synthseg_noEM_20260622_044535
+  - brats2024-glioma_t1n_synthseg_EM_20260622_044535
+  - brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val000_20260710_040303
+  - brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val100_20260725_113540
