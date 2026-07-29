@@ -10,12 +10,12 @@ echo " MSLesSeg <- open-ms FLAIR models | evaluate 6-method suite"
 echo "=================================================================="
 
 declare -a RUNS_CATS=(
-    "open-ms_flair_baseline_20260630_072657 nnUNet"
-    "open-ms_flair_auglab_default_20260630_072742 auglab"
-    "open-ms_flair_synthseg_noEM_train100_val000_20260630_102513 auglab"
-    "open-ms_flair_synthseg_EM_train100_val000_20260630_064759 auglab"
-    "open-ms_flair_v26_6_2_train050_val100_20260630_102558 nnUNet"
-    "open-ms_flair_auglabAug_v26_6_2_train025_val100_20260630_064702 auglab"
+    "open-ms_flair_baseline_20260706_061243 nnUNet"
+    "open-ms_flair_auglab_default_20260706_061243 auglab"
+    "open-ms_flair_synthseg_noEM_train100_val000_20260706_061243 auglab"
+    "open-ms_flair_synthseg_EM_train100_val000_20260706_061243 auglab"
+    "open-ms_flair_v26_6_2_train050_val100_20260706_061243 nnUNet"
+    "open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243 auglab"
 )
 
 for entry in "${RUNS_CATS[@]}"; do

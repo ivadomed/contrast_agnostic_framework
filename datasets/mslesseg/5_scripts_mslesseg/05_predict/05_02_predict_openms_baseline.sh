@@ -5,5 +5,5 @@ set -euo pipefail
 METHOD="baseline"
 TRAINER="nnUNetTrainerOpenMSBaseline"
 CATEGORY="nnUNet"
-RUN_ID="${1:-open-ms_flair_baseline_20260630_072657}"
+RUN_ID="${1:-open-ms_flair_baseline_20260706_061243}"
 source "$(dirname "$0")/05_01_predict_common.sh" "$RUN_ID" "${@:2}"

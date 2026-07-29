@@ -5,5 +5,5 @@ set -euo pipefail
 METHOD="auglab_default"
 TRAINER="nnUNetTrainerOpenMSAugLabDefault"
 CATEGORY="auglab"
-RUN_ID="${1:-open-ms_flair_auglab_default_20260630_072742}"
+RUN_ID="${1:-open-ms_flair_auglab_default_20260706_061243}"
 source "$(dirname "$0")/05_01_predict_common.sh" "$RUN_ID" "${@:2}"
