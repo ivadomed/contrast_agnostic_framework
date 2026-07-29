@@ -1,0 +1,17 @@
+name: brats-ssa2024
+role: test-only                 # evaluates foreign (brats2024-glioma) models; never trained on
+source: "BraTS-SSA 2024 (Sub-Saharan Africa glioma cohort) -- official: Synapse (synapse.org/brats, DUA-gated); ingested here via kagglehub re-upload kaalmurlidhar/brats2024-africa, 95_Glioma subset only"
+n_scans: 95                     # 95_Glioma cohort only; 51_OtherNeoplasms excluded (non-glioma, out-of-domain)
+modalities:
+  t1n: {suffix: T1n}
+  t1c: {suffix: T1c}
+  t2w: {suffix: T2w}
+  t2f: {suffix: T2f}
+orientation: LPS                 # reoriented from source RAS by 03_preprocess/03_00_reorient_to_lps.py
+space: "1mm-iso, 240x240x155 (standard BraTS grid)"
+labels: {background: 0, NCR: 1, SNFH: 2, ET: 3}   # RC=4 never present (pre-treatment cohort)
+evaluated_with:
+  source_dataset: brats2024-glioma
+  model_type: brats2024_glioma_model
+  training_contrasts: [t1n, t2w]    # two separately-trained model families
+  test_contrasts: [t1n, t1c, t2w, t2f]

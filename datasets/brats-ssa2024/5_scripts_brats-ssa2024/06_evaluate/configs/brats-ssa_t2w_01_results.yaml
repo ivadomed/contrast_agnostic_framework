@@ -1,0 +1,16 @@
+# brats-ssa2024 -- brats2024-glioma T2w-TRAINED models evaluated cross-dataset on all
+# 95 BraTS-SSA glioma cases. Same 6-method suite as brats2024-glioma's own
+# brats_t2w_01_results.yaml (minus the pending srcsm arm).
+title: "brats-ssa2024 <- brats2024-glioma T2w-TRAINED models, cross-dataset generalization (6-method suite)"
+metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t2w"
+output_prefix: "01_results_t2w"
+in_domain_contrast: t2w
+column_order: [t1n, t1c, t2w, t2f]
+
+runs:
+  - brats2024-glioma_t2w_baseline_20260620_125115
+  - brats2024-glioma_t2w_auglab_default_20260620_125306
+  - brats2024-glioma_t2w_synthseg_noEM_20260620_125442
+  - brats2024-glioma_t2w_synthseg_EM_20260620_125354
+  - brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val000_20260725_113540
+  - brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val100_20260725_113540

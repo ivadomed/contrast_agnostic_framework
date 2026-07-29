@@ -1,0 +1,17 @@
+# brats-ssa2024 -- brats2024-glioma T1n-TRAINED models evaluated cross-dataset on all
+# 95 BraTS-SSA glioma cases (independent Sub-Saharan Africa cohort/scanner set --
+# see datasets/brats-ssa2024/README.md). Same 6-method suite as
+# brats2024-glioma's own brats_t1n_01_results.yaml (minus the pending srcsm arm).
+title: "brats-ssa2024 <- brats2024-glioma T1n-TRAINED models, cross-dataset generalization (6-method suite)"
+metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t1n"
+output_prefix: "01_results_t1n"
+in_domain_contrast: t1n
+column_order: [t1n, t1c, t2w, t2f]
+
+runs:
+  - brats2024-glioma_t1n_baseline_20260622_044535
+  - brats2024-glioma_t1n_auglab_default_20260622_044535
+  - brats2024-glioma_t1n_synthseg_noEM_20260622_044535
+  - brats2024-glioma_t1n_synthseg_EM_20260622_044535
+  - brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val000_20260710_040303
+  - brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val100_20260725_113540
