@@ -16,12 +16,17 @@ column_order:
   - mslesseg_flair
   - mslesseg_t1w
   - mslesseg_t2w
+  - ms3seg_flair
+  - ms3seg_t1w
+  - ms3seg_t2w
 
 sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/open-ms/8_results_open-ms/02_metrics/open_ms_model/t1w"
     column_prefix: "open-ms_"
   - metrics_dir: "${PROJECT_ROOT}/datasets/mslesseg/8_results_mslesseg/02_metrics/open_ms_model/t1w"
     column_prefix: "mslesseg_"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/ms3seg/8_results_ms3seg/02_metrics/open_ms_model/t1w"
+    column_prefix: "ms3seg_"
 
 # Fixed 6-method suite (CLAUDE.md canonical order), T1w-TRAINED checkpoints.
 # Same RUN_IDs as datasets/mslesseg/.../configs/mslesseg_t1w_01_results.yaml
