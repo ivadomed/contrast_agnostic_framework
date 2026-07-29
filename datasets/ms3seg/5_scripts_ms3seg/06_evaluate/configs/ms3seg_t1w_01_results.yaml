@@ -1,0 +1,13 @@
+title: "ms3seg <- open-ms T1w-TRAINED models, cross-dataset generalization (6-method suite)"
+metrics_dir: "${METRICS_ROOT}/open_ms_model/t1w"
+output_prefix: "01_results_t1w"
+in_domain_contrast: t1w
+column_order: [flair, t1w, t2w]
+
+runs:
+  - open-ms_t1w_baseline_20260708_083441
+  - open-ms_t1w_auglab_default_20260708_083511
+  - open-ms_t1w_synthseg_noEM_train100_val000_20260708_083541
+  - open-ms_t1w_synthseg_EM_train100_val000_20260708_083611
+  - open-ms_t1w_v26_6_2_train050_val100_20260708_083641
+  - open-ms_t1w_auglabAug_v26_6_2_train025_val100_20260708_083711

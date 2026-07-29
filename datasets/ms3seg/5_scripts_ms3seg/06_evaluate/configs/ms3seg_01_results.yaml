@@ -1,0 +1,13 @@
+title: "ms3seg <- open-ms FLAIR-TRAINED models, cross-dataset generalization (6-method suite)"
+metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+output_prefix: "01_results"
+in_domain_contrast: flair
+column_order: [flair, t1w, t2w]
+
+runs:
+  - open-ms_flair_baseline_20260706_061243
+  - open-ms_flair_auglab_default_20260706_061243
+  - open-ms_flair_synthseg_noEM_train100_val000_20260706_061243
+  - open-ms_flair_synthseg_EM_train100_val000_20260706_061243
+  - open-ms_flair_v26_6_2_train050_val100_20260706_061243
+  - open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243
