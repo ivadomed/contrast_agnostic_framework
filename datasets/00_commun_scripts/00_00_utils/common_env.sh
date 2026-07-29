@@ -40,19 +40,26 @@ source "${PROJECT_ROOT}/scripts/job_runner/run_job.sh"
 
 export DATASET_ROLE="${DATASET_ROLE:-training}"
 
-export nnUNet_raw="${DATASET_ROOT}/2_nnUNet_${DATASET_NAME}/raw"
-export PREDICTIONS_ROOT="${DATASET_ROOT}/8_results_${DATASET_NAME}/01_predictions"
-export METRICS_ROOT="${DATASET_ROOT}/8_results_${DATASET_NAME}/02_metrics"
+## ${VAR:-default} guards below (not plain `export VAR=default`): predict/evaluate
+## wrapper chains re-source the dataset's env.sh (which re-sources this file)
+## PARTWAY through a run, after a cluster override file (e.g.
+## scripts/cluster/tamia_env*.sh) has already exported a scratch-resident path.
+## An unconditional export would silently clobber that override back to the
+## git-repo-relative default on the re-source — a guard lets an already-exported
+## value survive. Bit us once already (mslesseg -> open-ms cross-predict on tamia).
+export nnUNet_raw="${nnUNet_raw:-${DATASET_ROOT}/2_nnUNet_${DATASET_NAME}/raw}"
+export PREDICTIONS_ROOT="${PREDICTIONS_ROOT:-${DATASET_ROOT}/8_results_${DATASET_NAME}/01_predictions}"
+export METRICS_ROOT="${METRICS_ROOT:-${DATASET_ROOT}/8_results_${DATASET_NAME}/02_metrics}"
 export WANDB_PROJECT="mri_synthesis_seg_${DATASET_NAME}"
 
 [ -n "${BIDS_SUBDIR:-}" ] && \
-    export BIDS_ROOT="${DATASET_ROOT}/1_BIDS_${DATASET_NAME}/${BIDS_SUBDIR}"
+    export BIDS_ROOT="${BIDS_ROOT:-${DATASET_ROOT}/1_BIDS_${DATASET_NAME}/${BIDS_SUBDIR}}"
 
 for _d in ${CE_SUBDIRS:-}; do
     case "$_d" in
-        raw)          export RAW_ROOT="${DATASET_ROOT}/0_raw_${DATASET_NAME}";;
-        preprocessed) export nnUNet_preprocessed="${DATASET_ROOT}/2_nnUNet_${DATASET_NAME}/preprocessed";;
-        splits)       export SPLITS_DIR="${DATASET_ROOT}/4_splits_${DATASET_NAME}";;
+        raw)          export RAW_ROOT="${RAW_ROOT:-${DATASET_ROOT}/0_raw_${DATASET_NAME}}";;
+        preprocessed) export nnUNet_preprocessed="${nnUNet_preprocessed:-${DATASET_ROOT}/2_nnUNet_${DATASET_NAME}/preprocessed}";;
+        splits)       export SPLITS_DIR="${SPLITS_DIR:-${DATASET_ROOT}/4_splits_${DATASET_NAME}}";;
         *) echo "common_env.sh: unknown CE_SUBDIRS entry '$_d' (want: raw|preprocessed|splits)" >&2;;
     esac
 done

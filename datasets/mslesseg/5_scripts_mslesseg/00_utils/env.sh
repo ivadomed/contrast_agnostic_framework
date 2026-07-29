@@ -26,15 +26,21 @@ DATASET_ROLE="test-only"
 # contrast here, so (unlike trusted/amos/sliver07) no env_<contrast>.sh override is
 # needed. nnUNetv2_predict resolves the model from nnUNet_results + dataset id (the
 # trained model dir holds plans.json/dataset.json).
-export OPENMS_DATASET_ROOT="${DATASET_ROOT}/../open-ms"
-export OPENMS_PREDICTIONS_ROOT="${OPENMS_DATASET_ROOT}/8_results_open-ms/01_predictions"
-export OPENMS_NNUNET_RAW="${OPENMS_DATASET_ROOT}/2_nnUNet_open-ms/raw"
-export OPENMS_NNUNET_PREPROCESSED="${OPENMS_DATASET_ROOT}/2_nnUNet_open-ms/preprocessed"
-export OPENMS_DATASET_ID="Dataset070_OpenMS_FLAIR"
-export OPENMS_DS_NAME="Dataset070_OpenMS_FLAIR"
-export OPENMS_DATASET_JSON="${OPENMS_NNUNET_RAW}/${OPENMS_DS_NAME}/dataset.json"
-export OPENMS_TRAINING_CONTRAST="flair"
-export OPENMS_MODEL_TYPE="open_ms_model"
+#
+# ${VAR:-default} guards (not plain export): predict/evaluate wrapper chains re-source
+# this file PARTWAY through a run, after a cluster override (e.g.
+# scripts/cluster/tamia_env_mslesseg_openmscross.sh) has already exported a
+# scratch-resident path — an unconditional export would silently clobber it back to
+# the git-repo-relative default. See common_env.sh for the same fix on the shared side.
+export OPENMS_DATASET_ROOT="${OPENMS_DATASET_ROOT:-${DATASET_ROOT}/../open-ms}"
+export OPENMS_PREDICTIONS_ROOT="${OPENMS_PREDICTIONS_ROOT:-${OPENMS_DATASET_ROOT}/8_results_open-ms/01_predictions}"
+export OPENMS_NNUNET_RAW="${OPENMS_NNUNET_RAW:-${OPENMS_DATASET_ROOT}/2_nnUNet_open-ms/raw}"
+export OPENMS_NNUNET_PREPROCESSED="${OPENMS_NNUNET_PREPROCESSED:-${OPENMS_DATASET_ROOT}/2_nnUNet_open-ms/preprocessed}"
+export OPENMS_DATASET_ID="${OPENMS_DATASET_ID:-70}"          # numeric -- consumed as nnUNetv2_predict's -d flag
+export OPENMS_DS_NAME="${OPENMS_DS_NAME:-Dataset070_OpenMS_FLAIR}"
+export OPENMS_DATASET_JSON="${OPENMS_DATASET_JSON:-${OPENMS_NNUNET_RAW}/${OPENMS_DS_NAME}/dataset.json}"
+export OPENMS_TRAINING_CONTRAST="${OPENMS_TRAINING_CONTRAST:-flair}"
+export OPENMS_MODEL_TYPE="${OPENMS_MODEL_TYPE:-open_ms_model}"
 # open-ms scripts dir on PYTHONPATH so its trainer classes (nnUNetTrainerOpenMS*)
 # resolve for -tr at predict time.
 OPENMS_SCRIPTS_DIR="${OPENMS_DATASET_ROOT}/5_scripts_open-ms"
