@@ -32,6 +32,7 @@ DATASET_ROLE="test-only"
 export CHAOS_DATASET_ROOT="${DATASET_ROOT}/../chaos"
 export CHAOS_PREDICTIONS_ROOT="${CHAOS_DATASET_ROOT}/8_results_chaos/01_predictions"
 export CHAOS_NNUNET_RAW="${CHAOS_DATASET_ROOT}/2_nnUNet_chaos/raw"
+export CHAOS_NNUNET_PREPROCESSED="${CHAOS_DATASET_ROOT}/2_nnUNet_chaos/preprocessed"
 export CHAOS_DATASET_ID="${CHAOS_DATASET_ID:-60}"
 export CHAOS_DS_NAME="${CHAOS_DS_NAME:-Dataset060_CHAOS_MR_T1in}"
 # chaos dataset.json (label map: background 0, liver 1, right_kidney 2, left_kidney 3,

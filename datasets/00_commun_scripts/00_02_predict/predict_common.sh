@@ -7,11 +7,12 @@
 # Two modes:
 #   PREDICT_MODE=own    — predict with this dataset's OWN trained models
 #                         (brats2024-glioma, chaos). Model + inputs live in this dataset.
-#   PREDICT_MODE=cross  — predict with ANOTHER dataset's models (amos, sliver07 use
-#                         chaos checkpoints). Model dir + nnUNet_raw/preprocessed come
-#                         from the CHAOS_* env vars (set by env.sh); inputs are this
-#                         dataset's flat imagesTs_<item>/; outputs are segregated under
-#                         this dataset's PREDICTIONS_ROOT/<chaos_model_type>/<contrast>/.
+#   PREDICT_MODE=cross  — predict with ANOTHER dataset's models (amos/sliver07/trusted use
+#                         chaos checkpoints; mslesseg uses open-ms checkpoints). Model dir +
+#                         nnUNet_raw/preprocessed come from the <SOURCE_PREFIX>_* env vars
+#                         (set by env.sh — SOURCE_PREFIX defaults to CHAOS); inputs are this
+#                         dataset's flat imagesTs_<item>/; outputs are segregated under this
+#                         dataset's PREDICTIONS_ROOT/<source_model_type>/<contrast>/.
 #
 # Contract — the shim must have already sourced env.sh, cd'd to PROJECT_ROOT, and set:
 #   PREDICT_MODE          own | cross
@@ -62,12 +63,19 @@ _CKPT_TAG="$(basename "${CHECKPOINT}" .pth)"; _CKPT_TAG="${_CKPT_TAG#checkpoint_
 CKPT_SUBDIR=""; [ "${_CKPT_TAG}" != "best" ] && CKPT_SUBDIR="${_CKPT_TAG}"
 
 if [ "${PREDICT_MODE}" = "cross" ]; then
-    DATASET_ID="${CHAOS_DATASET_ID:-60}"
-    RUN_DIR="${CHAOS_PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
-    _OUT_BASE="${PREDICTIONS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${CATEGORY}"
+    # SOURCE_PREFIX selects which foreign dataset's env vars to read (env.sh sets
+    # <PREFIX>_DATASET_ID/_MODEL_TYPE/_TRAINING_CONTRAST/_PREDICTIONS_ROOT/_NNUNET_RAW/
+    # _NNUNET_PREPROCESSED). Defaults to CHAOS for back-compat with amos/sliver07/trusted,
+    # which don't set it. A new cross-eval dataset (e.g. mslesseg -> open-ms) sets
+    # SOURCE_PREFIX="OPENMS" in its 05_01_predict_common.sh shim before sourcing this file.
+    SOURCE_PREFIX="${SOURCE_PREFIX:-CHAOS}"
+    _src() { local n="${SOURCE_PREFIX}_$1"; echo "${!n}"; }
+    DATASET_ID="$(_src DATASET_ID)"
+    RUN_DIR="$(_src PREDICTIONS_ROOT)/$(_src MODEL_TYPE)/$(_src TRAINING_CONTRAST)/${CATEGORY}/${RUN_ID}"
+    _OUT_BASE="${PREDICTIONS_ROOT}/$(_src MODEL_TYPE)/$(_src TRAINING_CONTRAST)/${CATEGORY}"
     _IN_BASE="${nnUNet_raw}/imagesTs_"                     # flat raw layout (no Dataset<id>/ dir)
-    _JOB_RAW="${CHAOS_NNUNET_RAW}"
-    _JOB_PREP="${CHAOS_DATASET_ROOT}/2_nnUNet_chaos/preprocessed"
+    _JOB_RAW="$(_src NNUNET_RAW)"
+    _JOB_PREP="$(_src NNUNET_PREPROCESSED)"
     _JOB_RESULTS="${RUN_DIR}"
 else
     DATASET_ID="${DATASET_ID:-${PREDICT_DATASET_ID_DEFAULT}}"
@@ -98,6 +106,12 @@ predict_fold() {
     else
         _cuda_line="export CUDA_VISIBLE_DEVICES='${_CUDA_DEV}'"
     fi
+    # NODE-PACK mode (RUN_JOB_PACK_DIR set, see run_job_slurm.sh / train_common.sh):
+    # the pack-submit step assigns each fold's physical GPU via an OUTER
+    # CUDA_VISIBLE_DEVICES around this whole recorded command — an inner export here
+    # would silently override it and collapse every packed fold onto device 0. Omit it,
+    # matching train_common.sh's same pack-mode guard.
+    [ -n "${RUN_JOB_PACK_DIR:-}" ] && _cuda_line=""
 
     echo "[$(date '+%H:%M:%S')] predict ${METHOD} | run=${RUN_ID} | fold=${F} | ckpt=${CHECKPOINT} | slot=${SLOT} gpu=${GPU}"
 
