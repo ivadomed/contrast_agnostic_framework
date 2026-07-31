@@ -9,10 +9,12 @@
 | **Vulcan** (AMII / Alliance) | Slurm cluster | **Primary.** All datasets + checkpoints live here; the main place to train/predict/eval. GitHub push works from here (done manually). Can be queue-congested when priority is low. |
 | **Killarney** (Alliance) | Slurm cluster (same as Vulcan) | **Overflow GPU.** Same cluster type. Datasets staged there as of 2026-07-10: **chaos** (`1_BIDS_chaos/chaos-abdominal`, `2_nnUNet_chaos`) and **open-ms**. brats2024-glioma / on-harmony / others not yet staged — rsync from Vulcan first if needed there. Used when Vulcan priority runs low and we need more GPU. |
 | **romane** (NeuroPoly lab) | `set_slot` workstation | **Limited-use lab box, only 4 GPUs.** The original dev machine; used for smaller/interactive GPU jobs. |
+| **TamIA** (Alliance) | Slurm cluster (same family as Vulcan/Killarney) | **Newest, biggest-GPU cluster — added 2026-07-25.** Whole-node H100/H200 allocations (see below), much more GPU per node than Vulcan/Killarney's L40S. **Use these GPUs properly — a coworker was already warned by Alliance staff about under-utilizing allocated GPUs on this account, and TamIA's whole-node model makes idle GPUs especially visible.** Currently only reachable via a relay through Vulcan (see below); as of 2026-07-31 all 4 datasets (`brats2024-glioma`, `chaos`, `on-harmony`, `open-ms`) are staged there, and **all data currently lives on `$SCRATCH` only** (nothing in `$PROJECT` yet) — see the TamIA-specific subsection for what that means operationally. |
 
 **SSH hosts + repo path per machine** (for rsync/ssh between them):
 - **Vulcan**: `ssh vulcan.alliancecan.ca` — repo at `/project/aip-jcohen/paulh/mri_synthesis_project` (also reachable via the symlink `/home/paulh/projects/aip-jcohen/paulh/mri_synthesis_project`). `RUN_JOB_ACCOUNT=aip-jcohen` (the `run_job_slurm.sh` default).
 - **Killarney**: `ssh killarney.alliancecan.ca` — repo at `/home/paulh/projects/aip-jcohen/paulh/mri_synthesis_project`. **`RUN_JOB_ACCOUNT=aip-jcohen` — same account name as Vulcan, do NOT override it.** (`datasets/open-ms/KILLARNEY_HANDOFF.md` speculated `def-jcohen` before this was confirmed on real hardware 2026-07-10 via a Slurm "Invalid account" error listing `aip-jcohen` as the only valid AIP account on this cluster — that doc is stale on this point.) See that same file for the still-relevant port notes: venv rebuild, GPU-type parametrisation, trainer shims.
+- **TamIA**: not reachable directly by name from outside Canadian research networks — the login-node firewall drops non-Canadian traffic at the TCP level, and even from Canada the daemon that runs these sessions cannot complete Alliance's mandatory Duo two-factor login on every fresh connection. **Reach TamIA only by relaying through Vulcan**: `ssh vulcan.alliancecan.ca` then `ssh tamia.alliancecan.ca` from there (a ControlMaster relay block is already configured in Vulcan's own `~/.ssh/config` for this). Repo at `/project/aip-jcohen/paulh/mri_synthesis_project`, cloned directly from GitHub (not copied from Vulcan — Vulcan's `.git` is bloated to 25 GB from historical churn; a fresh GitHub clone is ~100 MB and lands on the same commit). `RUN_JOB_ACCOUNT=aip-jcohen` (same as the other two).
 
 This repo was originally developed on the `set_slot` workstation (romane) — that's why older scripts called `set_slot` directly; everything is now routed through `run_job` so it works on all three. Source of truth for Alliance cluster policy: `python_usage.html`, `running_jobs.html`, `storage_handling.html` in this directory (mirrored wiki pages) — re-read them if anything below looks stale.
 
@@ -60,6 +62,43 @@ Also re-run for the AugLab-provided trainers (source of truth: the separate git 
 - No parallel writes to one file on shared filesystems without MPI-IO. Never `rm -rf` with `*` directly — move to `toDelete/`, verify, then delete.
 - **Persistent venvs go in `$HOME`/`$PROJECT`, never `$SCRATCH`** — the purge policy can silently break a venv living there. For ephemeral per-job envs, build fresh on `$SLURM_TMPDIR` from a frozen `requirements.txt`.
 - Long-running training: jobs are capped at ~168h/7 days per submission — use checkpoint + restart, preferably `--array=1-N%1` self-chaining. If self-resubmitting from inside a script, the continue-condition must be a *positive* "more work remains" test, never a stopping-condition that could fail to trigger.
+
+---
+
+## TamIA (newest cluster — bigger GPUs, different layout, whole-node allocation)
+
+**Access:** TamIA cannot be reached directly from this environment (login-node firewall + Duo 2FA on every fresh connection). Always relay through Vulcan:
+```bash
+ssh vulcan.alliancecan.ca
+ssh tamia.alliancecan.ca   # from a vulcan login shell, using the relay ControlMaster set up in vulcan's ~/.ssh/config
+```
+Wrap remote commands in `bash -lc "..."` — a bare `ssh tamia.alliancecan.ca 'cmd'` gets a non-login shell without the CVMFS module PATH. Deeply nested quoting through the relay mangles reliably (`sed`/`awk`/`$(...)` get eaten) — write scripts to a local file and pipe them over (`tar cf - -C /tmp s.sh | ssh tamia.alliancecan.ca "tar xf - -C /tmp && bash /tmp/s.sh"`) rather than inlining complex shell.
+
+**GPUs — bigger than Vulcan/Killarney, whole-node only:**
+
+| Node class | GPUs/node | CPUs | RAM | Use |
+|---|---|---|---|---|
+| `h100:4` (the bulk of the cluster) | 4× H100 | 48 | 500,000 MB | **Default — use this class** |
+| `h200:8` | 8× H200 | 64 | 1,000,000 MB | Bigger node class — do **not** request unless explicitly asked |
+
+Partitions are `gpubase_bynode_b1/b2/b3` — **allocation is whole-node** (no per-GPU partition), so a submitted job gets all 4 (or 8) GPUs on the node whether it uses them or not. `run_job` env overrides for the default h100 class: `RUN_JOB_GPU_TYPE=h100`, `RUN_JOB_CPUS_PER_GPU=12` (48/4), `RUN_JOB_MEM_PER_GPU≈125000`. As always, these are env-var overrides only — `run_job_slurm.sh` itself is never forked per cluster. Do **not** pass `--partition` explicitly on TamIA (rejected even for partitions `sinfo` lists as valid) — submit without it and let the scheduler route.
+
+**Use the GPUs properly — this is now a hard requirement, not a nice-to-have.** Because allocation is whole-node, a job that only exercises 1 of 4 (or 1 of 8) GPUs wastes the other 3 (or 7) for the whole wall-clock duration — highly visible to Alliance staff, and **a coworker on this account has already been warned about under-utilizing allocated GPUs.** Concretely, for the H100 nodes:
+- Prefer packing **multiple folds onto the same node's GPUs** in one job rather than 1 fold = 1 whole node. With 4 GPUs/node, that means either 4 folds in parallel per job, or — since the current fold policy trains only folds 0/1/2 — 1 GPU sits idle unless a second task (a different method, modality, or ablation arm) is packed alongside.
+- The bigger H100 memory headroom vs Vulcan's L40S (each H100 has more VRAM) also means **larger batch sizes are affordable** — this changes the training config (not the shared script), so treat it as a per-cluster override the same way GPU type/CPU/mem are already overridden, not a hand-edit of `train_common.sh`.
+- Before changing batch size or fold-packing, size actual per-fold GPU-memory and utilization on one real H100 job first (`nvidia-smi` inside a submitted job, not the login node) rather than assuming Vulcan's numbers transfer — H100 vs L40S have different memory/compute ratios.
+
+**Storage — different layout from Vulcan/Killarney, do not hardcode old paths:**
+
+| Filesystem | Path | Quota | Notes |
+|---|---|---|---|
+| `$HOME` | `/home/p/paulh` (note extra `p/` nesting) | 25 GiB | source/config only, as elsewhere |
+| `$PROJECT` | `/project/aip-jcohen/` (`PROJECT` env var itself is empty — use the literal path) | shared group quota; **file COUNT is the binding constraint** (was 483K/500K files group-wide, only ~17K headroom, while space was two-thirds free) | check `# of files` via `diskusage_report`, not just space |
+| `$SCRATCH` | `/scratch/p/paulh` (also extra `p/` nesting; unset in non-login shells — export it explicitly) | 1024 GiB, ~1M files, purge-on-inactivity | **for now, all bulk nnUNet data on TamIA lives here** (see below) |
+
+**Current state (as of 2026-07-31): everything bulk is on `$SCRATCH`, nothing in `$PROJECT` yet.** Given the tight `$PROJECT` file-count quota, the repo + venv live in `$PROJECT` but the actual imaging data — now all 4 datasets (`brats2024-glioma`, `chaos`, `on-harmony`, `open-ms`), not just the original minimal `brats2024-glioma` subset — lives on `$SCRATCH` only. **This means it can be purged on inactivity** — treat it as re-copyable, not durable, until/unless it's deliberately promoted to `$PROJECT` (which would need to be weighed against the file-count quota). The transfer script that repopulates it from Vulcan is kept at `/project/aip-jcohen/paulh/copy_to_tamia.sh` on **Vulcan** (not TamIA) as the recovery path — re-run it from Vulcan if the scratch copy is purged. Cluster-specific path overrides live in `scripts/cluster/tamia_env.sh`, sourced *after* the dataset's own `00_utils/env.sh` (same env-var-override pattern as GPU type above — never fork `run_job.sh` itself). One gotcha already hit: `env.sh` exports `nnUNet_results` unconditionally, so a `${nnUNet_results:-...}` fallback in the override file silently no-ops — override those variables outright, not with a `:-` guard.
+
+**Venv note:** venvs are not portable across clusters — TamIA's was rebuilt fresh via the same `_setup_venv_oneshot.sh` recipe used elsewhere, submitted as a job (never on the login node). One TamIA-specific fix needed: Vulcan's venv carries a hand-written `srcsm_auglab_port.pth` with a hardcoded Vulcan path (not in git, not pip-generated) — every other cluster needs its own one-line `.pth` pointing at its own `sub-workspaces` path, or all custom trainer discovery silently fails.
 
 ---
 
@@ -113,6 +152,10 @@ Scripts inside `5_scripts_*/` follow a strict numbered convention:
 06_evaluate/
 ```
 
+`datasets/01_commun_results/` holds **cross-dataset** comparison tables — summaries
+that span all 8 training sets at once (e.g. Ours vs. best-other-method significance,
+one row per training set) — distinct from any single dataset's own `8_results_<dataset>/`.
+
 ---
 
 ## How experiments work — ALWAYS use the shared standardized scripts
@@ -136,10 +179,10 @@ Scripts live in exactly three places — put new code in the right one:
 | 2 | **auglab_default** | auglab | `transform_params_gpu_default01-23.json` |
 | 3 | **synthseg_noEM** | auglab | `transform_params_gpu_default01-23_Synthseg.json` |
 | 4 | **synthseg_EM** | auglab | `transform_params_gpu_default01-23_Synthseg_EM.json` |
-| 5 | **v26_6_2 (ours, alone)** | nnUNet | — (v26_6_2 transform alone; **train050_val100**) |
-| 6 | **auglabAug_v26_6_2 (OURS)** | auglab | `transform_params_gpu_default01-23_auglabAug_ImageContrastV26_6_2GPUTransform_train025.json` (**train025_val100**) |
+| 5 | **SRCSM** | auglab | `transform_params_gpu_srcsm_semrandconv.json` |
+| 6 | **auglabAug_v26_6_2 (OURS)** | auglab | `transform_params_gpu_default01-23_auglabAug_ImageContrastV26_6_2GPUTransform_train050.json` (**train050**; DualVal trainer) |
 
-The `trainXXX_valYYY` suffix (in the METHOD id / RUN_ID) encodes the synth-augmentation probabilities baked into the config — keep them as above (v26-alone = train050/val100; OURS = train025/val100). Ablation arms (e.g. `..._noisefill`, `..._no_voronoi`) are **extra** arms on top of these 6, never replacements.
+The `trainXXX_valYYY` suffix (in the METHOD id / RUN_ID) encodes the synth-augmentation probabilities baked into the config — OURS is **train050**. The DualVal trainer (see below) hard-links **both** a `val000` and a `val100` checkpoint mirror from one training run, so best-checkpoint eval needs both RUN_IDs (2 rows) — but since `checkpoint_final.pth` is the identical file in both mirrors, a final-checkpoint eval only needs one, collapsing back to exactly 6 methods. Ablation arms (e.g. `..._noisefill`, `..._no_voronoi`) and SRCSM's earlier life as an extra 7th arm on top of "v26_6_2 alone" are legacy naming — SRCSM is now a fixed member of the 6, not an addition to them.
 
 **FOLD POLICY — 3 folds only, permanently.** Always train **folds 0 1 2 only**. We used to train 4 folds but **from 2026-07-09 onward we never train fold 3 again** (3-fold ≡ 4-fold conclusions; fold 3 is wasted GPU on a congested cluster). If a dataset already has a 4-fold split, **reuse it and just train the first 3 folds** — do **not** create a new split and do **not** train fold 3. The shared drivers now **default** to 3 folds (not merely cap): `00_01_train/train_common.sh` `TRAIN_FOLDS` and `00_02_predict/predict_common.sh` `PREDICT_FOLDS` both default to `"0 1 2"`, `run_all_train_common.sh` exports `TRAIN_FOLDS="0 1 2"`, and `eval_folds.py` `EVAL_FOLDS` caps at 0-2 — so per-method wrappers no longer need to set folds explicitly. Only override (e.g. `TRAIN_FOLDS="0 1 2 3"`) for a deliberate one-off or to predict a legacy 4-fold model.
 
@@ -191,6 +234,10 @@ A new **method** is a ~5-line wrapper (set METHOD/TRAINER/CATEGORY/config, sourc
 
 Config-driven aggregation + significance consume YAML configs (`06_evaluate/configs/*.yaml`) so a whole dataset's 6-method table is summarized and tested with one command — **use these, do not compute ad-hoc tables/p-values.**
 
+Within `02_metrics/<model>/<contrast>/`, a non-headline result set gets its **own dedicated subdir** rather than mixing into the flat headline layout — established conventions so far: `checkpoint_comparison/` (checkpoint_best vs checkpoint_final sweep, all 8 training sets) and `ablations/` (open-ms FLAIR's causal-ablation study). Headline run dirs stay in the parent and are referenced unprefixed by any config that needs them (cross-dataset tables, `checkpoint_comparison/best_vs_final` configs); run dirs exclusive to the subdir's own study move into it and are referenced as `<subdir>/<run_id>`.
+
+Predicting/evaluating at a **non-default checkpoint** (project default is `checkpoint_best.pth`) is a uniform mechanism across all 4 dataset families: `predict_common.sh`'s `CHECKPOINT` env var and each dataset's `06_01_evaluate_*.sh`'s `CKPT_TAG` env var route non-best predictions/metrics to sibling `fold{k}/<tag>/` / `{category}_{run_id}_<tag>/` paths, never touching the default best-checkpoint data. Conclusion from the 2026-07-31 sweep (see each dataset's `checkpoint_comparison/best_vs_final_ckpt_summary.md`): `checkpoint_best` beats `checkpoint_final` overall, most clearly on open-ms — final-checkpoint results are not a drop-in upgrade.
+
 ---
 
 ## Analysis pipelines (paper: the two mechanism "pillars")
@@ -225,3 +272,6 @@ currently relevant.
 ## Common gotchas
 
 - Whenever we run anything, we want to run a script with a simple bash command (which dispatches through `run_job` on this cluster — see "Cluster resource management" above). The script likely already exists in `5_scripts_*/` and if not, it should be added there — the structure should naturally guide you. We want to avoid running Python scripts directly from the command line without a proper script wrapper. Running existing scripts is good for consistency, and creating new scripts in the right place is good for organization and future reproducibility; it also ensures we don't debug the same thing repeatedly.
+- `06_01_evaluate_run.sh` (chaos, brats2024-glioma) defaults `DATASET_ID` internally to the training set's *primary* contrast. Evaluating the *secondary* modality (e.g. brats t2w, chaos t2spir) without passing `DATASET_ID` explicitly silently scores against the wrong ground truth — no error, just wrong numbers. Always pass it explicitly for the non-primary modality.
+- open-ms's evaluate script requires `CATEGORY` (`nnUNet`/`auglab`) explicitly — unlike chaos/brats, it does not auto-detect it. A wrong `CATEGORY` doesn't error either; it silently writes an empty, `_logs`-only metrics dir. Check `eval_all.csv` actually exists before trusting a run finished.
+- When writing a one-off/filtered aggregate or significance config (e.g. to compare a subset of methods), always set an explicit `output_dir` pointing at scratch space. Omitting it makes `aggregate_from_config.py`/`significance_from_config.py` fall back to the dataset's real output dir and **silently overwrite the actual headline `*_summary.md`/`*_significance.md` files.**

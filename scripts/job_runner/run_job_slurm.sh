@@ -54,6 +54,34 @@ run_job() {
         esac
     done
 
+    # ── NODE-PACK MODE (opt-in via RUN_JOB_PACK_DIR) ─────────────────────────
+    # On clusters that allocate GPUs only by whole node (e.g. tamia H100:
+    # "GPUs are only allocated by node"), one sbatch-per-fold is rejected and
+    # would also waste GPUs. In pack mode, run_job does NOT submit — it records
+    # this call's command into RUN_JOB_PACK_DIR, and a later
+    # run_job_pack_submit.sh packs all recorded commands into ONE whole-node
+    # job, pinning them across the node's GPUs (>1 per GPU as needed). The fold
+    # command must NOT hard-set CUDA_VISIBLE_DEVICES (the submit step assigns the
+    # physical GPU per command) — train_common.sh omits that export in pack mode.
+    # Default (unset): behaves exactly as before. --name is unique per fold, so
+    # concurrent appends don't collide.
+    if [ -n "${RUN_JOB_PACK_DIR:-}" ]; then
+        mkdir -p "${RUN_JOB_PACK_DIR}"
+        local safe_name; safe_name="$(printf '%s' "${name}" | tr -cs 'A-Za-z0-9_.-' '_')"
+        local cmdfile="${RUN_JOB_PACK_DIR}/${safe_name}.sh"
+        {
+            echo "#!/bin/bash"
+            echo "export WANDB_MODE=offline"
+            echo "export nnUNet_wandb_mode=offline"
+            printf '%q ' "$@"
+            echo
+        } > "${cmdfile}"
+        chmod +x "${cmdfile}"
+        printf '%s\t%s\t%s\t%s\n' "${cmdfile}" "${log:-/dev/null}" "${name}" "${RUN_JOB_PACK_DONEFILE:-}" >> "${RUN_JOB_PACK_DIR}/index.tsv"
+        echo "run_job (pack): queued '${name}' -> ${cmdfile}"
+        return 0
+    fi
+
     if [ -z "${cpus}" ]; then
         if [ "${gpus}" -gt 0 ]; then cpus=$((RUN_JOB_CPUS_PER_GPU * gpus)); else cpus="${RUN_JOB_CPUS_DEFAULT}"; fi
     fi

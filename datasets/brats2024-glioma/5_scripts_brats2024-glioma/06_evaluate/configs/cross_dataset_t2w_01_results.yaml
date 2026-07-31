@@ -22,12 +22,12 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/brats-ssa2024/8_results_brats-ssa2024/02_metrics/brats2024_glioma_model/t2w"
     column_prefix: "brats-ssa_"
 
-# Same 6-method suite as brats_t2w_01_results.yaml / brats-ssa_t2w_01_results.yaml
-# (srcsm arm excluded here, matching that config).
+# 7-method suite incl. srcsm (predicted + evaluated on brats-ssa2024 2026-07-29).
 runs:
   - brats2024-glioma_t2w_baseline_20260620_125115
   - brats2024-glioma_t2w_auglab_default_20260620_125306
   - brats2024-glioma_t2w_synthseg_noEM_20260620_125442
   - brats2024-glioma_t2w_synthseg_EM_20260620_125354
+  - brats2024-glioma_t2w_srcsm_20260709_122045
   - brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val000_20260725_113540
   - brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val100_20260725_113540

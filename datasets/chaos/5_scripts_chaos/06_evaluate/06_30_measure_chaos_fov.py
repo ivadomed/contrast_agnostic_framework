@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Measure the CHAOS field-of-view (FOV) relative to the kidneys (and liver).
+Measure the CHAOS field-of-view (FOV) relative to the kidneys (and liver, spleen).
 
 CHAOS has a restricted axial FOV — models trained on it never saw anatomy outside a
 ~2-3 dm superior-inferior slab of the upper abdomen (it even truncates the liver dome
 at its top edge). To score chaos-trained models FAIRLY on full-torso test volumes
-(AMOS / SLIVER07 / TRUSTED), we restrict evaluation to the CHAOS-equivalent slab,
-anchored on a landmark organ present in the test GT (kidneys; liver where there are
+(AMOS / SLIVER07 / TRUSTED / MSD-SPLEEN), we restrict evaluation to the CHAOS-equivalent
+slab, anchored on a landmark organ present in the test GT (kidneys; liver or spleen where there are
 no kidneys). This script quantifies that slab from the CHAOS training GT.
 
 For every CHAOS training label volume, for each anchor organ, we take the organ's
@@ -52,6 +52,7 @@ CONTRAST_DS = {
 ANCHORS = {
     "kidney": [2, 3],   # right_kidney + left_kidney
     "liver":  [1],
+    "spleen": [4],      # added for msd-spleen (spleen-only CT cross-eval)
 }
 
 

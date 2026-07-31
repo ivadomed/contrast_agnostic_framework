@@ -50,7 +50,10 @@ def main() -> None:
                     choices=list(CONTRAST_SUFFIX))
     args = ap.parse_args()
 
-    ds_name = f"Dataset{args.dataset_id:03d}_BraTS2024GliomaT1n"
+    family = {51: "T1n", 52: "T2w"}.get(args.dataset_id)
+    if family is None:
+        raise SystemExit(f"--dataset-id {args.dataset_id} unrecognized (expected 51=T1n or 52=T2w)")
+    ds_name = f"Dataset{args.dataset_id:03d}_BraTS2024Glioma{family}"
     out_root = NNUNET_RAW / ds_name
     cases = json.loads(TEST_CASES.read_text())
     print(f"{len(cases)} test cases → {ds_name}, contrasts: {args.contrasts}")

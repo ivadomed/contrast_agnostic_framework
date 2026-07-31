@@ -290,6 +290,16 @@ def main():
         f"Held-out contrasts: {', '.join(ood_cols) if ood_cols else '(none)'}. "
         "This is the paper's headline claim (cross-contrast generalization).")
 
+    # ALL contrasts combined (in-domain + OOD), equal weight per contrast — matches
+    # the summary table's `all` column exactly (unlike OOD/IND, which deliberately
+    # split that column apart for the headline claim).
+    if in_dom:
+        lines += block_table(
+            cols, "ALL contrasts combined (in-domain + OOD)",
+            f"All {len(cols)} contrasts: {', '.join(cols)}. Equal weight per contrast — "
+            "the same estimand as the summary table's `all` column, just paired/tested "
+            "rather than only averaged.")
+
     # IND — the training contrast only (shows the domain-randomization trade-off).
     if ind_cols:
         lines += block_table(

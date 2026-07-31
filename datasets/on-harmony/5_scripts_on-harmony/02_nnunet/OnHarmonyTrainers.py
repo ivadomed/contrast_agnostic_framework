@@ -38,6 +38,8 @@ try:
     from on_harmony.trainers.synthseg_b import nnUNetTrainerOnHarmonySynthSegB                                 # noqa: F401
     from on_harmony.trainers.auglab_default import nnUNetTrainerOnHarmonyAugLabDefault                         # noqa: F401
     from on_harmony.trainers.auglab_valsynth import nnUNetTrainerOnHarmonyAugLabValSynth                       # noqa: F401
+    # DualVal: ONE run -> both val000 + val100 checkpoints (opt-in only, see module docstring)
+    from on_harmony.trainers.auglab_dualval import nnUNetTrainerOnHarmonyAugLabDualVal                         # noqa: F401
 except ImportError as e:
     import warnings
     warnings.warn(

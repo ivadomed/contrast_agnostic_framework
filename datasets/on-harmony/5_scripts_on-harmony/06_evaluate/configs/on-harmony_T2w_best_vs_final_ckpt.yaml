@@ -1,0 +1,26 @@
+# Generated as part of the checkpoint_best vs checkpoint_final comparison sweep.
+# Real data for the side that wasn't this dataset's historical on-disk default
+# lives under metrics_dir/checkpoint_comparison/ (keys below are prefixed accordingly); the
+# other side is the pre-existing headline data, untouched, in metrics_dir itself.
+# auglabAug_v26_6_2's val000/val100 DualVal mirrors have genuinely different
+# checkpoint_best.pth so both are kept as separate best rows; checkpoint_final.pth
+# is byte-identical between them (verified via md5sum), so there is one final row.
+title: "ON-Harmony T2w — checkpoint_best vs checkpoint_final"
+metrics_dir: "${METRICS_ROOT}/on_harmony_model/T2w"
+output_prefix: "best_vs_final_ckpt"
+in_domain_contrast: T2w
+
+runs:
+  - checkpoint_comparison/nnUNet_on-harmony_T2w_baseline_20260624_191152  # baseline (best)
+  - nnUNet_on-harmony_T2w_baseline_20260624_191152  # baseline (final)
+  - checkpoint_comparison/auglab_on-harmony_T2w_synthseg_noEM_20260624_191418  # synthseg_noEM (best)
+  - auglab_on-harmony_T2w_synthseg_noEM_20260624_191418  # synthseg_noEM (final)
+  - checkpoint_comparison/auglab_on-harmony_T2w_synthseg_EM_20260624_191329  # synthseg_EM (best)
+  - auglab_on-harmony_T2w_synthseg_EM_20260624_191329  # synthseg_EM (final)
+  - checkpoint_comparison/auglab_on-harmony_T2w_auglab_default_20260625_143115  # auglab_default (best)
+  - auglab_on-harmony_T2w_auglab_default_20260625_143115  # auglab_default (final)
+  - checkpoint_comparison/auglab_on-harmony_T2w_srcsm_20260709_122145  # srcsm (best)
+  - auglab_on-harmony_T2w_srcsm_20260709_122145  # srcsm (final)
+  - checkpoint_comparison/auglab_on-harmony_T2w_auglabAug_v26_6_2_train050_val000_20260710_040443  # auglabAug_v26_6_2 val000 (best)
+  - checkpoint_comparison/auglab_on-harmony_T2w_auglabAug_v26_6_2_train050_val100_20260727_075205  # auglabAug_v26_6_2 val100 (best)
+  - auglab_on-harmony_T2w_auglabAug_v26_6_2_train050_20260727_075205  # auglabAug_v26_6_2 (final)

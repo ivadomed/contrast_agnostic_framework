@@ -42,6 +42,9 @@ try:
     from brats2024_glioma.trainers.v26_6_2_t2w_train050_val100 import nnUNetTrainerBraTS2024GliomaT2wV26_6_2_train050_val100  # noqa: F401
     from brats2024_glioma.trainers.auglab_default_t2w import nnUNetTrainerBraTS2024GliomaT2wAugLabDefault  # noqa: F401
     from brats2024_glioma.trainers.auglab_valsynth_t2w import nnUNetTrainerBraTS2024GliomaT2wAugLabValSynth  # noqa: F401
+    # DualVal: ONE run -> both val000 + val100 checkpoints (opt-in only, see module docstring)
+    from brats2024_glioma.trainers.auglab_dualval import nnUNetTrainerBraTS2024GliomaAugLabDualVal  # noqa: F401
+    from brats2024_glioma.trainers.auglab_dualval import nnUNetTrainerBraTS2024GliomaT2wAugLabDualVal  # noqa: F401
 except ImportError as e:
     import warnings
     warnings.warn(

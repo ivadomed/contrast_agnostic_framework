@@ -26,12 +26,13 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/brats-ssa2024/8_results_brats-ssa2024/02_metrics/brats2024_glioma_model/t1n"
     column_prefix: "brats-ssa_"
 
-# Same 6-method suite as brats_t1n_01_results.yaml / brats-ssa_t1n_01_results.yaml
-# (srcsm arm never trained for T1n -- excluded here too, per that config's own note).
+# 7-method suite incl. srcsm (predicted + evaluated on brats-ssa2024 2026-07-29 --
+# the checkpoint does exist; the prior "never trained for T1n" note here was stale).
 runs:
   - brats2024-glioma_t1n_baseline_20260622_044535
   - brats2024-glioma_t1n_auglab_default_20260622_044535
   - brats2024-glioma_t1n_synthseg_noEM_20260622_044535
   - brats2024-glioma_t1n_synthseg_EM_20260622_044535
+  - brats2024-glioma_t1n_srcsm_20260709_122015
   - brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val000_20260710_040303
   - brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val100_20260725_113540

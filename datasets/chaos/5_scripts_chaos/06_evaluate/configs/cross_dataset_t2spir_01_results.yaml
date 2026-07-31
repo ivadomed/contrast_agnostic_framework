@@ -11,6 +11,7 @@ column_order:
   - amos_ct
   - amos_mri
   - sliver07_ct_liver
+  - msd_spleen_ct_spleen
 
 sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/chaos/8_results_chaos/02_metrics/chaos_model/t2spir"
@@ -22,15 +23,22 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/sliver07/8_results_sliver07/02_metrics/chaos_model/t2spir"
     column_rename:
       ct: sliver07_ct_liver  # sliver07 GT only has liver
+  - metrics_dir: "${PROJECT_ROOT}/datasets/msd-spleen/8_results_msd-spleen/02_metrics/chaos_model/t2spir"
+    column_rename:
+      ct: msd_spleen_ct_spleen  # msd-spleen GT only has spleen
   # NOTE: TRUSTED intentionally NOT included here — its US eval is confounded by a
   # center-bias artifact (see the t1in config note). Excluded from the roll-up.
 
+# Canonical method order (CLAUDE.md): baseline, auglab_default, synthseg_noEM,
+# synthseg_EM, v26_6_2 (alone), srcsm (7th arm), OURS val000, OURS val100.
+# Updated 2026-07-29: OURS was pointing at the stale pre-dual-val
+# train025_val100 checkpoint -- now the current train050_val000/val100 pair.
 runs:
-  - chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633
-  - chaos_t2spir_v26_6_2_train050_val100_20260620_112122
-  - chaos_t2spir_synthseg_EM_20260620_112357
-  - chaos_t2spir_synthseg_noEM_20260620_112515
-  - chaos_t2spir_auglab_default_20260620_112240
   - chaos_t2spir_baseline_20260620_111146
-  - chaos_t2spir_srcsm_20260709_121945        # 7th arm — SRCSM (SemRandConv-3D)
-  - chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202  # extra ablation arm (train050_val000)
+  - chaos_t2spir_auglab_default_20260620_112240
+  - chaos_t2spir_synthseg_noEM_20260620_112515
+  - chaos_t2spir_synthseg_EM_20260620_112357
+  - chaos_t2spir_v26_6_2_train050_val100_20260620_112122
+  - chaos_t2spir_srcsm_20260709_121945
+  - chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202
+  - chaos_t2spir_auglabAug_v26_6_2_train050_val100_20260723_194053

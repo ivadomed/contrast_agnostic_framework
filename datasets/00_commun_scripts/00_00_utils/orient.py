@@ -42,7 +42,13 @@ def reorient_file(path: Path, target_axcodes=TARGET_AXCODES, dry_run: bool = Fal
         return "would-fix"
     transform = ornt_transform(io_orientation(img.affine), axcodes2ornt(target_axcodes))
     out = img.as_reoriented(transform)                     # lossless axis permute/flip
-    tmp = path.with_name(path.name + ".reorient.tmp.nii.gz")
+    # nib.save() picks gzip vs plain purely from the TMP filename's extension, so the
+    # tmp suffix must match the ORIGINAL file's suffix(es) (.nii vs .nii.gz) — every
+    # caller so far only ever had .nii.gz targets, so a hardcoded ".nii.gz" tmp suffix
+    # happened to match; a dataset with plain .nii BIDS files (e.g. msd-spleen) would
+    # otherwise get gzip content silently renamed onto a .nii path.
+    suffix = "".join(path.suffixes)                        # ".nii" or ".nii.gz"
+    tmp = path.with_name(path.name[:-len(suffix)] + ".reorient.tmp" + suffix)
     nib.save(out, str(tmp))
     os.replace(str(tmp), str(path))                        # breaks hard-link to 0_raw
     return "fixed"

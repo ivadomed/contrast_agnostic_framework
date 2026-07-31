@@ -13,6 +13,14 @@
 #   WORKER:    bash 06_01_evaluate_testset.sh <RUN_ID> <FOLD>   (runs inside a 1-GPU job)
 #       Predicts every contrast for its fold → resamples to native → shared evaluate.py
 #       (Dice+HD95) → summarize_fold → fold{k}/eval_all.csv (group=test contrast).
+#
+# Optional env: CHECKPOINT (default "checkpoint_final.pth" — this script has always
+#   called nnUNetv2_predict with no -chk flag, and nnU-Net's own CLI default for -chk
+#   IS checkpoint_final.pth, so this default preserves every existing on-harmony
+#   result byte-for-byte). Set CHECKPOINT=checkpoint_best.pth to additionally produce
+#   the best-checkpoint arm (the other 3 datasets' default) — it lands in a sibling
+#   fold{k}/best/<contrast> prediction dir and a sibling <CATEGORY>_<RUN_ID>_best
+#   metrics dir, never touching the existing flat/"final" paths.
 set -euo pipefail
 # Resolve HERE (this script's dir) BEFORE any cd, so it stays correct even when the
 # script is invoked as a bare relative filename (e.g. `bash 06_01_evaluate_testset.sh`).
@@ -59,15 +67,23 @@ DJ="${nnUNet_raw}/${DS_NAME}/dataset.json"
 
 TESTSET="${PREDICTIONS_ROOT}/${MODEL_TYPE}/_test_set"                                   # shared, run-independent
 PRED_BASE="${RUN_BASE}"                                                                  # predictions co-located w/ model (chaos-style)
-METRICS_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAIN_CONTRAST}/${CATEGORY}_${RUN_ID}"     # per-run metrics
 CONTRAST_LIST="T1w T2w bold dwi_ap epi_ap gre_echo1_mag"
+
+CHECKPOINT="${CHECKPOINT:-checkpoint_final.pth}"
+_CKPT_TAG="$(basename "${CHECKPOINT}" .pth)"; _CKPT_TAG="${_CKPT_TAG#checkpoint_}"
+_PRED_SUBDIR=""; _OUT_SUFFIX=""
+if [ "${_CKPT_TAG}" != "final" ]; then
+    _PRED_SUBDIR="${_CKPT_TAG}/"
+    _OUT_SUFFIX="_${_CKPT_TAG}"
+fi
+METRICS_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAIN_CONTRAST}/${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}"  # per-run metrics
 
 # ════════════════════════════════════════════════════════════════════════════
 # LAUNCHER — assemble the shared test set once, then one GPU job per fold
 # ════════════════════════════════════════════════════════════════════════════
 if [ -z "$FOLD" ]; then
-    echo "[$(date '+%H:%M:%S')] LAUNCH eval ${RUN_ID}  trainer=${TRAINER}  -> ${TRAIN_CONTRAST}/${CATEGORY}"
-    export BIDS TEST_CASES TESTSET
+    echo "[$(date '+%H:%M:%S')] LAUNCH eval ${RUN_ID}  trainer=${TRAINER}  -> ${TRAIN_CONTRAST}/${CATEGORY}  ckpt=${CHECKPOINT}"
+    export BIDS TEST_CASES TESTSET CHECKPOINT
     # Shared cross-contrast test set (images 4D→3D + 31-class GT). Idempotent: built once,
     # reused by every run/model (the test set is identical across them).
     $PY - <<'PYEOF'
@@ -157,11 +173,11 @@ for CONTRAST in $CONTRAST_LIST; do
     PRED_RAW="${SLURM_TMPDIR:-${SCRATCH:-/tmp}}/onhpred_${RUN_ID}_f${FOLD}_${CONTRAST}"
     rm -rf "$PRED_RAW"; mkdir -p "$PRED_RAW"
     if ! .venv/bin/nnUNetv2_predict -i "$IMG_RAS" -o "$PRED_RAW" \
-            -d "${DATASET_ID}" -c 3d_fullres -f "${FOLD}" -tr "${TRAINER}" -p nnUNetPlans; then
+            -d "${DATASET_ID}" -c 3d_fullres -f "${FOLD}" -tr "${TRAINER}" -p nnUNetPlans -chk "${CHECKPOINT}"; then
         echo "  ! [fold${FOLD}] predict failed for $CONTRAST (continuing)"; rm -rf "$PRED_RAW"; continue
     fi
 
-    PRED_DIR="${PRED_BASE}/fold${FOLD}/${CONTRAST}"; mkdir -p "$PRED_DIR"
+    PRED_DIR="${PRED_BASE}/fold${FOLD}/${_PRED_SUBDIR}${CONTRAST}"; mkdir -p "$PRED_DIR"
     IN_DIR="$PRED_RAW" OUT_DIR="$PRED_DIR" REF_DIR="$IMG_DIR" $PY - <<'PYEOF2'
 import os, SimpleITK as sitk
 from pathlib import Path

@@ -12,8 +12,11 @@
 # (significance_from_config.py, same config, pass --ref explicitly — see that
 # script's header for the substring-ambiguity gotcha).
 title: "open-ms — FLAIR-trained, causal-ablation ladders (PALETTE mechanism decomposition)"
-metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
-output_prefix: "02_ablation"
+sources:
+  - metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+    column_prefix: ""
+output_dir: "${METRICS_ROOT}/open_ms_model/flair/ablations"
+output_prefix: "combined"
 in_domain_contrast: flair
 column_order: [flair, t2w, t1w]
 
@@ -22,12 +25,12 @@ runs:
   - open-ms_flair_baseline_20260706_061243
   - open-ms_flair_synthseg_noEM_train100_val000_20260706_061243
   - open-ms_flair_synthseg_EM_train100_val000_20260706_061243
-  - open-ms_flair_baseline_kmeans_label_remap_train050_val100_20260708_075800
-  - open-ms_flair_baseline_kmeans_label_remap_voronoi_train050_val100_20260708_075823
+  - ablations/nnUNet_open-ms_flair_baseline_kmeans_label_remap_train050_val100_20260708_075800
+  - ablations/nnUNet_open-ms_flair_baseline_kmeans_label_remap_voronoi_train050_val100_20260708_075823
   - open-ms_flair_v26_6_2_train050_val100_20260706_061243
   # --- auglab-anchored ladder ---
   - open-ms_flair_auglab_default_20260706_061243
-  - open-ms_flair_auglab_kmeans_label_remap_train025_val100_20260707_065414
-  - open-ms_flair_auglab_kmeans_label_remap_voronoi_train025_val100_20260707_065409
-  - open-ms_flair_auglabAug_v26_6_2_noisefill_train025_val100_20260706_061243
-  - open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243
+  - ablations/auglab_open-ms_flair_auglab_kmeans_label_remap_train025_val100_20260707_065414
+  - ablations/auglab_open-ms_flair_auglab_kmeans_label_remap_voronoi_train025_val100_20260707_065409
+  - ablations/auglab_open-ms_flair_auglabAug_v26_6_2_noisefill_train025_val100_20260706_061243
+  - ablations/auglab_open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243

@@ -1,15 +1,18 @@
-# 7 comparison arms (6 standard + srcsm SemRandConv-3D, Thaler et al. 2025).
+# Fixed 7-method order (no others): baseline, synthseg_noEM, synthseg_EM,
+# auglab_default, srcsm, auglabAug_v26_6_2 train050_val000, then train050_val100.
+# v26_6_2-alone and the train025_val100 auglabAug variant are dropped from this
+# table. A run with no eval data yet still gets a row (blank/"—") rather than
+# being dropped, so the method list/order stays fixed.
 title: "CHAOS T2spir — results"
 metrics_dir: "${METRICS_ROOT}/chaos_model/t2spir"
 output_prefix: "03_01_results"
 in_domain_contrast: t2spir
 
 runs:
-  - chaos_t2spir_auglabAug_v26_6_2_train025_val100_20260620_112633
-  - chaos_t2spir_v26_6_2_train050_val100_20260620_112122
-  - chaos_t2spir_synthseg_EM_20260620_112357
-  - chaos_t2spir_synthseg_noEM_20260620_112515
-  - chaos_t2spir_auglab_default_20260620_112240
   - chaos_t2spir_baseline_20260620_111146
-  - chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202  # extra ablation arm (train050_val000), not a suite replacement
+  - chaos_t2spir_synthseg_noEM_20260620_112515
+  - chaos_t2spir_synthseg_EM_20260620_112357
+  - chaos_t2spir_auglab_default_20260620_112240
   - chaos_t2spir_srcsm_20260709_121945
+  - chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202
+  - chaos_t2spir_auglabAug_v26_6_2_train050_val100_20260723_194053

@@ -7,12 +7,15 @@ metrics_dir: "${METRICS_ROOT}/on_harmony_model/T2w"
 output_prefix: "results"
 in_domain_contrast: T2w
 
+# Fixed 7-method order (no others): baseline, synthseg_noEM, synthseg_EM,
+# auglab_default, srcsm, auglabAug_v26_6_2 train050_val000, then train050_val100.
+# v26_6_2-alone and the train025_val100 auglabAug variant are dropped from this
+# table. train050_val100 has NOT been trained yet — blank row (not dropped).
 runs:
   - on-harmony_T2w_baseline_20260624_191152
-  - on-harmony_T2w_v26_6_2_train050_val100_20260625_154418
-  - on-harmony_T2w_auglab_default_20260625_143115
-  - on-harmony_T2w_synthseg_EM_20260624_191329
   - on-harmony_T2w_synthseg_noEM_20260624_191418
-  - on-harmony_T2w_auglabAug_v26_6_2_train025_val100_20260624_191557
-  - on-harmony_T2w_srcsm_20260709_122145  # 7th arm — SRCSM (SemRandConv-3D)
-  - on-harmony_T2w_auglabAug_v26_6_2_train050_val000_20260710_040443  # ablation arm — train050/val000
+  - on-harmony_T2w_synthseg_EM_20260624_191329
+  - on-harmony_T2w_auglab_default_20260625_143115
+  - on-harmony_T2w_srcsm_20260709_122145
+  - on-harmony_T2w_auglabAug_v26_6_2_train050_val000_20260710_040443
+  - on-harmony_T2w_auglabAug_v26_6_2_train050_val100_20260727_075205

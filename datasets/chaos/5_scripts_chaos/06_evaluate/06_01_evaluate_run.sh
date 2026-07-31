@@ -12,6 +12,12 @@
 #   FOLD: 0-3 or "all" (default: all).
 # Optional env override:
 #   CATEGORY   "nnUNet" or "auglab" (default: auto-detected from PREDICTIONS_ROOT)
+#   CKPT_TAG   (default "best") — set to "final" to evaluate a checkpoint_final
+#     prediction run (predict with CHECKPOINT=checkpoint_final.pth first; see
+#     05_predict/05_01_predict_common.sh). "best" reads/writes the original flat
+#     paths unchanged; any other tag reads predictions from fold{F}/<tag>/<mod>
+#     (see predict_common.sh's CKPT_SUBDIR) and writes metrics to a sibling
+#     <CATEGORY>_<RUN_ID>_<tag> dir so it never collides with checkpoint_best.
 #
 # Examples:
 #   bash 06_01_evaluate_run.sh chaos_t1in_v26_6_2_train090_val000_20260614_205937   # all folds
@@ -59,6 +65,10 @@ _DS_NAME="$(ls "${nnUNet_raw}" | grep "^Dataset0*${DATASET_ID}_" | head -1)"
 DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 
+CKPT_TAG="${CKPT_TAG:-best}"
+_PRED_SUBDIR=""; [ "${CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${CKPT_TAG}/"
+_OUT_SUFFIX=""; [ "${CKPT_TAG}" != "best" ] && _OUT_SUFFIX="_${CKPT_TAG}"
+
 # Translation-robustness experiment (opt-in via EXP_TRANSLATION=NNN, paired with the
 # predict-side flag): read predictions from .../fold{F}/exp_translation_NNN/<mod>/,
 # score against the translated GT labelsTs_<mod>_translation_NNN, and write metrics
@@ -92,8 +102,8 @@ PY
 
 eval_fold() {
     local F="$1" SLOT="${2:-0}"
-    local PRED_ROOT="${PRED_BASE}/fold${F}${EXP_SUBDIR:+/${EXP_SUBDIR}}"
-    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}${EXP_SUBDIR:+/${EXP_SUBDIR}}/${CATEGORY}_${RUN_ID}/fold${F}"
+    local PRED_ROOT="${PRED_BASE}/fold${F}/${_PRED_SUBDIR}${EXP_SUBDIR:+${EXP_SUBDIR}/}"
+    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}${EXP_SUBDIR:+/${EXP_SUBDIR}}/${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}/fold${F}"
 
     if [ ! -d "$PRED_ROOT" ]; then
         echo "  ! fold${F}: no predictions dir at $PRED_ROOT — skipping" >&2

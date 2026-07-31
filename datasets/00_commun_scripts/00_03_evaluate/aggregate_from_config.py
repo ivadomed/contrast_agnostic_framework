@@ -398,25 +398,32 @@ def main():
     runs_data = {}
     fold_counts = {}
     runs_ordered = []
+    any_data = False
 
+    # Missing runs are NOT dropped from the table — they still get a row (all "—"
+    # cells, 0 folds), keeping the config's declared order/method set intact so a
+    # still-training or not-yet-launched experiment is visibly absent rather than
+    # silently missing from the comparison.
     for key in run_keys:
         if multi_source:
             data, n_folds = load_run_from_sources(sources, key)
         else:
             run_dir = resolve_run_dir(sources[0]["metrics_dir"], key)
             if run_dir is None:
-                print(f"  skip {key}: directory not found in {sources[0]['metrics_dir']}", file=sys.stderr)
-                continue
-            data = load_run(run_dir)
-            n_folds = count_eval_folds(run_dir)
+                print(f"  blank row {key}: directory not found in {sources[0]['metrics_dir']}", file=sys.stderr)
+                data, n_folds = {}, 0
+            else:
+                data = load_run(run_dir)
+                n_folds = count_eval_folds(run_dir)
         if not data:
-            print(f"  skip {key}: no eval_all.csv found in any source", file=sys.stderr)
-            continue
+            print(f"  blank row {key}: no eval_all.csv found in any source", file=sys.stderr)
+        else:
+            any_data = True
         runs_data[key] = data
         fold_counts[key] = n_folds
         runs_ordered.append(key)
 
-    if not runs_data:
+    if not any_data:
         print("No runs with evaluation data found.", file=sys.stderr)
         sys.exit(1)
 

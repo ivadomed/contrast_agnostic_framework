@@ -28,13 +28,17 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/ms3seg/8_results_ms3seg/02_metrics/open_ms_model/t1w"
     column_prefix: "ms3seg_"
 
-# Fixed 6-method suite (CLAUDE.md canonical order), T1w-TRAINED checkpoints.
-# Same RUN_IDs as datasets/mslesseg/.../configs/mslesseg_t1w_01_results.yaml
-# (mslesseg evaluates these exact open-ms checkpoints) -- kept in sync by hand.
+# 8-method suite (CLAUDE.md canonical order + srcsm 7th arm), T1w-TRAINED checkpoints.
+# OURS updated 2026-07-29 to the current val000/val100 pair (train025_val100 was the
+# pre-dual-val checkpoint, now superseded). Same RUN_IDs as
+# datasets/mslesseg/.../configs/mslesseg_t1w_01_results.yaml (mslesseg evaluates these
+# exact open-ms checkpoints) -- kept in sync by hand.
 runs:
   - open-ms_t1w_baseline_20260708_083441
   - open-ms_t1w_auglab_default_20260708_083511
   - open-ms_t1w_synthseg_noEM_train100_val000_20260708_083541
   - open-ms_t1w_synthseg_EM_train100_val000_20260708_083611
   - open-ms_t1w_v26_6_2_train050_val100_20260708_083641
-  - open-ms_t1w_auglabAug_v26_6_2_train025_val100_20260708_083711
+  - open-ms_t1w_srcsm_20260709_075121
+  - open-ms_t1w_auglabAug_v26_6_2_train050_val000_20260710_054525
+  - open-ms_t1w_auglabAug_v26_6_2_train050_val100_20260723_194125

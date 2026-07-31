@@ -15,14 +15,17 @@
 # config, pass --ref explicitly — see that script's header for the
 # substring-ambiguity gotcha).
 title: "open-ms — FLAIR-trained, auglab-anchored causal-ablation ladder @ train050_val000 (PALETTE mechanism decomposition)"
-metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
-output_prefix: "02_ablation_auglab_val000"
+sources:
+  - metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+    column_prefix: ""
+output_dir: "${METRICS_ROOT}/open_ms_model/flair/ablations"
+output_prefix: "auglab_val000"
 in_domain_contrast: flair
 column_order: [flair, t2w, t1w]
 
 runs:
   - open-ms_flair_auglab_default_20260706_061243
-  - open-ms_flair_auglab_kmeans_train050_val000_20260711_065618
-  - open-ms_flair_auglab_kmeans_label_remap_train050_val000_20260711_063123
-  - open-ms_flair_auglab_kmeans_label_remap_voronoi_train050_val000_20260711_063200
+  - ablations/auglab_open-ms_flair_auglab_kmeans_train050_val000_20260711_065618
+  - ablations/auglab_open-ms_flair_auglab_kmeans_label_remap_train050_val000_20260711_063123
+  - ablations/auglab_open-ms_flair_auglab_kmeans_label_remap_voronoi_train050_val000_20260711_063200
   - open-ms_flair_auglabAug_v26_6_2_train050_val000_20260710_054455

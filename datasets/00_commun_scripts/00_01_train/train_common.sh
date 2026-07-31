@@ -59,6 +59,15 @@ RUN_ID="${1:-${DATASET_NAME}_${TRAINING_CONTRAST}_${METHOD}_$(date +%Y%m%d_%H%M%
 mkdir -p "$LOG_DIR"
 echo "[$(date '+%H:%M:%S')] ${METHOD} — RUN_ID=${RUN_ID}  (GPUS_PER_FOLD=${GPUS_PER_FOLD})"
 
+# NODE-PACK record mode (RUN_JOB_PACK_DIR set): run_job only records commands, so
+# recording must be synchronous (else the wrapper can exit before the last
+# backgrounded append lands — drops a fold) and needs no inter-launch stagger
+# (nothing is submitted here). Default (unset): unchanged.
+if [ -n "${RUN_JOB_PACK_DIR:-}" ]; then
+    LAUNCH_WAIT=1
+    LAUNCH_STAGGER_S=0
+fi
+
 launch_fold() {
     local FOLD="$1" SLOT="$2" GPUS="$3"
     local NGPU; NGPU="$(awk -F',' '{print NF}' <<<"$GPUS")"
@@ -102,9 +111,31 @@ launch_fold() {
         _iters_export="export NNUNET_ITERS_PER_EPOCH='${NNUNET_ITERS_PER_EPOCH:-${NNUNET_ITERS_PER_EPOCH_DEFAULT}}'"
     fi
 
+    # CUDA_VISIBLE_DEVICES: normally pinned here. In NODE-PACK mode (RUN_JOB_PACK_DIR
+    # set) the pack-submit step assigns each fold its physical GPU, so this export is
+    # omitted and the fold inherits CUDA_VISIBLE_DEVICES from the packed job. Default
+    # (unset): identical to before.
+    local _cvd_export="export CUDA_VISIBLE_DEVICES='${_CUDA_DEV}'"
+    if [ -n "${RUN_JOB_PACK_DIR:-}" ]; then _cvd_export=""; fi
+
+    # NODE-PACK resume: a packed run is chained across several jobs (job N+1 resumes
+    # job N's checkpoints, since one job can't outlast the cluster walltime cap), and
+    # all jobs reuse the SAME recorded cmd. So resume must be detected at RUNTIME inside
+    # the packed job, not baked at record time (when no checkpoint exists yet). Normal
+    # mode keeps the record-time CONTINUE_FLAG. Also expose this fold's checkpoint_final
+    # to run_job as the pack "done" marker so the chain can stop once every fold finished.
+    local _resume_prelude="" _cflag="${CONTINUE_FLAG}"
+    if [ -n "${RUN_JOB_PACK_DIR:-}" ]; then
+        _cflag="\${CFLAG}"
+        _resume_prelude="CFLAG=''
+        if [ -f '${CKPT_LATEST}' ]; then CFLAG='--c'
+        elif [ -f '${CKPT_FINAL}' ]; then cp '${CKPT_FINAL}' '${CKPT_LATEST}'; CFLAG='--c'; fi"
+    fi
+
     local wait_args=()
     [ "${LAUNCH_WAIT:-0}" = "1" ] && wait_args=(--wait)
 
+    RUN_JOB_PACK_DONEFILE="${CKPT_FINAL}" \
     run_job --name "fold${FOLD}_${RUN_ID}" --gpus "${NGPU}" --slot "${SLOT}" \
         --log "${LOG_DIR}/fold${FOLD}.log" "${wait_args[@]}" -- \
         bash -c "
@@ -118,7 +149,7 @@ launch_fold() {
         export nnUNet_n_proc_DA=${DA_WORKERS}
         export AUGLAB_PARAMS_GPU_JSON='${AUGLAB_PARAMS_GPU_JSON:-}'
         export AUGLAB_VAL_PARAMS_GPU_JSON='${AUGLAB_VAL_PARAMS_GPU_JSON:-}'
-        export CUDA_VISIBLE_DEVICES='${_CUDA_DEV}'
+        ${_cvd_export}
         export nnUNet_wandb_enabled='${nnUNet_wandb_enabled:-1}'
         export nnUNet_wandb_project='${nnUNet_wandb_project:-${WANDB_PROJECT:-mri_synthesis_seg_${DATASET_NAME}}}'
         export nnUNet_wandb_run_name='${RUN_ID}_fold${FOLD}'
@@ -140,7 +171,8 @@ launch_fold() {
         ${_iters_export}
         export nnUNet_compile='${nnUNet_compile:-0}'
         cd '${PROJECT_ROOT}'
-        .venv/bin/nnUNetv2_train ${DATASET_ID} 3d_fullres ${FOLD} ${CONTINUE_FLAG} \
+        ${_resume_prelude}
+        .venv/bin/nnUNetv2_train ${DATASET_ID} 3d_fullres ${FOLD} ${_cflag} \
             -tr ${TRAINER} -p nnUNetPlans -num_gpus ${NGPU}
     "
 }

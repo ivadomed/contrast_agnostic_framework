@@ -33,6 +33,7 @@ import numpy as np
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]                 # datasets/open-ms
 METRICS_ROOT = DATASET_ROOT / "8_results_open-ms/02_metrics/open_ms_model/flair"
+ABLATIONS_ROOT = METRICS_ROOT / "ablations"   # exclusive-to-this-ladder run dirs + outputs live here
 
 sys.path.insert(0, str(DATASET_ROOT.parent / "00_commun_scripts" / "00_00_utils"))
 from eval_folds import EVAL_FOLDS  # noqa: E402
@@ -41,12 +42,12 @@ CONTRASTS = ["flair", "t2w", "t1w"]
 
 
 def _resolve(prefix: str) -> str:
-    """Return the metrics_dir name starting with `prefix` (the timestamp suffix
+    """Return the ablations/ dir name starting with `prefix` (the timestamp suffix
     isn't known until the run has been launched/evaluated) — picks the most
     recently modified match, or returns `prefix` unchanged (and lets the caller
     report it as missing) if nothing matches yet."""
-    matches = sorted(METRICS_ROOT.glob(f"{prefix}*"), key=lambda p: p.stat().st_mtime, reverse=True)
-    return matches[0].name if matches else prefix
+    matches = sorted(ABLATIONS_ROOT.glob(f"{prefix}*"), key=lambda p: p.stat().st_mtime, reverse=True)
+    return f"ablations/{matches[0].name}" if matches else prefix
 
 
 def _rungs_auglab():
@@ -54,11 +55,11 @@ def _rungs_auglab():
         ("auglab_default (floor)", "— (full AugLab recipe, no synthesis)",
          "auglab_open-ms_flair_auglab_default_20260706_061243"),
         ("no_voronoi", "+ K-means intensity clustering",
-         "auglab_open-ms_flair_auglab_kmeans_label_remap_train025_val100_20260707_065414"),
+         "ablations/auglab_open-ms_flair_auglab_kmeans_label_remap_train025_val100_20260707_065414"),
         ("+voronoi", "+ Voronoi spatial sub-parcellation",
-         "auglab_open-ms_flair_auglab_kmeans_label_remap_voronoi_train025_val100_20260707_065409"),
+         "ablations/auglab_open-ms_flair_auglab_kmeans_label_remap_voronoi_train025_val100_20260707_065409"),
         ("PALETTE", "+ real-texture fill (vs. noise)",
-         "auglab_open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243"),
+         "ablations/auglab_open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243"),
     ]
 
 
@@ -190,9 +191,9 @@ def main():
         md, series = render_ladder(name, rungs)
         all_md.append(md)
         all_md.append("")
-        plot_ladder(name, rungs, series, METRICS_ROOT / f"01_results_ladder_{name}.png")
+        plot_ladder(name, rungs, series, ABLATIONS_ROOT / f"ladder_{name}.png")
 
-    out_path = METRICS_ROOT / "01_results_ladders.md"
+    out_path = ABLATIONS_ROOT / "ladders.md"
     out_path.write_text("\n".join(all_md) + "\n")
     print("\n".join(all_md))
     print(f"\n→ {out_path}")

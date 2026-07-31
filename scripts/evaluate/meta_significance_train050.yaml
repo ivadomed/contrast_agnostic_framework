@@ -4,8 +4,9 @@
 # datasets/00_commun_scripts/00_03_evaluate/meta_significance.py (see its header).
 # Run via scripts/evaluate/run_meta_significance.sh.
 #
-# NOTE: 6 experiments across 4 datasets today. Add brats t2w + on-harmony T1w here once
-# their train050_val000 models finish training (pending jobs 5786257-70) → 8 experiments.
+# NOTE: 8 experiments across 4 datasets. brats t2w + on-harmony T1w were added 2026-07-30
+# once their train050_val000 models finished (completing the 6 -> 8 expansion this file
+# previously flagged as pending).
 title: "Cross-dataset combined significance — OURS (auglabAug_v26_6_2 train050_val000)"
 ref_pattern: "auglabAug_v26_6_2_train050_val000"
 competitors:
@@ -20,6 +21,8 @@ experiments:
   - {name: "chaos t1in",     dataset: chaos,            config: "${PROJECT_ROOT}/datasets/chaos/5_scripts_chaos/06_evaluate/configs/chaos_t1in_03_results.yaml"}
   - {name: "chaos t2spir",   dataset: chaos,            config: "${PROJECT_ROOT}/datasets/chaos/5_scripts_chaos/06_evaluate/configs/chaos_t2spir_01_results.yaml"}
   - {name: "brats t1n",      dataset: brats2024-glioma, config: "${PROJECT_ROOT}/datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_t1n_01_results.yaml"}
+  - {name: "brats t2w",      dataset: brats2024-glioma, config: "${PROJECT_ROOT}/datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_t2w_01_results.yaml"}
+  - {name: "on-harmony T1w", dataset: on-harmony,       config: "${PROJECT_ROOT}/datasets/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_T1w.yaml"}
   - {name: "on-harmony T2w", dataset: on-harmony,       config: "${PROJECT_ROOT}/datasets/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_T2w.yaml"}
   - {name: "open-ms flair",  dataset: open-ms,          config: "${PROJECT_ROOT}/datasets/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_flair_01_results.yaml"}
   - {name: "open-ms t1w",    dataset: open-ms,          config: "${PROJECT_ROOT}/datasets/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_t1w_01_results.yaml"}

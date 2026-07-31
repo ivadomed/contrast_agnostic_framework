@@ -7,12 +7,19 @@ metrics_dir: "${METRICS_ROOT}/on_harmony_model/T1w"
 output_prefix: "results"
 in_domain_contrast: T1w
 
+# Fixed 7-method order (no others): baseline, synthseg_noEM, synthseg_EM,
+# auglab_default, srcsm, auglabAug_v26_6_2 train050_val000, then train050_val100.
+# v26_6_2-alone and the train025_val100 auglabAug variant are dropped from this
+# table. train050_val000 and train050_val100 come from ONE DualVal training run
+# (RUN_ID "_val000_") — val100 is auto-materialized as a sibling "_val100_"
+# RUN_ID at on_train_end (hard-linked checkpoints, see
+# on_harmony/trainers/auglab_dualval.py); both were predicted/evaluated
+# separately on TamIA and synced here (2026-07-29).
 runs:
   - on-harmony_T1w_baseline_20260623_192811
-  - on-harmony_T1w_v26_6_2_train050_val100_20260623_192811
-  - on-harmony_T1w_auglab_default_20260623_192811
-  - on-harmony_T1w_synthseg_EM_20260623_192811
   - on-harmony_T1w_synthseg_noEM_20260623_192811
-  - on-harmony_T1w_auglabAug_v26_6_2_train025_val100_20260623_192811
-  # 7th arm — SRCSM (SemRandConv-3D). Uncomment + fill in RUN_ID after training:
-  #  - on-harmony_T1w_srcsm_<TIMESTAMP>  # fill in after training
+  - on-harmony_T1w_synthseg_EM_20260623_192811
+  - on-harmony_T1w_auglab_default_20260623_192811
+  - on-harmony_T1w_srcsm_20260709_122115
+  - on-harmony_T1w_auglabAug_v26_6_2_train050_val000_20260727_075205
+  - on-harmony_T1w_auglabAug_v26_6_2_train050_val100_20260727_075205

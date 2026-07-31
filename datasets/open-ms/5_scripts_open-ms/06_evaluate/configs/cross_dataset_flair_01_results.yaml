@@ -31,9 +31,11 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/ms3seg/8_results_ms3seg/02_metrics/open_ms_model/flair"
     column_prefix: "ms3seg_"
 
-# Fixed 6-method suite (CLAUDE.md canonical order): baseline, auglab_default,
-# synthseg_noEM, synthseg_EM, v26_6_2-alone (train050_val100), auglabAug_v26_6_2
-# (OURS, train025_val100). Same RUN_IDs as datasets/mslesseg/.../configs/mslesseg_01_results.yaml
+# 8-method suite (CLAUDE.md canonical order + srcsm 7th arm): baseline, auglab_default,
+# synthseg_noEM, synthseg_EM, v26_6_2-alone (train050_val100), srcsm, and OURS as the
+# CURRENT val000/val100 pair (train025_val100 was the pre-dual-val checkpoint, now
+# superseded — updated 2026-07-29 to match what's actually been predicted+evaluated on
+# mslesseg/ms3seg). Same RUN_IDs as datasets/mslesseg/.../configs/mslesseg_01_results.yaml
 # (mslesseg evaluates these exact open-ms checkpoints) — kept in sync by hand.
 runs:
   - open-ms_flair_baseline_20260706_061243
@@ -41,4 +43,6 @@ runs:
   - open-ms_flair_synthseg_noEM_train100_val000_20260706_061243
   - open-ms_flair_synthseg_EM_train100_val000_20260706_061243
   - open-ms_flair_v26_6_2_train050_val100_20260706_061243
-  - open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243
+  - open-ms_flair_srcsm_20260709_072043
+  - open-ms_flair_auglabAug_v26_6_2_train050_val000_20260710_054455
+  - open-ms_flair_auglabAug_v26_6_2_train050_val100_20260716_095413

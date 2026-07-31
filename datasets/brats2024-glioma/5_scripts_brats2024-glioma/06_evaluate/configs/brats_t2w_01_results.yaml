@@ -3,11 +3,16 @@ metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t2w"
 output_prefix: "03_01_results"
 in_domain_contrast: t2w
 
+# Fixed 7-method order (no others): baseline, synthseg_noEM, synthseg_EM,
+# auglab_default, srcsm, auglabAug_v26_6_2 train050_val000, then train050_val100.
+# v26_6_2-alone and the train025_val100 auglabAug variant are dropped from this
+# table. The train050_val000/val100 rungs have NOT been trained yet as of
+# 2026-07-24 — they get a blank row (not dropped) rather than being omitted.
 runs:
   - brats2024-glioma_t2w_baseline_20260620_125115
-  - brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217
-  - brats2024-glioma_t2w_auglab_default_20260620_125306
-  - brats2024-glioma_t2w_synthseg_EM_20260620_125354
   - brats2024-glioma_t2w_synthseg_noEM_20260620_125442
-  - brats2024-glioma_t2w_auglabAug_v26_6_2_train025_val100_20260620_125531
-  - brats2024-glioma_t2w_srcsm_20260709_122045  # 7th arm — SRCSM (SemRandConv-3D)
+  - brats2024-glioma_t2w_synthseg_EM_20260620_125354
+  - brats2024-glioma_t2w_auglab_default_20260620_125306
+  - brats2024-glioma_t2w_srcsm_20260709_122045
+  - brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val000_20260725_113540
+  - brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val100_20260725_113540

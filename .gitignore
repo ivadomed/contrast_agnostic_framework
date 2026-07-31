@@ -28,6 +28,7 @@ archive/
 *.dcm
 *.raw
 *.mhd
+*.tar
 .claude/
 python_usage.html
 running_jobs.html

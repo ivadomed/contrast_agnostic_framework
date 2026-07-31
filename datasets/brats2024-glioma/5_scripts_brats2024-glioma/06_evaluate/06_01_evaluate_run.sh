@@ -10,6 +10,12 @@
 #
 # Optional env override:
 #   CATEGORY   "nnUNet" (default) or "auglab"
+#   CKPT_TAG   (default "best") — set to "final" to evaluate a checkpoint_final
+#     prediction run (predict with CHECKPOINT=checkpoint_final.pth first; see
+#     05_predict/05_01_predict_common.sh). "best" reads/writes the original flat
+#     paths unchanged; any other tag reads predictions from fold{F}/<tag>/<contrast>
+#     (see predict_common.sh's CKPT_SUBDIR) and writes metrics to a sibling
+#     <CATEGORY>_<RUN_ID>_<tag> dir so it never collides with checkpoint_best.
 #
 # Examples:
 #   bash 06_01_evaluate_run.sh brats2024-glioma_t1n_v26_6_2_train090_val000_20260608_003445              # nnUNet, all folds
@@ -55,12 +61,16 @@ GT_DIR="${nnUNet_raw}/${_DS_NAME}/labelsTr"
 DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 
+CKPT_TAG="${CKPT_TAG:-best}"
+_PRED_SUBDIR=""; [ "${CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${CKPT_TAG}/"
+_OUT_SUFFIX=""; [ "${CKPT_TAG}" != "best" ] && _OUT_SUFFIX="_${CKPT_TAG}"
+
 [ -d "$PRED_BASE" ] || { echo "ERROR: no predictions at $PRED_BASE" >&2; exit 1; }
 
 eval_fold() {
     local F="$1" SLOT="${2:-0}"
-    local PRED_ROOT="${PRED_BASE}/fold${F}"
-    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}/fold${F}"
+    local PRED_ROOT="${PRED_BASE}/fold${F}/${_PRED_SUBDIR}"
+    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}/fold${F}"
 
     if [ ! -d "$PRED_ROOT" ]; then
         echo "  ! fold${F}: no predictions dir at $PRED_ROOT — skipping" >&2
@@ -77,7 +87,7 @@ eval_fold() {
         [ -f "${EVAL_DIR}/${c}_metrics.csv" ] && { contrasts+=("$c"); continue; }
         contrasts+=("$c")
         run_job --name "brats_eval_${RUN_ID}_fold${F}_${c}" \
-            --gpus 0 --slot "${SLOT}" --time "3:00:00" \
+            --gpus 0 --slot "${SLOT}" --time "3:00:00" --mem 64G \
             --log "${EVAL_DIR}/${c}_eval.log" --wait -- \
             "${PROJECT_ROOT}/.venv/bin/python" "${HERE}/06_00_evaluate.py" \
             --pred_dir "$d" --gt_dir "$GT_DIR" --dataset_json "$DJ" \

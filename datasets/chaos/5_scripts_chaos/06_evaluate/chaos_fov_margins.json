@@ -39,6 +39,23 @@
         "mean": 54.3,
         "max": 112.0
       }
+    },
+    "spleen": {
+      "sup_mm": 61.8,
+      "inf_mm": 99.0,
+      "n": 16,
+      "sup_mm_stats": {
+        "min": 0.0,
+        "median": 61.8,
+        "mean": 58.4,
+        "max": 117.0
+      },
+      "inf_mm_stats": {
+        "min": 6.0,
+        "median": 99.0,
+        "mean": 95.9,
+        "max": 184.0
+      }
     }
   },
   "t2spir": {
@@ -74,6 +91,23 @@
         "median": 79.6,
         "mean": 75.6,
         "max": 117.0
+      }
+    },
+    "spleen": {
+      "sup_mm": 45.0,
+      "inf_mm": 103.5,
+      "n": 16,
+      "sup_mm_stats": {
+        "min": 0.0,
+        "median": 45.0,
+        "mean": 47.2,
+        "max": 79.2
+      },
+      "inf_mm_stats": {
+        "min": 40.0,
+        "median": 103.5,
+        "mean": 109.9,
+        "max": 189.0
       }
     }
   }
