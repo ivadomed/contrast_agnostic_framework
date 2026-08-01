@@ -27,6 +27,13 @@
 #   EVAL_MODE     generic_labels | label_map | amos
 #   EVAL_LABELS   generic_labels: chaos label name(s), e.g. "liver"
 #   EVAL_LABEL_MAP  label_map: JSON, e.g. '{"spleen": [4, 1]}'
+#   EVAL_PARALLEL optional, concurrent eval tasks (default 20). Evaluation is
+#                 CPU-only and the node has 48 cores, so the old default of 6
+#                 (x2 workers = 12 procs) left the node 75% idle: cirrmri's eval
+#                 projected ~75 min at P=6 and finished in 4.5 min at P=20.
+#                 For a big dataset prefer ALSO splitting by contrast into
+#                 separate jobs (and run eval on a CPU-only allocation) rather
+#                 than one whole-node GPU job doing everything serially.
 set -uo pipefail
 PROJECT_ROOT="/project/aip-jcohen/paulh/mri_synthesis_project"
 SCRATCH="${SCRATCH:-/scratch/p/paulh}"
@@ -174,7 +181,7 @@ eval_one() {   # contrast cat rid fold item
 export -f eval_one; export RES WORK PROJECT_ROOT EVAL_PY EVAL_MODE CHAOS_DATASET_JSON
 export EVAL_LABELS="${EVAL_LABELS:-}" EVAL_LABEL_MAP="${EVAL_LABEL_MAP:-}"
 printf '%s\n' "${JOBS[@]}" | awk -F'|' '{print $1,$2,$3,$5,$6}' \
-  | xargs -P 6 -L 1 bash -c 'eval_one "$@"' _
+  | xargs -P "${EVAL_PARALLEL:-20}" -L 1 bash -c 'eval_one "$@"' _
 echo "[fov] evaluate phase done"
 
 # ── PHASE 4: merge -> eval_all.csv (depth 4: .../<contrast>/fov_crop/<run>) ──
