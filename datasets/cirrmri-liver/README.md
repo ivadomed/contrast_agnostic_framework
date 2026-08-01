@@ -2,6 +2,22 @@
 
 > ⚠️ **This dataset is used for EVALUATION ONLY. No model is ever trained on it.**
 
+> 🚫 **EXCLUDED from the cross-dataset roll-up tables as of 2026-08-01 —
+> results here should not be trusted.** See
+> `CIRRHOSIS_FRAGMENTATION_INVESTIGATION.md` for the full writeup. Summary:
+> predictions on a subset of cases show liver/kidney/spleen labels fragmented
+> into many small disconnected components with organs mislabeled/missing,
+> across every method tested (baseline, srcsm, OURS) — not explained by any
+> pipeline mechanism checked (FOV, orientation, intensity/normalization,
+> trainer-class code, patch-tiling, config override, resampling/
+> interpolation — all ruled out with direct empirical tests, not assumption).
+> Leading unconfirmed explanation: this is a diagnosed cirrhosis cohort
+> (Radiological Evaluation metadata: Mild/Moderate/Severe), and portal
+> hypertension commonly causes splenomegaly (spleen approaching liver size) —
+> an anatomical distortion no augmentation strategy here randomizes. Not
+> independently confirmed (this dataset's own GT is liver-only, no spleen/
+> kidney label to check against).
+
 CIRRMRI-LIVER (CirrMRI600+, Jha et al., *Scientific Data* 12, 896 (2025)) is an
 **MRI, liver-only** dataset. Here it serves a single purpose: **test models trained
 on `chaos` (MR T1-DUAL in-phase / T2-SPIR) on out-of-distribution MRI data** — a

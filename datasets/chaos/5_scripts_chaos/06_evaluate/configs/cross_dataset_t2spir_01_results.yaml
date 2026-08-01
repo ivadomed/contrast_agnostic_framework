@@ -12,13 +12,26 @@ column_order:
   - amos_mri
   - sliver07_ct_liver
   - msd_spleen_ct_spleen
-  - cirrmri_liver_t1
-  - cirrmri_liver_t2
 
 sources:
   # kidney-t2w EXCLUDED 2026-08-01: coronal acquisition, its through-plane
   # (A-P depth) FOV is fundamentally different from chaos's axial slab, so it is
   # not a valid cross-CONTRAST comparison. See datasets/kidney-t2w/ACQUISITION_PLANE_INVESTIGATION.md
+  # cirrmri-liver EXCLUDED 2026-08-01: several cases show organ predictions
+  # (liver/kidney/spleen all fragmented, mislabeled, kidneys missing) that are
+  # NOT explained by any pipeline mechanism -- FOV, orientation, intensity/
+  # normalization, trainer-class inference code, patch-tiling, config override,
+  # and resampling/interpolation (tested directly: manually pre-resampled a bad
+  # case with nnU-Net's own resample fn, reducing on-the-fly resampling to a
+  # no-op -- fragmentation persisted unchanged) were all ruled out with direct
+  # evidence. Leading explanation: cirrhosis (this cohort's diagnosis, confirmed
+  # via Radiological Evaluation metadata, Mild/Moderate/Severe) causes portal
+  # hypertension -> splenomegaly (spleen approaching liver size) -- an ANATOMICAL
+  # distortion no augmentation strategy here randomizes (all of them randomize
+  # appearance/contrast, not organ size/shape), so it isn't reliably measuring
+  # contrast generalization for this dataset. Not confirmed by direct
+  # measurement (this dataset's own GT is liver-only, no spleen/kidney label to
+  # check against) -- treated as untrustworthy pending that confirmation.
   - metrics_dir: "${PROJECT_ROOT}/datasets/chaos/8_results_chaos/02_metrics/chaos_model/t2spir"
     column_prefix: "chaos_"
     column_rename:
@@ -31,10 +44,6 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/msd-spleen/8_results_msd-spleen/02_metrics/chaos_model/t2spir"
     column_rename:
       ct: msd_spleen_ct_spleen  # msd-spleen GT only has spleen
-  - metrics_dir: "${PROJECT_ROOT}/datasets/cirrmri-liver/8_results_cirrmri-liver/02_metrics/chaos_model/t2spir"
-    column_rename:
-      t1: cirrmri_liver_t1  # cirrmri-liver GT only has liver; two modality items (t1w/t2w MRI)
-      t2: cirrmri_liver_t2
   # NOTE: TRUSTED intentionally NOT included here — its US eval is confounded by a
   # center-bias artifact (see the t1in config note). Excluded from the roll-up.
 
