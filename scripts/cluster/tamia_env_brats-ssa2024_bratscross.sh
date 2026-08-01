@@ -17,6 +17,16 @@
 
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
 
+# NOTE: PREDICTIONS_ROOT (and METRICS_ROOT where set) point at TamIA $SCRATCH
+# because TamIA's $PROJECT has a hard file-COUNT quota and a prediction tree is
+# tens of thousands of small files. $SCRATCH is PURGE-ON-INACTIVITY, so it is
+# NOT their permanent home -- after any TamIA predict/evaluate job, pull the
+# results back into the Vulcan repo with:
+#     bash scripts/cluster/fetch_tamia_results.sh <dataset>
+# Skipping this left msd-spleen, cirrmri-liver, kidney-t2w, ms3seg and
+# brats-ssa2024 with ZERO predictions on Vulcan (found 2026-08-01) -- metrics
+# had been copied back but the predictions, which are what you actually need to
+# inspect WHY a method scored what it did, had not.
 export PREDICTIONS_ROOT="$SCRATCH/brats-ssa2024/8_results_brats-ssa2024/01_predictions"
 export METRICS_ROOT="$SCRATCH/brats-ssa2024/8_results_brats-ssa2024/02_metrics"
 

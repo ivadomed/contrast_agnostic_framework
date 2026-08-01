@@ -14,9 +14,11 @@ column_order:
   - msd_spleen_ct_spleen
   - cirrmri_liver_t1
   - cirrmri_liver_t2
-  - kidney_t2w_t2
 
 sources:
+  # kidney-t2w EXCLUDED 2026-08-01: coronal acquisition, its through-plane
+  # (A-P depth) FOV is fundamentally different from chaos's axial slab, so it is
+  # not a valid cross-CONTRAST comparison. See datasets/kidney-t2w/ACQUISITION_PLANE_INVESTIGATION.md
   - metrics_dir: "${PROJECT_ROOT}/datasets/chaos/8_results_chaos/02_metrics/chaos_model/t2spir"
     column_prefix: "chaos_"
     column_rename:
@@ -33,9 +35,6 @@ sources:
     column_rename:
       t1: cirrmri_liver_t1  # cirrmri-liver GT only has liver; two modality items (t1w/t2w MRI)
       t2: cirrmri_liver_t2
-  - metrics_dir: "${PROJECT_ROOT}/datasets/kidney-t2w/8_results_kidney-t2w/02_metrics/chaos_model/t2spir"
-    column_rename:
-      t2: kidney_t2w_t2  # kidney-t2w GT only has kidney; single T2w MRI item, 7-method roster (no standalone v26_6_2)
   # NOTE: TRUSTED intentionally NOT included here — its US eval is confounded by a
   # center-bias artifact (see the t1in config note). Excluded from the roll-up.
 
@@ -48,7 +47,6 @@ runs:
   - chaos_t2spir_auglab_default_20260620_112240
   - chaos_t2spir_synthseg_noEM_20260620_112515
   - chaos_t2spir_synthseg_EM_20260620_112357
-  - chaos_t2spir_v26_6_2_train050_val100_20260620_112122
   - chaos_t2spir_srcsm_20260709_121945
   - chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202
   - chaos_t2spir_auglabAug_v26_6_2_train050_val100_20260723_194053

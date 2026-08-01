@@ -9,10 +9,17 @@
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
 
 # KIDNEY-T2W's own paths (inputs for cross-mode predict + this dataset's own output tree).
-# METRICS_ROOT is intentionally left at common_env.sh's default (under $PROJECT, NOT
-# scratch) — prediction NIfTI volumes are large/regenerable (scratch, purge-able),
-# but the small per-fold metrics CSVs are precious and land in the backed-up
-# $PROJECT repo checkout so they can be copied back to Vulcan afterward.
+# METRICS_ROOT is intentionally left at common_env.sh's default (under $PROJECT,
+# NOT scratch): TamIA's $PROJECT has a hard file-COUNT quota, and a prediction
+# tree is tens of thousands of small files, so predictions must be WRITTEN to
+# scratch here. But scratch is PURGE-ON-INACTIVITY, so scratch is not their
+# permanent home -- after the job, pull them back to the Vulcan repo with:
+#     bash scripts/cluster/fetch_tamia_results.sh <dataset>
+# (Do not skip this. Predictions are the primary artifact for inspecting WHY a
+# method scored what it scored; every Vulcan-run dataset keeps its own under
+# 8_results_*/01_predictions. An earlier version of this comment called them
+# "large/regenerable", which led to msd-spleen, cirrmri-liver and kidney-t2w
+# all sitting with ZERO predictions on Vulcan -- found 2026-08-01.)
 export nnUNet_raw="$SCRATCH/kidney-t2w/2_nnUNet_kidney-t2w/raw"
 export PREDICTIONS_ROOT="$SCRATCH/kidney-t2w/8_results_kidney-t2w/01_predictions"
 
