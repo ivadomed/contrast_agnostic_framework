@@ -169,7 +169,7 @@ rc_eval=$?
 echo "[pack] evaluate phase done rc=${rc_eval}"
 
 echo "[pack] ==== PHASE 5: merge each fold's t2 into eval_all.csv (summarize_fold.py) ===="
-find "${METRICS_ROOT}" -mindepth 2 -maxdepth 2 -type d | while read -r run_dir; do
+find "${METRICS_ROOT}" -mindepth 3 -maxdepth 3 -type d | while read -r run_dir; do
     run_name="$(basename "${run_dir}")"
     run_id="${run_name#nnUNet_}"; run_id="${run_id#auglab_}"
     for fold_dir in "${run_dir}"/fold*/; do

@@ -188,7 +188,11 @@ echo "[pack] ==== PHASE 5: merge each fold's t1+t2 into eval_all.csv (summarize_
 # both read eval_all.csv (not the raw t1_metrics.csv/t2_metrics.csv directly), so
 # skipping this silently left "no evaluation data found" until caught and backfilled
 # by hand on Vulcan afterward. Kept here so a future re-run doesn't repeat the gap.
-find "${METRICS_ROOT}" -mindepth 2 -maxdepth 2 -type d | while read -r run_dir; do
+# ALSO NOTE (found onboarding kidney-t2w): this loop had an off-by-one mindepth/maxdepth
+# bug (2/2 instead of 3/3 -- run dirs are METRICS_ROOT/chaos_model/<contrast>/<run>, i.e.
+# depth 3, not 2) that silently matched ZERO dirs, so this "fix" never actually ran and
+# eval_all.csv was still missing until backfilled again by hand. Fixed here too.
+find "${METRICS_ROOT}" -mindepth 3 -maxdepth 3 -type d | while read -r run_dir; do
     run_name="$(basename "${run_dir}")"
     run_id="${run_name#nnUNet_}"; run_id="${run_id#auglab_}"
     for fold_dir in "${run_dir}"/fold*/; do

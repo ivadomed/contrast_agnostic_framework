@@ -6,8 +6,8 @@ Per training set, "best other method" = whichever of {baseline, synthseg_noEM, s
 |---|---|---|---|---|---|---|
 | brats2024-gli | t1n | synthseg_EM | -0.41 | 0.8779 | +2.62 | 1.0000 |
 | brats2024-gli | t2w | auglab_default | +0.92 | **0.0001** | -0.66 | **0.0396** |
-| chaos | t1in | srcsm | +1.07 | 0.1366 | +2.22 | 0.7675 |
-| chaos | t2spir | auglab_default | +1.38 | **0.0071** | -6.17 | **0.0000** |
+| chaos | t1in | synthseg_EM | +0.10 | 0.3399 | -0.76 | 0.5123 |
+| chaos | t2spir | synthseg_EM | +1.32 | **0.0041** | -1.26 | 0.1559 |
 | open-ms | flair | srcsm | +2.59 | **0.0001** | +5.63 | 1.0000 |
 | open-ms | t1w | synthseg_EM | -1.03 | 0.9991 | +5.11 | 1.0000 |
 | on-harmony | T1w | auglab_default | +1.02 | **0.0070** | -0.92 | **0.0079** |

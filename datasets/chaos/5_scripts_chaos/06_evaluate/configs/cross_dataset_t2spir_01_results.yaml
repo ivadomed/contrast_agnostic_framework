@@ -14,6 +14,7 @@ column_order:
   - msd_spleen_ct_spleen
   - cirrmri_liver_t1
   - cirrmri_liver_t2
+  - kidney_t2w_t2
 
 sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/chaos/8_results_chaos/02_metrics/chaos_model/t2spir"
@@ -32,6 +33,9 @@ sources:
     column_rename:
       t1: cirrmri_liver_t1  # cirrmri-liver GT only has liver; two modality items (t1w/t2w MRI)
       t2: cirrmri_liver_t2
+  - metrics_dir: "${PROJECT_ROOT}/datasets/kidney-t2w/8_results_kidney-t2w/02_metrics/chaos_model/t2spir"
+    column_rename:
+      t2: kidney_t2w_t2  # kidney-t2w GT only has kidney; single T2w MRI item, 7-method roster (no standalone v26_6_2)
   # NOTE: TRUSTED intentionally NOT included here — its US eval is confounded by a
   # center-bias artifact (see the t1in config note). Excluded from the roll-up.
 
