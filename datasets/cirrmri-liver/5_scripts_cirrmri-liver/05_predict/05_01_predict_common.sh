@@ -22,6 +22,6 @@ PREDICT_LOG_PREFIX="cirrmri_liver_predict"
 PREDICT_ITEMS_DEFAULT="t1 t2"
 PREDICT_FOLD_DEFAULT="all"
 PREDICT_TIME="01:30:00"
-PREDICT_EXTRA_FLAGS="-npp 12 -nps 6"
+PREDICT_EXTRA_FLAGS="-npp 6 -nps 3"
 
 source "${PROJECT_ROOT}/datasets/00_commun_scripts/00_02_predict/predict_common.sh" "$@"

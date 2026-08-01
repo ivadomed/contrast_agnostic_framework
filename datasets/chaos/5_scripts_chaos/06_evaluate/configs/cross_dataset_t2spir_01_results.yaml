@@ -12,6 +12,8 @@ column_order:
   - amos_mri
   - sliver07_ct_liver
   - msd_spleen_ct_spleen
+  - cirrmri_liver_t1
+  - cirrmri_liver_t2
 
 sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/chaos/8_results_chaos/02_metrics/chaos_model/t2spir"
@@ -26,6 +28,10 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/msd-spleen/8_results_msd-spleen/02_metrics/chaos_model/t2spir"
     column_rename:
       ct: msd_spleen_ct_spleen  # msd-spleen GT only has spleen
+  - metrics_dir: "${PROJECT_ROOT}/datasets/cirrmri-liver/8_results_cirrmri-liver/02_metrics/chaos_model/t2spir"
+    column_rename:
+      t1: cirrmri_liver_t1  # cirrmri-liver GT only has liver; two modality items (t1w/t2w MRI)
+      t2: cirrmri_liver_t2
   # NOTE: TRUSTED intentionally NOT included here — its US eval is confounded by a
   # center-bias artifact (see the t1in config note). Excluded from the roll-up.
 
