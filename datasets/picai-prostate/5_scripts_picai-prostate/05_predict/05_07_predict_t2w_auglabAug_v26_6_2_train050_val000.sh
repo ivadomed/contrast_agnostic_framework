@@ -7,7 +7,7 @@
 # (see 04_06's header) — using AugLabDefault/AugLabValSynth here finds no checkpoint.
 # Usage: bash $(basename 05_predict/05_07_predict_t2w_auglabAug_v26_6_2_train050_val000.sh) <RUN_ID> [FOLD] [ITEM ...]
 set -euo pipefail
-METHOD="auglabAug_v26_6_2_train050_val000"
+METHOD="t2w_auglabAug_v26_6_2_train050_val000"
 TRAINER="nnUNetTrainerPICAIProstateAugLabDualVal"
 CATEGORY="auglab"
 source "$(dirname "$0")/05_01_predict_common.sh" "$@"

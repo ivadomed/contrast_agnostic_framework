@@ -3,7 +3,7 @@
 # held-out test set — T2W/ADC/HBV, folds 0 1 2.
 # Usage: bash $(basename 05_predict/05_02_predict_t2w_baseline.sh) <RUN_ID> [FOLD] [ITEM ...]
 set -euo pipefail
-METHOD="baseline"
+METHOD="t2w_baseline"
 TRAINER="nnUNetTrainerPICAIProstateBaseline"
 CATEGORY="nnUNet"
 source "$(dirname "$0")/05_01_predict_common.sh" "$@"

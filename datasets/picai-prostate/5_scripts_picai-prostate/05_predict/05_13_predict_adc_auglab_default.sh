@@ -5,7 +5,7 @@
 set -euo pipefail
 source "$(dirname "$0")/../00_utils/env_adc.sh"
 PREDICT_DATASET_ID_DEFAULT="81"
-METHOD="auglab_default"
+METHOD="adc_auglab_default"
 TRAINER="nnUNetTrainerPICAIProstateAugLabDefault"
 CATEGORY="auglab"
 source "$(dirname "$0")/05_01_predict_common.sh" "$@"
