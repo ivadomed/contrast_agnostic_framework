@@ -29,6 +29,9 @@
 #   PACK_TIME=23:59:00      per-job walltime (keep < cluster cap so it routes to the long partition)
 #   PACK_CHAIN=3            number of chained jobs (>= ceil(total_hours / PACK_TIME))
 #   PACK_ACCOUNT=aip-jcohen PACK_USE_MPS=0  PACK_JOB_NAME=nodepack
+#   PACK_GPU_MAP=""         explicit per-fold GPU placement, one index per index.tsv row
+#                           (e.g. "0 0 0 1 2 3"); empty = round-robin. Use it when folds
+#                           cost very different amounts — see the note at its definition.
 set -euo pipefail
 
 PACK_DIR="${1:?usage: run_job_pack_submit.sh <PACK_DIR>}"
@@ -46,12 +49,24 @@ PACK_CHAIN="${PACK_CHAIN:-3}"
 PACK_ACCOUNT="${PACK_ACCOUNT:-aip-jcohen}"
 PACK_USE_MPS="${PACK_USE_MPS:-0}"
 PACK_JOB_NAME="${PACK_JOB_NAME:-nodepack}"
+# PACK_GPU_MAP (optional): explicit placement — space-separated GPU index per index.tsv
+# row, in row order (e.g. "0 0 0 1 2 3" puts the first three folds on GPU0 and the next
+# three on GPUs 1/2/3). Empty (default): round-robin i%G, unchanged.
+# Round-robin implicitly spreads folds evenly, which is wrong when the folds cost very
+# different amounts: srcsm trains ~3x slower per epoch than every other method, so a
+# srcsm fold sharing a GPU with a second fold becomes the straggler that holds the whole
+# node (and its chain) open. This lets a caller give srcsm folds a GPU to themselves and
+# double up the cheap folds instead. Rows beyond the map's length fall back to i%G.
+PACK_GPU_MAP="${PACK_GPU_MAP:-}"
+read -ra _GPU_MAP <<< "${PACK_GPU_MAP}"
 
-echo "[pack] ${N_FOLDS} folds over ${PACK_NODE_GPUS} GPU(s) (round-robin i%G), chain of ${PACK_CHAIN} x ${PACK_TIME}:"
+_placement_desc="round-robin i%G"
+[ -n "${PACK_GPU_MAP}" ] && _placement_desc="explicit PACK_GPU_MAP"
+echo "[pack] ${N_FOLDS} folds over ${PACK_NODE_GPUS} GPU(s) (${_placement_desc}), chain of ${PACK_CHAIN} x ${PACK_TIME}:"
 _i=0
 while IFS=$'\t' read -r _cmd _log _name _done; do
     [ -n "${_cmd}" ] || continue
-    echo "  GPU $((_i % PACK_NODE_GPUS))  <-  ${_name}"
+    echo "  GPU ${_GPU_MAP[$_i]:-$((_i % PACK_NODE_GPUS))}  <-  ${_name}"
     _i=$((_i + 1))
 done < "${INDEX}"
 
@@ -72,6 +87,7 @@ set -uo pipefail
 G=${PACK_NODE_GPUS}
 INDEX='${INDEX}'
 USE_MPS=${PACK_USE_MPS}
+read -ra GPU_MAP <<< "${PACK_GPU_MAP}"   # empty → round-robin i%G below
 
 # Skip if every fold already finished (chain tail becomes a cheap no-op).
 all_done=1
@@ -98,7 +114,7 @@ declare -a PIDS NAMES GPUS
 i=0
 while IFS=\$'\t' read -r cmdfile log name donefile; do
     [ -n "\$cmdfile" ] || continue
-    gpu=\$(( i % G ))
+    gpu=\${GPU_MAP[\$i]:-\$(( i % G ))}
     plog="\${cmdfile%.sh}.log"   # persistent (pack dir on scratch), not node-local /tmp
     echo "[pack-job] launch '\$name' on GPU \$gpu -> \$plog"
     CUDA_VISIBLE_DEVICES=\$gpu bash "\$cmdfile" > "\$plog" 2>&1 &
