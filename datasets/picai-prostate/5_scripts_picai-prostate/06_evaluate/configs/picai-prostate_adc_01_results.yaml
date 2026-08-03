@@ -1,0 +1,31 @@
+# picai-prostate ADC-trained models — headline 7-arm table (Dice + HD95), scored on the
+# 55-study held-out test set in all three contrasts (in-domain adc + cross-contrast).
+#
+# 7 arms from 6 training runs: the last two rows are the val000 / val100 checkpoints that
+# the SINGLE DualVal run emits (see 04_train/04_16's header) — ..._val100 is a hard-linked
+# mirror of the same run, not a separate training.
+#
+# The inline `sig. vs ref` column is auto-wired: the run list contains a run id matching
+# REF_SUBSTR "auglabAug_v26_6_2_train050_val000", so aggregate_from_config.py adds it with
+# no config field needed (CLAUDE.md "Inline sig. vs ref column").
+#
+# Consumed by 06_10_aggregate_from_config.sh AND 06_11_significance_from_config.sh.
+title: "picai-prostate ADC models — csPCa lesion segmentation, cross-contrast"
+in_domain_contrast: adc
+output_prefix: "01_results"
+output_dir: "${METRICS_ROOT}/picai_prostate_model/adc"
+metrics_dir: "${METRICS_ROOT}/picai_prostate_model/adc"
+
+column_order:
+  - t2w
+  - adc
+  - hbv
+
+runs:
+  - picai-prostate_adc_baseline_20260802_205730
+  - picai-prostate_adc_auglab_default_20260802_205730
+  - picai-prostate_adc_synthseg_noEM_20260802_205736
+  - picai-prostate_adc_synthseg_EM_20260802_205736
+  - picai-prostate_adc_srcsm_20260802_205742
+  - picai-prostate_adc_auglabAug_v26_6_2_train050_val000_20260802_205742
+  - picai-prostate_adc_auglabAug_v26_6_2_train050_val100_20260802_205742

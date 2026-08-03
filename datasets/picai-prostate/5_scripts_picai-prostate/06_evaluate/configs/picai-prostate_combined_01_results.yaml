@@ -1,0 +1,40 @@
+# picai-prostate — combined training modalities (t2w + adc pooled), cross-contrast.
+# Consumed by datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
+# 06_17_combined_modality_summary.sh. Companion to picai-prostate_t2w_01_results.yaml /
+# picai-prostate_adc_01_results.yaml (each ONE training modality) — this pools BOTH into one
+# row per method (3+3 folds tagged by modality → one equally-weighted 6-fold mean), with an
+# inline significance column (ref = OURS train050_val000) after the usual "all" column.
+# This is also what feeds picai-prostate's column in the cross-dataset task-level heatmap
+# (scripts/evaluate/meta_task_heatmap.yaml).
+#
+# Same fixed 7-method order as the per-modality configs (no others): baseline,
+# synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2 train050_val000,
+# then train050_val100. NOTE the last two share ONE training run per modality — the
+# _val100 run id is the DualVal trainer's hard-linked mirror, not a separate training.
+title: "picai-prostate — combined training modalities (t2w + adc), cross-contrast"
+output_dir: "${METRICS_ROOT}/picai_prostate_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [t2w, adc, hbv]
+
+modalities:
+  - name: t2w
+    metrics_dir: "${METRICS_ROOT}/picai_prostate_model/t2w"
+    runs:
+      baseline: picai-prostate_t2w_baseline_20260802_205711
+      synthseg_noEM: picai-prostate_t2w_synthseg_noEM_20260802_205717
+      synthseg_EM: picai-prostate_t2w_synthseg_EM_20260802_205717
+      auglab_default: picai-prostate_t2w_auglab_default_20260802_205711
+      srcsm: picai-prostate_t2w_srcsm_20260802_205723
+      auglabAug_v26_6_2_train050_val000: picai-prostate_t2w_auglabAug_v26_6_2_train050_val000_20260802_205723
+      auglabAug_v26_6_2_train050_val100: picai-prostate_t2w_auglabAug_v26_6_2_train050_val100_20260802_205723
+  - name: adc
+    metrics_dir: "${METRICS_ROOT}/picai_prostate_model/adc"
+    runs:
+      baseline: picai-prostate_adc_baseline_20260802_205730
+      synthseg_noEM: picai-prostate_adc_synthseg_noEM_20260802_205736
+      synthseg_EM: picai-prostate_adc_synthseg_EM_20260802_205736
+      auglab_default: picai-prostate_adc_auglab_default_20260802_205730
+      srcsm: picai-prostate_adc_srcsm_20260802_205742
+      auglabAug_v26_6_2_train050_val000: picai-prostate_adc_auglabAug_v26_6_2_train050_val000_20260802_205742
+      auglabAug_v26_6_2_train050_val100: picai-prostate_adc_auglabAug_v26_6_2_train050_val100_20260802_205742
