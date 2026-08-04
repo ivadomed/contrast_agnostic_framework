@@ -45,12 +45,26 @@ import numpy as np
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "00_00_utils"))  # sibling: 00_commun_scripts/00_00_utils
-from eval_folds import filter_fold_dirs  # noqa: E402 — single source of truth, see eval_folds.py
-# Significance testing lives in the dedicated companion script
-# datasets/00_commun_scripts/00_03_evaluate/significance_from_config.py (same
-# config, run separately) — not embedded here.
+from eval_folds import EVAL_FOLD_INDICES, filter_fold_dirs  # noqa: E402 — single source of truth, see eval_folds.py
+from stat_tests import holm, macro_perm  # noqa: E402 — shared math, see stat_tests.py
+# Full significance reporting (OOD/IND/per-contrast breakdowns) lives in the
+# dedicated companion script datasets/00_commun_scripts/00_03_evaluate/
+# significance_from_config.py (same config, run separately). This module only
+# adds ONE inline "sig. vs ref" column to the summary table/heatmap (see
+# `significance_column` below) — auto-wired whenever the run list contains the
+# headline OURS method (a run id containing REF_SUBSTR); significance_from_config.py
+# reuses load_run_cases/paired from here rather than redefining them.
 
 _PREFIXES = ("nnUNet_", "auglab_", "")
+
+# The headline "OURS" method — any run id containing this substring is picked as
+# the reference for the auto-wired inline significance column. Deliberately more
+# specific than just "v26_6_2" (which also matches the older non-auglab "v26_6_2
+# alone" method and its HP-tuning variants) and than "auglabAug_v26_6_2" alone
+# (which also matches train025/train090 HP variants) — this exact substring
+# matches ONLY the headline train050_val000 run in every config checked
+# (2026-08-01 audit: exactly 0 or 1 occurrence in every existing config).
+REF_SUBSTR = "auglabAug_v26_6_2_train050_val000"
 
 # ── multi-source helpers ─────────────────────────────────────────────────────
 
@@ -160,6 +174,90 @@ def count_eval_folds(run_dir: Path) -> int:
                if (fd / "eval_all.csv").exists())
 
 
+def load_run_cases(sources: list, key: str, metric: str) -> dict:
+    """col -> {case_id: mean metric over that case's labels and folds in
+    EVAL_FOLD_INDICES}. Single source of truth for the paired-case unit of
+    analysis (see significance_from_config.py's module docstring for why the
+    CASE, fold-0-2-capped, is the correct unit) — shared by the inline
+    significance column here and by significance_from_config.py's full report.
+    """
+    per = defaultdict(lambda: defaultdict(list))
+    for src in sources:
+        run_dir = resolve_run_dir(src["metrics_dir"], key)
+        if run_dir is None:
+            continue
+        prefix = src.get("column_prefix", "")
+        rename = src.get("column_rename", {})
+        for fold_dir in sorted(run_dir.glob("fold*")):
+            try:
+                fold_idx = int(fold_dir.name.replace("fold", ""))
+            except ValueError:
+                continue
+            if fold_idx not in EVAL_FOLD_INDICES:
+                continue
+            csv_path = fold_dir / "eval_all.csv"
+            if not csv_path.exists():
+                continue
+            with csv_path.open() as f:
+                for row in csv.DictReader(f):
+                    col = rename.get(row["group"], f"{prefix}{row['group']}")
+                    try:
+                        v = float(row[metric])
+                    except (KeyError, ValueError):
+                        continue
+                    if np.isfinite(v):
+                        per[col][row["case"]].append(v)
+    return {col: {c: float(np.mean(vs)) for c, vs in cases.items() if vs}
+            for col, cases in per.items()}
+
+
+def paired(ref_cases: dict, comp_cases: dict, col: str) -> tuple:
+    """Aligned (x_ref, y_comp) arrays over shared cases for one contrast column."""
+    r, c = ref_cases.get(col, {}), comp_cases.get(col, {})
+    common = sorted(set(r) & set(c))
+    return np.array([r[k] for k in common]), np.array([c[k] for k in common])
+
+
+def find_ref_key(run_keys: list) -> str | None:
+    """First run id containing REF_SUBSTR, or None if the config doesn't
+    include the headline OURS method (in which case no significance column
+    is added — see main())."""
+    return next((k for k in run_keys if REF_SUBSTR in k), None)
+
+
+def significance_column(sources: list, runs_ordered: list, ref_key: str,
+                        all_contrasts: list, metric: str) -> dict:
+    """method_key -> Holm-corrected one-sided ("ref better") macroΔ p-value vs
+    ref, across ALL tested contrasts (equal weight per contrast — the same
+    estimand as the summary table's `all` column). Same test as
+    significance_from_config.py's headline block, imported from stat_tests.py
+    so there is one implementation. NaN (blank cell) for the ref's own row."""
+    higher_better = metric == "dice"
+    ref_cases = load_run_cases(sources, ref_key, metric)
+    competitors = [k for k in runs_ordered if k != ref_key]
+    p1s = []
+    for key in competitors:
+        comp_cases = load_run_cases(sources, key, metric)
+        arrs = []
+        for col in all_contrasts:
+            x, y = paired(ref_cases, comp_cases, col)
+            if len(x):
+                arrs.append(x - y)
+        _, _, p1 = macro_perm(arrs, higher_better)
+        p1s.append(p1)
+    hp = holm(p1s)
+    out = {ref_key: float("nan")}
+    out.update(dict(zip(competitors, hp)))
+    return out
+
+
+def _fmt_sig(p: float, alpha: float = 0.05) -> str:
+    if not np.isfinite(p):
+        return "—"
+    s = f"{p:.1e}" if p < 1e-4 else f"{p:.4f}"
+    return f"**{s}**" if p < alpha else s
+
+
 def cross_fold_stats(per_fold: dict) -> tuple:
     fold_means = []
     for vs in per_fold.values():
@@ -200,7 +298,8 @@ def _display_key(key: str) -> str:
 
 
 def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, prefix: str,
-                  in_domain_contrast: str = None, column_order: list = None):
+                  in_domain_contrast: str = None, column_order: list = None,
+                  sig_by_metric: dict = None, ref_key: str = None):
     all_contrasts_set = {c for d in runs_data.values() for c in d.get("dice", {})}
     if column_order:
         ordered = [c for c in column_order if c in all_contrasts_set]
@@ -218,6 +317,12 @@ def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, pr
     # Column headers: bold the in-domain contrast
     col_headers = [f"**{c}**" if c == in_domain_contrast else c for c in cols]
 
+    sig_note = ""
+    if sig_by_metric is not None:
+        sig_note = (f" `sig. vs ref` = Holm-corrected one-sided (ref better) macroΔ p-value of "
+                   f"`{_display_key(ref_key)}` vs that row (blank on the ref's own row); "
+                   "**bold** = p < 0.05.")
+
     lines = [
         f"# {title}",
         "",
@@ -227,7 +332,7 @@ def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, pr
         "Each cell is the **cross-fold, cross-class average** (mean over all labels and folds). "
         "`all` = average across modalities. **Bold** = best per column. "
         + (f"**{in_domain_contrast}** = in-domain contrast. " if in_domain_contrast else "")
-        + "— = no data.",
+        + "— = no data." + sig_note,
         "",
     ]
 
@@ -243,12 +348,14 @@ def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, pr
         matrices[metric] = mat
 
         best = _best_per_col(mat, metric)
+        sig = sig_by_metric.get(metric) if sig_by_metric else None
+        sig_header = " | sig. vs ref |" if sig is not None else " |"
 
         lines += [
             f"## {heading}",
             "",
-            "| experiment | folds | " + " | ".join(col_headers) + " |",
-            "|" + "---|" * (len(cols) + 2),
+            "| experiment | folds | " + " | ".join(col_headers) + sig_header,
+            "|" + "---|" * (len(cols) + 2 + (1 if sig is not None else 0)),
         ]
         for i, key in enumerate(runs_ordered):
             nf = fold_counts.get(key, 0)
@@ -258,7 +365,11 @@ def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, pr
                 if s != "—" and best[j] == i:
                     s = f"**{s}**"
                 cells.append(s)
-            lines.append(f"| {_format_label_md(_display_key(key))} | {nf} | " + " | ".join(cells) + " |")
+            row = f"| {_format_label_md(_display_key(key))} | {nf} | " + " | ".join(cells)
+            if sig is not None:
+                sig_cell = "—" if key == ref_key else _fmt_sig(sig.get(key, float("nan")))
+                row += f" | {sig_cell}"
+            lines.append(row + " |")
         lines.append("")
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -268,11 +379,13 @@ def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, pr
     print(f"\n→ {md_path}")
 
     _save_heatmaps(matrices, runs_ordered, fold_counts, cols, out_dir, prefix, title,
-                   in_domain_contrast=in_domain_contrast)
+                   in_domain_contrast=in_domain_contrast, sig_by_metric=sig_by_metric,
+                   ref_key=ref_key)
 
 
 def _save_heatmaps(matrices, runs_ordered, fold_counts, cols, out_dir: Path, prefix: str,
-                   title: str, in_domain_contrast: str = None):
+                   title: str, in_domain_contrast: str = None,
+                   sig_by_metric: dict = None, ref_key: str = None):
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -297,12 +410,18 @@ def _save_heatmaps(matrices, runs_ordered, fold_counts, cols, out_dir: Path, pre
             continue
 
         best = _best_per_col(mat, metric)
+        sig = sig_by_metric.get(metric) if sig_by_metric else None
 
-        n_runs, n_cols = mat.shape
+        n_runs, n_data_cols = mat.shape
+        n_cols = n_data_cols + (1 if sig is not None else 0)
+        plot_cols = cols + (["sig. vs ref"] if sig is not None else [])
+        full = np.full((n_runs, n_cols), np.nan)
+        full[:, :n_data_cols] = mat
+
         fig_w = max(8, 1.4 * n_cols + 5)
         fig_h = max(3, 0.55 * n_runs + 2)
         fig, ax = plt.subplots(figsize=(fig_w, fig_h))
-        masked = np.ma.masked_invalid(mat)
+        masked = np.ma.masked_invalid(full)
         im = ax.imshow(masked, aspect="auto", cmap=cmap)
 
         # In-domain column: subtle background band drawn behind the image
@@ -311,7 +430,7 @@ def _save_heatmaps(matrices, runs_ordered, fold_counts, cols, out_dir: Path, pre
                        color="crimson", alpha=0.08, zorder=0)
 
         ax.set_xticks(range(n_cols))
-        xlabels = ax.set_xticklabels(cols, rotation=30, ha="right")
+        xlabels = ax.set_xticklabels(plot_cols, rotation=30, ha="right")
         if in_domain_col is not None:
             xlabels[in_domain_col].set_color("crimson")
             xlabels[in_domain_col].set_fontweight("bold")
@@ -322,7 +441,7 @@ def _save_heatmaps(matrices, runs_ordered, fold_counts, cols, out_dir: Path, pre
         ax.set_title(f"{title} — {heading}", pad=10)
 
         for i in range(n_runs):
-            for j in range(n_cols):
+            for j in range(n_data_cols):
                 v = mat[i, j]
                 if np.isfinite(v):
                     txt = f"{v * 100:.1f}" if prec == 4 else f"{v:.1f}"
@@ -336,8 +455,24 @@ def _save_heatmaps(matrices, runs_ordered, fold_counts, cols, out_dir: Path, pre
                         fontweight=fw,
                     )
 
+        # Significance column: no color scale (masked NaN cell), just text —
+        # bold red if p < 0.05, gray otherwise; blank on the ref's own row.
+        if sig is not None:
+            for i, key in enumerate(runs_ordered):
+                if key == ref_key:
+                    continue
+                p_val = sig.get(key, float("nan"))
+                if not np.isfinite(p_val):
+                    continue
+                txt = f"{p_val:.1e}" if p_val < 1e-4 else f"{p_val:.3f}"
+                starred = p_val < 0.05
+                ax.text(n_data_cols, i, txt, ha="center", va="center", fontsize=8,
+                       color="crimson" if starred else "gray",
+                       fontweight="bold" if starred else "normal")
+            ax.axvline(n_data_cols - 0.5, color="black", linewidth=0.8)
+
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-        ax.set_xlabel("modality")
+        ax.set_xlabel("modality" + ("  |  significance vs ref" if sig is not None else ""))
         ax.set_ylabel("experiment")
         fig.tight_layout()
 
@@ -427,8 +562,24 @@ def main():
         print("No runs with evaluation data found.", file=sys.stderr)
         sys.exit(1)
 
+    # Inline "sig. vs ref" column: auto-wired whenever the config's run list
+    # includes the headline OURS method (REF_SUBSTR) and has data for it, unless
+    # explicitly disabled (`no_significance: true`) or overridden (`sig_ref: <exact run id>`).
+    sig_by_metric, ref_key = None, None
+    if not cfg.get("no_significance", False):
+        ref_key = cfg.get("sig_ref") or find_ref_key(runs_ordered)
+        if ref_key is not None and ref_key in runs_ordered and runs_data.get(ref_key):
+            all_contrasts = sorted({c for d in runs_data.values() for c in d.get("dice", {})})
+            sig_by_metric = {
+                metric: significance_column(sources, runs_ordered, ref_key, all_contrasts, metric)
+                for metric in ("dice", "hd95")
+            }
+        else:
+            ref_key = None
+
     build_summary(runs_ordered, runs_data, fold_counts, title, out_dir, output_prefix,
-                  in_domain_contrast=in_domain_contrast, column_order=column_order)
+                  in_domain_contrast=in_domain_contrast, column_order=column_order,
+                  sig_by_metric=sig_by_metric, ref_key=ref_key)
 
 
 if __name__ == "__main__":

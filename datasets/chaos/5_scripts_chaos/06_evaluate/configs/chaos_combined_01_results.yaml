@@ -1,0 +1,37 @@
+# CHAOS — combined training modalities (T1in + T2spir pooled), cross-contrast.
+# Consumed by datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py
+# via 06_33_combined_modality_summary.sh. Companion to chaos_t1in_03_results.yaml /
+# chaos_t2spir_01_results.yaml (each ONE training modality) — this pools BOTH into
+# one row per method, with an inline significance column (ref = OURS train050_val000)
+# after the usual "all" column.
+#
+# Same fixed 7-method order as the per-modality configs (no others): baseline,
+# synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2
+# train050_val000, then train050_val100.
+title: "CHAOS — combined training modalities (T1in + T2spir), cross-contrast"
+output_dir: "${METRICS_ROOT}/chaos_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [t1in, t2spir, ct, t1out]
+
+modalities:
+  - name: t1in
+    metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+    runs:
+      baseline: chaos_t1in_baseline_20260614_153230
+      synthseg_noEM: chaos_t1in_synthseg_noEM_train100_val000_20260611_120000
+      synthseg_EM: chaos_t1in_synthseg_EM_train100_val000_20260611_120000
+      auglab_default: chaos_t1in_auglab_default_20260611_120000
+      srcsm: chaos_t1in_srcsm_20260710_011817
+      auglabAug_v26_6_2_train050_val000: chaos_t1in_auglabAug_v26_6_2_train050_val000_20260615_213615
+      auglabAug_v26_6_2_train050_val100: chaos_t1in_auglabAug_v26_6_2_train050_val100_20260616_112420
+  - name: t2spir
+    metrics_dir: "${METRICS_ROOT}/chaos_model/t2spir"
+    runs:
+      baseline: chaos_t2spir_baseline_20260620_111146
+      synthseg_noEM: chaos_t2spir_synthseg_noEM_20260620_112515
+      synthseg_EM: chaos_t2spir_synthseg_EM_20260620_112357
+      auglab_default: chaos_t2spir_auglab_default_20260620_112240
+      srcsm: chaos_t2spir_srcsm_20260709_121945
+      auglabAug_v26_6_2_train050_val000: chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202
+      auglabAug_v26_6_2_train050_val100: chaos_t2spir_auglabAug_v26_6_2_train050_val100_20260723_194053

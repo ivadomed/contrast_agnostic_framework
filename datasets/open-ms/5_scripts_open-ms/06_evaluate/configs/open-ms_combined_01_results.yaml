@@ -1,0 +1,37 @@
+# open-ms — combined training modalities (flair + t1w pooled), cross-contrast.
+# Consumed by datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py
+# via 06_17_combined_modality_summary.sh. Companion to open-ms_flair_01_results.yaml /
+# open-ms_t1w_01_results.yaml (each ONE training modality) — this pools BOTH into one
+# row per method, with an inline significance column (ref = OURS train050_val000)
+# after the usual "all" column.
+#
+# Same fixed 7-method order as the per-modality configs (no others): baseline,
+# synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2
+# train050_val000, then train050_val100.
+title: "open-ms — combined training modalities (flair + t1w), cross-contrast"
+output_dir: "${METRICS_ROOT}/open_ms_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [flair, t1w, t2w]
+
+modalities:
+  - name: flair
+    metrics_dir: "${METRICS_ROOT}/open_ms_model/flair"
+    runs:
+      baseline: open-ms_flair_baseline_20260706_061243
+      synthseg_noEM: open-ms_flair_synthseg_noEM_train100_val000_20260706_061243
+      synthseg_EM: open-ms_flair_synthseg_EM_train100_val000_20260706_061243
+      auglab_default: open-ms_flair_auglab_default_20260706_061243
+      srcsm: open-ms_flair_srcsm_20260709_072043
+      auglabAug_v26_6_2_train050_val000: open-ms_flair_auglabAug_v26_6_2_train050_val000_20260710_054455
+      auglabAug_v26_6_2_train050_val100: open-ms_flair_auglabAug_v26_6_2_train050_val100_20260716_095413
+  - name: t1w
+    metrics_dir: "${METRICS_ROOT}/open_ms_model/t1w"
+    runs:
+      baseline: open-ms_t1w_baseline_20260708_083441
+      synthseg_noEM: open-ms_t1w_synthseg_noEM_train100_val000_20260708_083541
+      synthseg_EM: open-ms_t1w_synthseg_EM_train100_val000_20260708_083611
+      auglab_default: open-ms_t1w_auglab_default_20260708_083511
+      srcsm: open-ms_t1w_srcsm_20260709_075121
+      auglabAug_v26_6_2_train050_val000: open-ms_t1w_auglabAug_v26_6_2_train050_val000_20260710_054525
+      auglabAug_v26_6_2_train050_val100: open-ms_t1w_auglabAug_v26_6_2_train050_val100_20260723_194125

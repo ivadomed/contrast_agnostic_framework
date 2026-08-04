@@ -56,67 +56,32 @@ Usage:
 Writes {output_dir}/{output_prefix}_significance.md and prints a summary.
 """
 import argparse
-import csv
 import importlib.util
 import os
 import sys
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import norm
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "00_00_utils"))
 from eval_folds import EVAL_FOLD_INDICES  # noqa: E402 — single source of truth, see eval_folds.py
-from stat_tests import wilcoxon_p, holm, fmt_p  # noqa: E402 — shared math, see stat_tests.py
+from stat_tests import (  # noqa: E402 — shared math, see stat_tests.py
+    wilcoxon_p, holm, fmt_p, macro_stat, macro_perm, macro_ci,
+)
 
-# Reuse run-dir resolution from the aggregator so resolution stays identical.
+# Reuse run-dir resolution AND per-case loading from the aggregator so both
+# scripts test the exact same numbers (aggregate_from_config.py now also draws
+# an inline "sig. vs ref" column on the summary table using this same
+# load_run_cases/paired — one implementation, two callers).
 # aggregate_from_config.py is now a sibling in this same dir (00_03_evaluate/).
 _AGG = Path(__file__).resolve().parent / "aggregate_from_config.py"
 _spec = importlib.util.spec_from_file_location("aggregate_from_config", _AGG)
 _agg = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_agg)
 resolve_run_dir = _agg.resolve_run_dir
-
-
-def load_run_cases(sources, key, metric):
-    """col -> {case_id: mean metric over that case's labels and folds in EVAL_FOLD_INDICES}."""
-    per = defaultdict(lambda: defaultdict(list))
-    for src in sources:
-        run_dir = resolve_run_dir(src["metrics_dir"], key)
-        if run_dir is None:
-            continue
-        prefix = src.get("column_prefix", "")
-        rename = src.get("column_rename", {})
-        for fold_dir in sorted(run_dir.glob("fold*")):
-            try:
-                fold_idx = int(fold_dir.name.replace("fold", ""))
-            except ValueError:
-                continue
-            if fold_idx not in EVAL_FOLD_INDICES:
-                continue
-            csv_path = fold_dir / "eval_all.csv"
-            if not csv_path.exists():
-                continue
-            with csv_path.open() as f:
-                for row in csv.DictReader(f):
-                    col = rename.get(row["group"], f"{prefix}{row['group']}")
-                    try:
-                        v = float(row[metric])
-                    except (KeyError, ValueError):
-                        continue
-                    if np.isfinite(v):
-                        per[col][row["case"]].append(v)
-    return {col: {c: float(np.mean(vs)) for c, vs in cases.items() if vs}
-            for col, cases in per.items()}
-
-
-def paired(ref_cases, comp_cases, col):
-    """Aligned (x_ref, y_comp) arrays over shared cases for one contrast column."""
-    r, c = ref_cases.get(col, {}), comp_cases.get(col, {})
-    common = sorted(set(r) & set(c))
-    return np.array([r[k] for k in common]), np.array([c[k] for k in common])
+load_run_cases = _agg.load_run_cases
+paired = _agg.paired
 
 
 def main():
@@ -183,7 +148,6 @@ def main():
 
     scale = 100 if higher_better else 1
     unit = "Dice pts" if higher_better else "mm HD95"
-    rng = np.random.default_rng(0)      # reproducible bootstrap CI
     B_BOOT = 5000
 
     # In-domain (training) contrast. For multi-source configs the column is already prefixed
@@ -202,44 +166,6 @@ def main():
                 out.append(x - y)
         return out
 
-    def macro_stat(arrs):
-        return float(np.mean([a.mean() for a in arrs])) if arrs else float("nan")
-
-    def macro_perm(arrs):
-        """Contrast-stratified paired SIGN-FLIP test on the macroΔ (analytic normal form).
-
-        macroΔ = mean over contrasts of that contrast's mean paired diff (equal weight per
-        contrast — the estimand the summary `all` column reports, so the test can't be
-        hijacked by case-count imbalance). Under H0 (no method difference) each paired diff
-        d flips sign with E[±d]=0, Var[±d]=d². The sign-flip null of macroΔ therefore has
-        mean 0 and Var = (1/K²) Σ_k (1/n_k²) Σ_i d_ki², closed-form (no simulation, no
-        Monte-Carlo floor). Z = macroΔ / sd → normal-approximation two-sided and one-sided
-        (ours-better) p. Returns (macroΔ*scale, two-sided p, one-sided p)."""
-        if not arrs:
-            return float("nan"), float("nan"), float("nan")
-        obs = macro_stat(arrs)
-        K = len(arrs)
-        var_T = sum((a ** 2).sum() / (a.size ** 2) for a in arrs) / (K ** 2)
-        sd = float(np.sqrt(var_T))
-        if sd == 0:
-            p_two = 1.0 if obs == 0 else 0.0
-            return obs * scale, p_two, (0.0 if (obs > 0) == higher_better and obs != 0 else 1.0)
-        z = obs / sd
-        p_two = float(2 * norm.sf(abs(z)))
-        p_one = float(norm.sf(z) if higher_better else norm.cdf(z))
-        return obs * scale, p_two, p_one
-
-    def macro_ci(arrs):
-        """Hierarchical bootstrap 95% CI of macroΔ (resample cases within each contrast)."""
-        if not arrs:
-            return float("nan"), float("nan")
-        per = np.empty((B_BOOT, len(arrs)))
-        for j, a in enumerate(arrs):
-            idx = rng.integers(0, a.size, size=(B_BOOT, a.size))
-            per[:, j] = a[idx].mean(axis=1)
-        lo, hi = np.percentile(per.mean(axis=1), [2.5, 97.5])
-        return lo * scale, hi * scale
-
     def block_table(subset, heading, note):
         # HEADLINE = one-sided directional ("ours better") p, Holm-corrected across
         # competitors — justified because the hypothesis is directional (our method is
@@ -249,8 +175,8 @@ def main():
         p1s, rows = [], []
         for comp in competitors:
             arrs = diff_arrays(comp, subset)
-            obs, p2, p1 = macro_perm(arrs)
-            lo, hi = macro_ci(arrs)
+            obs, p2, p1 = macro_perm(arrs, higher_better, scale)
+            lo, hi = macro_ci(arrs, scale, b_boot=B_BOOT, seed=0)
             better = (lambda a: (a > 0).sum()) if higher_better else (lambda a: (a < 0).sum())
             worse = (lambda a: (a < 0).sum()) if higher_better else (lambda a: (a > 0).sum())
             nw = int(sum(better(a) for a in arrs)); nl = int(sum(worse(a) for a in arrs))

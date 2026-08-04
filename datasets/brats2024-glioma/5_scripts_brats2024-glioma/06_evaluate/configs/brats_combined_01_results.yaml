@@ -1,0 +1,37 @@
+# BraTS 2024 Glioma — combined training modalities (t1n + t2w pooled), cross-contrast.
+# Consumed by datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py
+# via 06_13_combined_modality_summary.sh. Companion to brats_t1n_01_results.yaml /
+# brats_t2w_01_results.yaml (each ONE training modality) — this pools BOTH into one
+# row per method, with an inline significance column (ref = OURS train050_val000)
+# after the usual "all" column.
+#
+# Same fixed 7-method order as the per-modality configs (no others): baseline,
+# synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2
+# train050_val000, then train050_val100.
+title: "BraTS 2024 Glioma — combined training modalities (t1n + t2w), cross-contrast"
+output_dir: "${METRICS_ROOT}/brats2024_glioma_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [t1c, t1n, t2f, t2w]
+
+modalities:
+  - name: t1n
+    metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t1n"
+    runs:
+      baseline: brats2024-glioma_t1n_baseline_20260622_044535
+      synthseg_noEM: brats2024-glioma_t1n_synthseg_noEM_20260622_044535
+      synthseg_EM: brats2024-glioma_t1n_synthseg_EM_20260622_044535
+      auglab_default: brats2024-glioma_t1n_auglab_default_20260622_044535
+      srcsm: brats2024-glioma_t1n_srcsm_20260709_122015
+      auglabAug_v26_6_2_train050_val000: brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val000_20260710_040303
+      auglabAug_v26_6_2_train050_val100: brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val100_20260725_113540
+  - name: t2w
+    metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t2w"
+    runs:
+      baseline: brats2024-glioma_t2w_baseline_20260620_125115
+      synthseg_noEM: brats2024-glioma_t2w_synthseg_noEM_20260620_125442
+      synthseg_EM: brats2024-glioma_t2w_synthseg_EM_20260620_125354
+      auglab_default: brats2024-glioma_t2w_auglab_default_20260620_125306
+      srcsm: brats2024-glioma_t2w_srcsm_20260709_122045
+      auglabAug_v26_6_2_train050_val000: brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val000_20260725_113540
+      auglabAug_v26_6_2_train050_val100: brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val100_20260725_113540

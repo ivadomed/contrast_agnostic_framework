@@ -16,6 +16,12 @@
 #     paths unchanged; any other tag reads predictions from fold{F}/<tag>/<contrast>
 #     (see predict_common.sh's CKPT_SUBDIR) and writes metrics to a sibling
 #     <CATEGORY>_<RUN_ID>_<tag> dir so it never collides with checkpoint_best.
+#   METRICS_SUBDIR   unset (default) writes to the normal flat METRICS_ROOT/.../<contrast>/
+#     layout. Set to e.g. "ablations" to write to METRICS_ROOT/.../<contrast>/ablations/
+#     instead — for non-headline result sets (see CLAUDE.md's "Within 02_metrics/<model>/
+#     <contrast>/, a non-headline result set gets its own dedicated subdir" convention),
+#     so ad-hoc/ablation runs never mix into the flat headline layout. Predictions are
+#     read from the normal (non-subdir) path either way — only the metrics OUTPUT moves.
 #
 # Examples:
 #   bash 06_01_evaluate_run.sh brats2024-glioma_t1n_v26_6_2_train090_val000_20260608_003445              # nnUNet, all folds
@@ -64,13 +70,14 @@ PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${
 CKPT_TAG="${CKPT_TAG:-best}"
 _PRED_SUBDIR=""; [ "${CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${CKPT_TAG}/"
 _OUT_SUFFIX=""; [ "${CKPT_TAG}" != "best" ] && _OUT_SUFFIX="_${CKPT_TAG}"
+METRICS_SUBDIR="${METRICS_SUBDIR:-}"
 
 [ -d "$PRED_BASE" ] || { echo "ERROR: no predictions at $PRED_BASE" >&2; exit 1; }
 
 eval_fold() {
     local F="$1" SLOT="${2:-0}"
     local PRED_ROOT="${PRED_BASE}/fold${F}/${_PRED_SUBDIR}"
-    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}/fold${F}"
+    local EVAL_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}${METRICS_SUBDIR:+/${METRICS_SUBDIR}}/${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}/fold${F}"
 
     if [ ! -d "$PRED_ROOT" ]; then
         echo "  ! fold${F}: no predictions dir at $PRED_ROOT — skipping" >&2
@@ -119,7 +126,7 @@ if [ "$FOLD" = "all" ]; then
         eval_fold "$F" "$F" &
     done
     wait
-    echo "[$(date '+%H:%M:%S')] all folds evaluated → ${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}/"
+    echo "[$(date '+%H:%M:%S')] all folds evaluated → ${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}${METRICS_SUBDIR:+/${METRICS_SUBDIR}}/${CATEGORY}_${RUN_ID}/"
 else
     eval_fold "${FOLD}" "${SLOT:-0}"
 fi
