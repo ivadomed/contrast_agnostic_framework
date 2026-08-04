@@ -2,16 +2,87 @@
 \setcounter{page}{1}
 \maketitlesupplementary
 
+\section{Training configuration}
+\label{sec:suppl-config}
 
-\section{Rationale}
-\label{sec:rationale}
-% 
-Having the supplementary compiled together with the main paper means that:
-% 
-\begin{itemize}
-\item The supplementary can back-reference sections of the main paper, for example, we can refer to \cref{sec:intro};
-\item The main paper can forward reference sub-sections within the supplementary explicitly (e.g. referring to a particular experiment); 
-\item When submitted to arXiv, the supplementary will already included at the end of the paper.
-\end{itemize}
-% 
-To split the supplementary pages from the main paper, you can use \href{https://support.apple.com/en-ca/guide/preview/prvw11793/mac#:~:text=Delete%20a%20page%20from%20a,or%20choose%20Edit%20%3E%20Delete).}{Preview (on macOS)}, \href{https://www.adobe.com/acrobat/how-to/delete-pages-from-pdf.html#:~:text=Choose%20%E2%80%9CTools%E2%80%9D%20%3E%20%E2%80%9COrganize,or%20pages%20from%20the%20file.}{Adobe Acrobat} (on all OSs), as well as \href{https://superuser.com/questions/517986/is-it-possible-to-delete-some-pages-of-a-pdf-document}{command line tools}.
+\input{sec/_suppl_config}
+
+\section{Datasets and evaluation protocol}
+\label{sec:suppl-data}
+
+\input{sec/_suppl_data}
+
+\section{Per-setting results}
+\label{sec:suppl-persetting}
+
+\cref{tab:meta} in the main paper reports results at the task level, pooling
+each task's held-out test contrasts and both of its source modalities. This
+section reports the same evaluation broken out into the eight individual
+source-modality settings. Every number is a cross-fold, cross-class average
+over all held-out contrasts of that setting, under the protocol of
+\cref{subsec:e-setup}.
+
+\input{sec/_suppl_tables}
+
+Two observations are easier to see here than at task level. First, PALETTE
+attains the best Dice in \emph{all eight} settings. Second, the identity of
+the runner-up is not stable: Auglab is the strongest competitor on six of the
+eight Dice settings, SRCSM on Open-MS FLAIR, and SynthSeg-EM on ON-Harmony
+T2w; on HD95 the runner-up changes again. No competing method can be relied
+upon as a default, which is the practical argument for a plug-in transform
+that is at or near the top everywhere.
+
+\section{Synthetic contrast at validation time}
+\label{sec:suppl-val100}
+
+Throughout the main paper PALETTE is applied with synthetic contrast during
+training only (\emph{train050/val000}), because every competing method is
+likewise evaluated with a real-contrast validation set; this keeps the
+comparison exactly like-for-like. PALETTE can additionally be applied to the
+validation set, so that model selection is performed under randomized
+contrast as well (\emph{train050/val100}).
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc|cc}
+\toprule
+ & \multicolumn{2}{c|}{Dice $\uparrow$} & \multicolumn{2}{c}{HD95 (mm) $\downarrow$} \\
+Task & val000 & val100 & val000 & val100 \\
+\midrule
+Brats-GLI    & 46.8 & \textbf{47.3} & 15.2 & \textbf{14.7} \\
+CHAOS        & 87.3 & \textbf{87.5} & 24.3 & \textbf{21.7} \\
+ON-Harmony   & 68.2 & \textbf{68.4} &  4.2 & \textbf{4.1}  \\
+Open-MS      & \textbf{38.5} & 37.9 & \textbf{24.3} & 24.2 \\
+\midrule
+\textbf{overall} & 60.2 & \textbf{60.3} & 17.0 & \textbf{16.2} \\
+\bottomrule
+\end{tabular}
+\caption{Applying PALETTE at validation time as well as at training time.
+The two configurations are statistically indistinguishable at task level
+(Dice $p = 0.66$, HD95 $p = 0.99$), so we report the like-for-like
+\emph{val000} configuration in the main paper and note \emph{val100} as a
+free additional gain -- it requires no extra data, annotation or training
+cost, only applying the same transform to the validation split.}
+\label{tab:suppl-val100}
+\end{table}
+
+Validation-time randomization improves the aggregate on both metrics
+(\cref{tab:suppl-val100}), most visibly on boundary distance
+($17.0 \rightarrow 16.2$~mm overall, and $24.3 \rightarrow 21.7$~mm on
+CHAOS). The effect is not significant at task level, and Open-MS moves
+slightly the other way, so we do not claim it as a separate contribution;
+we report it because it costs nothing and because it indicates that the
+benefit of contrast randomization extends to model selection and is not
+confined to the gradient updates.
+
+\section{Component ablation}
+\label{sec:suppl-mechanism}
+
+\input{sec/_suppl_mechanism}
+
+\section{Direct measurement of texture fidelity}
+\label{sec:suppl-ngf}
+
+\input{sec/_suppl_ngf}

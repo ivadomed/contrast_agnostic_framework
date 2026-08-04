@@ -1,0 +1,27 @@
+All evaluation is performed on held-out test cases only. For each task the model
+is trained on a single source contrast and evaluated on every contrast of that
+task's test split, including the training contrast itself; training and
+validation subjects never appear in any reported number.
+
+\paragraph{ON-Harmony} \cite{warrington2025onharmony} --- 31-region healthy-brain
+segmentation. Reference labels are \emph{silver standard}: they were produced
+automatically with FreeSurfer~\cite{fischl2012freesurfer} on the T1w volume of
+each subject and then registered to that subject's other contrasts, which are
+acquired in the same session. They are therefore not manual annotations, and
+absolute Dice on this task should be read as agreement with an automated
+reference rather than with a human rater; the comparison between methods, which
+all use the identical reference, is unaffected.
+
+\paragraph{Open-MS} \cite{lesjak2018openms} --- MS-lesion segmentation with
+manual consensus annotations, evaluated across FLAIR, T1w and T2w.
+
+\paragraph{Brats2024-GLI} \cite{deverdier2024brats2024} --- post-treatment
+glioma sub-region segmentation, evaluated across T1n, T1c, T2w and T2-FLAIR.
+
+\paragraph{CHAOS} \cite{kavur2021chaos} --- abdominal organ segmentation (liver,
+spleen, both kidneys), evaluated across the CHAOS MR contrasts and, as a
+cross-modality transfer, on held-out CT from AMOS~\cite{ji2022amos} and
+SLIVER07~\cite{heimann2009comparison}.
+
+Per-dataset subject counts, acquisition parameters and label definitions will be
+tabulated here in the camera-ready version.

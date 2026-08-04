@@ -74,12 +74,15 @@ restricted to $\ell$'s voxels only, \textbf{on top of the step-3 output}
 intensities, not on the original voxel values, so it composes with rather
 than replaces the unsupervised remap (\cref{fig:method-pipeline}, column
 4 shows the resulting per-label flat-remap value, computed prior to this
-step). Because the label assignment is independent of whatever
-$k$-means/Voronoi region a voxel fell into, this step reintroduces a
-full-strength contrast discontinuity exactly at the true label border
-regardless of whether the unsupervised partition happened to preserve it
--- sharpening the boundary cue the segmentation network can rely on,
-rather than sharpening the underlying anatomy. The step only ever
+step). The voxels of $\ell$ are therefore \emph{re-assigned} to a new region
+whose contrast is drawn afresh, but they \emph{inherit} the internal
+structure the $k$-means and Voronoi steps already imposed on them: the
+remap is affine, so relative intensity variation inside $\ell$ survives.
+Because the label assignment is independent of whatever $k$-means/Voronoi
+region a voxel fell into, this step reintroduces a full-strength contrast
+discontinuity exactly at the true label border regardless of whether the
+unsupervised partition happened to preserve it -- sharpening the boundary
+cue the network can rely on, not the underlying anatomy. The step only ever
 consumes the segmentation labels the network is already being trained to
 predict -- whatever labels happen to be annotated in the training set,
 including sparse or partial annotations -- so it requires no additional
@@ -158,8 +161,8 @@ affine remap. Because the partition and target statistics are identical to
 PALETTE's own, any difference in downstream performance between PALETTE and
 noise-fill isolates the one variable that changed: whether real texture is
 preserved or discarded within each region. We report this comparison
-separately for texture-defined structures (identified by fine internal
-gradients or low boundary contrast) and boundary-defined structures
+separately for structures with no tissue interface (fine internal gradients, low boundary
+contrast) and structures bounded by one
 (identified by a sharp, high-contrast border) in \cref{sec:experiments}, as
 the texture-preservation hypothesis predicts a widening gap specifically on
 the former.

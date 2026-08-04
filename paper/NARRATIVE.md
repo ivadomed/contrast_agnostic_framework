@@ -181,3 +181,98 @@ the win. If forced to one: **Level 3.**
 - [ ] Per-case Wilcoxon significance across all main-comparison datasets (needed given thin margins).
 - [ ] Decide how to present BraTS (near-tie on Dice, HD95 favors ablation) — likely rely on
       per-structure/crush-case breakdown there rather than the aggregate.
+
+---
+
+# ADDENDUM 2026-08-02 — narrative reframe (mechanism-first) + the "why" paragraph
+
+## A. Proposed reframe: lead with the mechanism, not the SOTA
+
+**Current thesis (§3, 2026-07-04):** "texture-preserving augmentation → new SOTA, *and* we
+explain the SOTA via two analyses."
+**Proposed thesis:** "**Preserving real texture matters for some segmentation tasks and not
+others — we identify which, and PALETTE is the augmentation that exploits it.**" SOTA numbers
+become supporting evidence, not the headline.
+
+**Why this is better for CVPR, in one sentence:** it changes the sign of our weakest number.
+
+| | SOTA-first framing | mechanism-first framing |
+|---|---|---|
+| CHAOS ladder +1.07 Dice | an embarrassment ("barely works on organs") | **the control arm** that makes the thesis falsifiable |
+| "significant in 6 of 8" | thin, marginal | secondary; the dissociation carries the paper |
+| §5 discussion admitting "margins are thin by design" | a concession a reviewer can quote back | unnecessary — margins are no longer the claim |
+
+CVPR reviewers do not reward medical-benchmark deltas; they reward a transferable insight.
+"Texture preservation pays off exactly when the target is appearance-defined rather than
+interface-defined, and here is a controlled dissociation" is a CVPR-shaped contribution.
+"We beat AugLab by ~1 Dice on 8 medical settings" is not.
+
+**Structural consequences if adopted:**
+- The ablation ladder (rung 4→5 fill swap) moves from §4.x to the **teaser figure**. It is an
+  *intervention* — partition held fixed, only the fill changes — which is stronger evidence
+  than any benchmark table.
+- open-ms **+7.70** vs CHAOS **+1.07** is the headline pair, with the NGF dose-response
+  (`ngf_dose_response_openms_flair.png`) as the independent confirmation that texture is what
+  turned on at that rung.
+- Contribution list reorders: (1) the finding, (2) PALETTE as the method that exploits it,
+  (3) the 8-setting evaluation as breadth evidence.
+- **Requirement this creates:** the dissociation needs ≥2 boundary-defined tasks, not just
+  CHAOS T1in. **RESOLVED 2026-08-02** — CHAOS T2spir (−1.14 Dice) and BraTS T1n (+7.22) both
+  landed, so the dissociation is now 2 appearance-defined (+7.70, +7.22) vs 2 interface-defined
+  (+1.07, −1.14), with inconsistent sign on the interface side. Spine would make it 2-vs-3 and
+  is now the highest-value remaining experiment. See `PAPER_TODO_20260802.md`.
+
+## B. The "why" paragraph — drop-in, cite as written
+
+Verified 2026-08-02. Full citation audit, including what NOT to cite and why:
+`datasets/00_commun_scripts/00_04_analysis/label_cue_importance/LITERATURE_REVIEW.md` §9–10.
+
+> Preserving real intensity structure matters where the target is defined by tissue
+> appearance, and not where it is defined by an anatomical interface. Liver, spleen and
+> kidney are encapsulated organs bounded by fat planes — a genuine physical interface, which
+> is why edge-following methods such as geodesic active contours have long succeeded on them
+> [CHAOS/Kavur 2021; GAC liver PMC4283827]; an augmentation that scrambles internal texture
+> while preserving that interface loses little. Diffuse glioma has no such interface: tumour
+> cells infiltrate beyond both the contrast-enhancing margin and the peritumoral FLAIR
+> abnormality [Meta-Radiology 2025; FLAIRectomy Brain Sci 2022; PMC8156976], so the target
+> must be inferred from tissue appearance rather than followed along an edge. MS lesions are
+> likewise defined by tissue signal characteristics rather than an anatomical border
+> [Zhang 2008].
+
+**Three traps this wording avoids — do not "simplify" them back in:**
+1. **Never argue from "CHAOS is solved."** A model reaching Dice 0.95 could be using texture,
+   shape or position. Performance shows the task is learnable, not that the boundary is an
+   intensity edge. Argue from *which class of algorithm works*: geodesic active contours are
+   edge-followers and only work if a gradient ridge exists. Nobody has ever segmented MS
+   lesions or glioma sub-regions with one.
+2. **Never infer "texture-defined" from rater disagreement.** Low inter-rater agreement is
+   equally consistent with "the scanner never captured the lesion extent". It supports "no
+   clear boundary" at most, and even then weakly.
+3. **Never claim MS lesions lack clear boundaries.** Clinical radiology describes typical MS
+   lesions as *well* demarcated; "ill-defined borders" is a documented red flag pointing AWAY
+   from MS (toward PML/NMOSD/MOGAD) — Brain 2019;142(7):1858. A neuroradiologist reviewer
+   would invert this claim. For MS argue *texture-informative* + *hard to delineate*, never
+   *boundary-less*. Glioma and MS are NOT symmetric; do not lump them.
+
+**Also do not use:** the widely quoted glioma "20% intra / 28% inter-rater" figure
+(attribution to Mazzara 2004 could not be confirmed); "manual liver Dice 0.95" as an
+inter-rater number (it is manual vs a reference standard).
+
+## C. Held in reserve — the contrast objection
+
+Expect: *"boundary clarity is a property of the sequence, not the disease — enhancing tumour
+has a razor-sharp margin on T1c."* Two answers, neither needed in the main text:
+1. Glioma infiltration is documented beyond BOTH the enhancing margin AND the FLAIR
+   abnormality — no sequence bounds the disease. The sharp T1c margin is a blood–brain-barrier
+   boundary, not a tumour boundary.
+2. Our own per-contrast measurement (804 ROIs, `label_cue_importance/FINDINGS.md`): every
+   pathology label sits at or below chance **in its own best contrast** (enhancing tumour on
+   T1c 0.463, MS on FLAIR 0.461) while every organ stays high in **both** contrasts
+   (0.620–0.921). Rebuttal material, not main-text material.
+
+## D. Status of this narrative doc
+
+§3 (central thesis) and §4 (framing) predate this addendum and are **superseded on the
+SOTA-first point** if the reframe is adopted. §8's honest odds (10–15% as-is, ~30% with the
+texture proof) were written 2026-07-04; the ablation + NGF dose-response now exist, so ~30% is
+the live number, and the reframe is an argument for the upper end of it — not a guarantee.

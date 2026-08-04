@@ -1,9 +1,21 @@
-\begin{thebibliography}{34}
+\begin{thebibliography}{38}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[fla(2022)]{flairectomy2022}
+{FLAIRectomy}: Resecting beyond the contrast margin for glioblastoma.
+\newblock \emph{Brain Sciences}, 12\penalty0 (5):\penalty0 544, 2022.
+\newblock histopathological tumour infiltration inside peritumoral FLAIR
+  abnormality, beyond the enhancing margin.
+
+\bibitem[gli(2025)]{gliomamargins2025}
+Imaging strategies for delineating glioma margins: Aiming at precise therapy.
+\newblock \emph{Meta-Radiology}, 2025.
+\newblock "gliomas do not exhibit a clear boundary between malignant and
+  healthy tissue"; infiltration several cm into normal-appearing parenchyma.
 
 \bibitem[Badea and Popa(2024)]{badea2024generalizable}
 Liviu Badea and Maria Popa.
@@ -122,6 +134,18 @@ Pablo Laso, Stefano Cerri, Annabel Sorby-Adams, Jennifer Guo, Farrah Mateen,
 \newblock Quantifying white matter hyperintensity and brain volumes in
   heterogeneous clinical and low-field portable {MRI}.
 \newblock \emph{arXiv preprint arXiv:2312.05119}, 2023.
+
+\bibitem[Lee et~al.(2007)Lee, Kim, Lee, Seo, Won, Shin, and
+  Shin]{lee2007gaclivers}
+Junghoon Lee, Namkug Kim, Ho Lee, Joon~Beom Seo, Hyung~Jin Won, Yong~Moon Shin,
+  and Yeong~Gil Shin.
+\newblock Computerized segmentation of liver in hepatic {CT} and {MRI} by means
+  of level-set geodesic active contouring.
+\newblock \emph{Annual International Conference of the IEEE Engineering in
+  Medicine and Biology Society}, 2007.
+\newblock PMC4283827; edge-driven level-set/geodesic-active-contour
+  segmentation of liver -- cited as evidence that a gradient ridge exists at
+  organ boundaries.
 
 \bibitem[Lesjak et~al.(2018)Lesjak, Galimzianova, Koren, Luka\v{c},
   Van~Leemput, and \v{S}piclin]{lesjak2018openms}
@@ -250,6 +274,14 @@ Zhenlin Xu, Deyi Liu, Junlin Yang, Colin Raffel, and Marc Niethammer.
   convolutions.
 \newblock In \emph{International Conference on Learning Representations
   (ICLR)}, 2021.
+
+\bibitem[Zhang et~al.(2008)Zhang, Tong, Wang, and Li]{zhang2008mstexture}
+Jeremy Zhang, Luyu Tong, Lin Wang, and Ning Li.
+\newblock Texture analysis of multiple sclerosis: a comparative study.
+\newblock \emph{Magnetic Resonance Imaging}, 26\penalty0 (8):\penalty0
+  1160--1166, 2008.
+\newblock PMID 18513908; texture features discriminate MS lesion vs
+  normal-appearing WM vs normal WM.
 
 \bibitem[Zhang et~al.(2020)Zhang, Wang, Yang, Sanford, Harmon, Turkbey, Wood,
   Roth, Myronenko, Xu, and Xu]{zhang2020bigaug}

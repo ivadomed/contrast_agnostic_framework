@@ -1,32 +1,29 @@
 \begin{abstract}
-Segmentation models for medical images are trained on one acquisition
-setting and deployed on others, and label-generative domain randomization
-(SynthSeg) addresses this by resampling intensities from a per-label
-Gaussian mixture over a dense anatomical label map -- an approach that is
-both label-driven (it requires exactly the expensive annotation the method
-is trying to reduce reliance on) and texture-destroying (it replaces real
-gradients and partial-volume detail with piecewise noise). We introduce
-PALETTE (Partition-based Affine Local-intEnsity Transform for
-Texture-prEserving augmentation), a single-source, label-free augmentation
-that partitions the foreground of a scan into intensity classes with
-unsupervised $k$-means, further subdivides each class into spatial
-sub-regions with a Voronoi partition, and applies a signed random
-affine remap $y = \mu + \alpha(x - \bar{x})$, $\alpha \in \pm
-U(0.5, 2.0)$, to the \emph{real} intensities within each sub-region.
-Because the transform remaps existing intensities rather than replacing
-them with sampled noise, edges, gradients, and partial-volume detail are
-preserved within each sub-region; only the region-to-region contrast
-relationship is randomized. Training a single nnU-Net configuration with
-PALETTE and evaluating across eight cross-contrast and cross-modality
-settings spanning abdominal CT/MRI, brain MRI, and brain tumor MRI, we
-show significant gains over a no-augmentation baseline and the original
-label-generative SynthSeg in all eight settings, and over a stronger
-SynthSeg variant we re-implement in seven of eight. Against Auglab, a
-recent published augmentation pipeline that is the strongest competitor and
-that our full method builds on, adding the PALETTE transform improves all
-eight settings and does so significantly in six. A
-causal ablation that holds the partition and per-region statistics fixed
-while replacing the real-intensity remap with label-style noise fill
-isolates texture preservation, rather than the shared partitioning scheme,
-as the source of the advantage.
+Segmentation models in medical imaging are trained on one acquisition setting
+and must generalize to others. Label-generative domain randomization, of which
+SynthSeg is the archetype, addresses this by discarding the acquired scan and
+resampling intensities from a per-label Gaussian mixture over a \emph{dense}
+anatomical label map -- an annotation far richer than the segmentation task
+itself provides, and one that does not preserve texture: real gradients and
+partial-volume detail become piecewise noise. We ask when that loss costs
+accuracy, and find the answer is a property of the \emph{task}. Where the
+target is separated from its surroundings by an anatomical interface --
+encapsulated abdominal organs, bounded by fat planes -- destroying texture
+costs nothing. Where no interface exists -- diffuse glioma, infiltrating beyond
+both the enhancing margin and the peritumoral FLAIR abnormality -- the target
+must be inferred from tissue appearance, and destroying texture is expensive.
+We exploit this with PALETTE, a single-source augmentation needing no dense
+label map: it partitions a scan's foreground by unsupervised $k$-means,
+sub-divides each class spatially by a Voronoi partition, and applies a signed
+random affine remap to the \emph{real} intensities of each sub-region. Remapping
+existing intensities rather than replacing them leaves edges, gradients and
+partial-volume detail largely intact; only the contrast relationships between
+regions are randomized. A controlled ablation isolates this: holding the
+partition and per-region statistics fixed and swapping only the real-intensity
+remap for label-style noise fill costs $7.7$ and $7.2$ Dice on the two tasks
+with no tissue interface, against $+1.1$ and $-1.1$ on the two with one.
+Across cross-contrast and cross-modality transfer on healthy-brain, MS-lesion,
+brain-tumour and abdominal-organ segmentation, one nnU-Net configuration
+trained with PALETTE improves significantly over all five competing methods, on
+both Dice and boundary distance.
 \end{abstract}

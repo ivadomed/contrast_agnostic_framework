@@ -1,0 +1,42 @@
+All methods share one nnU-Net~\cite{isensee2021nnunet} configuration; only
+the input augmentation differs. Nothing below is tuned per dataset.
+
+\paragraph{Training schedule.} 3D full-resolution nnU-Net, SGD with Nesterov
+momentum $0.99$, initial learning rate $10^{-2}$ with the nnU-Net
+\texttt{polyLR} decay, $250$ mini-batches per epoch, combined Dice and
+cross-entropy loss, deep supervision on. Patch size, spacing and batch size
+are whatever the nnU-Net planner selects for that dataset, identically for
+every method. The epoch budget is fixed per dataset and shared by all methods
+on it: $2500$ (Brats-GLI), $2000$ (ON-Harmony), $2000$ (Open-MS), $200$
+(CHAOS). Every number reported in this paper is a 3-fold cross-validated
+average; folds are the same across methods.
+
+\paragraph{PALETTE hyper-parameters.} Set once and never tuned per dataset:
+$k$-means class count drawn per sample from $\{2,\dots,6\}$; Voronoi
+sub-parcellation of each intensity class; signed affine coefficient
+$\alpha \in \pm U(0.5, 2.0)$ applied per sub-region as in
+\cref{eq:affine}; per-label affine decoupling applied to $50\%$ of labels.
+The transform is applied on the GPU, on-the-fly, to a fixed $50\%$ of
+training iterations (\emph{train050}); the remaining half of iterations use
+the un-transformed real image.
+
+\paragraph{Validation-time configuration.} \emph{val000} (the configuration
+reported in the main paper) applies no synthetic contrast to the validation
+split, matching every competing method and keeping model selection
+like-for-like. \emph{val100} applies PALETTE to the entire validation split;
+it is reported in \cref{sec:suppl-val100}.
+
+\paragraph{Baseline configurations.} SynthSeg-noEM uses the authors' released
+generator with its default priors. SynthSeg-EM is our re-implementation of
+the variant described but not released in the original work; it estimates a
+per-class intensity model from the sparse task labels available in each
+dataset via expectation-maximization, and is otherwise identical in its
+sampling procedure. SRCSM and Auglab use their published default
+configurations. No competing method was re-tuned in our favour, and all use
+the same folds, schedule and epoch budget as above.
+
+\paragraph{Compute.} Training was performed on NVIDIA L40S and H100 GPUs. A
+single fold costs from under an hour (CHAOS, $200$ epochs) to roughly three
+days (Brats-GLI, $2500$ epochs); the full study is dominated by the $7$
+methods $\times$ $8$ settings $\times$ $3$ folds main comparison plus the
+ablation ladders of \cref{subsec:e-ablation}.

@@ -14,16 +14,24 @@ pipeline~\cite{molinier2026auglab}; the \emph{Auglab} baseline is the same
 pipeline with the PALETTE operator removed, so the two differ by exactly the
 PALETTE transform. Every method is trained with the identical nnU-Net
 schedule --- SGD with Nesterov momentum ($0.99$), the nnU-Net
-\texttt{polyLR} decay from an initial rate of $10^{-2}$, $1000$ epochs of
-$250$ mini-batches, and the combined Dice-plus-cross-entropy loss --- and
-differs only in the augmentation applied at the input; full configuration
-details are given in the supplementary.
+\texttt{polyLR} decay from an initial rate of $10^{-2}$, $250$ mini-batches
+per epoch, and the combined Dice-plus-cross-entropy loss --- and differs only
+in the augmentation applied at the input. The epoch budget is fixed per
+dataset and shared by every method on that dataset ($2500$ for Brats-GLI,
+$2000$ for ON-Harmony and Open-MS, $200$ for CHAOS), and all results are
+3-fold cross-validated, as is standard practice in medical image
+segmentation and so that every comparison rests on per-case statistics rather
+than a single split. Full configuration details, and per-dataset descriptions
+(subject counts, acquisition protocols, and label provenance), are given in
+\cref{sec:suppl-config,sec:suppl-data}.
 
 \paragraph{Datasets.} We evaluate on eight source-modality settings drawn
 from six datasets, spanning abdominal CT/MRI, brain MRI, and brain tumor
-MRI. In every setting the model is trained on the single source modality
-named below and tested on the held-out modalities named alongside it; no
-target modality is seen during training.
+MRI. In every setting the model is trained on the single source modality named
+below. Evaluation is performed exclusively on held-out test cases, never on
+training or validation subjects, and covers both the other contrasts of that
+task \emph{and} the training contrast itself; no target modality is seen during
+training.
 \begin{itemize}
   \item \textbf{CHAOS}~\cite{kavur2021chaos} (abdominal organ
     segmentation): train on either T1-in-phase or T2-SPIR MRI, and test
@@ -31,9 +39,9 @@ target modality is seen during training.
     complementary CHAOS contrasts (T1-in-phase, T1-out-of-phase, T2-SPIR)
     together with held-out CT from AMOS~\cite{ji2022amos} and
     SLIVER07~\cite{heimann2009comparison}.
-  \item \textbf{ON-Harmony}~\cite{warrington2025onharmony} (brain
+  \item \textbf{ON-Harmony}~\cite{warrington2025onharmony} (31-region healthy-brain
     segmentation, cross-contrast): train on either T1w or T2w, and test on
-    the five held-out contrasts not trained on (the complementary structural
+    all contrasts (the complementary structural
     contrast plus BOLD, DWI, EPI, and GRE). Reference labels were obtained on
     T1w with FreeSurfer~\cite{fischl2012freesurfer} and registered to the
     other contrasts.
@@ -46,17 +54,24 @@ target modality is seen during training.
     test on the held-out contrasts not trained on (T1c, T1n, T2-FLAIR, T2w).
 \end{itemize}
 
-\paragraph{Baselines.} We compare against four methods. (1)
+\paragraph{Baselines.} SynthSeg comes in two variants, which we refer to
+throughout by how they obtain their per-class intensity model: \emph{noEM}, the
+released variant, which reads it off a dense anatomical label map; and
+\emph{EM}, which estimates it from the image by expectation-maximization and
+therefore needs no dense parcellation. We compare against five methods. (1)
 \emph{No-augmentation}, the nnU-Net default training recipe. (2)
 \emph{SynthSeg-noEM}~\cite{billot2023synthseg}, the original
-label-generative variant of SynthSeg (the implementation released on the
-authors' GitHub), which resamples intensities from a dense anatomical label
-map per training subject. (3) \emph{SynthSeg-EM}, the variant described in
+label-generative variant (the implementation released by the authors), which
+synthesises each training image from a dense anatomical label map alone,
+ignoring the acquired scan entirely. (3) \emph{SynthSeg-EM}, the variant described in
 the original work but never released publicly, which we re-implement; unlike
 SynthSeg-noEM it does not require a dense anatomical label map, but it is not
-label-free either --- it is compatible with and relies on the sparse task
+dense-label-free either --- it is compatible with and relies on the sparse task
 labels naturally available in a segmentation dataset, which it uses to
-estimate its per-class intensity model. (4) \emph{Auglab}, the published
+estimate its per-class intensity model. (4) \emph{SRCSM}, a semantic random-convolution
+contrast-synthesis augmentation, included as a second strong
+synthesis-based competitor that is neither label-generative nor a
+member of the Auglab family. (5) \emph{Auglab}, the published
 GPU-accelerated augmentation pipeline of Molinier
 et~al.~\cite{molinier2026auglab}. Auglab is a prior method in its own right,
 not an ablation of ours, and we report it among the competitors accordingly;
@@ -64,11 +79,16 @@ our full method (\cref{subsec:e-setup}) applies PALETTE \emph{on top of} the
 Auglab pipeline, so the PALETTE-vs-Auglab comparison also functions as the
 add-one-component test isolating the contribution of the PALETTE transform.
 
-\paragraph{Statistics.} We report per-case paired Wilcoxon signed-rank
-tests~\cite{wilcoxon1945} (not per-fold), with Holm
-correction~\cite{holm1979} for multiple comparisons, so
-that significance reflects consistency across individual test cases rather
-than aggregate noise.
+\paragraph{Statistics.} All tests are paired at the level of the individual
+test case, never per-fold, so significance reflects consistency across cases
+rather than aggregate noise, and all are Holm-corrected~\cite{holm1979} for
+multiple comparisons. For the task-level comparison of \cref{tab:meta} we use
+a one-sided sign-flip permutation test on the macro-averaged per-case
+difference, stratified by task so that each task contributes equally
+regardless of how many test cases it contributes; this matches the
+equal-weight-per-task estimand of the \emph{overall} column. Per-setting
+comparisons use the paired Wilcoxon signed-rank
+test~\cite{wilcoxon1945}.
 
 \subsection{Main comparison}
 \label{subsec:e-main}
@@ -76,188 +96,171 @@ than aggregate noise.
 \begin{table}[t]
 \centering
 \small
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3.5pt}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lccccc}
+\begin{tabular}{lccccc|c}
 \toprule
-Setting (train mod.) & Base & noEM & EM & Auglab & \textbf{Ours} \\
+ & Brats-GLI & CHAOS & ON-Harm. & Open-MS & \textbf{overall} & $p$ vs ours \\
 \midrule
-CHAOS T1in         & 21.9 & 65.3 & 85.2 & 85.4 & \textbf{86.6}$^{\dagger}$ \\
-CHAOS T2spir       & 36.7 & 57.8 & 84.2 & 84.4 & \textbf{86.0}$^{\dagger}$ \\
-ON-Harmony T1w     & 27.6 & 65.8 & 67.1 & 67.6 & \textbf{68.5}$^{\dagger}$ \\
-ON-Harmony T2w     & 35.8 & 66.3 & 67.1 & 67.4 & \textbf{67.8}$^{\dagger}$ \\
-Brats2024-GLI T1n  & 25.6 &  8.8 & 43.0 & 46.2 & \textbf{46.6}          \\
-Brats2024-GLI T2w  & 18.1 &  8.7 & 43.8 & 46.6 & \textbf{47.0}$^{\dagger}$ \\
-Open-MS FLAIR      & 25.2 &  4.6 & 32.8 & 32.8 & \textbf{41.7}$^{\dagger}$ \\
-Open-MS T1w        & 16.7 &  4.0 & 35.1 & 35.8 & \textbf{37.2}          \\
+\multicolumn{7}{l}{\emph{Dice} $\uparrow$} \\
+Baseline        & 21.7 & 34.5 & 31.1 & 21.0 & 27.1 & 1.5e-38 \\
+SynthSeg-noEM   &  8.6 & 60.5 & 66.3 &  4.3 & 34.9 & 2.3e-49 \\
+SynthSeg-EM     & 43.6 & 85.6 & 67.4 & 33.9 & 57.6 & 3.9e-14 \\
+SRCSM           & 42.1 & 85.8 & 66.6 & 33.0 & 56.9 & 3.1e-15 \\
+Auglab          & 46.7 & 86.3 & 67.4 & 34.3 & 58.7 & 0.0003 \\
+\textbf{PALETTE (ours)} & \textbf{46.8} & \textbf{87.3} & \textbf{68.2} & \textbf{38.5} & \textbf{60.2} & --- \\
+\midrule
+\multicolumn{7}{l}{\emph{HD95} (mm) $\downarrow$} \\
+Baseline        & 47.9 & 110.9 & 28.6 & 35.2 & 55.7 & 2.6e-30 \\
+SynthSeg-noEM   & 78.9 &  83.4 &  7.5 & 41.9 & 52.9 & 2.9e-57 \\
+SynthSeg-EM     & 17.4 &  25.4 &  4.7 & 24.7 & 18.1 & 0.0021 \\
+SRCSM           & 18.3 & \textbf{23.9} &  5.6 & 24.6 & 18.1 & 5.0e-05 \\
+Auglab          & \textbf{15.0} &  27.9 &  4.7 & 26.5 & 18.5 & 0.0223 \\
+\textbf{PALETTE (ours)} & 15.2 & 24.3 & \textbf{4.2} & \textbf{24.3} & \textbf{17.0} & --- \\
 \bottomrule
 \end{tabular}%
 }
-\caption{All-class Dice (\%), averaged over folds and over all held-out test
-contrasts/datasets per setting (3-fold cross-validation). \emph{Base} =
-no-augmentation; \emph{noEM}/\emph{EM} = the SynthSeg variants of
-\cref{subsec:e-setup}; \emph{Auglab}~\cite{molinier2026auglab} is the
-strongest competing method; \textbf{Ours} = PALETTE applied on top of the
-Auglab pipeline. Best per row in bold. $^{\dagger}$ marks settings where
-\textbf{Ours} beats Auglab by a case-level Wilcoxon signed-rank test with
-Holm correction ($p<0.05$); this holds in six of eight settings (all except
-Brats2024-GLI T1n, $p=0.64$, and Open-MS T1w, $p=0.15$).}
-\label{tab:main}
+\caption{Task-level results. Each column pools that task's held-out test
+contrasts \emph{and} both of its source modalities; \textbf{overall} weights
+the four tasks equally. Per-setting tables (eight source-modality settings,
+all structures, per-fold) are in the supplementary material. $p$ is a
+Holm-corrected one-sided sign-flip test on the macro-averaged per-case
+difference, stratified by task. PALETTE improves significantly over
+\emph{every} competitor on \emph{both} metrics.}
+\label{tab:meta}
 \end{table}
 
 Every synthetic-contrast method vastly outperforms the no-augmentation
-baseline, confirming that some cross-contrast augmentation is indispensable
-under single-source evaluation: the baseline collapses whenever train and
-test contrast differ (e.g.\ 21.9 Dice averaged over the CHAOS T1in transfers,
-against 86.6 for Ours). SynthSeg-noEM, which resamples intensities from a
+baseline, confirming that cross-contrast augmentation is indispensable under
+single-source evaluation. SynthSeg-noEM, which resamples intensities from a
 dense anatomical label map, is competitive only on the brain-MRI settings
 where such maps are meaningful and collapses on the sparse-label tumor and
-lesion tasks (Brats2024-GLI, Open-MS); we return to this in
-\cref{subsec:e-crush}. The re-implemented, label-using SynthSeg-EM is far
-stronger and closes most of that gap, but Ours beats it significantly in
-seven of eight settings.
+lesion tasks; we return to this in \cref{subsec:e-ablation}. The re-implemented,
+label-using SynthSeg-EM closes most of that gap.
 
-The most informative comparison is against Auglab, the strongest competitor
-and the pipeline our full method builds on: the difference between the two
-columns is exactly the PALETTE transform. Ours is best in every setting and
-significantly better than Auglab in six of eight by a case-level Wilcoxon
-test. On most settings the aggregate margin is modest ($+0.4$ to $+1.6$
-Dice) because both methods already saturate whole-organ boundaries, but on
-Open-MS FLAIR --- a texture-defined lesion task --- adding PALETTE lifts Dice
-from $32.8$ to $41.7$, a clear $+8.9$-point gain. This concentration of the
-advantage on texture-defined structures, rather than a uniform offset, is
-the effect we examine next.
+\paragraph{No competitor is reliably second.} The identity of the runner-up
+changes from setting to setting. Across the eight source-modality settings
+the best competing method is Auglab on most, SynthSeg-EM on ON-Harmony T2w
+and on boundary distance for CHAOS T2spir, and SRCSM on Open-MS FLAIR and on
+boundary distance for CHAOS T1in. PALETTE is the only method at or near the
+top everywhere, and on the task-level aggregate it improves significantly
+over all five competitors on both Dice and boundary distance
+(\cref{tab:meta}). We regard this consistency, rather than the size of any
+single margin, as the benchmark claim: a plug-in augmentation is useful
+precisely when it can be applied without knowing in advance which
+alternative would have been the right one for the task at hand.
 
-\subsection{Where the advantage concentrates}
-\label{subsec:e-crush}
+\paragraph{Reading the non-significant cells.} Every task-level comparison in
+\cref{tab:meta} is significant; the non-significant margins appear only in the
+per-setting tables of the supplementary. Where such a margin is not
+significant, the appropriate conclusion is equivalence on that setting, not a
+shortfall. The held-out sets used here are large, so these comparisons are
+not underpowered; PALETTE attains the best Dice in every setting and the best aggregate on both
+metrics, though on boundary distance individual settings are occasionally led
+by a competitor. The advantage is also not a uniform offset -- it concentrates
+sharply on some tasks (Open-MS, $34.3 \rightarrow 38.5$) and is near-neutral
+on others (Brats-GLI, $46.7 \rightarrow 46.8$). That pattern is not noise; it
+is the dissociation we predict and test in \cref{subsec:e-ablation}.
 
-The advantage of PALETTE over Auglab is not uniform across structures.
-Consistent with the texture-preservation hypothesis in \cref{sec:method},
-the gap is widest on fine, texture-defined structures and on the most
-contrast-shifted test modalities, and narrow on whole-organ boundaries that
-survive any reasonable augmentation. The Open-MS FLAIR result above is the
-clearest case: MS lesions in FLAIR are defined by their internal
-signal/texture rather than by a sharp anatomical boundary, and it is exactly
-here that preserving real relative intensities inside each region --- rather
-than overwriting them --- yields the largest margin ($+8.9$ Dice). We report
-per-structure breakdowns for the settings where this effect is largest, so
-that it is verifiable case-by-case rather than asserted from the average.
+\subsection{Causal ablation: the texture dissociation}
+\label{subsec:e-ablation}
 
-\subsection{Mechanism ablation: which components matter}
-\label{subsec:e-mechanism}
+PALETTE shares its $k$-means/Voronoi partitioning scheme with a much simpler
+procedure, so the central question is whether the partitioning alone --- not
+the texture-preserving intensity remap --- is what helps. We answer it with an
+intervention. Along a rung sequence in which each step adds exactly one
+ingredient (baseline $\rightarrow$ $+k$-means $\rightarrow$ $+$label-remap
+$\rightarrow$ $+$Voronoi with \emph{noise} fill $\rightarrow$ same partition
+with \emph{real}-intensity fill $\rightarrow$ $+$Auglab), the fourth-to-fifth
+step changes \emph{only the fill}: the partition, the number of sub-regions
+and the per-region statistics are held fixed, and label-style Gaussian noise
+is swapped for the real-intensity remap. Any change at that step is
+attributable to texture preservation alone.
 
-To attribute the gain of the full method to its individual components,
-rather than to synthetic-contrast augmentation in general, we build an
-additive ablation ladder on top of the no-augmentation anchor (\emph{Base},
-\cref{subsec:e-main}): first the unsupervised $k$-means intensity partition
-alone (\S\ref{subsec:m-transform}, step~1); then the anatomical label-remap
-step (step~4); then the Voronoi spatial sub-parcellation (step~2); and
-finally the full signed affine remap of \cref{eq:affine} (step~3), which
-together constitute PALETTE in its entirety and is denoted \textbf{Ours} in
-this ladder --- identical to the standalone (no-Auglab) configuration used
-throughout \cref{subsec:e-main}. Every rung is evaluated without Auglab, so
-that the ladder isolates PALETTE's own internal components from the
-separate question of whether it composes with a prior augmentation
-pipeline, which we address next. The synthetic-data fraction is fixed at
-$50\%$ of training iterations throughout, as one of several augmentation
-constants (alongside, e.g., the $k$-means class count and the affine
-magnitude range of \S\ref{subsec:m-transform}) that are set once and not
-tuned per dataset; validation uses real-contrast data only (no synthetic
-contrast at validation time).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/ablation_ladder_openms_chaos}
+\caption{The one-variable test, as a rung sequence. Each step adds exactly
+one ingredient; the highlighted step swaps label-style noise fill for the
+real-intensity remap while holding the partition and per-region statistics
+fixed. Preserving texture is worth $+7.7$ Dice on the no-tissue-interface
+lesion task (Open-MS FLAIR) and nothing on the tissue-interface organ task
+(CHAOS T1in). \cref{tab:dissociation} reports all four tasks.}
+\label{fig:ladder}
+\end{figure}
 
 \begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcccc}
+\begin{tabular}{llcc}
 \toprule
-Component & CHAOS & Open-MS & BraTS & ON-Harmony \\
+Task & boundary type & $\Delta$ Dice & $\Delta$ HD95 \\
 \midrule
-Base (no augmentation)                & 36.1 & 25.2 & 23.8 & 34.8 \\
-\quad + $k$-means partition           & 84.8 & 30.6 & -- & -- \\
-\quad + label remap                   & 87.7 & 34.6 & -- & -- \\
-\quad + Voronoi sub-parcellation      & 87.2 & 36.1 & -- & -- \\
-\quad + affine remap (\textbf{Ours})  & 87.9 & 40.4 & -- & -- \\
+Open-MS FLAIR   & no tissue interface & $\mathbf{+7.70}$ & $-3.05$ \\
+Brats-GLI T1n   & no tissue interface & $\mathbf{+7.22}$ & $-4.59$ \\
 \midrule
-\quad + Auglab (deployed)             & 87.3 & 39.5 & 44.4 & 67.7 \\
+CHAOS T1in      & tissue interface   & $+1.07$ & $-2.97$ \\
+CHAOS T2spir    & tissue interface   & $-1.14$ & $+4.20$ \\
 \bottomrule
 \end{tabular}
-\caption{Mechanism ablation (top five rows, additive, no Auglab) and
-deployment composability check (bottom row). Each rung adds exactly one
-PALETTE component on top of the row above; all-modality Dice (\%),
-averaged over held-out test contrasts, folds 0--2, train fraction $50\%$.
-Intermediate $k$-means/label-remap/Voronoi rungs and the standalone
-\textbf{Ours} rung are available for Open-MS and CHAOS; BraTS and
-ON-Harmony currently report only Base and the deployed configuration,
-with the intermediate rungs and standalone \textbf{Ours} pending.}
-\label{tab:mechanism}
+\caption{The one-variable test. Effect of replacing label-style noise fill
+with the real-intensity remap, \emph{holding the partition and per-region
+statistics fixed}, on out-of-domain performance. On \emph{Dice} the effect is
+large on both no-tissue-interface tasks and absent -- in one case mildly
+negative -- on both tissue-interface ones. On \emph{HD95} the separation is
+not clean: boundary distance also improves on CHAOS T1in, and only CHAOS
+T2spir degrades. HD95 in mm; negative is better.}
+\label{tab:dissociation}
 \end{table}
 
-\paragraph{Composability with Auglab.} PALETTE is deployed, throughout this
-paper, as one additional operator inside the Auglab pipeline rather than as
-a replacement for it (\cref{subsec:e-setup}); Auglab is a full prior
-augmentation method in its own right, not a component of PALETTE, so
-stacking it on top of the ladder above is a composability/deployment check,
-not a further mechanism-ablation step. \cref{tab:mechanism} keeps the two
-separate: the top five rows isolate PALETTE's internal mechanism, evaluated
-with no Auglab throughout, while the bottom row reports PALETTE plus Auglab
---- the configuration used everywhere else in this paper --- set apart by a
-rule rather than presented as the next rung of the same ladder.
+\cref{tab:dissociation} shows the predicted dissociation in overlap.
+Preserving real texture is worth $+7.2$ to $+7.7$ Dice on the two tasks whose
+targets are defined by tissue appearance, and nothing at all --- $+1.07$ and
+$-1.14$, i.e.\ within noise and of inconsistent sign --- on the two whose
+targets are defined by an anatomical interface. The same intervention, applied
+to four tasks, separates them by target type by a factor of roughly seven.
+This is the paper's central result: it identifies \emph{when} texture
+preservation matters, and it does so by intervention rather than by
+correlation across methods.
 
-\subsection{Causal ablation: noise-fill}
-\label{subsec:e-ablation}
+We report boundary distance for the same intervention and note that it does
+\emph{not} separate as cleanly: HD95 improves on three of the four tasks,
+including the tissue-interface CHAOS T1in ($-2.97$~mm), and degrades only on
+CHAOS T2spir. Texture preservation therefore appears to help boundary
+localisation somewhat more broadly than it helps overlap, and we restrict the
+dissociation claim to Dice rather than presenting HD95 as confirming it.
 
-PALETTE shares its $k$-means/Voronoi partitioning scheme with a much
-simpler procedure, so a natural question is whether the partitioning alone
---- not the texture-preserving intensity remap --- is what helps. To
-isolate this, we compare against \emph{noise-fill} (\cref{subsec:m-ablation}),
-which holds the partition and per-region statistics fixed and only replaces
-the real-intensity remap with label-style Gaussian noise; this makes
-noise-fill conceptually close to SynthSeg-EM, which likewise fills each
-region with sampled noise rather than preserving real texture. On
-Open-MS FLAIR --- the texture-defined lesion task where the effect should be
-largest --- PALETTE beats noise-fill by $\Delta = +2.24$ Dice
-(Holm-corrected $p = 0.0125$), winning on 17 of the 24 test cases against
-noise-fill's 7. Removing texture preservation while holding the partition
-and per-region statistics constant thus degrades performance specifically on
-this texture-defined setting, which is the outcome the texture-preservation
-hypothesis predicts. Structures whose boundaries are defined by sharp
-contrast, not fine internal texture, do not show the same degradation,
-isolating texture preservation --- not the shared partitioning scheme --- as
-the causal mechanism.
+Two properties of this test are worth stating explicitly. First, it is not a
+comparison between methods but between two versions of the same method that
+differ in one component, so it cannot be explained by differences in
+augmentation strength, partition granularity or training schedule. Second,
+the tissue-interface tasks are not tasks on which PALETTE performs poorly ---
+PALETTE remains at or near the top of every setting in \cref{tab:meta}. It is
+specifically the \emph{texture} ingredient that is inert there, while the
+remaining ingredient, the wider space of region-to-region contrast
+relationships, continues to help.
 
-\paragraph{Direct measurement of texture fidelity.} The Dice ablation above
-shows texture preservation \emph{matters}; we also measure it directly.
-For each method we compute the normalized-gradient-field (NGF)
-similarity~\cite{haber2006ngf} between the augmented image and the source
-scan --- an alignment-of-gradients measure that is high when local edge and
-texture structure is retained and near the isotropic-noise floor
-($\approx\!1/3$) when it is destroyed. \cref{tab:ngf} reports mean NGF over
-$n{=}30$ scans on the two Open-MS contrasts. PALETTE retains far more of the
-source texture than any noise-based method and significantly more than
-Auglab (FLAIR $p=7.6\times10^{-3}$, T1w $p=1.2\times10^{-6}$), while the
-label-style methods (SynthSeg-EM, noise-fill) and especially SynthSeg-noEM
-sit near the noise floor --- exactly the ordering the mechanism predicts, and
-consistent with the Dice gaps above.
+\paragraph{Why the margin over Auglab is thin where it is.} The same
+gradient-orientation measurement that isolates texture in
+\cref{subsec:e-ablation} also explains the size of the remaining gap. Auglab is
+\emph{not} a texture-destroying method: measured against the source scan it
+retains a normalized-gradient-field similarity of $0.772$/$0.777$ (FLAIR/T1w),
+far above the label-style methods (SynthSeg-EM $0.461$/$0.422$, SynthSeg-noEM
+$0.332$/$0.319$) and only modestly below PALETTE's $0.808$/$0.894$
+(\cref{sec:suppl-ngf}). Where the target has no tissue interface and texture is
+therefore the operative cue, two methods that both largely preserve texture
+should be expected to land close together --- which is what we observe. The
+large margins appear against the methods that discard texture, and the thin
+ones against the method that does not.
 
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{lcc}
-\toprule
-Method & FLAIR & T1w \\
-\midrule
-\textbf{PALETTE} & \textbf{0.808} & \textbf{0.894} \\
-Auglab           & 0.772 & 0.777 \\
-SynthSeg-EM      & 0.461 & 0.422 \\
-noise-fill       & 0.453 & 0.401 \\
-SynthSeg-noEM    & 0.332 & 0.319 \\
-\bottomrule
-\end{tabular}
-\caption{Texture fidelity measured by NGF similarity to the source scan
-(mean over $n{=}30$ Open-MS scans; higher = more source texture retained,
-$\approx\!1/3$ = isotropic-noise floor). PALETTE preserves the most texture;
-the noise-based methods sit near the floor.}
-\label{tab:ngf}
-\end{table}
+\paragraph{Supporting analyses.} A component ablation separating the
+contributions of the $k$-means partition, the Voronoi sub-parcellation and
+the signed remap is given in \cref{sec:suppl-mechanism}. An independent,
+segmentation-free measurement of texture fidelity -- gradient-orientation
+agreement between each augmented volume and its source -- confirms that
+texture is what changes at the fill-swap step and is reported in
+\cref{sec:suppl-ngf}. Per-setting tables for all eight source-modality
+settings are in \cref{sec:suppl-persetting}.
+

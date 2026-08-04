@@ -3,44 +3,49 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 The style file: ieeenat_fullname.bst
 Database file #1: main.bib
-You've used 34 entries,
+Warning--to sort, need author or key in gliomamargins2025
+Warning--to sort, need author or key in flairectomy2022
+Warning--empty author in flairectomy2022
+Warning--empty author in gliomamargins2025
+You've used 38 entries,
             2708 wiz_defined-function locations,
-            833 strings with 14261 characters,
-and the built_in function-call counts, 21716 in all, are:
-= -- 1703
-> -- 2098
+            857 strings with 15456 characters,
+and the built_in function-call counts, 23465 in all, are:
+= -- 1860
+> -- 2203
 < -- 7
-+ -- 703
-- -- 669
-* -- 2041
-:= -- 3536
-add.period$ -- 102
-call.type$ -- 34
-change.case$ -- 320
-chr.to.int$ -- 34
-cite$ -- 68
-duplicate$ -- 743
-empty$ -- 1256
-format.name$ -- 707
-if$ -- 4331
++ -- 740
+- -- 702
+* -- 2202
+:= -- 3788
+add.period$ -- 116
+call.type$ -- 38
+change.case$ -- 343
+chr.to.int$ -- 38
+cite$ -- 82
+duplicate$ -- 823
+empty$ -- 1398
+format.name$ -- 742
+if$ -- 4698
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 34
-newline$ -- 178
-num.names$ -- 136
-pop$ -- 648
+missing$ -- 38
+newline$ -- 200
+num.names$ -- 144
+pop$ -- 694
 preamble$ -- 1
-purify$ -- 286
+purify$ -- 305
 quote$ -- 0
-skip$ -- 634
+skip$ -- 691
 stack$ -- 0
-substring$ -- 442
-swap$ -- 67
+substring$ -- 492
+swap$ -- 71
 text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 374
-warning$ -- 0
-while$ -- 130
+type$ -- 418
+warning$ -- 4
+while$ -- 139
 width$ -- 0
-write$ -- 430
+write$ -- 484
+(There were 4 warnings)

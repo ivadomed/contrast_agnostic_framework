@@ -1,0 +1,61 @@
+\label{subsec:e-mechanism}
+% moved from the main text 2026-08-02 to fit the 8-page limit
+
+To attribute the gain of the full method to its individual components,
+rather than to synthetic-contrast augmentation in general, we build an
+additive ablation ladder on top of the no-augmentation anchor (\emph{Base},
+\cref{subsec:e-main}): first the unsupervised $k$-means intensity partition
+alone (\S\ref{subsec:m-transform}, step~1); then the anatomical label-remap
+step (step~4); then the Voronoi spatial sub-parcellation (step~2); and
+finally the full signed affine remap of \cref{eq:affine} (step~3), which
+together constitute PALETTE in its entirety and is denoted \textbf{Ours} in
+this ladder --- identical to the standalone (no-Auglab) configuration used
+throughout \cref{subsec:e-main}. Every rung is evaluated without Auglab, so
+that the ladder isolates PALETTE's own internal components from the
+separate question of whether it composes with a prior augmentation
+pipeline, which we address next. The synthetic-data fraction is fixed at
+$50\%$ of training iterations throughout, as one of several augmentation
+constants (alongside, e.g., the $k$-means class count and the affine
+magnitude range of \S\ref{subsec:m-transform}) that are set once and not
+tuned per dataset; validation uses real-contrast data only (no synthetic
+contrast at validation time).
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+Component & CHAOS & Open-MS & BraTS & ON-Harmony \\
+\midrule
+Base (no augmentation)                & 36.1 & 25.2 & 23.8 & 34.8 \\
+\quad + $k$-means partition           & 84.8 & 30.6 & -- & -- \\
+\quad + label remap                   & 87.7 & 34.6 & -- & -- \\
+\quad + Voronoi sub-parcellation      & 87.2 & 36.1 & -- & -- \\
+\quad + affine remap (\textbf{Ours})  & 87.9 & 40.4 & -- & -- \\
+\midrule
+\quad + Auglab (deployed)             & 87.3 & 39.5 & 44.4 & 67.7 \\
+\bottomrule
+\end{tabular}
+\caption{Mechanism ablation (top five rows, additive, no Auglab) and
+deployment composability check (bottom row). Each rung adds exactly one
+PALETTE component on top of the row above; all-modality Dice (\%),
+averaged over held-out test contrasts, folds 0--2, train fraction $50\%$.
+Intermediate $k$-means/label-remap/Voronoi rungs and the standalone
+\textbf{Ours} rung are available for Open-MS and CHAOS; BraTS and
+ON-Harmony currently report only Base and the deployed configuration,
+with the intermediate rungs and standalone \textbf{Ours} pending.}
+\label{tab:mechanism}
+\end{table}
+
+\paragraph{Composability with Auglab.} PALETTE is deployed, throughout this
+paper, as one additional operator inside the Auglab pipeline rather than as
+a replacement for it (\cref{subsec:e-setup}); Auglab is a full prior
+augmentation method in its own right, not a component of PALETTE, so
+stacking it on top of the ladder above is a composability/deployment check,
+not a further mechanism-ablation step. \cref{tab:mechanism} keeps the two
+separate: the top five rows isolate PALETTE's internal mechanism, evaluated
+with no Auglab throughout, while the bottom row reports PALETTE plus Auglab
+--- the configuration used everywhere else in this paper --- set apart by a
+rule rather than presented as the next rung of the same ladder.
+
