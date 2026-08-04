@@ -9,7 +9,7 @@
 | **Vulcan** (AMII / Alliance) | Slurm cluster | **Primary.** All datasets + checkpoints live here; the main place to train/predict/eval. GitHub push works from here (done manually). Can be queue-congested when priority is low. |
 | **Killarney** (Alliance) | Slurm cluster (same as Vulcan) | **Overflow GPU.** Same cluster type. Datasets staged there as of 2026-07-10: **chaos** (`1_BIDS_chaos/chaos-abdominal`, `2_nnUNet_chaos`) and **open-ms**. brats2024-glioma / on-harmony / others not yet staged — rsync from Vulcan first if needed there. Used when Vulcan priority runs low and we need more GPU. |
 | **romane** (NeuroPoly lab) | `set_slot` workstation | **Limited-use lab box, only 4 GPUs.** The original dev machine; used for smaller/interactive GPU jobs. |
-| **TamIA** (Alliance) | Slurm cluster (same family as Vulcan/Killarney) | **Newest, biggest-GPU cluster — added 2026-07-25.** Whole-node H100/H200 allocations (see below), much more GPU per node than Vulcan/Killarney's L40S. **Use these GPUs properly — a coworker was already warned by Alliance staff about under-utilizing allocated GPUs on this account, and TamIA's whole-node model makes idle GPUs especially visible.** Currently only reachable via a relay through Vulcan (see below); as of 2026-08-02 five datasets (`brats2024-glioma`, `chaos`, `on-harmony`, `open-ms`, `picai-prostate`) are staged there, and **all data currently lives on `$SCRATCH` only** (nothing in `$PROJECT` yet) — see the TamIA-specific subsection for what that means operationally. |
+| **TamIA** (Alliance) | Slurm cluster (same family as Vulcan/Killarney) | **Newest, biggest-GPU cluster — added 2026-07-25.** Whole-node H100/H200 allocations (see below), much more GPU per node than Vulcan/Killarney's L40S. **Use these GPUs properly — a coworker was already warned by Alliance staff about under-utilizing allocated GPUs on this account, and TamIA's whole-node model makes idle GPUs especially visible.** Currently only reachable via a relay through Vulcan (see below); as of 2026-07-31 all 4 datasets (`brats2024-glioma`, `chaos`, `on-harmony`, `open-ms`) are staged there, and **all data currently lives on `$SCRATCH` only** (nothing in `$PROJECT` yet) — see the TamIA-specific subsection for what that means operationally. |
 
 **SSH hosts + repo path per machine** (for rsync/ssh between them):
 - **Vulcan**: `ssh vulcan.alliancecan.ca` — repo at `/project/aip-jcohen/paulh/mri_synthesis_project` (also reachable via the symlink `/home/paulh/projects/aip-jcohen/paulh/mri_synthesis_project`). `RUN_JOB_ACCOUNT=aip-jcohen` (the `run_job_slurm.sh` default).
@@ -84,8 +84,8 @@ Wrap remote commands in `bash -lc "..."` — a bare `ssh tamia.alliancecan.ca 'c
 Partitions are `gpubase_bynode_b1/b2/b3` — **allocation is whole-node** (no per-GPU partition), so a submitted job gets all 4 (or 8) GPUs on the node whether it uses them or not. `run_job` env overrides for the default h100 class: `RUN_JOB_GPU_TYPE=h100`, `RUN_JOB_CPUS_PER_GPU=12` (48/4), **`RUN_JOB_MEM_PER_GPU=115G`**. ⚠️ That variable is parsed in **GiB**, not MB — `run_job_slurm.sh` does `mem="$(( ${RUN_JOB_MEM_PER_GPU%G} * gpus ))G"`, stripping a trailing `G` and re-appending one. Passing the raw MB figure (`125000`) requests 500000 **G** and sbatch rejects the job with "Memory specification can not be satisfied" (cost a lost submission 2026-08-02). Leave headroom under the node's 500000 MB: 115G × 4 = 460G. As always, these are env-var overrides only — `run_job_slurm.sh` itself is never forked per cluster. Do **not** pass `--partition` explicitly on TamIA (rejected even for partitions `sinfo` lists as valid) — submit without it and let the scheduler route.
 
 **Use the GPUs properly — this is now a hard requirement, not a nice-to-have.** Because allocation is whole-node, a job that only exercises 1 of 4 (or 1 of 8) GPUs wastes the other 3 (or 7) for the whole wall-clock duration — highly visible to Alliance staff, and **a coworker on this account has already been warned about under-utilizing allocated GPUs.** Concretely, for the H100 nodes:
-- Node-pack placement is explicit when it needs to be: `run_job_pack_submit.sh` spreads recorded folds round-robin (`i%4`) by default, but **`PACK_GPU_MAP`** (one GPU index per `index.tsv` row) overrides that. Use it whenever folds cost very different amounts — notably **srcsm, which is ~3x slower per epoch than every other method**: round-robin will pair a srcsm fold with a second fold and make it the straggler that holds the whole node *and its whole dependency chain* open. Give srcsm folds a GPU to themselves and double up the cheap folds instead (canonical example: `picai-prostate/.../04_21_tamia_pack_launch_all.sh`).
-- Before choosing a layout, **run the sizing probe** — a few epochs of the heaviest and the slowest method side by side on one real node, reporting per-fold VRAM + epoch time (`picai-prostate/.../04_22_tamia_size_probe.sh` is the reusable pattern). CLAUDE.md already required measuring rather than assuming; that script is what does it.
+- Node-pack placement is explicit when it needs to be: `run_job_pack_submit.sh` spreads recorded folds round-robin (`i%4`) by default, but **`PACK_GPU_MAP`** (one GPU index per `index.tsv` row) overrides that. Use it whenever folds cost very different amounts — notably **srcsm, which is ~3x slower per epoch than every other method**: round-robin will pair a srcsm fold with a second fold and make it the straggler that holds the whole node *and its whole dependency chain* open. Give srcsm folds a GPU to themselves and double up the cheap folds instead. **Don't assume the 3x figure transfers to a new dataset — measure it first**: a 2026-08 attempt on a since-abandoned dataset (unreliable voxel-level annotations, unrelated to this tooling) found srcsm running no slower than the other methods there, the opposite of brats/on-harmony's pattern.
+- Before choosing a layout, **run a sizing probe** — a few epochs of the heaviest and the slowest method side by side on one real node, reporting per-fold VRAM + epoch time, using a throwaway results base so it can't pollute real checkpoints. CLAUDE.md already required measuring rather than assuming; write this probe fresh per dataset rather than assuming a prior one's numbers transfer.
 - Prefer packing **multiple folds onto the same node's GPUs** in one job rather than 1 fold = 1 whole node. With 4 GPUs/node, that means either 4 folds in parallel per job, or — since the current fold policy trains only folds 0/1/2 — 1 GPU sits idle unless a second task (a different method, modality, or ablation arm) is packed alongside.
 - The bigger H100 memory headroom vs Vulcan's L40S (each H100 has more VRAM) also means **larger batch sizes are affordable** — this changes the training config (not the shared script), so treat it as a per-cluster override the same way GPU type/CPU/mem are already overridden, not a hand-edit of `train_common.sh`.
 - Before changing batch size or fold-packing, size actual per-fold GPU-memory and utilization on one real H100 job first (`nvidia-smi` inside a submitted job, not the login node) rather than assuming Vulcan's numbers transfer — H100 vs L40S have different memory/compute ratios.
@@ -98,7 +98,7 @@ Partitions are `gpubase_bynode_b1/b2/b3` — **allocation is whole-node** (no pe
 | `$PROJECT` | `/project/aip-jcohen/` (`PROJECT` env var itself is empty — use the literal path) | shared group quota; **file COUNT is the binding constraint** (was 483K/500K files group-wide, only ~17K headroom, while space was two-thirds free) | check `# of files` via `diskusage_report`, not just space |
 | `$SCRATCH` | `/scratch/p/paulh` (also extra `p/` nesting; unset in non-login shells — export it explicitly) | 1024 GiB, ~1M files, purge-on-inactivity | **for now, all bulk nnUNet data on TamIA lives here** (see below) |
 
-**Current state (as of 2026-07-31): everything bulk is on `$SCRATCH`, nothing in `$PROJECT` yet.** Given the tight `$PROJECT` file-count quota, the repo + venv live in `$PROJECT` but the actual imaging data — now five datasets (`brats2024-glioma`, `chaos`, `on-harmony`, `open-ms`, and `picai-prostate` — which was downloaded and built directly on TamIA, never staged from Vulcan), not just the original minimal `brats2024-glioma` subset — lives on `$SCRATCH` only. **This means it can be purged on inactivity** — treat it as re-copyable, not durable, until/unless it's deliberately promoted to `$PROJECT` (which would need to be weighed against the file-count quota). The transfer script that repopulates it from Vulcan is kept at `/project/aip-jcohen/paulh/copy_to_tamia.sh` on **Vulcan** (not TamIA) as the recovery path — re-run it from Vulcan if the scratch copy is purged. Cluster-specific path overrides live in `scripts/cluster/tamia_env.sh`, sourced *after* the dataset's own `00_utils/env.sh` (same env-var-override pattern as GPU type above — never fork `run_job.sh` itself). One gotcha already hit: `env.sh` exports `nnUNet_results` unconditionally, so a `${nnUNet_results:-...}` fallback in the override file silently no-ops — override those variables outright, not with a `:-` guard.
+**Current state (as of 2026-07-31): everything bulk is on `$SCRATCH`, nothing in `$PROJECT` yet.** Given the tight `$PROJECT` file-count quota, the repo + venv live in `$PROJECT` but the actual imaging data — now all 4 datasets (`brats2024-glioma`, `chaos`, `on-harmony`, `open-ms`), not just the original minimal `brats2024-glioma` subset — lives on `$SCRATCH` only. **This means it can be purged on inactivity** — treat it as re-copyable, not durable, until/unless it's deliberately promoted to `$PROJECT` (which would need to be weighed against the file-count quota). The transfer script that repopulates it from Vulcan is kept at `/project/aip-jcohen/paulh/copy_to_tamia.sh` on **Vulcan** (not TamIA) as the recovery path — re-run it from Vulcan if the scratch copy is purged. Cluster-specific path overrides live in `scripts/cluster/tamia_env.sh`, sourced *after* the dataset's own `00_utils/env.sh` (same env-var-override pattern as GPU type above — never fork `run_job.sh` itself). One gotcha already hit: `env.sh` exports `nnUNet_results` unconditionally, so a `${nnUNet_results:-...}` fallback in the override file silently no-ops — override those variables outright, not with a `:-` guard.
 
 **Venv note:** venvs are not portable across clusters — TamIA's was rebuilt fresh via the same `_setup_venv_oneshot.sh` recipe used elsewhere, submitted as a job (never on the login node). One TamIA-specific fix needed: Vulcan's venv carries a hand-written `srcsm_auglab_port.pth` with a hardcoded Vulcan path (not in git, not pip-generated) — every other cluster needs its own one-line `.pth` pointing at its own `sub-workspaces` path, or all custom trainer discovery silently fails.
 
@@ -179,7 +179,7 @@ Scripts live in exactly three places — put new code in the right one:
 
 ### An "experiment" = a fixed 6-method suite trained on ONE modality
 
-"Start our 6 usual experiments on `<dataset>` `<modality>`" means: train these **exact 6 methods** on that single modality (on-harmony→T1w, open-ms→FLAIR, chaos→T1in/T2spir, brats→t1n/t2w, picai-prostate→T2W/ADC). AugLab configs are under `sub-workspaces/auglab_workspace/AugLab/auglab/configs/`:
+"Start our 6 usual experiments on `<dataset>` `<modality>`" means: train these **exact 6 methods** on that single modality (on-harmony→T1w, open-ms→FLAIR, chaos→T1in/T2spir, brats→t1n/t2w). AugLab configs are under `sub-workspaces/auglab_workspace/AugLab/auglab/configs/`:
 
 | # | method | category | AugLab config (or nnUNet) |
 |---|---|---|---|
@@ -194,7 +194,7 @@ The `trainXXX_valYYY` suffix (in the METHOD id / RUN_ID) encodes the synth-augme
 
 **FOLD POLICY — 3 folds only, permanently.** Always train **folds 0 1 2 only**. We used to train 4 folds but **from 2026-07-09 onward we never train fold 3 again** (3-fold ≡ 4-fold conclusions; fold 3 is wasted GPU on a congested cluster). If a dataset already has a 4-fold split, **reuse it and just train the first 3 folds** — do **not** create a new split and do **not** train fold 3. The shared drivers now **default** to 3 folds (not merely cap): `00_01_train/train_common.sh` `TRAIN_FOLDS` and `00_02_predict/predict_common.sh` `PREDICT_FOLDS` both default to `"0 1 2"`, `run_all_train_common.sh` exports `TRAIN_FOLDS="0 1 2"`, and `eval_folds.py` `EVAL_FOLDS` caps at 0-2 — so per-method wrappers no longer need to set folds explicitly. Only override (e.g. `TRAIN_FOLDS="0 1 2 3"`) for a deliberate one-off or to predict a legacy 4-fold model.
 
-**EPOCH POLICY — respect each dataset's usual epoch count.** Don't change these without a deliberate reason — they keep the 6-method suite comparable within and across runs of a dataset: **brats2024-glioma = 2500**, **on-harmony = 2000**, **open-ms = 2000**, **picai-prostate = 2000**, **chaos = 200**.
+**EPOCH POLICY — respect each dataset's usual epoch count.** Don't change these without a deliberate reason — they keep the 6-method suite comparable within and across runs of a dataset: **brats2024-glioma = 2500**, **on-harmony = 2000**, **open-ms = 2000**, **chaos = 200**.
 
 **How to launch all 6 (one command):** a per-modality launcher lists the 6 per-method wrapper paths in a `METHOD_SCRIPTS` array and sources the shared runner `datasets/00_commun_scripts/00_01_train/run_all_train_common.sh` — which caps folds at `0 1 2`, runs them in order, and supports `--start-from <method>` to resume a suite. Canonical example: `datasets/open-ms/5_scripts_open-ms/04_train/04_12_run_all_flair.sh` (→ `bash 04_12_run_all_flair.sh`). Each method is still its own thin `04_XX_train_<modality>_<method>.sh` wrapper (on-harmony T1w = `04_07`…`04_12`). For a **new** dataset/modality: create the 6 per-method wrappers (each ~5 lines: set METHOD/TRAINER/config, source `04_00_common.sh`) + one per-modality run-all launcher. *(The old `04_06_run_all_training.sh` is dead — ignore it.)*
 
@@ -291,3 +291,78 @@ currently relevant.
 - `06_01_evaluate_run.sh` (chaos, brats2024-glioma) defaults `DATASET_ID` internally to the training set's *primary* contrast. Evaluating the *secondary* modality (e.g. brats t2w, chaos t2spir) without passing `DATASET_ID` explicitly silently scores against the wrong ground truth — no error, just wrong numbers. Always pass it explicitly for the non-primary modality.
 - open-ms's evaluate script requires `CATEGORY` (`nnUNet`/`auglab`) explicitly — unlike chaos/brats, it does not auto-detect it. A wrong `CATEGORY` doesn't error either; it silently writes an empty, `_logs`-only metrics dir. Check `eval_all.csv` actually exists before trusting a run finished.
 - When writing a one-off/filtered aggregate or significance config (e.g. to compare a subset of methods), always set an explicit `output_dir` pointing at scratch space. Omitting it makes `aggregate_from_config.py`/`significance_from_config.py` fall back to the dataset's real output dir and **silently overwrite the actual headline `*_summary.md`/`*_significance.md` files.**
+
+---
+
+## Cluster operations — hard-won, added 2026-08-02
+
+**Slurm jobs go to TamIA, not Vulcan.** Standing default, not a per-case judgement. Vulcan's queue is
+routinely backed up (small CPU jobs sitting behind multi-day jobs indefinitely) while TamIA schedules
+the same work in ~1–2 min. Vulcan remains the filesystem home (repo, datasets, checkpoints, GitHub
+pushes) — it is not the compute target.
+
+**Remote commands over the TamIA relay MUST carry an explicit `cd`.** `ssh tamia '...'` starts in
+`$HOME`, so `tar xzf -` extracts into `/home/p/paulh/datasets/...`, not the repo. This bit repeatedly
+on 2026-08-02 and **silently dropped a code fix**, so a completed multi-GPU run produced results with
+one label missing and nobody noticed until the output table was read. Always:
+```bash
+cat script.sh | ssh tamia.alliancecan.ca 'cat > /tmp/s.sh && bash /tmp/s.sh'   # script starts with: cd /project/aip-jcohen/paulh/mri_synthesis_project
+```
+Piping a script file is also what avoids the nested-quoting mangling already documented above.
+
+**Vulcan's login-node `/tmp` runs ~98% full** (other users' multi-GB dirs). Session scratchpads get
+wiped mid-session and `tar` writes silently truncate to 0 bytes. **Stage intermediate data on
+`$SCRATCH`, never `/tmp`.** Our own `/tmp` footprint is ~30 MB — the pressure is not ours to fix.
+
+**No heavy compute inline on a login node, even when it "feels small".** A results aggregation held
+~6 Vulcan login cores for 9+ minutes (~54 CPU-min against a ~10 CPU-min allowance) before being
+caught. Wrap it in `run_job`. Related trap: **don't pipe a long-running command through `tail`** —
+it buffers until exit, so a working job looks hung.
+
+---
+
+## The paper (`paper/`)
+
+- **Source:** `paper/cvpr_format_latex/`, build with `pdflatex → bibtex → pdflatex ×2` (latexmk's
+  auto-ordering has failed here). CVPR 2026 limit is **8 pages excluding references**; a
+  `\label{endofmaintext}` before the bibliography lets you read the true main-text end page out of
+  `main.aux`. Supplementary (`sec/X_suppl.tex`) is compiled in and does not count.
+- **Narrative is mechanism-first as of 2026-08-02:** the claim is *"preserving texture matters where
+  the target is defined by tissue appearance, not by an anatomical interface"*, with the SOTA numbers
+  as supporting breadth. `paper/NARRATIVE.md` has the reframe rationale and — important — three
+  citation traps that must not be "simplified" back in (never argue from "CHAOS is solved"; never
+  infer texture-dependence from rater disagreement; **never claim MS lesions lack clear boundaries**,
+  which the clinical literature contradicts).
+- **Status + remaining work:** `paper/PAPER_TODO_20260802.md`.
+- `sec/_suppl_tables.tex` is **generated from `datasets/*/8_results_*`**, not hand-written —
+  regenerate, don't edit.
+
+---
+
+## Cleanup notes (read before deleting anything in the repo root)
+
+**Untracked but load-bearing — do NOT `git clean`:**
+- `datasets/01_commun_results/meta_task_heatmap_summary.md` — **the source of the paper's main
+  results table.** Untracked. Losing it loses the headline numbers.
+- `datasets/00_commun_scripts/00_04_analysis/label_cue_importance/` — shared boundary-cue analysis
+  (its `FINDINGS.md` / `LITERATURE_REVIEW.md` carry the reviewer-rebuttal material; deliberately kept
+  out of the paper).
+- `datasets/*/5_scripts_*/05_predict/05_4X_predict_*_kmeans*` — the ablation-ladder rungs that produce
+  the paper's central dissociation.
+- `paper/**/*.bak_20260802` — intentional pre-edit backups from the 2026-08-02 paper session.
+
+**Genuine cleanup targets (verify, move to `toDelete/`, then delete — never `rm -rf` with a glob):**
+- `${METRICS_ROOT}/` — a directory literally named after an **unexpanded shell variable**. It holds 4
+  real `*_significance.md` files misfiled by a bug. Check the correct `8_results_*/02_metrics/...`
+  paths already contain them before deleting; otherwise move them there first. **Fix the script that
+  wrote them** — an unquoted/unset `METRICS_ROOT` will do it again.
+- `datasets/01_commun_results/"ours_vs_best_other_train050_val000 copy.md"` — duplicate (note the
+  space in the filename).
+- `paper/cvpr_format_latex.stale_bak_1783838883/` (2.9 MB), `CLAUDE.md.bak.*`, `.scratch_analysis/`
+  (29 MB of one-off probes).
+
+**Known inconsistency worth fixing during cleanup:** the four ablation ladders do not share a summary
+format — BraTS T1n and CHAOS T2spir have `ablations/ladder_summary.md` with explicit rung tables,
+while Open-MS FLAIR and CHAOS T1in only have per-contrast `*_summary.md` whose OOD rungs must be
+averaged by hand. **This let a wrong number into the paper's central table** (an HD95 delta
+transcribed from the wrong ladder). Unify them onto one generator.
