@@ -1,0 +1,662 @@
+{
+    "0": {
+        "machine": "TrioTim",
+        "date": "2014",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.781,
+            "y": 0.781,
+            "z": 2.3
+        },
+        "contrast_phase": "arterial"
+    },
+    "1": {
+        "machine": "Skyra",
+        "date": "2017",
+        "sequence": "VIBE TWIST",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 2.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "2": {
+        "machine": "Skyra",
+        "date": "2017",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.042,
+            "y": 1.042,
+            "z": 3.0
+        },
+        "contrast_phase": "delayed"
+    },
+    "3": {
+        "machine": "Aera",
+        "date": "2012",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.879,
+            "y": 0.879,
+            "z": 4.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "4": {
+        "machine": "TrioTim",
+        "date": "2012",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.742,
+            "y": 0.742,
+            "z": 2.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "5": {
+        "machine": "Aera",
+        "date": "2019",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.25,
+            "y": 1.25,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "6": {
+        "machine": "TrioTim",
+        "date": "2013",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.879,
+            "y": 0.879,
+            "z": 2.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "7": {
+        "machine": "Skyra",
+        "date": "2017",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.136,
+            "y": 1.136,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "8": {
+        "machine": "MAGNETOM Sola",
+        "date": "2019",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.25,
+            "y": 1.25,
+            "z": 3.0
+        },
+        "contrast_phase": "delayed"
+    },
+    "9": {
+        "machine": "Skyra",
+        "date": "2020",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.042,
+            "y": 1.042,
+            "z": 3.0
+        },
+        "contrast_phase": "portal"
+    },
+    "10": {
+        "machine": "TrioTim",
+        "date": "2014",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.82,
+            "y": 0.82,
+            "z": 2.5
+        },
+        "contrast_phase": "unkown"
+    },
+    "11": {
+        "machine": "Aera",
+        "date": "2019",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.25,
+            "y": 1.25,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "12": {
+        "machine": "Signa HDxt",
+        "date": "2017",
+        "sequence": "LAVA FLEX",
+        "spacing": {
+            "x": 0.781,
+            "y": 0.781,
+            "z": 4.6
+        },
+        "contrast_phase": "unkown"
+    },
+    "13": {
+        "machine": "MAGNETOM Sola",
+        "date": "2020",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "portal"
+    },
+    "14": {
+        "machine": "Aera",
+        "date": "2017",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.312,
+            "y": 1.312,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "15": {
+        "machine": "Skyra",
+        "date": "2017",
+        "sequence": "VIBE TWIST",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 2.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "16": {
+        "machine": "Aera",
+        "date": "2017",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.406,
+            "y": 1.406,
+            "z": 3.0
+        },
+        "contrast_phase": "delayed"
+    },
+    "17": {
+        "machine": "Aera",
+        "date": "2015",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "18": {
+        "machine": "Aera",
+        "date": "2019",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.25,
+            "y": 1.25,
+            "z": 3.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "19": {
+        "machine": "SIGNA Explorer",
+        "date": "2016",
+        "sequence": "LAVA",
+        "spacing": {
+            "x": 0.859,
+            "y": 0.859,
+            "z": 4.2
+        },
+        "contrast_phase": "delayed"
+    },
+    "20": {
+        "machine": "Skyra",
+        "date": "2017",
+        "sequence": "VIBE TWIST",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 2.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "21": {
+        "machine": "TrioTim",
+        "date": "2016",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.977,
+            "y": 0.977,
+            "z": 2.1
+        },
+        "contrast_phase": "delayed"
+    },
+    "22": {
+        "machine": "Skyra",
+        "date": "2017",
+        "sequence": "VIBE TWIST",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 2.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "23": {
+        "machine": "Aera",
+        "date": "2015",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "portal"
+    },
+    "24": {
+        "machine": "Signa HDxt",
+        "date": "2017",
+        "sequence": "LAVA FLEX",
+        "spacing": {
+            "x": 0.82,
+            "y": 0.82,
+            "z": 4.4
+        },
+        "contrast_phase": "unkown"
+    },
+    "25": {
+        "machine": "TrioTim",
+        "date": "2013",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 2.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "26": {
+        "machine": "Aera",
+        "date": "2013",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.82,
+            "y": 0.82,
+            "z": 4.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "27": {
+        "machine": "TrioTim",
+        "date": "2014",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.684,
+            "y": 0.684,
+            "z": 2.0
+        },
+        "contrast_phase": "portal"
+    },
+    "28": {
+        "machine": "Aera",
+        "date": "2017",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "29": {
+        "machine": "Aera",
+        "date": "2018",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "no contrast agent"
+    },
+    "30": {
+        "machine": "Optima MR450w",
+        "date": "2018",
+        "sequence": "LAVA",
+        "spacing": {
+            "x": 0.84,
+            "y": 0.84,
+            "z": 4.0
+        },
+        "contrast_phase": "unkown"
+    },
+    "31": {
+        "machine": "Aera",
+        "date": "2015",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "delayed"
+    },
+    "32": {
+        "machine": "Skyra",
+        "date": "2018",
+        "sequence": "VIBE TWIST",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 2.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "33": {
+        "machine": "Aera",
+        "date": "2016",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 2.6
+        },
+        "contrast_phase": "arterial"
+    },
+    "34": {
+        "machine": "Aera",
+        "date": "2018",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.25,
+            "y": 1.25,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "35": {
+        "machine": "Aera",
+        "date": "2014",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "36": {
+        "machine": "Aera",
+        "date": "2016",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.25,
+            "y": 1.25,
+            "z": 3.5
+        },
+        "contrast_phase": "delayed"
+    },
+    "37": {
+        "machine": "Skyra",
+        "date": "2020",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.172,
+            "y": 1.172,
+            "z": 3.0
+        },
+        "contrast_phase": "portal"
+    },
+    "38": {
+        "machine": "Skyra",
+        "date": "2019",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.042,
+            "y": 1.042,
+            "z": 3.0
+        },
+        "contrast_phase": "portal"
+    },
+    "39": {
+        "machine": "TrioTim",
+        "date": "2014",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.762,
+            "y": 0.762,
+            "z": 2.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "40": {
+        "machine": "Skyra",
+        "date": "2017",
+        "sequence": "VIBE TWIST",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 2.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "41": {
+        "machine": "Aera",
+        "date": "2013",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.25,
+            "y": 1.25,
+            "z": 3.5
+        },
+        "contrast_phase": "portal"
+    },
+    "42": {
+        "machine": "Skyra",
+        "date": "2017",
+        "sequence": "VIBE TWIST",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 2.5
+        },
+        "contrast_phase": "arterial"
+    },
+    "43": {
+        "machine": "MAGNETOM Sola",
+        "date": "2020",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "44": {
+        "machine": "Aera",
+        "date": "2017",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "45": {
+        "machine": "MAGNETOM Sola",
+        "date": "2020",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.938,
+            "y": 0.938,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "46": {
+        "machine": "Aera",
+        "date": "2018",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "portal"
+    },
+    "47": {
+        "machine": "OPTIMA MR360",
+        "date": "2015",
+        "sequence": "LAVA",
+        "spacing": {
+            "x": 0.859,
+            "y": 0.859,
+            "z": 4.4
+        },
+        "contrast_phase": "unkown"
+    },
+    "48": {
+        "machine": "Aera",
+        "date": "2016",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.312,
+            "y": 1.312,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "49": {
+        "machine": "Aera",
+        "date": "2020",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "50": {
+        "machine": "SIGNA Explorer",
+        "date": "2016",
+        "sequence": "LAVA",
+        "spacing": {
+            "x": 0.859,
+            "y": 0.859,
+            "z": 4.6
+        },
+        "contrast_phase": "unkown"
+    },
+    "51": {
+        "machine": "Skyra",
+        "date": "2019",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.042,
+            "y": 1.042,
+            "z": 3.0
+        },
+        "contrast_phase": "portal"
+    },
+    "52": {
+        "machine": "Aera",
+        "date": "2014",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "no contrast agent"
+    },
+    "53": {
+        "machine": "Aera",
+        "date": "2019",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.188,
+            "y": 1.188,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "54": {
+        "machine": "TrioTim",
+        "date": "2016",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 0.918,
+            "y": 0.918,
+            "z": 2.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "55": {
+        "machine": "SIGNA Voyager",
+        "date": "2017",
+        "sequence": "LAVA",
+        "spacing": {
+            "x": 0.898,
+            "y": 0.898,
+            "z": 4.4
+        },
+        "contrast_phase": "unkown"
+    },
+    "56": {
+        "machine": "Aera",
+        "date": "2020",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.375,
+            "y": 1.375,
+            "z": 3.0
+        },
+        "contrast_phase": "portal"
+    },
+    "57": {
+        "machine": "Aera",
+        "date": "2019",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.25,
+            "y": 1.25,
+            "z": 3.5
+        },
+        "contrast_phase": "delayed"
+    },
+    "58": {
+        "machine": "Aera",
+        "date": "2013",
+        "sequence": "VIBE",
+        "spacing": {
+            "x": 1.146,
+            "y": 1.146,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    },
+    "59": {
+        "machine": "Aera",
+        "date": "2018",
+        "sequence": "VIBE CAIPIRINHA",
+        "spacing": {
+            "x": 1.312,
+            "y": 1.312,
+            "z": 3.0
+        },
+        "contrast_phase": "arterial"
+    }
+}

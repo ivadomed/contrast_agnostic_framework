@@ -1,0 +1,31 @@
+# atlas-liver-hcc — T1w-trained models, 6-method suite, folds 0 1 2.
+# STANDARD layout: consumed by 06_10_aggregate_from_config.sh (aggregate) and
+# 06_11_significance_from_config.sh (paired significance; pass --ref explicitly).
+# Eval (06_01) writes fold*/eval_all.csv under metrics_dir/{category}_{run_id}/.
+#
+# SINGLE-MODALITY DATASET: unlike chaos/brats2024-glioma/on-harmony/open-ms (each
+# trained on 2 modalities, pooled via combined_modality_summary.py), atlas-liver-hcc has
+# exactly ONE training contrast (T1w CE-MRI) — there is no second modality to pool, so
+# this dataset does NOT get a combined_contrasts/ table. The `all` column here already
+# IS the full headline result (mean over the single "t1w" test item x 12 held-out
+# patients x 3 folds); the held-out-patient split is the generalization axis, not a
+# cross-contrast one. Do not wire a fake combined_contrasts step for this dataset.
+title: "atlas-liver-hcc — T1w-trained models (6-method suite, single modality)"
+metrics_dir: "${METRICS_ROOT}/atlas_liver_hcc_model/t1w"
+output_prefix: "01_results"
+in_domain_contrast: t1w
+
+# Fixed 6-method order: baseline, auglab_default, synthseg_noEM, synthseg_EM, srcsm,
+# auglabAug_v26_6_2 train050_val000 (OURS — DualVal; val100 mirror not listed here, same
+# checkpoint_final.pth as val000 per CLAUDE.md's DualVal note, add its RUN_ID as a 7th
+# row only for a dedicated best_vs_final/val000_vs_val100 comparison, not the headline).
+#
+# PLACEHOLDER — fill in real RUN_IDs after 04_07_run_all_t1w.sh has been launched and
+# each method has finished training (this onboarding task does not launch training).
+runs:
+  # - atlas-liver-hcc_t1w_baseline_<TS>
+  # - atlas-liver-hcc_t1w_auglab_default_<TS>
+  # - atlas-liver-hcc_t1w_synthseg_noEM_<TS>
+  # - atlas-liver-hcc_t1w_synthseg_EM_<TS>
+  # - atlas-liver-hcc_t1w_srcsm_<TS>
+  # - atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val000_<TS>
