@@ -20,12 +20,12 @@ in_domain_contrast: t1w
 # checkpoint_final.pth as val000 per CLAUDE.md's DualVal note, add its RUN_ID as a 7th
 # row only for a dedicated best_vs_final/val000_vs_val100 comparison, not the headline).
 #
-# PLACEHOLDER — fill in real RUN_IDs after 04_07_run_all_t1w.sh has been launched and
-# each method has finished training (this onboarding task does not launch training).
+# Filled in 2026-08-06 after the TamIA suite (launched 2026-08-04, TS=20260804_062605)
+# finished training and predict+evaluate completed via 05_20_tamia_pack_predict_evaluate.sh.
 runs:
-  # - atlas-liver-hcc_t1w_baseline_<TS>
-  # - atlas-liver-hcc_t1w_auglab_default_<TS>
-  # - atlas-liver-hcc_t1w_synthseg_noEM_<TS>
-  # - atlas-liver-hcc_t1w_synthseg_EM_<TS>
-  # - atlas-liver-hcc_t1w_srcsm_<TS>
-  # - atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val000_<TS>
+  - atlas-liver-hcc_t1w_baseline_20260804_062605
+  - atlas-liver-hcc_t1w_auglab_default_20260804_062605
+  - atlas-liver-hcc_t1w_synthseg_noEM_20260804_062605
+  - atlas-liver-hcc_t1w_synthseg_EM_20260804_062605
+  - atlas-liver-hcc_t1w_srcsm_20260804_062605
+  - atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val000_20260804_062605
