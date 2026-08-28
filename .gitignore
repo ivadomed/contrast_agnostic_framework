@@ -19,6 +19,7 @@ archive/
 *.nii.gz
 *.nii
 *.ckpt
+LLD_MMRI_Annotation*.json
 **/8_results*/*
 **/2_nnUNet*/*
 **/1_BIDS*/*
