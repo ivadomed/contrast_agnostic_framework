@@ -13,6 +13,18 @@
 # lld-mmri-hcc scores ONLY the tumour label (no liver-organ mask in that dataset, and
 # its masks are MedSAM2 semi-automated, not fully expert-drawn -- see that dataset's
 # README caveat before treating a low score there as pure domain-gap evidence).
+#
+# Added 2026-08-29: liverhccseg (TCGA-LIHC, 14 HCC patients, real expert masks -- 2
+# independent board-certified radiologist raters, rater1 used as GT). Deliberately
+# genuinely HCC-only (unlike lld-mmri-hcc's broader liver-lesion pool -- adding
+# non-HCC lesions was considered and rejected: it would confound cross-contrast
+# generalization with cross-DISEASE generalization, a different and murkier claim).
+# Same CE-T1w contrast FAMILY as ATLAS's own training data (pre/art/pv/del phases) --
+# NOT a cross-contrast test the way lld-mmri-hcc's T2WI/DWI is -- but a genuinely
+# independent cohort/scanner/protocol, added as an extra concordant stratum to
+# strengthen the pooled significance test (motivation: OURS vs synthseg_EM was only
+# p=0.11 on lld-mmri-hcc alone). liverhccseg scores tumour only too (see that
+# dataset's README) so every OOD/cross-dataset column measures the same construct.
 title: "atlas-liver-hcc T1w models — cross-dataset (cross-contrast) results"
 in_domain_contrast: atlas_t1w
 output_prefix: "04_01_cross_dataset_t1w"
@@ -22,12 +34,18 @@ column_order:
   - atlas_t1w
   - lldmmrihcc_t2wi
   - lldmmrihcc_dwi
+  - liverhccseg_ce-pre_T1w
+  - liverhccseg_ce-art_T1w
+  - liverhccseg_ce-pv_T1w
+  - liverhccseg_ce-del_T1w
 
 sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/atlas-liver-hcc/8_results_atlas-liver-hcc/02_metrics/atlas_liver_hcc_model/t1w"
     column_prefix: "atlas_"
   - metrics_dir: "${PROJECT_ROOT}/datasets/lld-mmri-hcc/8_results_lld-mmri-hcc/02_metrics/atlas_liver_hcc_model/t1w"
     column_prefix: "lldmmrihcc_"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/liverhccseg/8_results_liverhccseg/02_metrics/atlas_liver_hcc_model/t1w"
+    column_prefix: "liverhccseg_"
 
 # Same 6 headline RUN_IDs as atlas-liver-hcc_t1w_01_results.yaml (TS=20260804_062605).
 runs:
