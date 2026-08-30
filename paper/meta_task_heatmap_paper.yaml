@@ -1,0 +1,44 @@
+# PAPER-SCOPED copy of scripts/evaluate/meta_task_heatmap.yaml, restricted to
+# the 5 tasks this paper actually reports (brats2024-glioma, chaos,
+# on-harmony, open-ms, atlas-liver-hcc). The shared config also lists a 6th
+# task, healthy-spine-tum, added by a separate, unrelated workstream in this
+# repo (2026-08-29) -- correct for that broader project, out of scope for
+# this paper. Rather than edit the shared config (which that other
+# workstream depends on) or let that task silently drift into the paper's
+# headline table, this file pins the paper's own task list, output to a
+# paper-local dir so it never collides with datasets/01_commun_results/
+# meta_task_heatmap_summary.md (now serving the broader, multi-task project).
+#
+# atlas-liver-hcc (liver tumour, HCC) added 2026-08-29: single training
+# modality (CE-T1w), so its "combined" config
+# (atlas-liver-hcc_combined_01_results.yaml) wraps that one modality only --
+# combined_modality_summary.py's >=2-modality guard was relaxed to >=1 to
+# allow this (regression-tested against on-harmony's existing 2-modality
+# config first: byte-identical output apart from the timestamp). It has no
+# train050_val100 run yet, so it contributes no data to that row/column
+# (excluded from those cells' averages, not counted as 0 -- same convention
+# already used for any other missing task/method combination here).
+#
+# Otherwise identical to the shared config: same ref, same per-task configs
+# (which already carry the contrast_groups fix for chaos/open-ms/atlas-liver-hcc).
+title: "Cross-dataset — task-level heatmap (7-method suite, paper's 5 tasks)"
+output_dir: "${PROJECT_ROOT}/paper/generated_results"
+output_prefix: "meta_task_heatmap_paper"
+ref: auglabAug_v26_6_2_train050_val000
+
+tasks:
+  - name: brats2024-glioma
+    dataset: brats2024-glioma
+    config: "${PROJECT_ROOT}/datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_combined_01_results.yaml"
+  - name: chaos
+    dataset: chaos
+    config: "${PROJECT_ROOT}/datasets/chaos/5_scripts_chaos/06_evaluate/configs/chaos_combined_01_results.yaml"
+  - name: on-harmony
+    dataset: on-harmony
+    config: "${PROJECT_ROOT}/datasets/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_combined_01_results.yaml"
+  - name: open-ms
+    dataset: open-ms
+    config: "${PROJECT_ROOT}/datasets/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_combined_01_results.yaml"
+  - name: atlas-liver-hcc
+    dataset: atlas-liver-hcc
+    config: "${PROJECT_ROOT}/datasets/atlas-liver-hcc/5_scripts_atlas-liver-hcc/06_evaluate/configs/atlas-liver-hcc_combined_01_results.yaml"
