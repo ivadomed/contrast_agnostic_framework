@@ -5,21 +5,20 @@
 \label{subsec:dg}
 
 Domain generalization (DG) targets unseen distributions without access to
-target data, unlike unsupervised domain adaptation (UDA), which assumes
-unlabelled target images and solves an easier problem~\cite{shin2023sdcuda}.
-Most medical DG methods are \emph{multi-source}, interpolating across several
-labelled domains by meta-learning~\cite{li2018mldg}, feature
-alignment~\cite{wang2020dofe}, or frequency-space
-exchange~\cite{liu2021feddg}. Recent computer-vision entrants follow the same
-recipe: MADGNet couples a multi-frequency architecture with multi-domain
-training~\cite{nam2024madgnet}, and foundation models such as SynthFM pursue
-modality-agnostic segmentation at scale~\cite{sengupta2025synthfm}, while
-diffusion-based stylization normalizes appearance but relies on a generative
-prior and on source diversity~\cite{bao2024structaware}. We instead work in the
-\emph{single-source} regime --- one labelled dataset, no target data, no second
-source --- which cannot exploit cross-domain interpolation and makes
-architecture-coupled methods orthogonal: our mechanism acts at the input level
-and leaves the segmentation network a fixed nnU-Net~\cite{isensee2021nnunet}.
+target data, unlike unsupervised domain adaptation, which assumes unlabelled
+target images and solves an easier problem~\cite{shin2023sdcuda}. Most
+medical DG methods are \emph{multi-source}, interpolating across several
+labelled domains by meta-learning, feature alignment, frequency-space
+exchange, multi-frequency architectures, foundation-model scale, or
+diffusion-based stylization~\cite{li2018mldg,wang2020dofe,liu2021feddg,nam2024madgnet,sengupta2025synthfm,bao2024structaware}
+-- all of which still rely on source diversity. We instead work in the
+\emph{single-source} regime --- one
+labelled dataset, no target data, no second source -- the setting that
+matters when target-domain data is unavailable at training time, which is
+routine in clinical deployment~\cite{zhang2020bigaug,ouyang2022gin}. This
+rules out cross-domain interpolation and makes architecture-coupled methods
+orthogonal to our contribution: our mechanism acts at the input level and
+leaves the segmentation network a fixed nnU-Net~\cite{isensee2021nnunet}.
 
 \subsection{Synthesis-based contrast-agnostic training}
 \label{subsec:synth}
@@ -28,67 +27,104 @@ The dominant single-source strategy is label-generative domain randomization,
 introduced by SynthSeg~\cite{billot2023synthseg}: intensities are sampled from a
 per-label Gaussian mixture over an anatomical segmentation, yielding images of
 arbitrary contrast that force contrast-invariance. This family carries two
-structural costs. It is \emph{label-driven} --- a dense anatomical label map is
-required per subject, and SIAM shows the dependence is on label \emph{quality},
-needing a few high-grade manually curated templates~\cite{valabregue2026siam};
-producing such maps is expensive in expert hours. It is also
-\emph{texture-destroying}: per-label Gaussian sampling replaces real gradients,
-partial-volume detail and unlabelled structure with piecewise noise, retaining
-layout but not texture. The lineage has been specialized to white-matter
-lesions~\cite{laso2024wmhsynthseg} and MS
-lesions~\cite{caselles2026timelesseg}, and sits alongside training-free
-per-scan generative fitting such as SAMSEG~\cite{cerri2021samseg}. We take
-SynthSeg's original (noEM) variant --- which requires a dense anatomical label
-map --- and its EM variant --- which does not need a dense map but still uses
-the sparse task labels naturally available in a segmentation dataset to
-estimate its per-class intensity model --- as baselines; as the EM variant has
-no public code, a faithful re-implementation is itself a contribution.
+structural costs: it is \emph{label-driven} (a dense anatomical label map is
+required per subject -- SIAM shifts the dependence from label
+\emph{quantity} to \emph{quality} with curated templates, but each still
+needs a full dense parcellation~\cite{valabregue2026siam}), and it is
+\emph{texture-destroying}, since per-label Gaussian sampling replaces real
+gradients, partial-volume detail and unlabelled structure with piecewise
+noise, retaining layout but not texture. The lineage has been specialized to
+white-matter and MS lesions and to atlas-based
+expectation-maximization~\cite{laso2024wmhsynthseg,caselles2026timelesseg,cerri2021samseg}.
+Among SynthSeg's own variants we take the
+original (\emph{noEM}), which resamples intensities from a dense anatomical
+label map and never looks at the acquired scan, and the \emph{EM} variant,
+which instead fits its per-class intensity model to the real image by
+expectation-maximization and so needs only the sparse task labels a
+segmentation dataset already provides, not a dense parcellation. The EM
+variant has no released implementation; ours follows the mechanism described
+in the original paper~\cite{billot2023synthseg}, and a faithful
+re-implementation is itself a contribution.
+
+\subsection{Texture as a segmentation signal}
+\label{subsec:texture}
+
+That local texture, not only intensity level, carries information a
+segmentation model can use is established independently of us: second-order
+gray-level statistics discriminate image content beyond simple
+intensity~\cite{haralick1973texture}, and quantitative texture features from
+tumour regions carry prognostic signal across CT, MRI and
+PET~\cite{lambin2012radiomics}. Closer to our setting, Kang et al.\
+disentangle structure from texture in cross-domain image translation with a
+texture co-occurrence loss, targeting the same failure mode we do --- naive
+translation distorts fine texture and degrades downstream
+segmentation~\cite{kang2023structurepreserving}; a texture-fidelity loss has
+likewise been added to GAN-based lesion augmentation~\cite{guan2022texture}.
+That some targets resist boundary-based methods for lack of a sharp edge,
+and are better served by texture-based segmentation, has been argued
+directly for diffuse white-matter lesions~\cite{kruggel2008texture}. None of
+this prior work, to our knowledge, connects texture preservation in an
+\emph{augmentation} to \emph{which} segmentation targets it helps; that
+connection, tested causally, is our contribution.
 
 \subsection{Single-source intensity and appearance augmentation}
 \label{subsec:aug}
 
-A second line manufactures appearance diversity directly from the real image,
-with no generative label model. General-purpose libraries stack intensity,
+Where the first line of single-source methods synthesizes from a label map, a
+second manufactures appearance diversity directly from the real image, with
+no generative label model. General-purpose libraries stack intensity,
 spatial and artifact transforms on an nnU-Net trainer; the recent Auglab
 pipeline~\cite{molinier2026auglab,isensee2021nnunet} is one such
-GPU-accelerated framework and is the strongest competitor in our experiments,
-and BigAug follows the same stacked-transform
-philosophy~\cite{zhang2020bigaug}. Our method inserts the PALETTE transform as
-one additional operator inside this pipeline, so the comparison against Auglab
-directly isolates the contribution of PALETTE. Closer to our operator are random-filter
-methods: GIN applies randomly re-initialized convolutions per forward pass to
-produce appearance variants requiring no label map in true 3D with no trained
-parameters~\cite{ouyang2022gin}, RandConv establishes the principle for natural
-images~\cite{xu2021randconv}, SLAug perturbs intensities per class using the
-task mask~\cite{su2023slaug}, and diffusion variants add learned
-generators~\cite{chen2024diffusionsdg}; a parallel frequency-domain line
-perturbs the Fourier amplitude spectrum rather than the image
-itself~\cite{zhao2024morestyle,li2024raffesdg,qiao2024ras}. These share our
-single-source stance --- GIN especially is a
-direct peer --- but vary appearance globally, spatially or spectrally, whereas
-our operator partitions the foreground into intensity classes and Voronoi
-sub-regions and applies a signed affine remap of the \emph{real} intensities
-within each. The closest peer is semantic-aware random
-convolution~\cite{thaler2025semrandconv}, which also localizes the perturbation
-region-wise in true 3D, but differs on both axes that define our operator: it
-delineates regions from the \emph{ground-truth label map}, reintroducing the
-task-label dependence we avoid, and applies a random convolution within each,
-which alters local gradients, whereas we partition by unsupervised $k$-means and
-Voronoi partition and apply an affine remap that leaves gradients intact.
-Because the remap is affine and region-local, edges and texture survive while
-contrast is randomized, preserving exactly the signal label-generative synthesis
-discards, without any anatomical labels.
+GPU-accelerated framework and is the strongest competitor in our
+experiments, and BigAug stacks a comparable set of coarse intensity, quality
+and spatial perturbations under the same single-source DG protocol we
+use~\cite{zhang2020bigaug}. Our method inserts the PALETTE transform as one
+additional operator inside the Auglab pipeline, so the comparison against
+Auglab directly isolates PALETTE's contribution. Closer to our operator are
+random-filter methods, which vary appearance with an untrained nonlinear
+filter: GIN applies randomly re-initialized convolutions for label-free
+appearance variants~\cite{ouyang2022gin} (the GIN-alone configuration we
+compare against is an ablation in the original paper of a two-view
+objective on 2-D slices, so our comparison is illustrative of the
+random-filter family rather than a reproduction of that paper's proposed
+method); related variants establish the random-filter principle for
+natural images, perturb intensities per class using the task mask, add
+learned diffusion generators, or perturb the Fourier amplitude spectrum
+instead of the image
+itself~\cite{xu2021randconv,su2023slaug,chen2024diffusionsdg,zhao2024morestyle,li2024raffesdg,qiao2024ras}.
+Our operator
+instead partitions the foreground into intensity classes and Voronoi
+sub-regions and applies a signed \emph{affine} remap of the real intensities
+within each, invertible and gradient-preserving by construction. The
+closest peer is SRCSM~\cite{thaler2025semrandconv} (semantic-aware random
+convolution with source matching), which also localizes its perturbation
+region-wise in true 3-D and, like PALETTE, layers exactly one
+label-consuming component over an otherwise label-free step: at training
+time it draws a fresh untrained convolution per anatomical class from the
+ground-truth map (needing a Gaussian smoothing pass to control the
+boundary-contrast artifacts this introduces), and at test time applies a
+label-free histogram matching onto the source distribution. The difference
+from PALETTE is not label use versus none, but \emph{how} that step
+transforms the signal: an untrained nonlinear convolution versus a
+deterministic affine remap that leaves relative intensity structure inside
+each region intact.
 
-\subsection{The evaluation gap}
+\subsection{Cross-contrast evaluation protocol}
 \label{subsec:gap}
 
-We are not aware of prior work reporting our protocol: training on a
-\emph{single real input modality} and testing on held-out modalities of the
-\emph{same task and dataset}, across a benchmark spanning brain, abdominal and
-tumour anatomy in both MRI and CT. Existing single-source evaluations are either
-cross-dataset but same-modality --- e.g.\ FLAIR MS-lesion models across
-sites~\cite{badea2024generalizable} on cohorts such as the public 3D-MR-MS
-data~\cite{lesjak2018openms} --- or contrast-agnostic-by-synthesis, where
-training data already span all contrasts and ``single-modality'' refers only to
-the test input. The one-real-modality-in, held-out-modality-out axis is the
-harder setting, and the one we target.
+We evaluate a model trained on a single real input modality on every
+held-out modality of the \emph{same} segmentation task, including the
+training modality itself, across four tasks spanning brain, abdominal and
+tumour anatomy in MRI and CT; a sixth task, spine segmentation, is a
+planned extension. This single-sequence-in, every-sequence-out design is
+not unprecedented -- Auglab's own evaluation follows the identical protocol
+for spine segmentation~\cite{molinier2026auglab} -- and our contribution is
+breadth (four distinct cross-contrast tasks, not one) and, for two of them,
+a further axis: MS-lesion and abdominal-organ segmentation are each also
+evaluated against independent external test datasets acquired at different
+sites, so the training dataset's own test set is one point among several
+rather than the only held-out evidence. A fifth task, liver-tumour
+segmentation, trains on a single modality and so has no cross-contrast axis
+of its own, but is evaluated against two independent external cohorts the
+same way, extending this same-site-is-not-enough argument to a setting
+where cross-contrast transfer cannot be measured at all.

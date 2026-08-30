@@ -12,13 +12,20 @@ on it: $2500$ (Brats-GLI), $2000$ (ON-Harmony), $2000$ (Open-MS), $200$
 average; folds are the same across methods.
 
 \paragraph{PALETTE hyper-parameters.} Set once and never tuned per dataset:
-$k$-means class count drawn per sample from $\{2,\dots,6\}$; Voronoi
-sub-parcellation of each intensity class; signed affine coefficient
-$\alpha \in \pm U(0.5, 2.0)$ applied per sub-region as in
-\cref{eq:affine}; per-label affine decoupling applied to $50\%$ of labels.
-The transform is applied on the GPU, on-the-fly, to a fixed $50\%$ of
-training iterations (\emph{train050}); the remaining half of iterations use
-the un-transformed real image.
+$k$-means class count drawn per sample from $\{2,\dots,6\}$, skipped in
+favour of a single global remap with probability $0.10$; Voronoi
+sub-parcellation of each intensity class with probability $0.60$ (else left
+as one region); signed affine coefficient $\alpha \in \pm U(0.5, 2.0)$
+applied per sub-region as in \cref{eq:affine} (always applied, to whatever
+partition results from the $k$-means/Voronoi steps); per-label affine
+decoupling applied independently per label with probability $0.5$ (skipped
+for any label with under $4$ foreground voxels in that sample); Gaussian
+blur $\sigma$ drawn from $\{0,0,0,0.3,0.5,0.8\}$, applied twice (after the
+region-level and after the label-level remap), so mostly not applied at
+either point. The transform is applied on the GPU, on-the-fly, to a fixed
+$50\%$ of training
+iterations (\emph{train050}); the remaining half of iterations use the
+un-transformed real image.
 
 \paragraph{Validation-time configuration.} \emph{val000} (the configuration
 reported in the main paper) applies no synthetic contrast to the validation

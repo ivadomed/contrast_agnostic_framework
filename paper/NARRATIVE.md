@@ -36,16 +36,24 @@ Target: CVPR (8 pages), then MICCAI as fallback.
 
 ## 3. Central thesis
 
-> A simple, label-free, **texture-preserving** contrast augmentation trains segmentation
-> models that are robust across MRI contrasts (and modalities), reaching **new SOTA** —
-> and we **explain** the SOTA via two orthogonal analyses: (1) it preserves real
-> texture/gradients that generative label-based synthesis destroys, and (2) it achieves
-> the most complete coverage of the real contrast-histogram manifold.
+> [Superseded 2026-08-02 — see Addendum below for the live framing.] A simple, label-free,
+> **texture-preserving** contrast augmentation trains segmentation models that are robust
+> across MRI contrasts (and modalities), reaching **new SOTA** — and we **explain** the SOTA
+> via two orthogonal analyses: (1) a causal ablation (partition held fixed, only the fill
+> changes) that isolates texture preservation as the active ingredient, and (2) an
+> independent NGF texture-fidelity measurement confirming what the ablation predicts.
 
 **The differentiator vs. SynthSeg:** *image-driven* (texture-preserving) vs.
 *label-generative* (texture-destroying, GMM noise per label). This is the paper's reason
 to exist. Note: SynthSeg's label-free (EM) variant has **no public code** — our
 re-implementation is a fair baseline and minor contribution in itself.
+
+**Pillar 2 (histogram-manifold coverage) is permanently out of scope for this paper** —
+decided 2026-08-28: the honest result needs more justification than it's worth for CVPR, so
+it will never be written up here, full stop. The original clause (2) above ("achieves the
+most complete coverage of the real contrast-histogram manifold") is stale and has been
+corrected in place rather than left to mislead a future read of this doc. Do not resurrect
+it without a deliberate decision to reopen the analysis.
 
 ---
 

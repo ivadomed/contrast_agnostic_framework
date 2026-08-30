@@ -145,3 +145,123 @@ measurement. **Not for the main text.** Its one job is rebutting the reviewer ob
 or below chance **in its own best contrast** (enhancing tumour on T1c 0.463, MS on FLAIR
 0.461) while every organ stays high in **both** (0.620–0.921). See that directory's
 `FINDINGS.md` §4 for the full list of attacks on it and which survive.
+
+---
+
+## Session addendum 2026-08-03 (part 2): ON-Harmony ablation + ladder unification + 10-panel figure
+
+### ON-Harmony added as a third, distinct pattern (not forced into the binary)
+`tab:dissociation` now has 5 rows across all 4 headline tasks (CHAOS twice):
+Dice fill-swap effect is **+7.70 / +7.22** (no tissue interface), **+1.07 / −1.14**
+(tissue interface, near-null/inconsistent sign), and **−4.48** (ON-Harmony,
+densely-labelled healthy brain) — large in magnitude but the *opposite* sign
+of the positive cases, fitting neither existing category. Two candidate,
+explicitly-hedged (not asserted) explanations are given in
+`subsec:e-ablation`: (1) ON-Harmony's 31 labels parcellate ~the whole brain
+volume (verified against `dataset.json`), unlike the few localized labels of
+the other tasks, so the per-label remap step already performs a near-dense,
+SynthSeg-like resampling even under noise fill — real-fill on top of that may
+encode silver-standard/registration noise as if it were signal; (2) brain
+tissue boundaries may sit nearer the tissue-interface end of the spectrum than
+tumour/lesion margins, though the effect size argues against a purely-null
+organ-like account. Every location that previously implied a clean 2-vs-2
+split (abstract, intro ×2, discussion, conclusion) has been corrected to
+reflect the 3-pattern reality; none now overclaim.
+
+### Ladder scripts unified (root cause from §3b finally fixed)
+New shared engine: `datasets/00_commun_scripts/00_03_evaluate/ladder_ood_common.py`.
+- Retrofitted BraTS-T1n (06_13), CHAOS-T2spir (06_33), ON-Harmony-T1w (06_10) as
+  thin wrappers — **regression-verified**: identical numbers to their previous
+  independent implementations.
+- Added CHAOS-T1in (06_34, new) and Open-MS-FLAIR-OOD (06_14, new) — these two
+  previously had no matching script (Open-MS's only existing 06_12 is a
+  different, older format with no HD95/OOD split). Running the canonical
+  engine against them caught **two more small HD95 discrepancies** vs. my
+  earlier hand-reconstruction: CHAOS T1in −2.97→**−2.95**, Open-MS FLAIR
+  −3.05→**−3.02**. Both corrected in the paper. Dice values matched exactly.
+- All five now write `ladder_series.json` (machine-readable) alongside the
+  existing `ladder_summary.md` + 2-panel PNG.
+
+### New 10-panel main-text figure
+`paper/make_ladder_panels.py` reads all 5 `ladder_series.json` files and emits
+10 individual small PDFs (`figures/ladder_panels/*.pdf`) — one Dice + one HD95
+trajectory per task, color-coded by boundary type (red = no interface, blue =
+tissue interface, purple = dense label map), fill-swap rung highlighted
+consistently. Wired into `\cref{fig:ladder}` as a proper `figure*` with 10
+`subfigure` environments (2 rows × 5 cols: Dice row, then HD95 row), replacing
+the old hand-assembled two-task composite PNG.
+
+**⚠️ Not visually verified.** The Read/image tool was unavailable for the
+entire second half of this session (repeated hook timeouts, not something I
+could route around) — verification is structural only: clean `pdflatex`
+compile, 0 new overfull/underfull warnings (the pre-existing one is in
+`_suppl_tables.tex`, unrelated), and all 10 expected panel titles present in
+the extracted text layer at the correct positions. **Recommend a visual
+spot-check of page 8 (`fig:ladder`) before trusting the layout** — subfigure
+widths (0.19\linewidth × 5 with tiny 5.2pt tick labels) were sized by
+calculation, not by looking at the result.
+
+### Page budget got worse, not better
+Main text is now **10 pages** (was 9 before this addendum), against the
+8-page limit and your ~7-page target. The new full-width figure is a
+meaningful contributor. This is now the single most pressing open item.
+
+---
+
+## Session addendum 2026-08-03 (part 2): ON-Harmony ablation + ladder unification + 10-panel figure
+
+### ON-Harmony added as a third, distinct pattern (not forced into the binary)
+tab:dissociation now has 5 rows across all 4 headline tasks (CHAOS twice):
+Dice fill-swap effect is +7.70 / +7.22 (no tissue interface), +1.07 / -1.14
+(tissue interface, near-null/inconsistent sign), and -4.48 (ON-Harmony,
+densely-labelled healthy brain) -- large in magnitude but the opposite sign
+of the positive cases, fitting neither existing category. Two candidate,
+explicitly-hedged (not asserted) explanations are given in subsec:e-ablation:
+(1) ON-Harmony's 31 labels parcellate ~the whole brain volume (verified
+against dataset.json), unlike the few localized labels of the other tasks,
+so the per-label remap step already performs a near-dense, SynthSeg-like
+resampling even under noise fill -- real-fill on top of that may encode
+silver-standard/registration noise as if it were signal; (2) brain tissue
+boundaries may sit nearer the tissue-interface end of the spectrum than
+tumour/lesion margins, though the effect size argues against a purely-null
+organ-like account. Every location that previously implied a clean 2-vs-2
+split (abstract, intro x2, discussion, conclusion) has been corrected to
+reflect the 3-pattern reality; none now overclaim.
+
+### Ladder scripts unified (root cause from earlier addendum's section 3b finally fixed)
+New shared engine: datasets/00_commun_scripts/00_03_evaluate/ladder_ood_common.py.
+- Retrofitted BraTS-T1n (06_13), CHAOS-T2spir (06_33), ON-Harmony-T1w (06_10) as
+  thin wrappers -- regression-verified: identical numbers to their previous
+  independent implementations.
+- Added CHAOS-T1in (06_34, new) and Open-MS-FLAIR-OOD (06_14, new) -- these two
+  previously had no matching script (Open-MS's only existing 06_12 is a
+  different, older format with no HD95/OOD split). Running the canonical
+  engine against them caught two more small HD95 discrepancies vs. my
+  earlier hand-reconstruction: CHAOS T1in -2.97 -> -2.95, Open-MS FLAIR
+  -3.05 -> -3.02. Both corrected in the paper. Dice values matched exactly.
+- All five now write ladder_series.json (machine-readable) alongside the
+  existing ladder_summary.md + 2-panel PNG.
+
+### New 10-panel main-text figure
+paper/make_ladder_panels.py reads all 5 ladder_series.json files and emits
+10 individual small PDFs (figures/ladder_panels/*.pdf) -- one Dice + one HD95
+trajectory per task, color-coded by boundary type (red = no interface, blue =
+tissue interface, purple = dense label map), fill-swap rung highlighted
+consistently. Wired into fig:ladder as a proper figure* with 10 subfigure
+environments (2 rows x 5 cols: Dice row, then HD95 row), replacing the old
+hand-assembled two-task composite PNG.
+
+NOT VISUALLY VERIFIED. The Read/image tool was unavailable for the entire
+second half of this session (repeated hook timeouts, not something routable
+around) -- verification is structural only: clean pdflatex compile, 0 new
+overfull/underfull warnings (the pre-existing one is in _suppl_tables.tex,
+unrelated), and all 10 expected panel titles present in the extracted text
+layer at the correct positions. Recommend a visual spot-check of page 8
+(fig:ladder) before trusting the layout -- subfigure widths (0.19 linewidth
+x5 with tiny 5.2pt tick labels) were sized by calculation, not by looking at
+the result.
+
+### Page budget got worse, not better
+Main text is now 10 pages (was 9 before this addendum), against the 8-page
+limit and the ~7-page target. The new full-width figure is a meaningful
+contributor. This is now the single most pressing open item.

@@ -28,23 +28,22 @@ contrast at validation time).
 \toprule
 Component & CHAOS & Open-MS & BraTS & ON-Harmony \\
 \midrule
-Base (no augmentation)                & 36.1 & 25.2 & 23.8 & 34.8 \\
-\quad + $k$-means partition           & 84.8 & 30.6 & -- & -- \\
-\quad + label remap                   & 87.7 & 34.6 & -- & -- \\
-\quad + Voronoi sub-parcellation      & 87.2 & 36.1 & -- & -- \\
-\quad + affine remap (\textbf{Ours})  & 87.9 & 40.4 & -- & -- \\
+Base (no augmentation)                & 36.1 & 25.2 & 25.3 & 27.5 \\
+\quad + $k$-means partition           & 84.8 & 30.6 & 40.6 & 67.6 \\
+\quad + label remap                   & 87.7 & 34.6 & 43.2 & 68.0 \\
+\quad + Voronoi sub-parcellation      & 87.2 & 36.1 & 41.8 & 68.2 \\
+\quad + affine remap (\textbf{Ours})  & 87.9 & 40.4 & 47.4 & 63.6 \\
 \midrule
-\quad + Auglab (deployed)             & 87.3 & 39.5 & 44.4 & 67.7 \\
+\quad + Auglab (deployed)             & 87.4 & 39.5 & 46.4 & 68.6 \\
 \bottomrule
 \end{tabular}
 \caption{Mechanism ablation (top five rows, additive, no Auglab) and
 deployment composability check (bottom row). Each rung adds exactly one
 PALETTE component on top of the row above; all-modality Dice (\%),
 averaged over held-out test contrasts, folds 0--2, train fraction $50\%$.
-Intermediate $k$-means/label-remap/Voronoi rungs and the standalone
-\textbf{Ours} rung are available for Open-MS and CHAOS; BraTS and
-ON-Harmony currently report only Base and the deployed configuration,
-with the intermediate rungs and standalone \textbf{Ours} pending.}
+BraTS and ON-Harmony report their T1n/T1w settings, matching every other
+table in this paper. The deployed row matches \cref{tab:suppl-dice}'s
+\textbf{Ours} column exactly.}
 \label{tab:mechanism}
 \end{table}
 
