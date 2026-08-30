@@ -1,9 +1,19 @@
-# BraTS 2024 Glioma — combined training modalities (t1n + t2w pooled), cross-contrast.
-# Consumed by datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py
-# via 06_13_combined_modality_summary.sh. Companion to brats_t1n_01_results.yaml /
+# BraTS 2024 Glioma — combined training modalities (t1n + t2w pooled),
+# cross-contrast. Consumed by
+# datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
+# 06_13_combined_modality_summary.sh. Companion to brats_t1n_01_results.yaml /
 # brats_t2w_01_results.yaml (each ONE training modality) — this pools BOTH into one
 # row per method, with an inline significance column (ref = OURS train050_val000)
 # after the usual "all" column.
+#
+# 2026-08-04: cross-dataset generalization (BraTS-SSA2024) was briefly added
+# here and then REMOVED at the user's explicit request — BraTS-SSA2024 is a
+# different cohort with a different annotation style than BraTS-GLI (no
+# resection-cavity label; see
+# datasets/brats-ssa2024/... onboarding notes), and is not to be pooled into
+# this dataset's own headline cross-dataset numbers. Only the BraTS2024-Glioma
+# (BraTS-GLI) test set is used here — own metrics_dir only, no external
+# sources.
 #
 # Same fixed 7-method order as the per-modality configs (no others): baseline,
 # synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2
