@@ -1,0 +1,56 @@
+# atlas-liver-hcc — single training modality (CE-T1w only, no second in-house
+# contrast to combine), cross-contrast + cross-dataset. Consumed by
+# datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
+# 06_XX_combined_modality_summary.sh, so this task plugs into
+# scripts/evaluate/meta_task_heatmap.py the same way every other task does
+# (that script expects the `modalities:` list schema, not a bare
+# aggregate_from_config.py config). Unlike the other 4 headline tasks this
+# "combines" exactly ONE modality -- a structural no-op for the
+# cross-modality pooling step, kept in this schema only for consistency with
+# the shared meta-heatmap machinery.
+#
+# sources/contrast_groups are copied verbatim from the validated
+# atlas-liver-hcc_cross_dataset_t1w_01_results.yaml (same column names,
+# same rationale for what's pooled and why -- see that file's header
+# comments for the full per-source justification). train050_val100 added
+# 2026-08-29 (predict+evaluate had already completed on all 3 sources, just
+# never wired into any of atlas-liver-hcc's configs).
+title: "atlas-liver-hcc — T1w (single modality), cross-contrast + cross-dataset"
+output_dir: "${METRICS_ROOT}/atlas_liver_hcc_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [atlas_t1w, lldmmrihcc_t2wi, lldmmrihcc_dwi, liverhccseg_ce-pre_T1w,
+               liverhccseg_ce-art_T1w, liverhccseg_ce-pv_T1w, liverhccseg_ce-del_T1w]
+
+modalities:
+  - name: t1w
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/atlas_liver_hcc_model/t1w"
+        column_prefix: "atlas_"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/lld-mmri-hcc/8_results_lld-mmri-hcc/02_metrics/atlas_liver_hcc_model/t1w"
+        column_prefix: "lldmmrihcc_"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/liverhccseg/8_results_liverhccseg/02_metrics/atlas_liver_hcc_model/t1w"
+        column_prefix: "liverhccseg_"
+    runs:
+      baseline: atlas-liver-hcc_t1w_baseline_20260804_062605
+      synthseg_noEM: atlas-liver-hcc_t1w_synthseg_noEM_20260804_062605
+      synthseg_EM: atlas-liver-hcc_t1w_synthseg_EM_20260804_062605
+      auglab_default: atlas-liver-hcc_t1w_auglab_default_20260804_062605
+      srcsm: atlas-liver-hcc_t1w_srcsm_20260804_062605
+      auglabAug_v26_6_2_train050_val000: atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val000_20260804_062605
+      auglabAug_v26_6_2_train050_val100: atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val100_20260804_062605
+
+# Significance/"all"-column pooling (aggregate_from_config.py's contrast_groups
+# machinery), copied verbatim from atlas-liver-hcc_cross_dataset_t1w_01_results.yaml:
+# liverhccseg's 4 CE-T1w phase columns pooled into one vote (cases concatenated,
+# same modality family) so it doesn't outvote lld-mmri-hcc's t2wi+dwi 2 votes.
+# Disable by removing this block or setting use_contrast_groups: false.
+contrast_groups:
+  atlas_t1w: atlas_t1w
+  lldmmrihcc_t2wi: lldmmrihcc_t2wi
+  lldmmrihcc_dwi: lldmmrihcc_dwi
+  liverhccseg_t1w:
+    - liverhccseg_ce-pre_T1w
+    - liverhccseg_ce-art_T1w
+    - liverhccseg_ce-pv_T1w
+    - liverhccseg_ce-del_T1w

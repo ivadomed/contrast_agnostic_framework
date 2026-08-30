@@ -47,7 +47,29 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/liverhccseg/8_results_liverhccseg/02_metrics/atlas_liver_hcc_model/t1w"
     column_prefix: "liverhccseg_"
 
-# Same 6 headline RUN_IDs as atlas-liver-hcc_t1w_01_results.yaml (TS=20260804_062605).
+# Significance-testing pooling (significance_from_config.py only -- does NOT affect
+# this file's own aggregate_from_config.py summary table/heatmap, which stays flat
+# per-column). Without this, liverhccseg's 4 phase columns each count as an
+# independently-weighted "contrast" in the OOD macroΔ average, so liverhccseg alone
+# would outvote lld-mmri-hcc's t2wi+dwi 4-to-2 even though it's one dataset testing
+# one contrast family. Pool liverhccseg's 4 phases into a single "same modality,
+# pooled across cases" group; keep t2wi/dwi separate since they're genuinely
+# different contrasts. Disable by removing this block or setting
+# use_contrast_groups: false (falls back to the flat per-column behaviour above).
+contrast_groups:
+  atlas_t1w: atlas_t1w
+  lldmmrihcc_t2wi: lldmmrihcc_t2wi
+  lldmmrihcc_dwi: lldmmrihcc_dwi
+  liverhccseg_t1w:
+    - liverhccseg_ce-pre_T1w
+    - liverhccseg_ce-art_T1w
+    - liverhccseg_ce-pv_T1w
+    - liverhccseg_ce-del_T1w
+
+# Same 6 headline RUN_IDs as atlas-liver-hcc_t1w_01_results.yaml, plus the
+# train050_val100 DualVal mirror (added 2026-08-29 -- predict+evaluate had
+# already completed on all 3 sources, just never wired into this config; see
+# that file's own runs: comment for the val000-vs-val100 verification).
 runs:
   - atlas-liver-hcc_t1w_baseline_20260804_062605
   - atlas-liver-hcc_t1w_auglab_default_20260804_062605
@@ -55,3 +77,4 @@ runs:
   - atlas-liver-hcc_t1w_synthseg_EM_20260804_062605
   - atlas-liver-hcc_t1w_srcsm_20260804_062605
   - atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val000_20260804_062605
+  - atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val100_20260804_062605

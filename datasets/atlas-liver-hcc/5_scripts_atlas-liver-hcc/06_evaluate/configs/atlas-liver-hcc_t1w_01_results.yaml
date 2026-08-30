@@ -15,10 +15,15 @@ metrics_dir: "${METRICS_ROOT}/atlas_liver_hcc_model/t1w"
 output_prefix: "01_results"
 in_domain_contrast: t1w
 
-# Fixed 6-method order: baseline, auglab_default, synthseg_noEM, synthseg_EM, srcsm,
-# auglabAug_v26_6_2 train050_val000 (OURS — DualVal; val100 mirror not listed here, same
-# checkpoint_final.pth as val000 per CLAUDE.md's DualVal note, add its RUN_ID as a 7th
-# row only for a dedicated best_vs_final/val000_vs_val100 comparison, not the headline).
+# Fixed 6-method order + DualVal's val100 mirror as a 7th row: baseline, auglab_default,
+# synthseg_noEM, synthseg_EM, srcsm, auglabAug_v26_6_2 train050_val000 (OURS, ref),
+# train050_val100. checkpoint_best_val000.pth and checkpoint_best_val100.pth are
+# genuinely different snapshots (confirmed by diffing eval_all.csv: different per-case
+# Dice, not a duplicate) -- same 2-row pattern chaos/open-ms's headline configs already
+# use. (Corrected 2026-08-29: this file previously omitted val100 as "not the headline",
+# reasoning from the checkpoint_final.pth collapse case, which doesn't apply at
+# checkpoint_best -- val100's predict+evaluate had already completed, just never wired
+# into this config.)
 #
 # Filled in 2026-08-06 after the TamIA suite (launched 2026-08-04, TS=20260804_062605)
 # finished training and predict+evaluate completed via 05_20_tamia_pack_predict_evaluate.sh.
@@ -29,3 +34,4 @@ runs:
   - atlas-liver-hcc_t1w_synthseg_EM_20260804_062605
   - atlas-liver-hcc_t1w_srcsm_20260804_062605
   - atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val000_20260804_062605
+  - atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val100_20260804_062605
