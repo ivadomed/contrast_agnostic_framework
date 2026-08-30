@@ -1,0 +1,39 @@
+# healthy-spine-TUM — combined training modalities (CT + Dixon in-phase
+# pooled), cross-contrast, with inline significance vs OURS. Companion to
+# healthy-spine-tum_ct_01_results.yaml / healthy-spine-tum_inphase_01_results.yaml
+# (each ONE training modality) — this pools BOTH into one row per method.
+#
+# Same fixed 7-method order as the per-modality configs (no others): baseline,
+# synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2
+# train050_val000, then train050_val100. srcsm and the val100 slot were never
+# run for this externally-imported dataset (see ../../README.md) — they render
+# as blank rows. The single OURS run available stands in for the
+# train050_val000 slot (same substitution used in the per-modality configs) and
+# is what `ref` below points at for the significance column.
+title: "healthy-spine-TUM — combined training modalities (CT + Dixon in-phase), cross-contrast"
+output_dir: "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/healthy-spine-tum/8_results_healthy-spine-tum/02_metrics/healthy_spine_tum_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [spider_T1w, spider_T2w, spinegan_ct, spinegan_dixon_fat, spinegan_dixon_inphase, spinegan_dixon_water]
+
+modalities:
+  - name: ct
+    metrics_dir: "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/healthy-spine-tum/8_results_healthy-spine-tum/02_metrics/healthy_spine_tum_model/ct"
+    runs:
+      baseline: healthy-spine-tum_ct_baseline_20260805_130846
+      synthseg_noEM: healthy-spine-tum_ct_synthseg_noEM_20260805_130846
+      synthseg_EM: healthy-spine-tum_ct_synthseg_EM_20260805_130846
+      auglab_default: healthy-spine-tum_ct_auglab_default_20260805_130846
+      srcsm: healthy-spine-tum_ct_srcsm  # not run for this dataset — blank row
+      auglabAug_v26_6_2_train050_val000: healthy-spine-tum_ct_auglabAug_v26_6_2_20260805_130846
+      auglabAug_v26_6_2_train050_val100: healthy-spine-tum_ct_auglabAug_v26_6_2_train050_val100  # not run — blank row
+  - name: inphase
+    metrics_dir: "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/healthy-spine-tum/8_results_healthy-spine-tum/02_metrics/healthy_spine_tum_model/inphase"
+    runs:
+      baseline: healthy-spine-tum_inphase_baseline_20260805_130846
+      synthseg_noEM: healthy-spine-tum_inphase_synthseg_noEM_20260805_130846
+      synthseg_EM: healthy-spine-tum_inphase_synthseg_EM_20260805_130846
+      auglab_default: healthy-spine-tum_inphase_auglab_default_20260805_130846
+      srcsm: healthy-spine-tum_inphase_srcsm  # not run for this dataset — blank row
+      auglabAug_v26_6_2_train050_val000: healthy-spine-tum_inphase_auglabAug_v26_6_2_20260805_130846
+      auglabAug_v26_6_2_train050_val100: healthy-spine-tum_inphase_auglabAug_v26_6_2_train050_val100  # not run — blank row

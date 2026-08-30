@@ -1,0 +1,22 @@
+# Fixed 7-method order (no others): baseline, synthseg_noEM, synthseg_EM,
+# auglab_default, srcsm, auglabAug_v26_6_2 train050_val000, then train050_val100.
+# This dataset's results were imported externally (see ../../README.md) and only
+# cover baseline/synthseg_noEM/synthseg_EM/auglab_default + a single OURS variant
+# (no srcsm run, no val000/val100 split) — srcsm and the val100 slot are declared
+# below anyway so they render as blank rows rather than being silently dropped.
+# metrics_dir is an absolute path (not ${METRICS_ROOT}) because this dataset has
+# no 00_utils/env.sh yet to export it — see root CLAUDE.md's ${METRICS_ROOT}
+# cleanup note for why an unset/unquoted version of that variable is dangerous.
+title: "healthy-spine-TUM — trained on CT — results"
+metrics_dir: "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/healthy-spine-tum/8_results_healthy-spine-tum/02_metrics/healthy_spine_tum_model/ct"
+output_prefix: "01_results"
+in_domain_contrast: spinegan_ct
+
+runs:
+  - healthy-spine-tum_ct_baseline_20260805_130846
+  - healthy-spine-tum_ct_synthseg_noEM_20260805_130846
+  - healthy-spine-tum_ct_synthseg_EM_20260805_130846
+  - healthy-spine-tum_ct_auglab_default_20260805_130846
+  - healthy-spine-tum_ct_srcsm  # not run for this dataset — blank row
+  - healthy-spine-tum_ct_auglabAug_v26_6_2_20260805_130846  # single OURS variant, standing in for train050_val000
+  - healthy-spine-tum_ct_auglabAug_v26_6_2_train050_val100  # not run for this dataset — blank row
