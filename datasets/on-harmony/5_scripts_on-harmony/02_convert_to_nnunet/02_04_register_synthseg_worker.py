@@ -8,7 +8,7 @@ The 0GenericAffine.mat produced maps T1w → target, so applying it to the
 T1w synthseg mask resamples it into the target modality's native space.
 
 No class remapping — output keeps the original 32-label SynthSeg format,
-matching derivatives/synthseg_masks/*/anat/*_T1w_synthseg.nii.gz.
+matching derivatives/labels/*/anat/*_T1w_label-synthseg_dseg.nii.gz.
 
 Expects antsRegistration and antsApplyTransforms on PATH (load the ants
 module before launching this script).
@@ -16,7 +16,7 @@ module before launching this script).
 Usage (via 02_04_register_synthseg_masks.sh):
     python register_synthseg_worker.py \\
         --modality T2w --rank 0 --world-size 4 \\
-        --bids-root /path/to/1_BIDS_on-harmony
+        --bids-root /path/to/1_BIDS_on-harmony/brain-onharmony
 """
 import argparse
 import shutil
@@ -148,10 +148,10 @@ def process_session(
     """
     cfg = MODALITIES[modality]
     ses_dir = bids_root / sub / ses
-    mask_root = bids_root / "derivatives" / "synthseg_masks"
+    mask_root = bids_root / "derivatives" / "labels"
 
     t1w_img = ses_dir / "anat" / f"{sub}_{ses}_T1w.nii.gz"
-    t1w_mask = mask_root / sub / ses / "anat" / f"{sub}_{ses}_T1w_synthseg.nii.gz"
+    t1w_mask = mask_root / sub / ses / "anat" / f"{sub}_{ses}_T1w_label-synthseg_dseg.nii.gz"
 
     if not t1w_img.exists():
         print(f"  SKIP {sub}/{ses}: T1w image missing", flush=True)
@@ -168,7 +168,7 @@ def process_session(
 
     n_done, n_failed = 0, 0
     for target_img in targets:
-        out_name = target_img.name.replace(".nii.gz", "_synthseg.nii.gz")
+        out_name = target_img.name.replace(".nii.gz", "_label-synthseg_dseg.nii.gz")
         out_dir = mask_root / sub / ses / cfg["subdir"]
         out_path = out_dir / out_name
 
@@ -205,7 +205,7 @@ def main():
 
     check_ants()
 
-    mask_root = args.bids_root / "derivatives" / "synthseg_masks"
+    mask_root = args.bids_root / "derivatives" / "labels"
     sessions = sorted(
         (sub_dir.name, ses_dir.name)
         for sub_dir in sorted(mask_root.iterdir())

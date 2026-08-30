@@ -31,9 +31,11 @@ export RUN_JOB_TIME_DEFAULT="${RUN_JOB_TIME_DEFAULT:-96:00:00}"
 CE_SUBDIRS="preprocessed splits"          # has 2_nnUNet/preprocessed + 4_splits (no 0_raw)
 source "${DATASET_ROOT}/../00_commun_scripts/00_00_utils/common_env.sh"
 
-# 1_BIDS_on-harmony has no leaf subdir (unlike chaos-abdominal etc.), so set BIDS_ROOT
-# explicitly rather than via common_env's BIDS_SUBDIR mechanism.
-export BIDS_ROOT="${DATASET_ROOT}/1_BIDS_on-harmony"
+# 1_BIDS_on-harmony's leaf subdir is brain-onharmony/ (the future git-annex dataset name,
+# nested here so the annex repo can be initialized in place) rather than common_env's
+# BIDS_SUBDIR mechanism. This is the single source of truth for this path — every
+# consumer reads BIDS_ROOT from the environment rather than hardcoding it.
+export BIDS_ROOT="${DATASET_ROOT}/1_BIDS_on-harmony/brain-onharmony"
 # Standard layout (see header). nnUNet_results = the nnUNet-category model base for the
 # active training contrast; nnU-Net writes <RUN_ID>/<trainer>/fold_N under it (the shared
 # train driver appends RUN_ID). Mirrors chaos's .../01_predictions/chaos_model/t1in/nnUNet.

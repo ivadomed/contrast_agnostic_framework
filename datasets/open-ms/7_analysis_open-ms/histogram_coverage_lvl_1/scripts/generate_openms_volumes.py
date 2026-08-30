@@ -32,9 +32,9 @@ from nibabel.processing import resample_from_to
 REPO = Path(__file__).resolve().parents[5]
 ANALYSIS = Path(__file__).resolve().parents[1]
 AUGLAB = REPO / "sub-workspaces/auglab_workspace/AugLab"
-BIDS = REPO / "datasets/open-ms/1_BIDS_open-ms/open-ms-brain"
+BIDS = REPO / "datasets/open-ms/1_BIDS_open-ms/ms-brain-openms"
 RAW = REPO / "datasets/open-ms/0_raw_open-ms"
-LESION_DIR = BIDS / "derivatives" / "manual_masks"
+LESION_DIR = BIDS / "derivatives" / "labels"
 DEFAULT_CONFIGS = REPO / "datasets/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/configs"
 METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default", "baseline_kmeans_label_remap_voronoi",
            "baseline_kmeans", "baseline_kmeans_label_remap", "v26_6_2_noisefill_v2"]
@@ -58,7 +58,7 @@ def list_sources(contrasts):
     for c in contrasts:
         for img in sorted(BIDS.glob(f"sub-*/anat/*_{c}.nii.gz")):
             sub = img.name.replace(f"_{c}.nii.gz", "")
-            les = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_dseg.nii.gz"
+            les = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_label-lesion_seg.nii.gz"
             if not les.exists():
                 print(f"MISSING lesion mask for {img.name}, skipping", flush=True); continue
             items.append((img.name.replace(".nii.gz", ""), img, les))

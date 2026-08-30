@@ -28,8 +28,8 @@ import numpy as np
 import nibabel as nib
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]          # datasets/open-ms
-BIDS_ROOT = DATASET_ROOT / "1_BIDS_open-ms" / "open-ms-brain"   # source = BIDS (run 00_01_bidsify.py first)
-DERIV = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT = DATASET_ROOT / "1_BIDS_open-ms" / "ms-brain-openms"   # source = BIDS (run 00_01_bidsify.py first)
+DERIV = BIDS_ROOT / "derivatives" / "labels"
 SPLITS = DATASET_ROOT / "4_splits_open-ms"
 OUT = DATASET_ROOT / "2_nnUNet_open-ms" / "raw" / "Dataset070_OpenMS_FLAIR"
 
@@ -42,7 +42,7 @@ def _img(pid: str, bids_suffix: str) -> Path:
 
 
 def _mask(pid: str) -> Path:
-    return DERIV / f"sub-{pid}" / "anat" / f"sub-{pid}_FLAIR_dseg.nii.gz"
+    return DERIV / f"sub-{pid}" / "anat" / f"sub-{pid}_FLAIR_label-lesion_seg.nii.gz"
 
 
 def _copy_image(src: Path, dst: Path) -> None:

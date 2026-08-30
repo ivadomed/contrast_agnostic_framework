@@ -11,7 +11,7 @@ Generated volumes (Pillar 1's data, reused for consistency):
   <generated_root>/<method>/<key>/<key>_run-NN.nii.gz     key = sub-XXXX_ses-YYYY_T1w
 The volumes are voxel-aligned to their source T1w, so the T1w SynthSeg parcellation of
 the same sub/ses applies directly:
-  <bids>/derivatives/synthseg_masks/<sub>/<ses>/anat/<sub>_<ses>_T1w_synthseg.nii.gz
+  <bids>/derivatives/labels/<sub>/<ses>/anat/<sub>_<ses>_T1w_label-synthseg_dseg.nii.gz
 
 Output: one CSV with meta cols {method, subject, session, key, run} + 448 hist columns.
 
@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import logging
+import os
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -39,9 +40,8 @@ log = logging.getLogger(__name__)
 # ── Paths ─────────────────────────────────────────────────────────────────────
 THIS = Path(__file__).resolve()
 ANALYSIS_ROOT = THIS.parents[2]                       # 7_analysis_on-harmony
-ONHARMONY_ROOT = THIS.parents[3]                      # datasets/on-harmony
 GENERATED_ROOT = ANALYSIS_ROOT / "texture_analysis_lvl_1" / "data" / "generated"
-BIDS_SYNTHSEG = (ONHARMONY_ROOT / "1_BIDS_on-harmony" / "derivatives" / "synthseg_masks")
+BIDS_SYNTHSEG = Path(os.environ["BIDS_ROOT"]) / "derivatives" / "labels"
 METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default"]
 
 # ── Reuse the grounded feature core from the contrast_manifold extractor ───────
@@ -74,7 +74,7 @@ def _synthseg_for_key(key: str) -> Path | None:
     if len(parts) < 2:
         return None
     sub, ses = parts[0], parts[1]
-    p = BIDS_SYNTHSEG / sub / ses / "anat" / f"{sub}_{ses}_T1w_synthseg.nii.gz"
+    p = BIDS_SYNTHSEG / sub / ses / "anat" / f"{sub}_{ses}_T1w_label-synthseg_dseg.nii.gz"
     return p if p.exists() else None
 
 

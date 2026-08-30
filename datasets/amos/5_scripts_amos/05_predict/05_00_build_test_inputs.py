@@ -2,7 +2,7 @@
 """
 Build per-modality nnUNet test-input dirs for AMOS evaluation.
 
-Reads from the BIDS layout (1_BIDS_amos/amos-abdominal/) and selects only
+Reads from the BIDS layout (1_BIDS_amos/abdomen-amos/) and selects only
 the validation-split cases (split=val in participants.tsv: 100 CT + 20 MRI).
 The training split is reserved for future native AMOS training and is excluded.
 
@@ -13,9 +13,9 @@ Each case is written as a single-channel input (_0000) to match the chaos
 model's single-channel expectation (trained on MR T1-DUAL in-phase).
 
 Reads:
-  1_BIDS_amos/amos-abdominal/sub-AM{id:04d}/anat/sub-AM{id:04d}_{CT|T2w}.nii.gz
-  1_BIDS_amos/amos-abdominal/derivatives/manual_masks/
-    sub-AM{id:04d}/anat/sub-AM{id:04d}_{CT|T2w}_dseg.nii.gz
+  1_BIDS_amos/abdomen-amos/sub-AM{id:04d}/anat/sub-AM{id:04d}_{CT|T2w}.nii.gz
+  1_BIDS_amos/abdomen-amos/derivatives/labels/
+    sub-AM{id:04d}/anat/sub-AM{id:04d}_{CT|T2w}_label-organs_dseg.nii.gz
 
 Writes:
   2_nnUNet_amos/raw/imagesTs_ct/{case}_0000.nii.gz
@@ -34,8 +34,8 @@ import csv
 from pathlib import Path
 
 DATASET_ROOT    = Path(__file__).resolve().parents[2]
-BIDS_ROOT       = DATASET_ROOT / "1_BIDS_amos" / "amos-abdominal"
-DERIV_DIR       = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT       = DATASET_ROOT / "1_BIDS_amos" / "abdomen-amos"
+DERIV_DIR       = BIDS_ROOT / "derivatives" / "labels"
 AMOS22          = DATASET_ROOT / "0_raw_amos" / "amos22"
 NNUNET_RAW      = DATASET_ROOT / "2_nnUNet_amos" / "raw"
 
@@ -68,7 +68,7 @@ def _val_cases_from_bids():
             suffix  = _bids_suffix(case_id)
             mod     = "ct" if _is_ct(case_id) else "mri"
             img     = BIDS_ROOT / sub / "anat" / f"{sub}_{suffix}.nii.gz"
-            lab     = DERIV_DIR / sub / "anat"  / f"{sub}_{suffix}_dseg.nii.gz"
+            lab     = DERIV_DIR / sub / "anat"  / f"{sub}_{suffix}_label-organs_dseg.nii.gz"
             if img.exists() and lab.exists():
                 yield case_id, mod, img, lab
             else:

@@ -279,8 +279,8 @@ All datasets live under `datasets/`. Every dataset uses the same 9-subdir standa
 datasets/
   validate_standard_dataset_structure.py  # run to verify compliance
   on-harmony/
-    1_BIDS_on-harmony/                    # BIDS data (real scans + derivatives)
-      derivatives/synthetic_<v>_guidance_lhc/sub-*/ses-*/*.nii.gz
+    1_BIDS_on-harmony/brain-onharmony/     # BIDS data (real scans + derivatives); leaf dir
+      derivatives/synthetic_<v>_guidance_lhc/sub-*/ses-*/*.nii.gz   # name = future git-annex dataset name
     2_nnUNet_on-harmony/raw/ + preprocessed/
     3_conf_on-harmony/data.yaml
     4_splits_on-harmony/on_harmony_split.json

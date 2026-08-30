@@ -30,8 +30,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR.parent / "00_utils"))
 
 DATASET_ROOT = SCRIPT_DIR.parents[1]
-BIDS_ROOT  = Path(os.environ.get("BIDS_ROOT", DATASET_ROOT / "1_BIDS_on-harmony"))
-MASKS_ROOT = BIDS_ROOT / "derivatives" / "synthseg_masks"
+BIDS_ROOT  = Path(os.environ["BIDS_ROOT"])
+MASKS_ROOT = BIDS_ROOT / "derivatives" / "labels"
 SPLITS_DIR = Path(os.environ.get("SPLITS_DIR", DATASET_ROOT / "4_splits_on-harmony"))
 
 TEST_SCANNERS    = {"NOT1ACH", "OXF1PRI"}
@@ -60,7 +60,7 @@ def discover_t2w_sessions() -> list[dict]:
                 continue
             ses = ses_dir.name
             t2w = ses_dir / "anat" / f"{sub}_{ses}_T2w.nii.gz"
-            mask = MASKS_ROOT / sub / ses / "anat" / f"{sub}_{ses}_T2w_synthseg.nii.gz"
+            mask = MASKS_ROOT / sub / ses / "anat" / f"{sub}_{ses}_T2w_label-synthseg_dseg.nii.gz"
             if not t2w.exists():
                 continue
             if not mask.exists():

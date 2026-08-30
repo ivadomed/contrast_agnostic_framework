@@ -9,7 +9,7 @@
 # Expected wall time per job: ~1-2 h (bold worst-case with mb4+mb6 per session).
 #
 # Outputs land in BIDS-compliant paths under:
-#   ${BIDS_ROOT}/derivatives/synthseg_masks/<sub>/<ses>/<subdir>/<name>_synthseg.nii.gz
+#   ${BIDS_ROOT}/derivatives/labels/<sub>/<ses>/<subdir>/<name>_label-synthseg_dseg.nii.gz
 #
 # Logs: ${RESULTS_DIR}/logs/register_synthseg/<job>.log   (persistent on $PROJECT)
 #

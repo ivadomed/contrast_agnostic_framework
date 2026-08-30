@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BIDSify AMOS22 (0_raw_amos/amos22/) → 1_BIDS_amos/amos-abdominal/.
+BIDSify AMOS22 (0_raw_amos/amos22/) → 1_BIDS_amos/abdomen-amos/.
 
 AMOS raw data is already in NIfTI format (nnUNet-style layout). This step
 reorganises it into a BIDS-compliant directory tree and writes metadata
@@ -26,14 +26,14 @@ Reads:
   0_raw_amos/amos22/{labelsTr,labelsVa}/amos_{id:04d}.nii.gz
 
 Writes:
-  1_BIDS_amos/amos-abdominal/
+  1_BIDS_amos/abdomen-amos/
     dataset_description.json
     participants.tsv
     sub-AM{id:04d}/anat/sub-AM{id:04d}_{CT|T2w}.nii.gz       (hard-link)
     sub-AM{id:04d}/anat/sub-AM{id:04d}_{CT|T2w}.json
-    derivatives/manual_masks/
+    derivatives/labels/
       dataset_description.json
-      sub-AM{id:04d}/anat/sub-AM{id:04d}_{CT|T2w}_dseg.nii.gz (hard-link)
+      sub-AM{id:04d}/anat/sub-AM{id:04d}_{CT|T2w}_label-organs_dseg.nii.gz (hard-link)
 
 Usage:
   python 00_01_bidsify.py
@@ -45,8 +45,8 @@ from pathlib import Path
 
 DATASET_ROOT    = Path(__file__).resolve().parents[2]
 AMOS22          = DATASET_ROOT / "0_raw_amos" / "amos22"
-BIDS_ROOT       = DATASET_ROOT / "1_BIDS_amos" / "amos-abdominal"
-DERIVATIVES_DIR = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT       = DATASET_ROOT / "1_BIDS_amos" / "abdomen-amos"
+DERIVATIVES_DIR = BIDS_ROOT / "derivatives" / "labels"
 
 # Full 15-organ AMOS GT label map (stored in the derivatives description).
 LABELS = {
@@ -175,7 +175,7 @@ def bidsify() -> None:
             deriv = DERIVATIVES_DIR / sub / "anat"
 
             _link(img_path, anat  / f"{sub}_{suffix}.nii.gz")
-            _link(lab_path, deriv / f"{sub}_{suffix}_dseg.nii.gz")
+            _link(lab_path, deriv / f"{sub}_{suffix}_label-organs_dseg.nii.gz")
             _write_json(anat / f"{sub}_{suffix}.json", {
                 "Modality":  mod,
                 "AMOS22_ID": f"amos_{case_id:04d}",

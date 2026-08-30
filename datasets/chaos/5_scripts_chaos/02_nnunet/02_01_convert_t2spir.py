@@ -5,46 +5,51 @@ Convert CHAOS BIDS → nnUNet raw format — MR T2-SPIR (T2w) only.
 Produces Dataset061_CHAOS_MR_T2spir: single channel (T2w), 4 organ labels.
 Mirrors 02_00_convert.py (T1in) exactly — same train/val pool, same holdout
 exclusion, same splits_final.json. Only the BIDS source file differs:
-  images: sub-MR{id}_T2w.nii
-  masks:  sub-MR{id}_T2w_dseg.nii
+  images: sub-MR{id}_T2w.nii.gz
+  masks:  sub-MR{id}_T2w_label-organs_dseg.nii.gz
+
+BIDS files are already .nii.gz (compressed) — plain_copy() below just copies them
+as-is (NOT a gzip_copy — the BIDS source used to be uncompressed .nii, which this
+function used to gzip on the fly; now that it's already compressed, doing that again
+would double-gzip the output into an unreadable file — a real bug caught 2026-08-28).
 
 Usage:
   python 02_01_convert_t2spir.py [--dataset-id 61] [--jobs N]
 """
 import argparse
-import gzip
 import json
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]
-BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "chaos-abdominal"
+BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "abdomen-chaos"
 NNUNET_RAW   = DATASET_ROOT / "2_nnUNet_chaos" / "raw"
-DERIV_DIR    = BIDS_ROOT / "derivatives" / "manual_masks"
+DERIV_DIR    = BIDS_ROOT / "derivatives" / "labels"
 TEST_CASES   = DATASET_ROOT / "4_splits_chaos" / "test_cases.json"
 
 LABELS = {"background": 0, "liver": 1, "right_kidney": 2, "left_kidney": 3, "spleen": 4}
 
 
-def gzip_copy(src: Path, dst: Path) -> None:
+def plain_copy(src: Path, dst: Path) -> None:
+    """Copy an already-compressed .nii.gz file as-is. No-op if dst exists."""
     if dst.exists():
         return
-    with open(src, "rb") as f_in, gzip.open(dst, "wb", compresslevel=1) as f_out:
-        shutil.copyfileobj(f_in, f_out)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst)
 
 
 def convert_case(case_id: str, images_tr: Path, labels_tr: Path) -> str:
     sub = f"sub-{case_id}"
-    src = BIDS_ROOT / sub / "anat" / f"{sub}_T2w.nii"
+    src = BIDS_ROOT / sub / "anat" / f"{sub}_T2w.nii.gz"
     if not src.exists():
         raise FileNotFoundError(f"Missing T2w: {src}")
-    gzip_copy(src, images_tr / f"{case_id}_0000.nii.gz")
+    plain_copy(src, images_tr / f"{case_id}_0000.nii.gz")
 
-    seg = DERIV_DIR / sub / "anat" / f"{sub}_T2w_dseg.nii"
+    seg = DERIV_DIR / sub / "anat" / f"{sub}_T2w_label-organs_dseg.nii.gz"
     if not seg.exists():
         raise FileNotFoundError(f"Missing seg: {seg}")
-    gzip_copy(seg, labels_tr / f"{case_id}.nii.gz")
+    plain_copy(seg, labels_tr / f"{case_id}.nii.gz")
     return case_id
 
 

@@ -33,7 +33,7 @@ the open-ms histogram-coverage analysis, see extract_lesion_overall_openms.py). 
 
 The ONLY change from on-harmony's compute_texture_metrics.py is the ROI mechanism (named
 boolean masks {lesion, foreground} instead of `range(1, 32)` anatomical label ids) and the
-source/lesion discovery (open-ms BIDS FLAIR/T1w scans + derivatives/manual_masks dseg, mirrors
+source/lesion discovery (open-ms BIDS FLAIR/T1w scans + derivatives/labels seg, mirrors
 generate_openms_volumes.py's list_sources()). rank_transform / abscorr / nmi_1d / erode and the
 --sanity self-test are unchanged.
 
@@ -66,8 +66,8 @@ ANALYSIS_ROOT = THIS_DIR.parent                                       # texture_
 # parents[0]=lvl1, [1]=7_analysis, [2]=open-ms, [3]=datasets, [4]=repo root.
 PROJECT_ROOT  = THIS_DIR.parents[4]
 
-BIDS       = PROJECT_ROOT / "datasets/open-ms/1_BIDS_open-ms/open-ms-brain"
-LESION_DIR = BIDS / "derivatives" / "manual_masks"
+BIDS       = PROJECT_ROOT / "datasets/open-ms/1_BIDS_open-ms/ms-brain-openms"
+LESION_DIR = BIDS / "derivatives" / "labels"
 DEFAULT_GENERATED = PROJECT_ROOT / "datasets/open-ms/7_analysis_open-ms/data/generated"
 DEFAULT_OUT       = ANALYSIS_ROOT / "outputs" / "data" / "texture_metrics.csv"
 
@@ -265,7 +265,7 @@ def list_source_keys(contrast: str):
     out = {}
     for img in sorted(BIDS.glob(f"sub-*/anat/*_{contrast}.nii.gz")):
         sub = img.name.replace(f"_{contrast}.nii.gz", "")
-        les = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_dseg.nii.gz"
+        les = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_label-lesion_seg.nii.gz"
         if not les.exists():
             continue
         key = img.name.replace(".nii.gz", "")   # sub-patientNN_<CONTRAST>

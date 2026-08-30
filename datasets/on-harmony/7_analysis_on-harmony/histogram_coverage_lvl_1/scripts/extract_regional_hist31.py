@@ -33,6 +33,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import logging
+import os
 import sys
 import types
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -54,9 +55,9 @@ ONHARMONY_ROOT = THIS.parents[3]                      # datasets/on-harmony
 GENERATED_ROOT = ANALYSIS_ROOT / "texture_analysis_lvl_1" / "data" / "generated"
 DS031 = ONHARMONY_ROOT / "2_nnUNet_on-harmony" / "raw" / "Dataset031_OnHarmonyT1w31"
 DS031_LABELS = DS031 / "labelsTr"
-BIDS_ROOT = ONHARMONY_ROOT / "1_BIDS_on-harmony"
+BIDS_ROOT = Path(os.environ["BIDS_ROOT"])
 DERIV_ROOT = BIDS_ROOT / "derivatives"
-SYNTHSEG_DERIV = DERIV_ROOT / "synthseg_masks"
+SYNTHSEG_DERIV = DERIV_ROOT / "labels"
 METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default"]
 
 N_REGIONS = 31
@@ -169,9 +170,9 @@ def discover_synth(methods: list[str]) -> list[dict]:
 
 
 def _synthseg_for_image(img_path: Path) -> Optional[Path]:
-    """Per-modality SynthSeg: <bids>/x.nii.gz → <bids>/derivatives/synthseg_masks/x_synthseg.nii.gz"""
+    """Per-modality SynthSeg: <bids>/x.nii.gz → <bids>/derivatives/labels/x_label-synthseg_dseg.nii.gz"""
     rel = img_path.relative_to(BIDS_ROOT)
-    seg = SYNTHSEG_DERIV / rel.parent / img_path.name.replace(".nii.gz", "_synthseg.nii.gz")
+    seg = SYNTHSEG_DERIV / rel.parent / img_path.name.replace(".nii.gz", "_label-synthseg_dseg.nii.gz")
     return seg if seg.exists() else None
 
 

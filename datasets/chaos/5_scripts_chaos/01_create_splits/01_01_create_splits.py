@@ -36,7 +36,7 @@ from pathlib import Path
 DATASET_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(DATASET_ROOT.parent / "00_commun_scripts" / "00_00_utils"))
 from splits_lib import kfold_splits, write_splits_final      # noqa: E402
-BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "chaos-abdominal"
+BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "abdomen-chaos"
 NNUNET_PRE   = DATASET_ROOT / "2_nnUNet_chaos" / "preprocessed"
 SPLITS_DIR   = DATASET_ROOT / "4_splits_chaos"
 

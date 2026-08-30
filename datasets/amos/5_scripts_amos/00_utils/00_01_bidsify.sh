@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# BIDSify AMOS22: reorganise 0_raw_amos/amos22/ into 1_BIDS_amos/amos-abdominal/.
+# BIDSify AMOS22: reorganise 0_raw_amos/amos22/ into 1_BIDS_amos/abdomen-amos/.
 # Run AFTER 00_00_download_and_extract.py (raw data must already be present).
 #
 # Usage:

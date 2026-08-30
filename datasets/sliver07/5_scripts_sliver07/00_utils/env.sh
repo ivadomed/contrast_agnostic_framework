@@ -41,7 +41,7 @@ export CHAOS_MODEL_TYPE="chaos_model"
 CHAOS_SCRIPTS_DIR="${CHAOS_DATASET_ROOT}/5_scripts_chaos"
 
 # common_env config (plain vars — consumed by common_env, not exported to the env):
-BIDS_SUBDIR="sliver07-liver"             # → BIDS_ROOT under 1_BIDS_<name>/
+BIDS_SUBDIR="liver-sliver07-ct"             # → BIDS_ROOT under 1_BIDS_<name>/
 CE_SUBDIRS="raw"                          # only 0_raw exists (no preprocessed/splits — eval-only)
 CE_EXTRA_PYTHONPATH="${CHAOS_SCRIPTS_DIR}"
 source "${DATASET_ROOT}/../00_commun_scripts/00_00_utils/common_env.sh"

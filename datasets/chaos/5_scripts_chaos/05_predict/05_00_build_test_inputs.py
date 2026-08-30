@@ -11,22 +11,26 @@ Test groups (from 4_splits_chaos/test_cases.json):
   - MR internal-test patients → t1in, t1out, t2spir   (4 organs scoreable)
   - all CT patients           → ct                     (liver only scoreable)
 
-Reads:  ../../1_BIDS_chaos/chaos-abdominal/sub-<case>/anat/  (+ derivatives masks)
+Reads:  ../../1_BIDS_chaos/abdomen-chaos/sub-<case>/anat/  (+ derivatives masks)
 Writes: ../../2_nnUNet_chaos/raw/<DS_NAME>/imagesTs_<modality>/{case}_0000.nii.gz
                                           /labelsTs_<modality>/{case}.nii.gz
+
+BIDS files are already .nii.gz (compressed) — plain_copy() below just copies them
+as-is (NOT a gzip_copy — the BIDS source used to be uncompressed .nii, which this
+function used to gzip on the fly; now that it's already compressed, doing that again
+would double-gzip the output into an unreadable file — a real bug caught 2026-08-28).
 
     python 05_00_build_test_inputs.py                    # all modalities
     python 05_00_build_test_inputs.py --modalities t1in ct
 """
 import argparse
-import gzip
 import json
 import shutil
 from pathlib import Path
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]
-BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "chaos-abdominal"
-DERIV_DIR    = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "abdomen-chaos"
+DERIV_DIR    = BIDS_ROOT / "derivatives" / "labels"
 NNUNET_RAW   = DATASET_ROOT / "2_nnUNet_chaos" / "raw"
 TEST_CASES   = DATASET_ROOT / "4_splits_chaos" / "test_cases.json"
 
@@ -38,13 +42,23 @@ MODALITY_SUFFIX = {
     "ct":     "CT",
 }
 
+# modality tag → derivative mask filename suffix (without sub- prefix / extension).
+# CT is a binary liver-only mask (seg + label-liver); MR is 4-class discrete organ
+# segmentation (dseg + label-organs) — see derivatives/labels/README.md.
+MODALITY_LABEL_SUFFIX = {
+    "t1in":   "acq-inphase_T1w_label-organs_dseg",
+    "t1out":  "acq-outphase_T1w_label-organs_dseg",
+    "t2spir": "T2w_label-organs_dseg",
+    "ct":     "CT_label-liver_seg",
+}
 
-def gzip_copy(src: Path, dst: Path) -> None:
+
+def plain_copy(src: Path, dst: Path) -> None:
+    """Copy an already-compressed .nii.gz file as-is. No-op if dst exists."""
     if dst.exists():
         return
     dst.parent.mkdir(parents=True, exist_ok=True)
-    with open(src, "rb") as f_in, gzip.open(dst, "wb", compresslevel=1) as f_out:
-        shutil.copyfileobj(f_in, f_out)
+    shutil.copy2(src, dst)
 
 
 def main() -> None:
@@ -73,13 +87,13 @@ def main() -> None:
         n_ok, missing = 0, []
         for case in cases:
             sub = f"sub-{case}"
-            img = BIDS_ROOT / sub / "anat" / f"{sub}_{suffix}.nii"
-            seg = DERIV_DIR / sub / "anat" / f"{sub}_{suffix}_dseg.nii"
+            img = BIDS_ROOT / sub / "anat" / f"{sub}_{suffix}.nii.gz"
+            seg = DERIV_DIR / sub / "anat" / f"{sub}_{MODALITY_LABEL_SUFFIX[mod]}.nii.gz"
             if not img.exists() or not seg.exists():
                 missing.append(case)
                 continue
-            gzip_copy(img, img_dir / f"{case}_0000.nii.gz")
-            gzip_copy(seg, lab_dir / f"{case}.nii.gz")
+            plain_copy(img, img_dir / f"{case}_0000.nii.gz")
+            plain_copy(seg, lab_dir / f"{case}.nii.gz")
             n_ok += 1
         status = f"{n_ok}/{len(cases)} → {img_dir.name} (+labels)"
         if missing:

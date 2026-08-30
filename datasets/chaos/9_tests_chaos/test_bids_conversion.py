@@ -18,8 +18,8 @@ from pathlib import Path
 import numpy as np
 import SimpleITK as sitk
 
-BIDS = Path(__file__).resolve().parents[1] / "1_BIDS_chaos" / "chaos-abdominal"
-DERIV = BIDS / "derivatives" / "manual_masks"
+BIDS = Path(__file__).resolve().parents[1] / "1_BIDS_chaos" / "abdomen-chaos"
+DERIV = BIDS / "derivatives" / "labels"
 VALID_LABELS = {0, 1, 2, 3, 4}
 
 
@@ -81,14 +81,14 @@ def main() -> int:
         is_ct = sub.startswith("sub-CT")
         if is_ct:
             n_ct += 1
-            check_pair(anat / f"{sub}_CT.nii", deriv / f"{sub}_CT_dseg.nii", True, errs)
+            check_pair(anat / f"{sub}_CT.nii.gz", deriv / f"{sub}_CT_label-liver_seg.nii.gz", True, errs)
         else:
             n_mr += 1
-            in_m = check_pair(anat / f"{sub}_acq-inphase_T1w.nii",
-                              deriv / f"{sub}_acq-inphase_T1w_dseg.nii", False, errs)
-            out_m = check_pair(anat / f"{sub}_acq-outphase_T1w.nii",
-                               deriv / f"{sub}_acq-outphase_T1w_dseg.nii", False, errs)
-            check_pair(anat / f"{sub}_T2w.nii", deriv / f"{sub}_T2w_dseg.nii", False, errs)
+            in_m = check_pair(anat / f"{sub}_acq-inphase_T1w.nii.gz",
+                              deriv / f"{sub}_acq-inphase_T1w_label-organs_dseg.nii.gz", False, errs)
+            out_m = check_pair(anat / f"{sub}_acq-outphase_T1w.nii.gz",
+                               deriv / f"{sub}_acq-outphase_T1w_label-organs_dseg.nii.gz", False, errs)
+            check_pair(anat / f"{sub}_T2w.nii.gz", deriv / f"{sub}_T2w_label-organs_dseg.nii.gz", False, errs)
             if in_m is not None and out_m is not None and not np.array_equal(in_m, out_m):
                 errs.append(f"{sub}: in/out-phase masks differ (should be shared)")
 

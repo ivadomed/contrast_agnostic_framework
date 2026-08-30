@@ -20,13 +20,13 @@ Raw layout (kagglehub):
 MR mask greyscale encoding (verified): 63=liver 126=R-kidney 189=L-kidney 252=spleen.
 CT mask: binary → liver.
 
-BIDS output (1_BIDS_chaos/chaos-abdominal/):
-  sub-MR##/anat/  sub-MR##_acq-inphase_T1w.nii  (+ .json)   <- T1DUAL InPhase
-                  sub-MR##_acq-outphase_T1w.nii (+ .json)   <- T1DUAL OutPhase
-                  sub-MR##_T2w.nii              (+ .json)   <- T2SPIR
-  sub-CT##/anat/  sub-CT##_CT.nii               (+ .json)
-  derivatives/manual_masks/sub-MR##/anat/sub-MR##_<entities>_dseg.nii
-                           sub-CT##/anat/sub-CT##_CT_dseg.nii
+BIDS output (1_BIDS_chaos/abdomen-chaos/):
+  sub-MR##/anat/  sub-MR##_acq-inphase_T1w.nii.gz  (+ .json)   <- T1DUAL InPhase
+                  sub-MR##_acq-outphase_T1w.nii.gz (+ .json)   <- T1DUAL OutPhase
+                  sub-MR##_T2w.nii.gz              (+ .json)   <- T2SPIR
+  sub-CT##/anat/  sub-CT##_CT.nii.gz               (+ .json)
+  derivatives/labels/sub-MR##/anat/sub-MR##_<entities>_label-organs_dseg.nii.gz
+                     sub-CT##/anat/sub-CT##_CT_label-liver_seg.nii.gz
   dataset_description.json   participants.tsv
 
 In/out-phase are treated as two DISTINCT modalities (domain generalisation).
@@ -49,8 +49,8 @@ from PIL import Image
 
 DATASET_ROOT    = Path(__file__).resolve().parents[2]   # …/datasets/chaos/
 RAW_ROOT        = DATASET_ROOT / "0_raw_chaos"
-BIDS_ROOT       = DATASET_ROOT / "1_BIDS_chaos" / "chaos-abdominal"
-DERIVATIVES_DIR = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT       = DATASET_ROOT / "1_BIDS_chaos" / "abdomen-chaos"
+DERIVATIVES_DIR = BIDS_ROOT / "derivatives" / "labels"
 
 KAGGLE_DATASET = "omarxadel/chaos-combined-ct-mr-healthy-abdominal-organ"
 
@@ -161,9 +161,9 @@ def bidsify_mr(chaos_id: str, mr_dir: Path, participants: list[dict]) -> None:
         in_img, in_files,
         mask_for_file=lambda p: ground / f"{p.stem}.png",
         decode=decode_mr_mask)
-    write_nii(in_img, anat / f"{sub}_acq-inphase_T1w.nii")
+    write_nii(in_img, anat / f"{sub}_acq-inphase_T1w.nii.gz")
     write_json(anat / f"{sub}_acq-inphase_T1w.json", _sidecar("MR", "T1DUAL in-phase"))
-    write_nii(in_lab, deriv / f"{sub}_acq-inphase_T1w_dseg.nii")
+    write_nii(in_lab, deriv / f"{sub}_acq-inphase_T1w_label-organs_dseg.nii.gz")
 
     out_img, _ = read_dicom_series(t1 / "DICOM_anon" / "OutPhase")
     # In/out are co-registered with identical slice count & z-order → reuse mask array.
@@ -172,9 +172,9 @@ def bidsify_mr(chaos_id: str, mr_dir: Path, participants: list[dict]) -> None:
         raise ValueError(f"{sub}: in/out-phase shape mismatch — cannot share mask")
     out_lab = sitk.GetImageFromArray(in_arr)
     out_lab.CopyInformation(out_img)
-    write_nii(out_img, anat / f"{sub}_acq-outphase_T1w.nii")
+    write_nii(out_img, anat / f"{sub}_acq-outphase_T1w.nii.gz")
     write_json(anat / f"{sub}_acq-outphase_T1w.json", _sidecar("MR", "T1DUAL out-phase"))
-    write_nii(out_lab, deriv / f"{sub}_acq-outphase_T1w_dseg.nii")
+    write_nii(out_lab, deriv / f"{sub}_acq-outphase_T1w_label-organs_dseg.nii.gz")
 
     # --- T2SPIR ---
     t2 = mr_dir / "T2SPIR"
@@ -184,9 +184,9 @@ def bidsify_mr(chaos_id: str, mr_dir: Path, participants: list[dict]) -> None:
         t2_img, t2_files,
         mask_for_file=lambda p: t2_ground / f"{p.stem}.png",
         decode=decode_mr_mask)
-    write_nii(t2_img, anat / f"{sub}_T2w.nii")
+    write_nii(t2_img, anat / f"{sub}_T2w.nii.gz")
     write_json(anat / f"{sub}_T2w.json", _sidecar("MR", "T2-SPIR"))
-    write_nii(t2_lab, deriv / f"{sub}_T2w_dseg.nii")
+    write_nii(t2_lab, deriv / f"{sub}_T2w_label-organs_dseg.nii.gz")
 
     participants.append({"label": label, "modality": "MR", "chaos_id": chaos_id})
 
@@ -208,9 +208,9 @@ def bidsify_ct(chaos_id: str, ct_dir: Path, participants: list[dict]) -> None:
         return ground / f"liver_GT_{name_rank[str(p)]:03d}.png"
 
     lab = build_label_volume(img, files, mask_for_file=mask_for, decode=decode_ct_mask)
-    write_nii(img, anat / f"{sub}_CT.nii")
+    write_nii(img, anat / f"{sub}_CT.nii.gz")
     write_json(anat / f"{sub}_CT.json", _sidecar("CT", "portal-venous abdominal CT"))
-    write_nii(lab, deriv / f"{sub}_CT_dseg.nii")
+    write_nii(lab, deriv / f"{sub}_CT_label-liver_seg.nii.gz")
 
     participants.append({"label": label, "modality": "CT", "chaos_id": chaos_id})
 
@@ -264,7 +264,14 @@ def _write_derivatives_description() -> None:
         "BIDSVersion": "1.9.0",
         "DatasetType": "derivative",
         "GeneratedBy": [{"Name": "CHAOS Challenge"}],
-        "LabelMap": LABELS,
+        "Description": (
+            "Two disjoint label sets, per CHAOS's own task split (see README.md in "
+            "this directory): CT files (*_CT_label-liver_seg.nii.gz) are binary "
+            "liver-only masks; MR files (*_label-organs_dseg.nii.gz) are 4-class "
+            "discrete organ segmentations, encoded per LabelMapMR below."
+        ),
+        "LabelMapCT": {"background": 0, "liver": 1},
+        "LabelMapMR": LABELS,
     })
 
 

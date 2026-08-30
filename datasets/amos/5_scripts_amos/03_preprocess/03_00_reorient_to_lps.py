@@ -30,8 +30,8 @@ BIDS + nnUNet file lists.
 WHAT IT TOUCHES
 ---------------
 Both trees the data flows through (idempotent — already-LPS files are skipped):
-  1_BIDS_amos/amos-abdominal/sub-*/anat/*.nii.gz                      (images)
-  1_BIDS_amos/amos-abdominal/derivatives/manual_masks/sub-*/anat/*.nii.gz  (masks)
+  1_BIDS_amos/abdomen-amos/sub-*/anat/*.nii.gz                      (images)
+  1_BIDS_amos/abdomen-amos/derivatives/labels/sub-*/anat/*.nii.gz  (masks)
   2_nnUNet_amos/raw/{imagesTs,labelsTs}_{ct,mri}/*.nii.gz             (nnUNet inputs)
 
 0_raw_amos is left pristine. The BIDS files are hard-links to 0_raw; writes go
@@ -53,8 +53,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]
 import orient  # noqa: E402
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]
-BIDS_ROOT    = DATASET_ROOT / "1_BIDS_amos" / "amos-abdominal"
-DERIV_DIR    = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT    = DATASET_ROOT / "1_BIDS_amos" / "abdomen-amos"
+DERIV_DIR    = BIDS_ROOT / "derivatives" / "labels"
 NNUNET_RAW   = DATASET_ROOT / "2_nnUNet_amos" / "raw"
 
 

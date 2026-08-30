@@ -32,7 +32,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BIDS_ROOT    = PROJECT_ROOT / "data" / "ON-Harmony"
-MASKS_ROOT   = BIDS_ROOT / "derivatives" / "synthseg_masks"
+MASKS_ROOT   = BIDS_ROOT / "derivatives" / "labels"
 SPLITS_DIR   = PROJECT_ROOT / "data" / "splits"
 
 TEST_SCANNERS    = {"NOT1ACH", "OXF1PRI"}
@@ -61,7 +61,7 @@ def discover_t1w_sessions() -> list[dict]:
                 continue
             ses = ses_dir.name
             t1w = ses_dir / "anat" / f"{sub}_{ses}_T1w.nii.gz"
-            mask = MASKS_ROOT / sub / ses / "anat" / f"{sub}_{ses}_T1w_synthseg.nii.gz"
+            mask = MASKS_ROOT / sub / ses / "anat" / f"{sub}_{ses}_T1w_label-synthseg_dseg.nii.gz"
             if not t1w.exists():
                 continue
             if not mask.exists():

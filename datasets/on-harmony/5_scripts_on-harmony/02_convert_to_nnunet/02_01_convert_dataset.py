@@ -6,7 +6,7 @@ Reads
 -----
   data/splits/onharmony_splits.json   — produced by 00_create_splits.py
   data/ON-Harmony/sub-*/ses-*/anat/*_T1w.nii.gz
-  data/ON-Harmony/derivatives/synthseg_masks/sub-*/ses-*/anat/*_T1w_synthseg.nii.gz
+  data/ON-Harmony/derivatives/labels/sub-*/ses-*/anat/*_T1w_label-synthseg_dseg.nii.gz
 
 Writes
 ------
@@ -36,7 +36,7 @@ N_WORKERS = 256
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BIDS_ROOT    = PROJECT_ROOT / "data" / "ON-Harmony"
-MASKS_ROOT   = BIDS_ROOT / "derivatives" / "synthseg_masks"
+MASKS_ROOT   = BIDS_ROOT / "derivatives" / "labels"
 SPLITS_JSON  = PROJECT_ROOT / "data" / "splits" / "onharmony_splits.json"
 import argparse
 import sys
@@ -145,7 +145,7 @@ def process_case(case_id: str, images_dir: Path, labels_dir: Path) -> None:
     """Copy T1w image and write remapped label for one case."""
     sub, ses, _ = case_id.split("_", 2)   # sub-XXXX, ses-YYYY, T1w
     t1w_path  = BIDS_ROOT / sub / ses / "anat" / f"{case_id}.nii.gz"
-    mask_path = MASKS_ROOT / sub / ses / "anat" / f"{case_id}_synthseg.nii.gz"
+    mask_path = MASKS_ROOT / sub / ses / "anat" / f"{case_id}_label-synthseg_dseg.nii.gz"
 
     if not t1w_path.exists():
         raise FileNotFoundError(f"T1w not found: {t1w_path}")

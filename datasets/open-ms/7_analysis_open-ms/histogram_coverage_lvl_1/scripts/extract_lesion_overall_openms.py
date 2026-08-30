@@ -42,8 +42,8 @@ log = logging.getLogger(__name__)
 THIS = Path(__file__).resolve()
 ANALYSIS = THIS.parents[1]
 REPO = THIS.parents[5]
-BIDS = REPO / "datasets/open-ms/1_BIDS_open-ms/open-ms-brain"
-LESION_DIR = BIDS / "derivatives" / "manual_masks"
+BIDS = REPO / "datasets/open-ms/1_BIDS_open-ms/ms-brain-openms"
+LESION_DIR = BIDS / "derivatives" / "labels"
 GENERATED = ANALYSIS.parent / "data" / "generated"    # shared with Pillar-1 texture_analysis_lvl_1
 METHODS = ["palette", "synthseg_em", "synthseg_noem", "auglab_default"]
 CONTRASTS = ("FLAIR", "T1w", "T2w")
@@ -57,7 +57,7 @@ def feature_cols(n_bins: int):
 
 
 def lesion_path(sub: str) -> Optional[Path]:
-    p = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_dseg.nii.gz"   # only annotation open-ms provides
+    p = LESION_DIR / sub / "anat" / f"{sub}_FLAIR_label-lesion_seg.nii.gz"   # only annotation open-ms provides
     return p if p.exists() else None
 
 

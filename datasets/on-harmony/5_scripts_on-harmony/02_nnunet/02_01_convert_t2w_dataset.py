@@ -7,8 +7,8 @@ used for T1w training).
 Reads
 -----
   4_splits_on-harmony/onharmony_t2w_splits.json   — produced by 01_02_create_splits_t2w.py
-  1_BIDS_on-harmony/sub-*/ses-*/anat/*_T2w.nii.gz
-  1_BIDS_on-harmony/derivatives/synthseg_masks/sub-*/ses-*/anat/*_T2w_synthseg.nii.gz
+  1_BIDS_on-harmony/brain-onharmony/sub-*/ses-*/anat/*_T2w.nii.gz
+  1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-*/ses-*/anat/*_T2w_label-synthseg_dseg.nii.gz
 
 Writes
 ------
@@ -42,8 +42,8 @@ N_WORKERS = 64
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DATASET_ROOT = SCRIPT_DIR.parents[1]
-BIDS_ROOT  = Path(os.environ.get("BIDS_ROOT", DATASET_ROOT / "1_BIDS_on-harmony"))
-MASKS_ROOT = BIDS_ROOT / "derivatives" / "synthseg_masks"
+BIDS_ROOT  = Path(os.environ["BIDS_ROOT"])
+MASKS_ROOT = BIDS_ROOT / "derivatives" / "labels"
 SPLITS_DIR = Path(os.environ.get("SPLITS_DIR", DATASET_ROOT / "4_splits_on-harmony"))
 SPLITS_JSON = SPLITS_DIR / "onharmony_t2w_splits.json"
 NNUNET_RAW = Path(os.environ.get("nnUNet_raw", DATASET_ROOT / "2_nnUNet_on-harmony" / "raw"))
@@ -88,7 +88,7 @@ def validate_geometry(t2w_nii: nib.Nifti1Image, mask_nii: nib.Nifti1Image, case_
 def process_case(case_id: str, images_dir: Path, labels_dir: Path) -> None:
     sub, ses, _ = case_id.split("_", 2)   # sub-XXXX, ses-YYYY, T2w
     t2w_path  = BIDS_ROOT / sub / ses / "anat" / f"{case_id}.nii.gz"
-    mask_path = MASKS_ROOT / sub / ses / "anat" / f"{case_id}_synthseg.nii.gz"
+    mask_path = MASKS_ROOT / sub / ses / "anat" / f"{case_id}_label-synthseg_dseg.nii.gz"
 
     if not t2w_path.exists():
         raise FileNotFoundError(f"T2w not found: {t2w_path}")

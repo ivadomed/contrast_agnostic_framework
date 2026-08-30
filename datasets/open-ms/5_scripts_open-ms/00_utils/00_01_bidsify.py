@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BIDSify open_ms_data (0_raw_open-ms/patientXX/) → 1_BIDS_open-ms/open-ms-brain/.
+BIDSify open_ms_data (0_raw_open-ms/patientXX/) → 1_BIDS_open-ms/ms-brain-openms/.
 
 The raw data is already analysis-ready NIfTI (co-registered to FLAIR, 1mm iso, LPS,
 N4). This step reorganises it into a BIDS-compliant tree with metadata sidecars; image
@@ -12,14 +12,15 @@ Subject ids are kept as `patientXX` (→ sub-patientXX) so the splits in 4_split
 
 BIDS suffixes:  FLAIR → _FLAIR ; T2W → _T2w ; T1W → _T1w
 The consensus lesion mask (FLAIR space, applies to all co-registered contrasts) is stored
-once under derivatives as sub-patientXX_FLAIR_dseg.nii.gz.
+once under derivatives as sub-patientXX_FLAIR_label-lesion_seg.nii.gz (binary mask, hence
+`seg` not `dseg`, with the BIDS-mandatory `label-` entity).
 
 Reads:   0_raw_open-ms/patientXX/{FLAIR,T2W,T1W,consensus_gt}.nii.gz
-Writes:  1_BIDS_open-ms/open-ms-brain/
+Writes:  1_BIDS_open-ms/ms-brain-openms/
            dataset_description.json, participants.tsv
            sub-patientXX/anat/sub-patientXX_{FLAIR,T2w,T1w}.nii.gz (+ .json sidecars)
-           derivatives/manual_masks/dataset_description.json
-           derivatives/manual_masks/sub-patientXX/anat/sub-patientXX_FLAIR_dseg.nii.gz
+           derivatives/labels/dataset_description.json
+           derivatives/labels/sub-patientXX/anat/sub-patientXX_FLAIR_label-lesion_seg.nii.gz
 
 Usage:  python 00_01_bidsify.py
 """
@@ -33,8 +34,8 @@ import nibabel as nib
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]                 # datasets/open-ms
 RAW = DATASET_ROOT / "0_raw_open-ms"
-BIDS_ROOT = DATASET_ROOT / "1_BIDS_open-ms" / "open-ms-brain"
-DERIV_DIR = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT = DATASET_ROOT / "1_BIDS_open-ms" / "ms-brain-openms"
+DERIV_DIR = BIDS_ROOT / "derivatives" / "labels"
 
 # raw filename -> BIDS suffix
 CONTRASTS = {"FLAIR": "FLAIR", "T2W": "T2w", "T1W": "T1w"}
@@ -87,7 +88,7 @@ def bidsify() -> None:
                    "Description": f"{raw_name}, co-registered to FLAIR, 1mm iso, N4, LPS"})
         # consensus lesion mask (FLAIR space)
         _link(RAW / pid / "consensus_gt.nii.gz",
-              DERIV_DIR / sub / "anat" / f"{sub}_FLAIR_dseg.nii.gz")
+              DERIV_DIR / sub / "anat" / f"{sub}_FLAIR_label-lesion_seg.nii.gz")
         lv = int((np.asanyarray(nib.load(str(RAW / pid / "consensus_gt.nii.gz")).dataobj) > 0).sum())
         rows.append(f"{sub}\t{lv}")
     (BIDS_ROOT / "participants.tsv").write_text("\n".join(rows) + "\n")

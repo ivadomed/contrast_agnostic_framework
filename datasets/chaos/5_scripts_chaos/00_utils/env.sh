@@ -20,7 +20,7 @@ export MODEL_TYPE="chaos_model"
 export TRAINING_CONTRAST="${TRAINING_CONTRAST:-t1in}"
 
 # common_env config (plain vars — consumed by common_env, not exported to the env):
-BIDS_SUBDIR="chaos-abdominal"            # → BIDS_ROOT under 1_BIDS_<name>/
+BIDS_SUBDIR="abdomen-chaos"              # → BIDS_ROOT under 1_BIDS_<name>/ (git-annex dataset name)
 CE_SUBDIRS="raw preprocessed splits"      # this dataset has 0_raw + 2_nnUNet/preprocessed + 4_splits
 source "${DATASET_ROOT}/../00_commun_scripts/00_00_utils/common_env.sh"
 

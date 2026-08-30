@@ -7,22 +7,34 @@ Only the MR cross-validation cases go into imagesTr — the held-out MR internal
 patients and ALL CT patients are excluded (they are test-only; see
 05_00_build_test_inputs.py). The CV/holdout partition is read from test_cases.json.
 
-BIDS .nii are uncompressed; this gzips them on the fly.
+BIDS files are already .nii.gz (compressed) — this copies them as-is. Does NOT use
+nnunet_convert_lib's gzip_copy (that helper assumes an uncompressed .nii source and
+gzips on the fly; calling it on an already-gzipped source would double-compress the
+output into an unreadable file — a real bug caught 2026-08-28 during git-annex prep).
 
 Usage:
   python 02_00_convert.py [--dataset-id 60] [--jobs N]
 """
 import argparse
 import json
+import shutil
 import sys
 from pathlib import Path
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(DATASET_ROOT.parent / "00_commun_scripts" / "00_00_utils"))
-from nnunet_convert_lib import gzip_copy, run_threaded_conversion, write_dataset_json  # noqa: E402
-BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "chaos-abdominal"
+from nnunet_convert_lib import run_threaded_conversion, write_dataset_json  # noqa: E402
+
+
+def plain_copy(src: Path, dst: Path) -> None:
+    """Copy an already-compressed .nii.gz file as-is. No-op if dst exists."""
+    if dst.exists():
+        return
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst)
+BIDS_ROOT    = DATASET_ROOT / "1_BIDS_chaos" / "abdomen-chaos"
 NNUNET_RAW   = DATASET_ROOT / "2_nnUNet_chaos" / "raw"
-DERIV_DIR    = BIDS_ROOT / "derivatives" / "manual_masks"
+DERIV_DIR    = BIDS_ROOT / "derivatives" / "labels"
 TEST_CASES   = DATASET_ROOT / "4_splits_chaos" / "test_cases.json"
 
 LABELS = {"background": 0, "liver": 1, "right_kidney": 2, "left_kidney": 3, "spleen": 4}
@@ -30,15 +42,15 @@ LABELS = {"background": 0, "liver": 1, "right_kidney": 2, "left_kidney": 3, "spl
 
 def convert_case(case_id: str, images_tr: Path, labels_tr: Path) -> str:
     sub = f"sub-{case_id}"
-    src = BIDS_ROOT / sub / "anat" / f"{sub}_acq-inphase_T1w.nii"
+    src = BIDS_ROOT / sub / "anat" / f"{sub}_acq-inphase_T1w.nii.gz"
     if not src.exists():
         raise FileNotFoundError(f"Missing T1 in-phase: {src}")
-    gzip_copy(src, images_tr / f"{case_id}_0000.nii.gz")
+    plain_copy(src, images_tr / f"{case_id}_0000.nii.gz")
 
-    seg = DERIV_DIR / sub / "anat" / f"{sub}_acq-inphase_T1w_dseg.nii"
+    seg = DERIV_DIR / sub / "anat" / f"{sub}_acq-inphase_T1w_label-organs_dseg.nii.gz"
     if not seg.exists():
         raise FileNotFoundError(f"Missing seg: {seg}")
-    gzip_copy(seg, labels_tr / f"{case_id}.nii.gz")
+    plain_copy(seg, labels_tr / f"{case_id}.nii.gz")
     return case_id
 
 

@@ -12,7 +12,9 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${HERE}/../../../../.." && pwd)"
-source "${PROJECT_ROOT}/scripts/job_runner/run_job.sh"
+# Sources run_job.sh transitively and sets BIDS_ROOT (single source of truth for the
+# on-harmony BIDS path — see 00_utils/env.sh) for extract_regional_hist31.py below.
+source "${PROJECT_ROOT}/datasets/on-harmony/5_scripts_on-harmony/00_utils/env.sh"
 
 PY="${PROJECT_ROOT}/.venv/bin/python"
 OUT="${HERE}/../outputs"

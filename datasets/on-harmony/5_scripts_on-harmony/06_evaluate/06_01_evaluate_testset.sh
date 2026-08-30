@@ -142,7 +142,7 @@ for contrast,fn in CONTRASTS.items():
             nib.save(nib.as_closest_canonical(nib.load(str(out))), str(rout))
         found+=1
         rel=src.relative_to(bids)
-        m=bids/"derivatives"/"synthseg_masks"/rel.parent/(rel.name[:-len(".nii.gz")]+"_synthseg.nii.gz")
+        m=bids/"derivatives"/"labels"/rel.parent/(rel.name[:-len(".nii.gz")]+"_label-synthseg_dseg.nii.gz")
         gout=gdir/f"{cid}.nii.gz"
         if m.exists() and not gout.exists():
             nib.save(remap(nib.load(str(m))), str(gout))

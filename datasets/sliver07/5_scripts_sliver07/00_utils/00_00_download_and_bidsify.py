@@ -13,9 +13,9 @@ Raw layout (Zenodo record 2597908, training-scans.zip + training-labels.zip):
     label/ liver-seg0NN.mhd   liver-seg0NN.raw     (binary liver, MET_CHAR)
 The label volume is co-registered with its scan (identical DimSize / spacing).
 
-BIDS output (1_BIDS_sliver07/sliver07-liver/):
-  sub-LV{NN}/anat/sub-LV{NN}_CT.nii  (+ .json)              <- liver-orig0NN
-  derivatives/manual_masks/sub-LV{NN}/anat/sub-LV{NN}_CT_dseg.nii  <- liver-seg0NN
+BIDS output (1_BIDS_sliver07/liver-sliver07-ct/):
+  sub-LV{NN}/anat/sub-LV{NN}_CT.nii.gz  (+ .json)              <- liver-orig0NN
+  derivatives/labels/sub-LV{NN}/anat/sub-LV{NN}_CT_label-liver_seg.nii.gz  <- liver-seg0NN
   dataset_description.json   participants.tsv
 
 Label map matches chaos so chaos-trained predictions score directly:
@@ -40,8 +40,8 @@ DATASET_ROOT    = Path(__file__).resolve().parents[2]   # …/datasets/sliver07/
 RAW_ROOT        = DATASET_ROOT / "0_raw_sliver07"
 SCAN_DIR        = RAW_ROOT / "scan"
 LABEL_DIR       = RAW_ROOT / "label"
-BIDS_ROOT       = DATASET_ROOT / "1_BIDS_sliver07" / "sliver07-liver"
-DERIVATIVES_DIR = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT       = DATASET_ROOT / "1_BIDS_sliver07" / "liver-sliver07-ct"
+DERIVATIVES_DIR = BIDS_ROOT / "derivatives" / "labels"
 
 ZENODO_RECORD = "2597908"
 ZENODO_BASE   = f"https://zenodo.org/api/records/{ZENODO_RECORD}/files"
@@ -126,9 +126,9 @@ def bidsify_case(n: int, participants: list[dict]) -> None:
     lab = sitk.GetImageFromArray(arr)
     lab.CopyInformation(img)
 
-    write_nii(img, anat / f"{sub}_CT.nii")
+    write_nii(img, anat / f"{sub}_CT.nii.gz")
     write_json(anat / f"{sub}_CT.json", _sidecar("SLIVER07 contrast-enhanced abdominal CT"))
-    write_nii(lab, deriv / f"{sub}_CT_dseg.nii")
+    write_nii(lab, deriv / f"{sub}_CT_label-liver_seg.nii.gz")
 
     participants.append({"label": label, "sliver07_id": f"{n:03d}"})
 

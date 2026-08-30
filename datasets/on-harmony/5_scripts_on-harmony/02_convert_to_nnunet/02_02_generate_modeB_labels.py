@@ -21,7 +21,7 @@ import os
 DATASET_ROOT = Path(__file__).resolve().parents[3]   # datasets/on-harmony/
 PROJECT_ROOT = DATASET_ROOT.parents[1]               # project root
 
-BIDS = Path(os.environ.get("BIDS_ROOT", str(DATASET_ROOT / "1_BIDS_on-harmony")))
+BIDS = Path(os.environ["BIDS_ROOT"])
 _nnunet_pre = Path(os.environ.get("nnUNet_preprocessed",
                                   str(DATASET_ROOT / "2_nnUNet_on-harmony/preprocessed")))
 SPLITS_JSON = _nnunet_pre / "Dataset030_OnHarmonyT1w/splits_final.json"
