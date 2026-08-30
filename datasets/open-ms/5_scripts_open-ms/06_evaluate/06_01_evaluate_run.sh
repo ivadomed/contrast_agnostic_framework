@@ -35,7 +35,13 @@ DJ="${nnUNet_raw}/${_DS_NAME}/dataset.json"
 PRED_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 _PRED_SUBDIR=""; [ "${CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${CKPT_TAG}/"
 _OUT_SUFFIX=""; [ "${CKPT_TAG}" != "best" ] && _OUT_SUFFIX="_${CKPT_TAG}"
-OUT_BASE="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}"
+# METRICS_SUBDIR (optional): unset (default) writes to the normal flat METRICS_ROOT/.../
+# <contrast>/ layout. Set to e.g. "ablations" to write to METRICS_ROOT/.../<contrast>/
+# ablations/ instead — for non-headline result sets (CLAUDE.md's "Within 02_metrics/
+# <model>/<contrast>/, a non-headline result set gets its own dedicated subdir"
+# convention; mirrors chaos's/brats2024-glioma's/on-harmony's 06_01_evaluate_run.sh).
+METRICS_SUBDIR="${METRICS_SUBDIR:-}"
+OUT_BASE="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}${METRICS_SUBDIR:+/${METRICS_SUBDIR}}/${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}"
 
 # "0 1 2": matches EVAL_FOLDS in datasets/00_commun_scripts/00_00_utils/eval_folds.py
 # (the single source of truth the aggregators cap to) — kept in sync by hand since bash

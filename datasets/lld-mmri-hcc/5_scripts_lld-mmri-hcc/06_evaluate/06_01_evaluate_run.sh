@@ -49,7 +49,14 @@ fi
 
 EVALUATE_PY="${ATLAS_DATASET_ROOT}/5_scripts_atlas-liver-hcc/06_evaluate/06_00_evaluate.py"
 PRED_BASE="${PREDICTIONS_ROOT}/${ATLAS_MODEL_TYPE}/${ATLAS_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
-METRICS_BASE="${METRICS_ROOT}/${ATLAS_MODEL_TYPE}/${ATLAS_TRAINING_CONTRAST}/${CATEGORY}_${RUN_ID}"
+# METRICS_SUBDIR (optional): unset (default) writes to the normal flat METRICS_ROOT/.../
+# <contrast>/ layout. Set to e.g. "ablations" to write to METRICS_ROOT/.../<contrast>/
+# ablations/ instead — for non-headline result sets (CLAUDE.md's "Within 02_metrics/
+# <model>/<contrast>/, a non-headline result set gets its own dedicated subdir"
+# convention; mirrors atlas-liver-hcc's/chaos's/brats2024-glioma's/on-harmony's
+# 06_01_evaluate_run.sh).
+METRICS_SUBDIR="${METRICS_SUBDIR:-}"
+METRICS_BASE="${METRICS_ROOT}/${ATLAS_MODEL_TYPE}/${ATLAS_TRAINING_CONTRAST}${METRICS_SUBDIR:+/${METRICS_SUBDIR}}/${CATEGORY}_${RUN_ID}"
 # atlas-liver-hcc tumour id (2) -> this dataset's GT lesion id (1). See header note.
 LABEL_MAP='{"tumour": [2, 1]}'
 
