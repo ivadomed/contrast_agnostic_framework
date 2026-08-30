@@ -1,8 +1,0 @@
-Gender:
-1 = Female
-2 = Male
-
-Radiological Evaluation:
-1 = Mild
-2 = Moderate
-3 = Severe
