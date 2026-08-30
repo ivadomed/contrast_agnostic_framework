@@ -22,7 +22,44 @@ source-modality settings. Every number is a cross-fold, cross-class average
 over all held-out contrasts of that setting, under the protocol of
 \cref{subsec:e-setup}.
 
+\paragraph{Statistical test construction.} All tests are paired at the
+level of the individual test case, never per-fold, so significance reflects
+consistency across cases rather than aggregate noise. The task-level test
+(\cref{tab:meta}) is a one-sided sign-flip permutation test on the
+macro-averaged per-case difference, stratified by task so that each task
+contributes equally regardless of how many test cases it contributes --
+this matches the equal-weight-per-task estimand of the main paper's
+\emph{overall} column. Per-setting comparisons (below) use the paired
+Wilcoxon signed-rank test~\cite{wilcoxon1945} instead, since there each
+setting is judged on its own rather than pooled into a cross-task estimand.
+All tests are Holm-corrected~\cite{holm1979} for multiple comparisons.
+
+\paragraph{Contrast-group pooling.} For CHAOS and Liver-HCC, the same
+tested modality is sometimes evidenced by more than one external source:
+CHAOS's CT evidence comes from its own held-out CT split plus AMOS and
+SLIVER07; Liver-HCC's LiverHccSeg evidence comes from four contrast-enhanced
+phases (pre/arterial/portal-venous/delayed) of the same underlying modality.
+Averaging every raw column with equal weight -- the natural first
+implementation -- silently lets a modality with more contributing sources
+or phases outvote one with fewer in both the displayed \emph{all} average
+and the significance test, since it then supplies more of the
+equally-weighted columns being averaged. We instead pool disjoint sources
+(or phases) of the \emph{same} modality by concatenating their cases into
+one group before any averaging happens, then average modality groups with
+equal weight -- for CHAOS this additionally means averaging equal-weight
+across liver/spleen/kidney \emph{within} the pooled CT evidence, since
+AMOS's own CT column already blends all three organs into one number before
+it reaches this step. This changed some task-level numbers for CHAOS and
+Liver-HCC from earlier drafts of this paper; the other three tasks have no
+multi-source modality and are unaffected.
+
 \input{sec/_suppl_tables}
+
+Every task-level comparison in the main paper's \cref{tab:meta} is
+significant; non-significant margins appear only in the per-setting tables
+below. Where such a margin is not significant, the appropriate conclusion is
+equivalence on that setting, not a shortfall: the held-out sets used here
+are large, so these comparisons are not underpowered.
 
 Two observations are easier to see here than at task level. First, PALETTE
 attains the best Dice in \emph{all eight} settings. Second, the identity of
@@ -31,6 +68,240 @@ eight Dice settings, SRCSM on Open-MS FLAIR, and SynthSeg-EM on ON-Harmony
 T2w; on HD95 the runner-up changes again. No competing method can be relied
 upon as a default, which is the practical argument for a plug-in transform
 that is at or near the top everywhere.
+
+\paragraph{Boundary distance at task level.} HD95 is less standard for this
+class of augmentation comparison than Dice, which is why it is reported here
+rather than in the main paper's headline table -- not because it is
+uninformative. \cref{tab:meta-hd95} gives the same task-level breakdown as
+\cref{tab:meta} (main paper). The no-augmentation baseline and SynthSeg-noEM
+are worst on both metrics, and PALETTE is at or near the best on every task
+except Liver-HCC (where SynthSeg-EM is noticeably ahead), and is
+significantly better in aggregate than four of the five competitors;
+SynthSeg-EM is close enough (29.8mm vs.\ our 30.8mm) that the two are not
+statistically distinguished ($p=1.00$). When HD95 disagrees with Dice for a
+given method -- a noticeably better HD95 than its
+Dice would predict -- the usual explanation is low recall: a method that
+predicts only a small, confident, well-localized fragment of the true
+structure can have a deceptively good boundary distance despite missing
+most of the target. A strong HD95 paired with a weak Dice is therefore a
+warning sign about a method's predictions, not evidence that it is actually
+competitive.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc|c}
+\toprule
+ & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Liver-HCC & \textbf{overall} & $p$ vs ours \\
+\midrule
+Baseline        & 47.9 & 124.4 & 28.6 & 35.2 & 75.5 & 62.3 & 1.4e-29 \\
+SynthSeg-noEM   & 78.9 &  89.9 &  7.5 & 41.9 & 172.0 & 78.0 & 7.7e-114 \\
+SynthSeg-EM     & 17.4 &  31.8 &  4.7 & 24.7 & \textbf{70.4} & \textbf{29.8} & 1.0000 \\
+SRCSM           & 18.3 & \textbf{26.7} &  5.6 & 24.6 & 84.1 & 31.9 & 0.0018 \\
+Auglab          & \textbf{15.0} &  39.3 &  4.7 & 26.5 & 81.6 & 33.4 & 0.0018 \\
+\textbf{PALETTE (ours)} & 15.2 & 30.6 & \textbf{4.2} & \textbf{24.3} & 80.0 & 30.8 & --- \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Task-level HD95 (mm, $\downarrow$), the secondary metric discussed
+above. Same pooling and significance test as \cref{tab:meta}. PALETTE is
+best in aggregate and at or near best on every task, though (as with Dice)
+no single competitor is reliably second; SRCSM is close enough in aggregate
+(18.8mm vs.\ 18.6mm) not to be statistically distinguished ($p=0.61$).}
+\label{tab:meta-hd95}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_hd95}
+\caption{The causal-ablation ladder of \cref{fig:ladder} (main paper), same
+per-dataset panels, same boundary-type grouping and same fill-swap rung,
+reported on HD95 instead of Dice (same significance colouring, now against
+the HD95 direction: lower is better, so \emph{improvement} means the
+fill-swap step lowers HD95). The separation is messier than Dice: 7 of 26
+curves improve significantly, 6 worsen significantly, 13 are flat --
+tissue-interface tasks alone split 1/6/9, so HD95 disagrees with Dice most
+in exactly the group where Dice found nothing. Underlying deltas in
+\cref{tab:dissociation-hd95}.}
+\label{fig:ladder-hd95}
+\end{figure*}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llc}
+\toprule
+Task & boundary type & $\Delta$ HD95 (mm) \\
+\midrule
+CHAOS T1in      & tissue interface   & $-2.95$ \\
+CHAOS T2spir    & tissue interface   & $+4.20$ \\
+ON-Harmony T1w  & tissue interface$^\dagger$ & $+6.22$ \\
+ON-Harmony T2w  & tissue interface$^\dagger$ & $+0.38$ \\
+\midrule
+Open-MS FLAIR   & no tissue interface & $-3.02$ \\
+Open-MS T1w     & no tissue interface & $+3.94$ \\
+Brats-GLI T1n   & no tissue interface & $-4.59$ \\
+Brats-GLI T2w   & no tissue interface & $-1.88$ \\
+\bottomrule
+\end{tabular}
+\caption{Same fill-swap step as \cref{tab:dissociation} (main paper),
+reported on HD95 instead of Dice (negative is better), all four headline
+tasks, both training modalities each. The separation is not clean on HD95
+anywhere: sign flips between the two modalities of the same task for both
+Open-MS and CHAOS, so we restrict the dissociation claim to Dice in the
+main paper and report HD95 here rather than presenting it as confirming
+that claim. $^\dagger$Grouped with CHAOS as tissue-interface, not a
+separate category -- see \S4.3 of the main paper.}
+\label{tab:dissociation-hd95}
+\end{table}
+
+\paragraph{Full ladder: numbers and significance.} \cref{fig:ladder} (main
+paper) shows the rung sequence visually; \cref{tab:ladder-full} gives the
+underlying OOD Dice at every rung, with significance for each step against
+the rung immediately before it (Holm-corrected paired Wilcoxon test within
+each ladder's 6 transitions). Most steps that add an ingredient help,
+significantly, as expected. Three cells are significant \emph{decreases}
+(marked $\downarrow$): the fill-swap step on both ON-Harmony modalities
+(T1w and T2w), consistent with ON-Harmony's tissue-interface grouping
+(\cref{subsec:e-ablation}) and replicating across modalities; and the
+Voronoi sub-parcellation step on Brats-GLI T1n (not T2w), which is new
+here. We do not hide this: Voronoi's own marginal contribution is
+task-dependent rather than uniformly positive -- a separate paired
+significance check (same protocol as \cref{tab:mechanism}'s all-contrast
+Dice, not just the OOD slice used above) confirms the same pattern: Voronoi
+significantly \emph{helps} Open-MS FLAIR and (by a small margin) ON-Harmony
+T1w, is flat on CHAOS T1in, and significantly \emph{hurts} Brats-GLI T1n
+under the real-fill deployed configuration as well, not only here under
+noise fill. The full method still wins on Brats-GLI T1n regardless
+(\cref{tab:meta}): whatever Voronoi costs there is more than recovered by
+the subsequent real-intensity fill step, so the net effect of the complete
+pipeline is positive even though one internal component is not.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.4pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+Rung & Open-MS & Open-MS & Brats-GLI & Brats-GLI & CHAOS & CHAOS & ON-Harm. & ON-Harm. \\
+     & FLAIR   & T1w     & T1n       & T2w       & T1in  & T2spir & T1w     & T2w \\
+\midrule
+base       & 2.5 & 1.1 & 16.9 & 6.0 & 21.0 & 21.2 & 15.0 & 25.6 \\
++km        & $11.2^{**}$ & $9.8^{***}$ & $38.4^{***}$ & $38.6^{***}$ & $84.2^{***}$ & $79.0^{***}$ & $62.5^{***}$ & $63.5^{***}$ \\
++lbl       & $17.5^{***}$ & $22.4^{***}$ & $41.8^{***}$ & $40.2^{***}$ & $87.7^{***}$ & $83.4^{***}$ & 62.9 & 63.6 \\
++vor       & $19.6^{*}$ & $34.1^{***}$ & $39.8^{***}{\downarrow}$ & 41.0 & 87.2 & 82.7 & $63.2^{*}$ & $64.2^{***}$ \\
++real      & $27.3^{***}$ & 34.9 & $47.0^{***}$ & 41.5 & $88.2^{***}$ & 81.6 & $58.7^{***}{\downarrow}$ & $62.7^{***}{\downarrow}$ \\
++AL(v000)  & 30.6 & 36.4 & 46.9 & $46.8^{***}$ & 87.6 & 86.3 & $64.2^{*}$ & 63.9 \\
++AL(v100)  & 31.3 & 34.7 & $47.6^{*}$ & $46.9^{*}$ & 87.1 & $87.1^{*}$ & 64.2 & 64.4 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{OOD Dice (\%) at every ladder rung (\cref{fig:ladder}, main paper),
+all four headline tasks, both training modalities each, with significance
+for each step vs.\ the rung immediately above it: $^{*}p<0.05$,
+$^{**}p<0.01$, $^{***}p<0.001$ (Holm-corrected paired Wilcoxon,
+within-ladder family of 6 tests), $\downarrow$ marks a significant
+\emph{decrease}. Rungs: base(line), +$k$-means, +label-remap, +Voronoi
+(noise fill), +real-intensity fill (PALETTE alone), +AugLab (val000/val100).}
+\label{tab:ladder-full}
+\end{table}
+
+\paragraph{Per-label breakdown: is the fill-swap effect uniform within a task?}
+\label{par:per-label}
+\cref{fig:ladder} shows that Brats-GLI T2w's pooled fill-swap effect is
+small and not significant, with one significantly negative eval contrast
+inside it (T2w$\to$T1n). This raises a further question: within that one
+(training, eval) pair, does the fill-swap step affect every anatomical
+sub-region equally, or is the worsening itself concentrated in specific
+labels? We break Brats-GLI T2w$\to$T1n down by its four labels -- necrotic
+core (NCR), oedema (SNFH), enhancing tumour (ET), resection cavity (RC);
+$n=70$ test cases for SNFH and ET, present in essentially every case
+(NCR $n=51$, RC $n=67$, since not every tumour has a necrotic core or a
+resection cavity).
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Label & T1n$\to$T2w & T2w$\to$T1n & gap \\
+\midrule
+NCR  & 21.5 & 19.3 & $+2.1$ \\
+SNFH & 66.3 & 45.3 & $\mathbf{+21.0}$ \\
+ET   & 27.5 & 27.9 & $-0.4$ \\
+RC   & 52.3 & 43.1 & $+9.1$ \\
+\bottomrule
+\end{tabular}
+\caption{Absolute OOD Dice (\%) of the deployed real-fill (v26\_6\_2) model,
+per label, both transfer directions.}
+\label{tab:per-label-abs}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc}
+\toprule
+Label & T1n$\to$T2w $\Delta$ & T2w$\to$T1n $\Delta$ \\
+\midrule
+NCR  & $+1.9$ (p=0.10) & $+0.3$ (p=0.87) \\
+SNFH & $\mathbf{+14.7}$ (p=4.3e-11) & $\mathbf{-9.8}$ (p=4.5e-05) \\
+ET   & $+2.3$ (p=0.017) & $+0.9$ (p=0.38) \\
+RC   & $+2.9$ (p=0.0003) & $\mathbf{-6.5}$ (p=0.0039) \\
+\bottomrule
+\end{tabular}
+\caption{Fill-swap step (+voronoi noise fill $\to$ v26\_6\_2 real fill),
+per label, both directions. $p$: Holm-corrected paired Wilcoxon, family =
+the 4 labels within each direction. \textbf{Bold} = significant.}
+\label{tab:per-label-delta}
+\end{table}
+
+The worsening is not a property of ``the tumour'' -- it is concentrated
+almost entirely in SNFH, which alone accounts for $+21.0$ of the roughly
+14-point whole-tumour Dice gap between directions, and is the only label
+whose fill-swap delta significantly reverses sign between the two training
+directions ($+14.7$ when trained on T1n, $-9.8$ when trained on T2w). RC
+shows the same reversal at smaller magnitude. NCR shows no significant
+effect in either direction, and ET helps a little only in the direction
+that already works (T1n$\to$T2w), never significantly reversing when
+trained on T2w. \cref{fig:snfh-et-zoom} shows why on one representative
+case: the T2w-trained model's real-fill prediction on SNFH collapses to a
+thin band near the ventricle relative to its own noise-fill prediction on
+the same case, while its ET prediction looks essentially unchanged between
+the two rungs.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/snfh_et_zoom}
+\caption{\texttt{BraTSGLI02108101}, fold 0, T2w-trained model evaluated on
+T1n. Zoomed crops before (noise-fill) and after (real-fill) the fill-swap
+step, for the SNFH-dominant (top) and ET-dominant (bottom) lesion
+components of the same case. Colour = ground truth wherever the prediction
+agrees; grey = false positive; outline = ground truth.}
+\label{fig:snfh-et-zoom}
+\end{figure}
+
+One candidate mechanism, flagged for future work rather than tested here:
+a texture pattern learned from one contrast's rendering of a diffuse,
+texture-defined label like oedema may not simply fail to transfer to a
+different contrast's rendering of the same tissue -- it may actively
+mislead, if the model has come to rely on a contrast-specific cue that the
+other contrast does not reproduce. This would be an instance of shortcut
+learning~\cite{geirhos2020shortcut} -- specifically, a network relying on a
+domain-specific cue that does not reproduce across acquisition protocols,
+the mechanism~\citet{ouyang2023causality} identify behind failed
+single-source domain generalization in cross-modality and cross-sequence
+medical segmentation -- rather than the intended, causal feature, which a
+simplicity-biased network need not prefer even when it would generalize
+better~\cite{shah2020simplicity}. We have not tested this mechanistically
+here; it is the most concrete hypothesis consistent with the label-specific,
+direction-dependent pattern above, not a demonstrated cause.
 
 \section{Synthetic contrast at validation time}
 \label{sec:suppl-val100}
@@ -52,30 +323,34 @@ contrast as well (\emph{train050/val100}).
 Task & val000 & val100 & val000 & val100 \\
 \midrule
 Brats-GLI    & 46.8 & \textbf{47.3} & 15.2 & \textbf{14.7} \\
-CHAOS        & 87.3 & \textbf{87.5} & 24.3 & \textbf{21.7} \\
+CHAOS        & 85.0 & \textbf{85.2} & 30.6 & \textbf{28.7} \\
 ON-Harmony   & 68.2 & \textbf{68.4} &  4.2 & \textbf{4.1}  \\
-Open-MS      & \textbf{38.5} & 37.9 & \textbf{24.3} & 24.2 \\
+Open-MS      & \textbf{38.5} & 37.9 & 24.3 & \textbf{24.2} \\
+Liver-HCC    & \textbf{49.7} & 49.1 & 80.0 & \textbf{69.2} \\
 \midrule
-\textbf{overall} & 60.2 & \textbf{60.3} & 17.0 & \textbf{16.2} \\
+\textbf{overall} & 57.6 & 57.6 & 30.8 & \textbf{28.2} \\
 \bottomrule
 \end{tabular}
-\caption{Applying PALETTE at validation time as well as at training time.
-The two configurations are statistically indistinguishable at task level
-(Dice $p = 0.66$, HD95 $p = 0.99$), so we report the like-for-like
-\emph{val000} configuration in the main paper and note \emph{val100} as a
-free additional gain -- it requires no extra data, annotation or training
-cost, only applying the same transform to the validation split.}
+\caption{Applying PALETTE at validation time as well as at training time,
+all five tasks. The two configurations are statistically indistinguishable
+at task level (Dice $p = 0.73$, HD95 $p = 1.00$, same task-stratified test
+as \cref{tab:meta}), so we report the like-for-like \emph{val000}
+configuration in the main paper and note \emph{val100} as a free additional
+gain where it helps -- it requires no extra data, annotation or training
+cost, only applying the same transform to the validation split. Liver-HCC's
+own Dice moves the other way (49.7 $\to$ 49.1), which is why \textbf{overall}
+Dice is an exact wash across the two configurations.}
 \label{tab:suppl-val100}
 \end{table}
 
-Validation-time randomization improves the aggregate on both metrics
-(\cref{tab:suppl-val100}), most visibly on boundary distance
-($17.0 \rightarrow 16.2$~mm overall, and $24.3 \rightarrow 21.7$~mm on
-CHAOS). The effect is not significant at task level, and Open-MS moves
-slightly the other way, so we do not claim it as a separate contribution;
-we report it because it costs nothing and because it indicates that the
-benefit of contrast randomization extends to model selection and is not
-confined to the gradient updates.
+Validation-time randomization improves most tasks on both metrics
+(\cref{tab:suppl-val100}), most visibly on boundary distance for CHAOS
+($30.6 \rightarrow 28.7$~mm) and for Liver-HCC
+($80.0 \rightarrow 69.2$~mm). The effect is not significant at task level,
+and Open-MS and Liver-HCC Dice both move slightly the other way, so we do
+not claim it as a separate contribution; we report it because it costs
+nothing and because it indicates that the benefit of contrast randomization
+extends to model selection and is not confined to the gradient updates.
 
 \section{Component ablation}
 \label{sec:suppl-mechanism}

@@ -23,5 +23,35 @@ spleen, both kidneys), evaluated across the CHAOS MR contrasts and, as a
 cross-modality transfer, on held-out CT from AMOS~\cite{ji2022amos} and
 SLIVER07~\cite{heimann2009comparison}.
 
-Per-dataset subject counts, acquisition parameters and label definitions will be
-tabulated here in the camera-ready version.
+\paragraph{Liver-HCC} \cite{quinton2023atlas} --- hepatocellular carcinoma
+tumour segmentation on contrast-enhanced T1w (single modality, no
+in-house cross-contrast axis), transferred cross-dataset to
+LiverHccSeg~\cite{gross2023liverhccseg} (same contrast family, independent
+cohort/scanner) and to the HCC subset of
+LLD-MMRI~\cite{lou2025sdrformer}~(T2WI/DWI, masks produced with
+MedSAM2~\cite{ma2025medsam2}).
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc}
+\toprule
+Task & Train & Test \\
+\midrule
+CHAOS          & 16  & 24 \\
+ON-Harmony     & 84  & 8  \\
+Open-MS        & 22  & 8  \\
+Brats2024-GLI  & 630 & 70 \\
+Liver-HCC      & 48  & 12 \\
+\bottomrule
+\end{tabular}
+\caption{Per-task subject/case counts, pooled across the 3 folds used
+everywhere in this paper ($\pm 1$ between folds). ON-Harmony counts are scan
+sessions, not unique subjects, since its travelling-heads design scans some
+subjects at multiple sites. CHAOS test includes its own held-out CT split,
+separate from the AMOS/SLIVER07 cross-dataset transfer counted
+independently (external cohorts, not re-tabulated here). Liver-HCC test
+likewise excludes its two cross-dataset cohorts.}
+\label{tab:suppl-datasets}
+\end{table}

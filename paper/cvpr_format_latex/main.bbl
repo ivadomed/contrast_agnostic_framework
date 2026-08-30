@@ -1,26 +1,9 @@
-\begin{thebibliography}{38}
+\begin{thebibliography}{49}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
-
-\bibitem[fla(2022)]{flairectomy2022}
-{FLAIRectomy}: Resecting beyond the contrast margin for glioblastoma.
-\newblock \emph{Brain Sciences}, 12\penalty0 (5):\penalty0 544, 2022.
-\newblock histopathological tumour infiltration inside peritumoral FLAIR
-  abnormality, beyond the enhancing margin.
-
-\bibitem[gli(2025)]{gliomamargins2025}
-Imaging strategies for delineating glioma margins: Aiming at precise therapy.
-\newblock \emph{Meta-Radiology}, 2025.
-\newblock "gliomas do not exhibit a clear boundary between malignant and
-  healthy tissue"; infiltration several cm into normal-appearing parenchyma.
-
-\bibitem[Badea and Popa(2024)]{badea2024generalizable}
-Liviu Badea and Maria Popa.
-\newblock Toward generalizable multiple sclerosis lesion segmentation models.
-\newblock \emph{arXiv preprint arXiv:2410.19623}, 2024.
 
 \bibitem[Bao et~al.(2024)Bao, Zhou, Li, and Luo]{bao2024structaware}
 Jie Bao, Zhixin Zhou, Wen~Jung Li, and Rui Luo.
@@ -77,12 +60,56 @@ Bruce Fischl.
 \newblock {FreeSurfer}.
 \newblock \emph{NeuroImage}, 62\penalty0 (2):\penalty0 774--781, 2012.
 
+\bibitem[Geirhos et~al.(2020)Geirhos, Jacobsen, Michaelis, Zemel, Brendel,
+  Bethge, and Wichmann]{geirhos2020shortcut}
+Robert Geirhos, J{\"o}rn-Henrik Jacobsen, Claudio Michaelis, Richard Zemel,
+  Wieland Brendel, Matthias Bethge, and Felix~A. Wichmann.
+\newblock Shortcut learning in deep neural networks.
+\newblock \emph{Nature Machine Intelligence}, 2\penalty0 (11):\penalty0
+  665--673, 2020.
+
+\bibitem[Gross et~al.(2023)Gross, Arora, Huber, K{\"u}c{\"u}kkaya, and
+  Onofrey]{gross2023liverhccseg}
+Moritz Gross, Sandeep Arora, Steffen Huber, Ahmet~S. K{\"u}c{\"u}kkaya, and
+  John~A. Onofrey.
+\newblock {LiverHccSeg}: A publicly available multiphasic {MRI} dataset with
+  liver and {HCC} tumor segmentations and inter-rater agreement analysis.
+\newblock \emph{Data in Brief}, 51:\penalty0 109662, 2023.
+
+\bibitem[Guan et~al.(2022)Guan, Chen, Wei, Heidari, Hu, Yang, Zheng, Zhou,
+  Chen, and Chen]{guan2022texture}
+Qian Guan, Yuqing Chen, Zhun Wei, Ali~Asghar Heidari, Huiling Hu, Xiao-Hong
+  Yang, Jiao Zheng, Qiang Zhou, Huiling Chen, and Feng Chen.
+\newblock Medical image augmentation for lesion detection using a
+  texture-constrained multichannel progressive {GAN}.
+\newblock \emph{Computers in Biology and Medicine}, 145:\penalty0 105444, 2022.
+\newblock progressive GAN augmentation with an explicit texture-discrimination
+  loss, added because standard GAN augmentation lost textural fidelity and hurt
+  lesion detection.
+
 \bibitem[Haber and Modersitzki(2006)]{haber2006ngf}
 Eldad Haber and Jan Modersitzki.
 \newblock Intensity gradient based registration and fusion of multi-modal
   images.
 \newblock In \emph{Medical Image Computing and Computer-Assisted Intervention
   (MICCAI)}, pages 726--733, 2006.
+
+\bibitem[Haddad et~al.(2022)Haddad, Young, Morshed, and
+  Berger]{flairectomy2022}
+Alexander~F. Haddad, Jacob~S. Young, Ramin~A. Morshed, and Mitchel~S. Berger.
+\newblock {FLAIRectomy}: Resecting beyond the contrast margin for glioblastoma.
+\newblock \emph{Brain Sciences}, 12\penalty0 (5):\penalty0 544, 2022.
+\newblock histopathological tumour infiltration inside peritumoral FLAIR
+  abnormality, beyond the enhancing margin.
+
+\bibitem[Haralick et~al.(1973)Haralick, Shanmugam, and
+  Dinstein]{haralick1973texture}
+Robert~M. Haralick, K. Shanmugam, and Its'hak Dinstein.
+\newblock Textural features for image classification.
+\newblock \emph{IEEE Transactions on Systems, Man, and Cybernetics},
+  SMC-3\penalty0 (6):\penalty0 610--621, 1973.
+\newblock foundational GLCM paper: second-order gray-level co-occurrence
+  statistics carry discriminative content beyond intensity.
 
 \bibitem[Heimann et~al.(2009)Heimann, Van~Ginneken, Styner, Arzhaeva, Aurich,
   Bauer, Beck, Becker, Beichel, Bekes, et~al.]{heimann2009comparison}
@@ -117,6 +144,18 @@ Yuanfeng Ji, Haotian Bai, Chongjian Ge, Jie Yang, Ye Zhu, Ruimao Zhang, Zhen
 \newblock In \emph{Advances in Neural Information Processing Systems}, pages
   36722--36732, 2022.
 
+\bibitem[Kang et~al.(2023)Kang, Chikontwe, Won, Luna, and
+  Park]{kang2023structurepreserving}
+Myeongkyun Kang, Philip Chikontwe, Dongkyu Won, Miguel Luna, and Sang~Hyun
+  Park.
+\newblock Structure-preserving image translation for multi-source medical image
+  domain adaptation.
+\newblock \emph{Pattern Recognition}, 144:\penalty0 109840, 2023.
+\newblock explicit structure-vs-texture disentanglement in cross-domain
+  translation via a texture co-occurrence loss; motivated by naive translation
+  distorting fine texture and degrading downstream segmentation -- closest
+  prior precedent for texture preservation as a design principle.
+
 \bibitem[Kavur et~al.(2021)Kavur, Gezer, Barı{\c{s}}, Aslan, Conze, Groza,
   Pham, Chatterjee, Ernst, {\"O}zkan, et~al.]{kavur2021chaos}
 A.~Emre Kavur, N.~Sinem Gezer, Mustafa Barı{\c{s}}, Sinem Aslan, Pierre-Henri
@@ -126,6 +165,28 @@ A.~Emre Kavur, N.~Sinem Gezer, Mustafa Barı{\c{s}}, Sinem Aslan, Pierre-Henri
   segmentation.
 \newblock \emph{Medical Image Analysis}, 69:\penalty0 101950, 2021.
 
+\bibitem[Kruggel et~al.(2008)Kruggel, Paul, and Gertz]{kruggel2008texture}
+Frithjof Kruggel, Jasmine~S. Paul, and Hermann-Josef Gertz.
+\newblock Texture-based segmentation of diffuse lesions of the brain's white
+  matter.
+\newblock \emph{NeuroImage}, 39\penalty0 (3):\penalty0 987--996, 2008.
+\newblock motivates texture-based over boundary/edge-based segmentation because
+  diffuse WM lesions are inhomogeneous, unsharp and faint -- implicit precedent
+  for the texture-defined vs boundary-defined distinction.
+
+\bibitem[Lambin et~al.(2012)Lambin, Rios-Velazquez, Leijenaar, Carvalho, van
+  Stiphout, Granton, Zegers, Gillies, Boellard, Dekker, and
+  Aerts]{lambin2012radiomics}
+Philippe Lambin, Emmanuel Rios-Velazquez, Ralph Leijenaar, Sara Carvalho, Ruben
+  G. P.~J. van Stiphout, Patrick Granton, Catharina M.~L. Zegers, Robert
+  Gillies, Ronald Boellard, Andre Dekker, and Hugo J. W.~L. Aerts.
+\newblock Radiomics: Extracting more information from medical images using
+  advanced feature analysis.
+\newblock \emph{European Journal of Cancer}, 48\penalty0 (4):\penalty0
+  441--446, 2012.
+\newblock founding radiomics position paper; quantitative texture features
+  carry prognostic signal across CT/MRI/PET and cancer types.
+
 \bibitem[Laso et~al.(2023)Laso, Cerri, Sorby-Adams, Guo, Mateen, Goebl, Wu,
   Liu, Li, Young, Billot, Puonti, et~al.]{laso2024wmhsynthseg}
 Pablo Laso, Stefano Cerri, Annabel Sorby-Adams, Jennifer Guo, Farrah Mateen,
@@ -134,18 +195,6 @@ Pablo Laso, Stefano Cerri, Annabel Sorby-Adams, Jennifer Guo, Farrah Mateen,
 \newblock Quantifying white matter hyperintensity and brain volumes in
   heterogeneous clinical and low-field portable {MRI}.
 \newblock \emph{arXiv preprint arXiv:2312.05119}, 2023.
-
-\bibitem[Lee et~al.(2007)Lee, Kim, Lee, Seo, Won, Shin, and
-  Shin]{lee2007gaclivers}
-Junghoon Lee, Namkug Kim, Ho Lee, Joon~Beom Seo, Hyung~Jin Won, Yong~Moon Shin,
-  and Yeong~Gil Shin.
-\newblock Computerized segmentation of liver in hepatic {CT} and {MRI} by means
-  of level-set geodesic active contouring.
-\newblock \emph{Annual International Conference of the IEEE Engineering in
-  Medicine and Biology Society}, 2007.
-\newblock PMC4283827; edge-driven level-set/geodesic-active-contour
-  segmentation of liver -- cited as evidence that a gradient ridge exists at
-  organ boundaries.
 
 \bibitem[Lesjak et~al.(2018)Lesjak, Galimzianova, Koren, Luka\v{c},
   Van~Leemput, and \v{S}piclin]{lesjak2018openms}
@@ -174,6 +223,24 @@ Quande Liu, Cheng Chen, Jing Qin, Qi Dou, and Pheng-Ann Heng.
 \newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
   and Pattern Recognition (CVPR)}, 2021.
 
+\bibitem[Lou et~al.(2025)Lou, Ying, Liu, Zhou, Zhang, and Yu]{lou2025sdrformer}
+Meng Lou, Hanning Ying, Xiaoqing Liu, Hong-Yu Zhou, Yuqin Zhang, and Yizhou Yu.
+\newblock {SDR-Former}: A siamese dual-resolution transformer for liver lesion
+  classification using {3D} multi-phase imaging.
+\newblock \emph{Neural Networks}, 185:\penalty0 107228, 2025.
+\newblock introduces and publicly releases the LLD-MMRI dataset (underpins the
+  MICCAI LLD-MMRI Challenge); our lld-mmri-hcc cross-dataset source is its HCC
+  subset.
+
+\bibitem[Ma et~al.(2025)Ma, Yang, Kim, Chen, Baharoon, Fallahpour, Asakereh,
+  Lyu, and Wang]{ma2025medsam2}
+Jun Ma, Zongxin Yang, Sumin Kim, Bihui Chen, Mohammed Baharoon, Adibvafa
+  Fallahpour, Reza Asakereh, Hongwei Lyu, and Bo Wang.
+\newblock {MedSAM2}: Segment anything in {3D} medical images and videos.
+\newblock \emph{arXiv preprint arXiv:2504.03600}, 2025.
+\newblock tool used to produce the semi-automated lesion masks in our
+  lld-mmri-hcc cross-dataset source.
+
 \bibitem[Molinier et~al.(2026)Molinier, M\"{o}ller, Dagonneau, Curto-Vilalta,
   Graf, Atad, Rueckert, Kirschke, and Cohen-Adad]{molinier2026auglab}
 Nathan Molinier, Hendrik M\"{o}ller, Thomas Dagonneau, Anna Curto-Vilalta,
@@ -190,14 +257,26 @@ Ju-Hyeon Nam, Nur~Suriza Syazwany, Su~Jung Kim, and Sang-Chul Lee.
 \newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
   and Pattern Recognition (CVPR)}, 2024.
 
-\bibitem[Ouyang et~al.(2023)Ouyang, Chen, Li, Li, Qin, Bai, and
+\bibitem[Ouyang et~al.(2023{\natexlab{a}})Ouyang, Chen, Li, Li, Qin, Bai, and
   Rueckert]{ouyang2022gin}
 Cheng Ouyang, Chen Chen, Surui Li, Zeju Li, Chen Qin, Wenjia Bai, and Daniel
   Rueckert.
 \newblock Causality-inspired single-source domain generalization for medical
   image segmentation.
 \newblock \emph{IEEE Trans. Med. Imaging}, 42\penalty0 (4):\penalty0
-  1095--1106, 2023.
+  1095--1106, 2023{\natexlab{a}}.
+
+\bibitem[Ouyang et~al.(2023{\natexlab{b}})Ouyang, Chen, Li, Li, Qin, Bai, and
+  Rueckert]{ouyang2023causality}
+Cheng Ouyang, Chen Chen, Surui Li, Zeju Li, Chen Qin, Wenjia Bai, and Daniel
+  Rueckert.
+\newblock Causality-inspired single-source domain generalization for medical
+  image segmentation.
+\newblock \emph{IEEE Transactions on Medical Imaging}, 42\penalty0
+  (4):\penalty0 1095--1106, 2023{\natexlab{b}}.
+\newblock validated on cross-modality (CT-MRI) abdominal and cross-sequence
+  cardiac MRI segmentation; argues domain-specific spurious cues break on
+  unseen domains, directly relevant to our contrast-specific-cue account.
 
 \bibitem[Qiao et~al.(2024)Qiao, Wang, Qu, Su, Jiang, and Guo]{qiao2024ras}
 Qiang Qiao, Wenyu Wang, Meixia Qu, Kun Su, Bin Jiang, and Qiang Guo.
@@ -205,6 +284,16 @@ Qiang Qiao, Wenyu Wang, Meixia Qu, Kun Su, Bin Jiang, and Qiang Guo.
   with random amplitude spectrum synthesis.
 \newblock In \emph{Medical Image Computing and Computer Assisted Intervention
   (MICCAI)}, 2024.
+
+\bibitem[Quinton et~al.(2023)Quinton, Popoff, Presles, Leclerc, Meriaudeau,
+  Nodari, Lopez, Pellegrinelli, Chevallier, Ginhac, Vrigneaud, and
+  Alberini]{quinton2023atlas}
+F{\'e}lix Quinton, Romain Popoff, Beno{\^i}t Presles, Sarah Leclerc, Fabrice
+  Meriaudeau, Guillaume Nodari, Olivier Lopez, Julie Pellegrinelli, Olivier
+  Chevallier, Dominique Ginhac, Jean-Marc Vrigneaud, and Jean-Louis Alberini.
+\newblock A tumour and liver automatic segmentation ({ATLAS}) dataset on
+  contrast-enhanced magnetic resonance imaging for hepatocellular carcinoma.
+\newblock \emph{Data}, 8\penalty0 (5):\penalty0 79, 2023.
 
 \bibitem[Sengupta et~al.(2025)Sengupta, Chakrabarty, Ravi, Avinash, and
   Soni]{sengupta2025synthfm}
@@ -214,6 +303,13 @@ Sourya Sengupta, Satrajit Chakrabarty, Keerthi~Sravan Ravi, Gopal Avinash, and
   image segmentation without real medical data.
 \newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
   and Pattern Recognition (CVPR)}, 2025.
+
+\bibitem[Shah et~al.(2020)Shah, Tamuly, Raghunathan, Jain, and
+  Netrapalli]{shah2020simplicity}
+Harshay Shah, Kaustav Tamuly, Aditi Raghunathan, Prateek Jain, and Praneeth
+  Netrapalli.
+\newblock The pitfalls of simplicity bias in neural networks.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2020.
 
 \bibitem[Shin et~al.(2023)Shin, Kim, Kim, Jun, Eo, and Hwang]{shin2023sdcuda}
 Hyungseob Shin, Hyeongyu Kim, Sewon Kim, Yohan Jun, Taejoon Eo, and Dosik
@@ -229,6 +325,31 @@ Zixian Su, Kai Yao, Xi Yang, Qiufeng Wang, Jie Sun, and Kaizhu Huang.
   in medical image segmentation.
 \newblock In \emph{Proceedings of the AAAI Conference on Artificial
   Intelligence}, 2023.
+
+\bibitem[Suzuki et~al.(2013)Suzuki, Huynh, Liu, Calabrese, Zhou, Oto, and
+  Hori]{lee2007gaclivers}
+Kenji Suzuki, Hieu~Trung Huynh, Yipeng Liu, Dominic Calabrese, Karen Zhou,
+  Aytekin Oto, and Masatoshi Hori.
+\newblock Computerized segmentation of liver in hepatic {CT} and {MRI} by means
+  of level-set geodesic active contouring.
+\newblock \emph{Annual International Conference of the IEEE Engineering in
+  Medicine and Biology Society (EMBC)}, 2013:\penalty0 2984--2987, 2013.
+\newblock PMC4283827; edge-driven level-set/geodesic-active-contour
+  segmentation of liver -- cited as evidence that a gradient ridge exists at
+  organ boundaries. Original entry mis-cited a different (2007,
+  non-matching-title) author list under this PMC id; corrected 2026-08-03 after
+  verification.
+
+\bibitem[Tang et~al.(2025)Tang, Chen, Li, Li, and Li]{gliomamargins2025}
+Jun Tang, Liangpeng Chen, Ziyang Li, Cong Li, and Deling Li.
+\newblock Imaging strategies for delineating glioma margins: Aiming at precise
+  therapy.
+\newblock \emph{Fundamental Research}, 6\penalty0 (4):\penalty0 2644--2653,
+  2025.
+\newblock "gliomas do not exhibit a clear boundary between malignant and
+  healthy tissue"; infiltration several cm into normal-appearing parenchyma.
+  Journal corrected 2026-08-03 (was mis-attributed to "Meta-Radiology", a
+  different, unrelated journal).
 
 \bibitem[Thaler et~al.(2025)Thaler, Urschler, Kozinski, Gsell, Plank, and
   Stern]{thaler2025semrandconv}
@@ -276,7 +397,7 @@ Zhenlin Xu, Deyi Liu, Junlin Yang, Colin Raffel, and Marc Niethammer.
   (ICLR)}, 2021.
 
 \bibitem[Zhang et~al.(2008)Zhang, Tong, Wang, and Li]{zhang2008mstexture}
-Jeremy Zhang, Luyu Tong, Lin Wang, and Ning Li.
+Jing Zhang, Longzheng Tong, Lei Wang, and Ning Li.
 \newblock Texture analysis of multiple sclerosis: a comparative study.
 \newblock \emph{Magnetic Resonance Imaging}, 26\penalty0 (8):\penalty0
   1160--1166, 2008.

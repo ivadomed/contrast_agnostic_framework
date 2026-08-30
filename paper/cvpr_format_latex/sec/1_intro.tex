@@ -63,23 +63,28 @@ We test the mechanism claim directly rather than inferring it from aggregate
 scores. Holding the $k$-means/Voronoi partition and the per-region statistics
 fixed, we replace only the real-intensity affine remap with label-style noise
 fill, matching SynthSeg's resampling inside PALETTE's own geometry. The swap
-costs $7.7$ and $7.2$ Dice on the two tasks whose targets have no tissue
-interface, against $+1.1$ and $-1.1$ on the two that do --- a separation by
-target type, not a uniform offset. An independent gradient-orientation
-measurement confirms that texture is what changes at that exact step.
+costs $7.7$ and $7.2$ Dice on tasks whose targets have no tissue interface,
+against $+1.1$ and $-1.1$ on organ tasks that do --- a separation by target
+type, not a uniform offset --- and $-4.5$/$-1.4$ on a third, far more
+densely-labelled interface task whose regions turn out, on inspection, to
+be tissue-interface targets too, just packed across near-total brain
+volume (\S\ref{subsec:e-ablation}). An independent gradient-orientation
+measurement confirms that texture is what changes at the fill-swap step.
 
 Empirically, training a single nnU-Net~\cite{isensee2021nnunet} configuration
 --- fixed across datasets, with only the epoch budget varying --- we evaluate
-cross-contrast and cross-modality transfer on four segmentation tasks: healthy
-brain, MS lesion, brain tumour, and abdominal organ. We compare against a
-no-augmentation baseline, both variants of SynthSeg (the original
-dense-label-driven variant, and an EM variant with no public implementation
-that we re-implement), SRCSM~\cite{thaler2025semrandconv}, and
-Auglab~\cite{molinier2026auglab}, a published augmentation pipeline designed
-for cross-modality training and the strongest competitor. PALETTE improves
-significantly over every competing method on both Dice and boundary distance at
-the task level. No competitor is reliably second: the runner-up changes
-identity across settings, so PALETTE is the only method at or near the top
+cross-contrast, cross-modality, and cross-dataset transfer on five
+segmentation tasks: healthy brain, MS lesion, brain tumour, abdominal organ,
+and liver tumour. We compare against a no-augmentation baseline, both
+variants of SynthSeg (the original dense-label-driven variant, and an EM
+variant with no public implementation that we re-implement),
+SRCSM~\cite{thaler2025semrandconv}, and Auglab~\cite{molinier2026auglab}, a
+published augmentation pipeline designed for cross-modality training and
+the strongest competitor. PALETTE improves significantly over every
+competing method on Dice at the task level, and remains at or near the best
+on boundary distance without always being the outright aggregate winner
+there. No competitor is reliably second: the runner-up changes identity
+across settings, so PALETTE is the only method at or near the top
 throughout.
 
 In summary, we make the following contributions:
@@ -91,15 +96,19 @@ In summary, we make the following contributions:
     dissociation rather than asserting it post hoc.
     \item \textbf{A causal ablation isolating texture.} Holding the intensity
     and spatial partition and the per-region statistics fixed and swapping only
-    the real-intensity remap for label-style noise fill separates the four tasks
-    by target type. An independent gradient-orientation measurement confirms
-    that texture, not the partitioning scheme, is what changes at that step.
+    the real-intensity remap for label-style noise fill separates our headline
+    tasks by target type, a separation a third, far more densely-labelled
+    interface task also follows, just with a larger negative swing. An
+    independent gradient-orientation measurement confirms that texture, not
+    the partitioning scheme, is what changes at that step.
     \item \textbf{PALETTE}, the single-source contrast augmentation that
     exploits this, requiring no dense anatomical label map and using only the
     sparse task labels a segmentation dataset already provides.
-    \item \textbf{Breadth evidence.} Across cross-contrast and cross-modality
-    transfer on healthy-brain, MS-lesion, brain-tumour and abdominal-organ
-    segmentation, with one configuration reused across datasets, PALETTE
-    improves significantly over all five competing methods on both Dice and
-    boundary distance.
+    \item \textbf{Breadth evidence.} Across cross-contrast, cross-modality and
+    cross-dataset transfer on healthy-brain, MS-lesion, brain-tumour,
+    abdominal-organ, and liver-tumour segmentation, with one configuration
+    reused across datasets, PALETTE attains the best Dice on every task and
+    improves significantly over all five competing methods on Dice, remaining
+    at or near the best on boundary distance without always being the
+    outright aggregate winner there.
 \end{itemize}

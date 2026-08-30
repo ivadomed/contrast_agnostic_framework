@@ -1,20 +1,6 @@
 \section{Discussion and Limitations}
 \label{sec:discussion}
 
-\paragraph{Consistency, not margin, is the benchmark claim.} No competing
-method is reliably second-best. Across the eight source-modality settings the
-runner-up changes identity -- Auglab~\cite{molinier2026auglab} on most,
-SynthSeg-EM on on-harmony T2w and on boundary distance for CHAOS T2spir, and
-SRCSM on open-ms FLAIR and for boundary distance on CHAOS T1in. PALETTE is the
-only method at or near the top of every setting, and at the task level it
-improves significantly over all five competitors on both Dice and boundary
-distance (\cref{tab:meta}). Where a per-setting margin is not significant the
-correct reading is equivalence on that task rather than a shortfall: the test
-sets here are large, so these comparisons are not underpowered. The claim we
-make is therefore \emph{equivalent-or-better everywhere, and better on
-aggregate}, which is a stronger property for a plug-in augmentation than a
-large win on any single benchmark.
-
 \paragraph{The causal ablation isolates a mechanism, not a full explanation.}
 The noise-fill comparison in \cref{subsec:e-ablation} shows that texture
 preservation, specifically, drives the advantage on no-tissue-interface
@@ -23,19 +9,6 @@ observed on tissue-interface structures, which likely stem from the wider
 space of region-to-region contrast relationships (including the sign
 inversions in \cref{eq:affine}) that no single real acquisition protocol
 supplies. Disentangling these two effects further is left to future work.
-
-\paragraph{SynthSeg-noEM's collapse on sparse-label tasks is expected.} The
-large gap between SynthSeg-noEM and the other methods on Brats2024-GLI and
-Open-MS (\cref{tab:meta}) is not an implementation artifact but a direct
-consequence of what SynthSeg-noEM requires. It generates images by
-resampling intensities from a \emph{dense} anatomical label map covering the
-whole volume; on sparse-label segmentation tasks --- a single glioma or a
-handful of MS lesions floating in an otherwise unlabelled brain --- there is
-no such dense map, so the generated images carry almost no anatomical
-structure and the network cannot learn. SynthSeg-noEM is therefore expected
-to be competitive only where dense label maps are meaningful (the brain-MRI
-settings) and to collapse elsewhere; this is a property of the method's
-input requirements, not a caveat about our re-implementation.
 
 \paragraph{Why the dissociation follows from the anatomy.} Preserving real
 intensity structure matters where the target is defined by tissue
@@ -52,7 +25,15 @@ inferred from appearance rather than followed along an edge. MS lesions are
 likewise defined by tissue signal characteristics rather than an anatomical
 border~\cite{zhang2008mstexture}. This account is an interpretation of the
 ablation, not an independent proof of it; the causal evidence is the
-intervention in \cref{subsec:e-ablation}.
+intervention in \cref{subsec:e-ablation}. It also extends to the ON-Harmony
+result once its actual labels are examined (\cref{subsec:e-ablation}): its
+31 regions -- ventricles, cortex, white matter, deep grey nuclei -- are
+bounded by genuine tissue-type transitions throughout, so despite first
+appearances it groups with the organ tasks rather than the no-interface
+ones. The larger negative magnitude there, compared to CHAOS's near-null
+one, is plausibly a density effect -- near-total brain volume relabelled at
+once, rather than a handful of organs -- which we leave to a dedicated
+follow-up with a second densely-labelled task.
 
 \paragraph{The label step needs only the annotation training already
 assumes.} PALETTE's one label-consuming step uses whatever segmentation labels
@@ -79,17 +60,23 @@ of the augmentation: it matters where the target is defined by tissue
 appearance, and not where it is defined by an anatomical interface. A
 controlled intervention -- holding the partition and per-region statistics
 fixed and swapping only label-style noise fill for a real-intensity remap --
-separates four tasks cleanly along exactly that line, worth $+7.7$ and $+7.2$
-Dice on the two no-tissue-interface tasks and nothing ($+1.1$, $-1.1$) on the
-two tissue-interface tasks. PALETTE, the single-source
+separates our no-tissue-interface and tissue-interface tasks along exactly
+that line, worth $+7.7$ and $+7.2$ Dice on the former and nothing ($+1.1$,
+$-1.1$) on the latter -- a pattern a third, far more densely-labelled
+interface task (healthy-brain) also follows, just with a larger negative
+swing ($-4.5$, $-1.4$) plausibly reflecting how much more of the volume is
+relabelled at once (\cref{subsec:e-ablation}). PALETTE, the single-source
 augmentation built on this observation, partitions the foreground by
 unsupervised $k$-means and a Voronoi sub-parcellation and applies a signed
 affine remap of the real intensities within each sub-region, requiring
-neither a dense anatomical label map nor any target-domain data. Across eight
-cross-contrast and cross-modality settings spanning abdominal, brain and
-brain-tumor imaging, a single nnU-Net configuration trained with PALETTE
-attains the best Dice in every setting and improves significantly over all
-five competing methods on both Dice and boundary distance. We regard the
+neither a dense anatomical label map nor any target-domain data. Across
+eight cross-contrast and cross-modality settings plus a fifth,
+single-modality liver-tumour task, and cross-dataset external test sets,
+spanning abdominal, brain, brain-tumor, and liver imaging, a single nnU-Net
+configuration trained with PALETTE attains the best Dice in every task and
+improves significantly over all five competing methods on Dice, remaining
+at or near the best on boundary distance without always being the outright
+aggregate winner there. We regard the
 task-level account as the more durable contribution: it predicts in advance
 where a texture-preserving augmentation will and will not pay off, and that
 prediction is testable on any new task.

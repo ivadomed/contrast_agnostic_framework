@@ -20,10 +20,17 @@ existing intensities rather than replacing them leaves edges, gradients and
 partial-volume detail largely intact; only the contrast relationships between
 regions are randomized. A controlled ablation isolates this: holding the
 partition and per-region statistics fixed and swapping only the real-intensity
-remap for label-style noise fill costs $7.7$ and $7.2$ Dice on the two tasks
-with no tissue interface, against $+1.1$ and $-1.1$ on the two with one.
-Across cross-contrast and cross-modality transfer on healthy-brain, MS-lesion,
-brain-tumour and abdominal-organ segmentation, one nnU-Net configuration
-trained with PALETTE improves significantly over all five competing methods, on
-both Dice and boundary distance.
+remap for label-style noise fill costs $7.7$ and $7.2$ Dice on tasks with no
+tissue interface, against $+1.1$ and $-1.1$ on organ tasks with one, and
+$-4.5$ and $-1.4$ on a third, far more densely-labelled interface task
+(31-region healthy-brain parcellation) whose regions are, on inspection,
+tissue-interface targets too -- negative rather than merely small,
+plausibly because so much more of the volume is relabelled at once, but
+never a significant gain either way.
+Across cross-contrast, cross-modality and cross-dataset transfer on
+healthy-brain, MS-lesion, brain-tumour, abdominal-organ, and liver-tumour
+segmentation, one nnU-Net configuration trained with PALETTE attains the
+best Dice on every task and improves significantly over all five competing
+methods on Dice, remaining at or near the best on boundary distance without
+being the outright aggregate winner there.
 \end{abstract}

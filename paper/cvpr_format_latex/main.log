@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021 Gentoo Linux) (preloaded format=pdflatex 2023.8.23)  3 AUG 2026 15:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021 Gentoo Linux) (preloaded format=pdflatex 2023.8.23)  30 AUG 2026 14:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -298,6 +298,14 @@ Package: enumitem 2019/06/20 v3.9 Customized lists
 \enitdp@description=\count298
 )) (./preamble.tex)
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
+tex/multirow/multirow.sty
+Package: multirow 2021/03/15 v2.8 Span multiple rows of a table
+\multirow@colwidth=\skip55
+\multirow@cntb=\count299
+\multirow@dima=\skip56
+\bigstrutjot=\dimen179
+)
+(/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/hyperref/hyperref.sty
 Package: hyperref 2021-02-27 v7.00k Hypertext links for LaTeX
 
@@ -350,9 +358,9 @@ Package: auxhook 2019-12-17 v1.6 Hooks for auxiliary files (HO)
 tex/kvoptions/kvoptions.sty
 Package: kvoptions 2020-10-07 v3.14 Key value format for package options (HO)
 )
-\@linkdim=\dimen179
-\Hy@linkcounter=\count299
-\Hy@pagecounter=\count300
+\@linkdim=\dimen180
+\Hy@linkcounter=\count300
+\Hy@pagecounter=\count301
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/hyperref/pd1enc.def
@@ -373,7 +381,7 @@ Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 neric/etexcmds/etexcmds.sty
 Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
 )
-\Hy@SavedSpaceFactor=\count301
+\Hy@SavedSpaceFactor=\count302
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/hyperref/puenc.def
@@ -417,17 +425,17 @@ Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 86.
 ))
-\c@Hy@tempcnt=\count302
+\c@Hy@tempcnt=\count303
 LaTeX Info: Redefining \url on input line 4804.
-\XeTeXLinkMargin=\dimen180
+\XeTeXLinkMargin=\dimen181
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/ge
 neric/bitset/bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
 )
-\Fld@menulength=\count303
-\Field@Width=\dimen181
-\Fld@charsize=\dimen182
+\Fld@menulength=\count304
+\Field@Width=\dimen182
+\Fld@charsize=\dimen183
 Package hyperref Info: Hyper figures OFF on input line 6075.
 Package hyperref Info: Link nesting OFF on input line 6080.
 Package hyperref Info: Hyper index ON on input line 6083.
@@ -444,18 +452,18 @@ Package: atbegshi-ltx 2020/08/17 v1.0a Emulation of the original atbegshi packa
 ge
 with kernel methods
 )
-\Hy@abspage=\count304
-\c@Item=\count305
-\c@Hfootnote=\count306
+\Hy@abspage=\count305
+\c@Item=\count306
+\c@Hfootnote=\count307
 )
 Package hyperref Info: Driver (autodetected): hpdftex.
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/hyperref/hpdftex.def
 File: hpdftex.def 2021-02-27 v7.00k Hyperref driver for pdfTeX
-\Fld@listcount=\count307
-\c@bookmark@seq@number=\count308
-\Hy@SectionHShift=\skip55
+\Fld@listcount=\count308
+\c@bookmark@seq@number=\count309
+\Hy@SectionHShift=\skip57
 )
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/cleveref/cleveref.sty
@@ -486,7 +494,7 @@ File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2021-03-18 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count309
+\l__color_backend_stack_int=\count310
 \l__pdf_internal_box=\box53
 ) (./main.aux)
 \openout1 = `main.aux'.
@@ -513,16 +521,16 @@ LaTeX Font Info:    ... okay on input line 48.
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/co
 ntext/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count310
-\scratchdimen=\dimen183
+\scratchcounter=\count311
+\scratchdimen=\dimen184
 \scratchbox=\box54
-\nofMPsegments=\count311
-\nofMParguments=\count312
+\nofMPsegments=\count312
+\nofMParguments=\count313
 \everyMPshowfont=\toks31
-\MPscratchCnt=\count313
-\MPscratchDim=\dimen184
-\MPnumerator=\count314
-\makeMPintoPDFobject=\count315
+\MPscratchCnt=\count314
+\MPscratchDim=\dimen185
+\MPnumerator=\count315
+\makeMPintoPDFobject=\count316
 \everyMPtoPDFconversion=\toks32
 )
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
@@ -563,7 +571,7 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 neric/gettitlestring/gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count316
+\c@section@level=\count317
 )
 LaTeX Info: Redefining \ref on input line 48.
 LaTeX Info: Redefining \pageref on input line 48.
@@ -587,8 +595,8 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 50.
 tex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) (./sec/0_abstract.tex) (./sec/1_intro.tex
-LaTeX Font Info:    Trying to load font information for OT1+phv on input line 4
-8.
+LaTeX Font Info:    Trying to load font information for OT1+phv on input line 3
+5.
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/psnfss/ot1phv.fd
@@ -598,86 +606,185 @@ File: ot1phv.fd 2020/03/25 scalable font definitions for OT1/phv.
 
 
 ]
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 8
-7.
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 7
+1.
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )) (./sec/2_related_work.tex [2]) (./sec/3_method.tex
 [3]
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 9
-0.
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 8
+3.
 
 (/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/tex/la
 tex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
-)
-<figures/palette_method_figure.png, id=200, 852.786pt x 366.168pt>
-File: figures/palette_method_figure.png Graphic file (type png)
-<use figures/palette_method_figure.png>
-Package pdftex.def Info: figures/palette_method_figure.png  used on input line 
-106.
-(pdftex.def)             Requested size: 496.85625pt x 213.3386pt.
-) (./sec/4_experiments.tex [4] [5 <./figures/palette_method_figure.png>] [6]
-<figures/ablation_ladder_openms_chaos.png, id=269, 927.9468pt x 367.1316pt>
-File: figures/ablation_ladder_openms_chaos.png Graphic file (type png)
-<use figures/ablation_ladder_openms_chaos.png>
-Package pdftex.def Info: figures/ablation_ladder_openms_chaos.png  used on inpu
-t line 183.
-(pdftex.def)             Requested size: 237.13594pt x 93.81618pt.
- [7 <./figures/ablation_ladder_openms_chaos.png>])
-(./sec/5_discussion.tex [8]) (./main.bbl (./main.brf)
+) [4]
+<figures/method_panels/chaos_a.png, id=228, 157.5486pt x 185.0112pt>
+File: figures/method_panels/chaos_a.png Graphic file (type png)
+<use figures/method_panels/chaos_a.png>
+Package pdftex.def Info: figures/method_panels/chaos_a.png  used on input line 
+110.
+(pdftex.def)             Requested size: 93.89418pt x 110.25946pt.
+<figures/method_panels/chaos_b.png, id=230, 157.5486pt x 185.0112pt>
+File: figures/method_panels/chaos_b.png Graphic file (type png)
+<use figures/method_panels/chaos_b.png>
+Package pdftex.def Info: figures/method_panels/chaos_b.png  used on input line 
+110.
+(pdftex.def)             Requested size: 93.89418pt x 110.25946pt.
+<figures/method_panels/chaos_c.png, id=231, 157.5486pt x 185.0112pt>
+File: figures/method_panels/chaos_c.png Graphic file (type png)
+<use figures/method_panels/chaos_c.png>
+Package pdftex.def Info: figures/method_panels/chaos_c.png  used on input line 
+110.
+(pdftex.def)             Requested size: 93.89418pt x 110.25946pt.
+<figures/method_panels/chaos_d.png, id=232, 157.5486pt x 185.0112pt>
+File: figures/method_panels/chaos_d.png Graphic file (type png)
+<use figures/method_panels/chaos_d.png>
+Package pdftex.def Info: figures/method_panels/chaos_d.png  used on input line 
+110.
+(pdftex.def)             Requested size: 93.89418pt x 110.25946pt.
+<figures/method_panels/chaos_e.png, id=233, 157.5486pt x 185.0112pt>
+File: figures/method_panels/chaos_e.png Graphic file (type png)
+<use figures/method_panels/chaos_e.png>
+Package pdftex.def Info: figures/method_panels/chaos_e.png  used on input line 
+110.
+(pdftex.def)             Requested size: 93.89418pt x 110.25946pt.
+<figures/method_panels/onharmony_a.png, id=234, 164.7756pt x 139.4811pt>
+File: figures/method_panels/onharmony_a.png Graphic file (type png)
+<use figures/method_panels/onharmony_a.png>
+Package pdftex.def Info: figures/method_panels/onharmony_a.png  used on input l
+ine 110.
+(pdftex.def)             Requested size: 93.89418pt x 79.47949pt.
+<figures/method_panels/onharmony_b.png, id=235, 164.7756pt x 139.4811pt>
+File: figures/method_panels/onharmony_b.png Graphic file (type png)
+<use figures/method_panels/onharmony_b.png>
+Package pdftex.def Info: figures/method_panels/onharmony_b.png  used on input l
+ine 110.
+(pdftex.def)             Requested size: 93.89418pt x 79.47949pt.
+<figures/method_panels/onharmony_c.png, id=236, 164.7756pt x 139.4811pt>
+File: figures/method_panels/onharmony_c.png Graphic file (type png)
+<use figures/method_panels/onharmony_c.png>
+Package pdftex.def Info: figures/method_panels/onharmony_c.png  used on input l
+ine 110.
+(pdftex.def)             Requested size: 93.89418pt x 79.47949pt.
+<figures/method_panels/onharmony_d.png, id=237, 164.7756pt x 139.4811pt>
+File: figures/method_panels/onharmony_d.png Graphic file (type png)
+<use figures/method_panels/onharmony_d.png>
+Package pdftex.def Info: figures/method_panels/onharmony_d.png  used on input l
+ine 110.
+(pdftex.def)             Requested size: 93.89418pt x 79.47949pt.
+<figures/method_panels/onharmony_e.png, id=238, 164.7756pt x 139.4811pt>
+File: figures/method_panels/onharmony_e.png Graphic file (type png)
+<use figures/method_panels/onharmony_e.png>
+Package pdftex.def Info: figures/method_panels/onharmony_e.png  used on input l
+ine 110.
+(pdftex.def)             Requested size: 93.89418pt x 79.47949pt.
+) (./sec/4_experiments.tex [5] [6 <./figures/method_panels/chaos_a.png> <./figu
+res/method_panels/chaos_b.png> <./figures/method_panels/chaos_c.png> <./figures
+/method_panels/chaos_d.png> <./figures/method_panels/chaos_e.png> <./figures/me
+thod_panels/onharmony_a.png> <./figures/method_panels/onharmony_b.png> <./figur
+es/method_panels/onharmony_c.png> <./figures/method_panels/onharmony_d.png> <./
+figures/method_panels/onharmony_e.png>]
+<figures/per_contrast_curves/fill_swap_per_contrast.pdf, id=326, 1192.455pt x 4
+55.30101pt>
+File: figures/per_contrast_curves/fill_swap_per_contrast.pdf Graphic file (type
+ pdf)
+<use figures/per_contrast_curves/fill_swap_per_contrast.pdf>
+Package pdftex.def Info: figures/per_contrast_curves/fill_swap_per_contrast.pdf
+  used on input line 214.
+(pdftex.def)             Requested size: 496.85625pt x 189.7106pt.
+ [7])
+(./sec/5_discussion.tex [8 <./figures/per_contrast_curves/fill_swap_per_contras
+t.pdf>]) (./main.bbl (./main.brf)
 \tf@brf=\write4
 \openout4 = `main.brf'.
 
- [9]) (./sec/X_suppl.tex
-[10] (./sec/_suppl_config.tex) (./sec/_suppl_data.tex)pdfTeX warning (ext4): de
-stination with the same identifier (name{page.1}) has been already used, duplic
-ate ignored
+ [9] [10] [11]) (./sec/X_suppl.tex [12
+
+]
+(./sec/_suppl_config.tex) (./sec/_suppl_data.texpdfTeX warning (ext4): destinat
+ion with the same identifier (name{page.1}) has been already used, duplicate ig
+nored
 <to be read again> 
                    \relax 
-l.24 
+l.33 
       [1
 
 
-] (./sec/_suppl_tables.tex) (./sec/_suppl_mechanism.tex
-Overfull \hbox (47.11324pt too wide) in paragraph at lines 27--47
- [][] 
- []
-
-pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has 
+]) (./sec/_suppl_tables.tex)pdfTeX warning (ext4): destination with the same id
+entifier (name{page.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.71 
+      [2]
+<figures/per_contrast_curves/fill_swap_per_contrast_hd95.pdf, id=638, 1192.455p
+t x 455.30101pt>
+File: figures/per_contrast_curves/fill_swap_per_contrast_hd95.pdf Graphic file 
+(type pdf)
+<use figures/per_contrast_curves/fill_swap_per_contrast_hd95.pdf>
+Package pdftex.def Info: figures/per_contrast_curves/fill_swap_per_contrast_hd9
+5.pdf  used on input line 118.
+(pdftex.def)             Requested size: 496.85625pt x 189.7106pt.
+pdfTeX warning (ext4): destination with the same identifier (name{page.3}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.61 
-      [2]) (./sec/_suppl_ngf.tex
-<figures/ngf_dose_response_openms_flair.png, id=436, 931.8012pt x 374.3586pt>
+l.225 
+       [3]
+<figures/snfh_et_zoom.pdf, id=664, 476.98201pt x 505.89pt>
+File: figures/snfh_et_zoom.pdf Graphic file (type pdf)
+<use figures/snfh_et_zoom.pdf>
+Package pdftex.def Info: figures/snfh_et_zoom.pdf  used on input line 281.
+(pdftex.def)             Requested size: 201.56699pt x 213.7846pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+pdfTeX warning (ext4): destination with the same identifier (name{page.4}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.305 
+       [4 <./figures/per_contrast_curves/fill_swap_per_contrast_hd95.pdf>]
+(./sec/_suppl_mechanism.tex
+Overfull \hbox (47.11324pt too wide) in paragraph at lines 27--46
+ [][] 
+ []
+
+pdfTeX warning (ext4): destination with the same identifier (name{page.5}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.60 
+      [5 <./figures/snfh_et_zoom.pdf>]) (./sec/_suppl_ngf.tex
+<figures/ngf_dose_response_openms_flair.png, id=850, 931.8012pt x 374.3586pt>
 File: figures/ngf_dose_response_openms_flair.png Graphic file (type png)
 <use figures/ngf_dose_response_openms_flair.png>
 Package pdftex.def Info: figures/ngf_dose_response_openms_flair.png  used on in
 put line 3.
 (pdftex.def)             Requested size: 237.13594pt x 95.26881pt.
-))pdfTeX warning (ext4): destination with the same identifier (name{page.3}) ha
+))pdfTeX warning (ext4): destination with the same identifier (name{page.6}) ha
 s been already used, duplicate ignored
 <to be read again> 
                    \relax 
 l.69 \end{document}
-                    [3 <./figures/ngf_dose_response_openms_flair.png>]
+                    [6 <./figures/ngf_dose_response_openms_flair.png>]
 (./main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 5C4E789B7A31175EB0D8C0F90FCFD128;3955.
+(rerunfilecheck)             Checksum: AF87D7EA601459DBAC9CF707B75B1DAA;4265.
 Package rerunfilecheck Info: File `main.brf' has not changed.
-(rerunfilecheck)             Checksum: 20965DE6FA8D87E35682737741833B76;3751.
+(rerunfilecheck)             Checksum: 433C4833F83D829A61AAA443C7AEE790;4611.
  ) 
 Here is how much of TeX's memory you used:
- 14722 strings out of 480884
- 240222 string characters out of 5900692
- 589279 words of memory out of 5000000
- 31598 multiletter control sequences out of 15000+600000
- 436322 words of font info for 95 fonts, out of 8000000 for 9000
+ 15005 strings out of 480884
+ 247139 string characters out of 5900692
+ 589829 words of memory out of 5000000
+ 31834 multiletter control sequences out of 15000+600000
+ 440321 words of font info for 102 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 98i,11n,102p,1564b,563s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 98i,13n,102p,1209b,609s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/font
 s/enc/dvips/base/8r.enc}</cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr
 /share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></cvmfs/soft.compute
@@ -686,28 +793,32 @@ s/cm/cmmi10.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/t
 exmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></cvmfs/soft.computecanada.c
 a/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmm
 i7.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist
-/fonts/type1/public/amsfonts/cm/cmmi9.pfb></cvmfs/soft.computecanada.ca/gentoo/
-2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></
+/fonts/type1/public/amsfonts/cm/cmmi8.pfb></cvmfs/soft.computecanada.ca/gentoo/
+2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></
 cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/ty
-pe1/public/amsfonts/cm/cmr7.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-6
-4-v3/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></cvmfs/soft.
-computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmsy10.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/
-share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></cvmfs/soft.computec
+pe1/public/amsfonts/cm/cmr10.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-
+64-v3/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></cvmfs/soft
+.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmr9.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/s
+hare/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></cvmfs/soft.computec
 anada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/public/amsfonts
-/cm/cmsy9.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/tex
-mf-dist/fonts/type1/urw/courier/ucrr8a.pfb></cvmfs/soft.computecanada.ca/gentoo
-/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></cvmf
-s/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/
-urw/helvetic/uhvr8a.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr
-/share/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></cvmfs/soft.computecanada.c
-a/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><
-/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/t
-ype1/urw/times/utmri8a.pfb>
-Output written on main.pdf (13 pages, 2181595 bytes).
+/cm/cmsy5.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></cvmfs/soft.computecanada.ca/
+gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7
+.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/f
+onts/type1/public/amsfonts/cm/cmsy9.pfb></cvmfs/soft.computecanada.ca/gentoo/20
+23/x86-64-v3/usr/share/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></cvmfs/so
+ft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/urw/
+helvetic/uhvb8a.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/sha
+re/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb></cvmfs/soft.computecanada.ca
+/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></
+cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/share/texmf-dist/fonts/ty
+pe1/urw/times/utmr8a.pfb></cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/us
+r/share/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on main.pdf (18 pages, 738013 bytes).
 PDF statistics:
- 530 PDF objects out of 1000 (max. 8388607)
- 483 compressed objects within 5 object streams
- 111 named destinations out of 1000 (max. 500000)
- 192 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 958 PDF objects out of 1000 (max. 8388607)
+ 631 compressed objects within 7 object streams
+ 138 named destinations out of 1000 (max. 500000)
+ 255 words of extra memory for PDF output out of 10000 (max. 10000000)
 
