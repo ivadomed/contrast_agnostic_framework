@@ -95,21 +95,33 @@ def load_combined_run(modalities: list, method_key: str) -> tuple:
         fold_counts[mod["name"]] = 0
         if not run_id:
             continue
-        run_dir = _agg.resolve_run_dir(mod["metrics_dir"], run_id)
-        if run_dir is None:
-            continue
         n = 0
-        for fold_dir in filter_fold_dirs(sorted(run_dir.glob("fold*"))):
-            csv_path = fold_dir / "eval_all.csv"
-            if not csv_path.exists():
+        for src_idx, src in enumerate(mod["sources"]):
+            run_dir = _agg.resolve_run_dir(src["metrics_dir"], run_id)
+            if run_dir is None:
                 continue
-            n += 1
-            tag = f'{mod["name"]}_{fold_dir.name}'
-            with csv_path.open() as f:
-                for row in csv.DictReader(f):
-                    contrast, label = row["group"], row["label"]
-                    for k in ("dice", "hd95"):
-                        data[k][contrast][label][tag].append(float(row[k]))
+            prefix = src.get("column_prefix", "")
+            rename = src.get("column_rename", {})
+            for fold_dir in filter_fold_dirs(sorted(run_dir.glob("fold*"))):
+                csv_path = fold_dir / "eval_all.csv"
+                if not csv_path.exists():
+                    continue
+                # Display "folds" count reflects the trained model's own fold
+                # structure (source 0 = the dataset's own metrics_dir), not the
+                # number of external test sources it was additionally evaluated
+                # on -- those are more test DATA, not more trained folds, and
+                # counting every source here previously double/quadruple-
+                # counted (e.g. displayed "12+12" for a 4-source, 3-fold model
+                # instead of the correct "3+3").
+                if src_idx == 0:
+                    n += 1
+                tag = f'{mod["name"]}_{fold_dir.name}'
+                with csv_path.open() as f:
+                    for row in csv.DictReader(f):
+                        contrast = rename.get(row["group"], f"{prefix}{row['group']}")
+                        label = row["label"]
+                        for k in ("dice", "hd95"):
+                            data[k][contrast][label][tag].append(float(row[k]))
         fold_counts[mod["name"]] = n
     return data, fold_counts
 
@@ -127,30 +139,36 @@ def load_combined_cases(modalities: list, method_key: str, metric: str) -> dict:
         run_id = mod["runs"].get(method_key)
         if not run_id:
             continue
-        run_dir = _agg.resolve_run_dir(mod["metrics_dir"], run_id)
-        if run_dir is None:
-            continue
-        for fold_dir in sorted(run_dir.glob("fold*")):
-            try:
-                fold_idx = int(fold_dir.name.replace("fold", ""))
-            except ValueError:
-                continue
-            if fold_idx not in EVAL_FOLD_INDICES:
-                continue
-            csv_path = fold_dir / "eval_all.csv"
-            if not csv_path.exists():
-                continue
-            with csv_path.open() as f:
-                for row in csv.DictReader(f):
-                    case_tag = f'{mod["name"]}::{row["case"]}'
-                    try:
-                        v = float(row[metric])
-                    except (KeyError, ValueError):
-                        continue
-                    if np.isfinite(v):
-                        per[row["group"]][case_tag].append(v)
+        # Reuse aggregate_from_config's load_run_cases (identical prefix/rename semantics,
+        # one implementation) for this modality's source list, then tag case keys by
+        # modality so pooling across modalities stays equally-weighted (unchanged behaviour).
+        per_col = _agg.load_run_cases(mod["sources"], run_id, metric)
+        for col, cases in per_col.items():
+            for case_id, v in cases.items():
+                per[col][f'{mod["name"]}::{case_id}'].append(v)
     return {col: {c: float(np.mean(vs)) for c, vs in cases.items() if vs}
             for col, cases in per.items()}
+
+
+def load_combined_cases_by_label(modalities: list, method_key: str, metric: str) -> dict:
+    """col -> label -> {case_tag: value} — the label-preserving sibling of
+    load_combined_cases, needed by contrast_groups (see resolve_group's block
+    comment in aggregate_from_config.py) to pool/organ-split BEFORE collapsing
+    across labels. case_tag = "<modality>::<case>", same tagging as
+    load_combined_cases so the ref/competitor pairing stays modality-correct."""
+    per = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for mod in modalities:
+        run_id = mod["runs"].get(method_key)
+        if not run_id:
+            continue
+        per_col_label = _agg.load_run_cases_by_label(mod["sources"], run_id, metric)
+        for col, labs in per_col_label.items():
+            for lab, cases in labs.items():
+                for case_id, v in cases.items():
+                    per[col][lab][f'{mod["name"]}::{case_id}'].append(v)
+    return {col: {lab: {c: float(np.mean(vs)) for c, vs in cases.items() if vs}
+                  for lab, cases in labs.items()}
+            for col, labs in per.items()}
 
 
 def paired(ref_cases: dict, comp_cases: dict, col: str) -> tuple:
@@ -160,17 +178,38 @@ def paired(ref_cases: dict, comp_cases: dict, col: str) -> tuple:
 
 
 def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, metric: str,
-                        modalities: list) -> dict:
+                        modalities: list, contrast_groups: dict = None) -> dict:
     """method_key -> Holm-corrected one-sided ("ref better") macroΔ p-value vs ref.
 
     Same estimand/test as significance_from_config.py's headline block
     (contrast-stratified paired sign-flip on macroΔ), just fed pooled-modality
     per-case data instead of single-modality data. Holm correction is applied
     across all non-ref competitors at once (one family of tests per metric).
+
+    contrast_groups (optional): same hierarchical pooling tree as
+    aggregate_from_config.py/significance_from_config.py — see resolve_group's
+    block comment. When given, resolved per-method via load_combined_cases_by_label
+    (still modality-tagged) instead of flat load_combined_cases.
     """
     higher_better = metric == "dice"
-    ref_cases = load_combined_cases(modalities, ref_key, metric)
     competitors = [k for k in runs_ordered if k != ref_key]
+    if contrast_groups:
+        label_data = {k: load_combined_cases_by_label(modalities, k, metric) for k in runs_ordered}
+        ref_by_label = label_data[ref_key]
+        p1s = []
+        for key in competitors:
+            arrs = []
+            for g in contrast_groups.values():
+                arr = _agg.resolve_group(g, ref_by_label, label_data[key])
+                if len(arr):
+                    arrs.append(arr)
+            _, _, p1 = macro_perm(arrs, higher_better)
+            p1s.append(p1)
+        hp = holm(p1s)
+        out = {ref_key: float("nan")}
+        out.update(dict(zip(competitors, hp)))
+        return out
+    ref_cases = load_combined_cases(modalities, ref_key, metric)
     p1s = []
     for key in competitors:
         comp_cases = load_combined_cases(modalities, key, metric)
@@ -189,7 +228,7 @@ def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, m
 
 def build_combined_summary(runs_ordered, runs_data, fold_counts, sig_by_metric, title,
                             out_dir: Path, prefix: str, ref_key: str, modalities: list,
-                            column_order: list = None):
+                            column_order: list = None, contrast_groups: dict = None):
     all_contrasts_set = {c for d in runs_data.values() for c in d.get("dice", {})}
     if column_order:
         ordered = [c for c in column_order if c in all_contrasts_set]
@@ -210,11 +249,20 @@ def build_combined_summary(runs_ordered, runs_data, fold_counts, sig_by_metric, 
         f"Modalities: {', '.join(all_contrasts)}", "",
         "Each cell is the **cross-fold, cross-class, cross-training-modality average** "
         "(mean over all labels, folds, AND the two training-modality models of the same "
-        "method). `all` = average across tested contrasts. **Bold** = best per column. "
+        "method). `all` = average across tested contrasts"
+        + (", pooled per the contrast-group tree below (raw per-column cells stay unpooled — "
+           "transparency only)" if contrast_groups else "") + ". **Bold** = best per column. "
         f"`sig. vs ref` = Holm-corrected one-sided (ref better) macroΔ p-value of "
         f"`{_agg._display_key(ref_key)}` vs that row (blank on the ref's own row); "
         "**bold** = p < 0.05. — = no data.", "",
     ]
+    if contrast_groups:
+        lines.append("`all` pooling (contrast-group pooling active):")
+        lines.append("")
+        for g, node in contrast_groups.items():
+            lines.append(f"- **{g}**:")
+            lines += _agg._describe_group(node, indent=1)
+        lines.append("")
 
     matrices = {}
     for metric, heading, prec in (("dice", "Dice ↑", 4), ("hd95", "HD95 mm ↓", 2)):
@@ -223,7 +271,12 @@ def build_combined_summary(runs_ordered, runs_data, fold_counts, sig_by_metric, 
             per_mod = [_agg.cross_fold_class_mean(runs_data[key], metric, c) for c in all_contrasts]
             for j, v in enumerate(per_mod):
                 mat[i, j] = v
-            finite = [v for v in per_mod if np.isfinite(v)]
+            if contrast_groups:
+                grp_vals = [_agg.resolve_group_value(node, runs_data[key], metric)
+                           for node in contrast_groups.values()]
+                finite = [v for v in grp_vals if np.isfinite(v)]
+            else:
+                finite = [v for v in per_mod if np.isfinite(v)]
             mat[i, -1] = float(np.mean(finite)) if finite else np.nan
         matrices[metric] = mat
 
@@ -359,16 +412,29 @@ def main():
 
     modalities = []
     for m in cfg["modalities"]:
+        if "sources" in m:
+            sources = [{"metrics_dir": Path(os.path.expandvars(s["metrics_dir"])),
+                       "column_prefix": s.get("column_prefix", ""),
+                       "column_rename": s.get("column_rename", {})} for s in m["sources"]]
+        else:
+            sources = [{"metrics_dir": Path(os.path.expandvars(m["metrics_dir"])),
+                       "column_prefix": "", "column_rename": {}}]
         modalities.append({
             "name": m["name"],
-            "metrics_dir": Path(os.path.expandvars(m["metrics_dir"])),
+            "sources": sources,
             "runs": m.get("runs", {}),
         })
-        if not modalities[-1]["metrics_dir"].is_dir():
-            print(f"  note: source metrics_dir does not exist yet: {modalities[-1]['metrics_dir']}",
-                 file=sys.stderr)
-    if len(modalities) < 2:
-        sys.exit("combined_modality_summary.py expects >= 2 entries under `modalities:`.")
+        for src in sources:
+            if not src["metrics_dir"].is_dir():
+                print(f"  note: source metrics_dir does not exist yet: {src['metrics_dir']}",
+                     file=sys.stderr)
+    if len(modalities) < 1:
+        sys.exit("combined_modality_summary.py expects >= 1 entry under `modalities:`.")
+    # Most tasks have 2 (their two training contrasts); a single entry is a
+    # valid, supported degenerate case for a task with only one training
+    # modality (e.g. atlas-liver-hcc) -- the cross-modality pooling below is
+    # then a no-op, but the task still plugs into meta_task_heatmap.py the
+    # same way as every other task.
 
     method_order = cfg.get("method_order") or list(modalities[0]["runs"].keys())
     if ref_key not in method_order:
@@ -390,14 +456,21 @@ def main():
         print("No methods with evaluation data found.", file=sys.stderr)
         sys.exit(1)
 
+    # contrast_groups (opt-in — see resolve_group_value's block comment in
+    # aggregate_from_config.py). Disabled by omitting the key, or by
+    # use_contrast_groups: false.
+    contrast_groups = cfg.get("contrast_groups") if cfg.get("use_contrast_groups", True) else None
+
     all_contrasts = sorted({c for d in runs_data.values() for c in d.get("dice", {})})
     sig_by_metric = {
-        metric: significance_column(runs_ordered, ref_key, all_contrasts, metric, modalities)
+        metric: significance_column(runs_ordered, ref_key, all_contrasts, metric, modalities,
+                                    contrast_groups=contrast_groups)
         for metric in ("dice", "hd95")
     }
 
     build_combined_summary(runs_ordered, runs_data, fold_counts, sig_by_metric, title,
-                           out_dir, output_prefix, ref_key, modalities, column_order=column_order)
+                           out_dir, output_prefix, ref_key, modalities, column_order=column_order,
+                           contrast_groups=contrast_groups)
 
 
 if __name__ == "__main__":

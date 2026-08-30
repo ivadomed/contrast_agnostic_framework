@@ -69,44 +69,77 @@ _agg = _load_sibling("aggregate_from_config")
 _cms = _load_sibling("combined_modality_summary")
 
 
-def load_task_modalities(task: dict, project_root: str) -> list:
+def load_task_modalities(task: dict, project_root: str) -> tuple:
     """Load one task's own *_combined_01_results.yaml `modalities:` list, with
     METRICS_ROOT set to that task's dataset so its ${METRICS_ROOT}-relative
-    metrics_dir paths expand correctly (same pattern as meta_significance.py)."""
+    metrics_dir paths expand correctly (same pattern as meta_significance.py).
+    Returns (modalities, contrast_groups) — contrast_groups is that task's own
+    opt-in hierarchical-pooling tree (None if not configured / disabled), read
+    straight from the same combined config so this task-level rollup can never
+    silently disagree with what that dataset's own combined table shows."""
     os.environ["METRICS_ROOT"] = (
         f"{project_root}/datasets/{task['dataset']}/8_results_{task['dataset']}/02_metrics")
     cfg_path = Path(os.path.expandvars(task["config"]))
     if not cfg_path.exists():
         print(f"  skip task {task['name']}: config not found {cfg_path}", file=sys.stderr)
-        return []
+        return [], None
     cfg = yaml.safe_load(cfg_path.read_text())
     modalities = []
     for m in cfg["modalities"]:
+        if "sources" in m:
+            sources = [
+                {**src, "metrics_dir": Path(os.path.expandvars(src["metrics_dir"]))}
+                for src in m["sources"]
+            ]
+        else:
+            sources = [{"metrics_dir": Path(os.path.expandvars(m["metrics_dir"]))}]
         modalities.append({
             "name": m["name"],
-            "metrics_dir": Path(os.path.expandvars(m["metrics_dir"])),
+            "sources": sources,
             "runs": m.get("runs", {}),
         })
-    return modalities
+    contrast_groups = cfg.get("contrast_groups") if cfg.get("use_contrast_groups", True) else None
+    return modalities, contrast_groups
 
 
-def task_method_value(modalities: list, method_key: str, metric: str) -> float:
+def task_method_value(modalities: list, method_key: str, metric: str,
+                      contrast_groups: dict = None) -> float:
     """This task's `all` cell for one method: cross-fold-class mean per tested
     contrast (pooled over both training modalities), then averaged over
     contrasts, equal weight per contrast — IDENTICAL estimand to
-    combined_modality_summary.py's `all` column."""
+    combined_modality_summary.py's `all` column (same contrast_groups tree,
+    when that task's own combined config declares one, so this rollup's
+    displayed number always matches the per-dataset table it's built on)."""
     data, _ = _cms.load_combined_run(modalities, method_key)
+    if contrast_groups:
+        grp_vals = [_agg.resolve_group_value(node, data, metric) for node in contrast_groups.values()]
+        finite = [v for v in grp_vals if np.isfinite(v)]
+        return float(np.mean(finite)) if finite else float("nan")
     contrasts = sorted(data.get(metric, {}))
     vals = [_agg.cross_fold_class_mean(data, metric, c) for c in contrasts]
     finite = [v for v in vals if np.isfinite(v)]
     return float(np.mean(finite)) if finite else float("nan")
 
 
-def task_pooled_diffs(modalities: list, ref_key: str, comp_key: str, metric: str) -> np.ndarray:
+def task_pooled_diffs(modalities: list, ref_key: str, comp_key: str, metric: str,
+                      contrast_groups: dict = None) -> np.ndarray:
     """One task's stratum array for the top-level sign-flip test: every held-out
     case's paired diff (ref − comp), pooled across the task's tested contrasts
     AND its two training modalities (case tags already carry the modality, see
-    combined_modality_summary.load_combined_cases)."""
+    combined_modality_summary.load_combined_cases).
+
+    contrast_groups (optional): resolve each top-level group via
+    aggregate_from_config.resolve_group (fed by the label-preserving loader so
+    a group like chaos's "CT" gets its per-organ-then-cross-organ treatment),
+    then concatenate every group's array into one task stratum — preserves
+    "one stratum per TASK" (this function's whole point) while fixing the same
+    vote-imbalance the per-dataset headline tests already got fixed for."""
+    if contrast_groups:
+        ref_by_label = _cms.load_combined_cases_by_label(modalities, ref_key, metric)
+        comp_by_label = _cms.load_combined_cases_by_label(modalities, comp_key, metric)
+        pooled = [_agg.resolve_group(g, ref_by_label, comp_by_label) for g in contrast_groups.values()]
+        pooled = [p for p in pooled if len(p)]
+        return np.concatenate(pooled) if pooled else np.array([])
     ref_cases = _cms.load_combined_cases(modalities, ref_key, metric)
     comp_cases = _cms.load_combined_cases(modalities, comp_key, metric)
     cols = sorted(set(ref_cases) | set(comp_cases))
@@ -138,9 +171,10 @@ def main():
 
     tasks = []
     for t in cfg["tasks"]:
-        modalities = load_task_modalities(t, project_root)
+        modalities, contrast_groups = load_task_modalities(t, project_root)
         if modalities:
-            tasks.append({"name": t["name"], "modalities": modalities})
+            tasks.append({"name": t["name"], "modalities": modalities,
+                          "contrast_groups": contrast_groups})
     if len(tasks) < 2:
         sys.exit("meta_task_heatmap.py expects >= 2 tasks with resolvable configs.")
 
@@ -159,7 +193,9 @@ def main():
         "Each task column = that dataset's own `all` value (already averaged over its "
         "tested contrasts AND its two training modalities — see its "
         "`combined_contrasts/01_results_summary.md`). `overall` = equal-weight average "
-        "across the 4 tasks. **Bold** = best per column. `sig. vs ref` = Holm-corrected "
+        f"across the {len(tasks)} tasks that have data for that method (a task missing "
+        "for a given method — e.g. no HD95, or a method not run on that dataset — is "
+        "excluded, not counted as 0). **Bold** = best per column. `sig. vs ref` = Holm-corrected "
         f"one-sided (ref better) macroΔ p-value of `{_agg._display_key(ref_key)}` vs that "
         "row, equal weight per TASK (blank on the ref's own row); **bold** = p < 0.05.", "",
     ]
@@ -169,7 +205,8 @@ def main():
     for metric, heading, prec in (("dice", "Dice ↑", 4), ("hd95", "HD95 mm ↓", 2)):
         mat = np.full((len(method_order), len(cols)), np.nan)
         for i, key in enumerate(method_order):
-            per_task = [task_method_value(t["modalities"], key, metric) for t in tasks]
+            per_task = [task_method_value(t["modalities"], key, metric,
+                                          contrast_groups=t["contrast_groups"]) for t in tasks]
             for j, v in enumerate(per_task):
                 mat[i, j] = v
             finite = [v for v in per_task if np.isfinite(v)]
@@ -180,7 +217,8 @@ def main():
         competitors = [k for k in method_order if k != ref_key]
         p1s = []
         for comp in competitors:
-            arrs = [task_pooled_diffs(t["modalities"], ref_key, comp, metric) for t in tasks]
+            arrs = [task_pooled_diffs(t["modalities"], ref_key, comp, metric,
+                                      contrast_groups=t["contrast_groups"]) for t in tasks]
             arrs = [a for a in arrs if a.size]
             _, _, p1 = macro_perm(arrs, higher_better)
             p1s.append(p1)

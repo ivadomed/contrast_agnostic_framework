@@ -211,6 +211,50 @@ def load_run_cases(sources: list, key: str, metric: str) -> dict:
             for col, cases in per.items()}
 
 
+def load_run_cases_by_label(sources: list, key: str, metric: str) -> dict:
+    """col -> label -> {case_id: mean metric over folds in EVAL_FOLD_INDICES}.
+
+    Same fold-capping and case-unit-of-analysis rules as load_run_cases, but
+    WITHOUT collapsing across labels within a column — the label dimension
+    (e.g. amos's "ct" column carries liver/right_kidney/left_kidney/spleen
+    rows) is kept intact. Used only by significance_from_config.py's
+    `contrast_groups` hierarchical pooling (e.g. "average CT-liver across
+    every source that has a liver label, then average across organs, then
+    across modalities") — load_run_cases's flat per-column collapse is what
+    that feature needs to see PAST. See significance_from_config.py's
+    `resolve_group`/`_leaf_diff` for how this is consumed.
+    """
+    per = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for src in sources:
+        run_dir = resolve_run_dir(src["metrics_dir"], key)
+        if run_dir is None:
+            continue
+        prefix = src.get("column_prefix", "")
+        rename = src.get("column_rename", {})
+        for fold_dir in sorted(run_dir.glob("fold*")):
+            try:
+                fold_idx = int(fold_dir.name.replace("fold", ""))
+            except ValueError:
+                continue
+            if fold_idx not in EVAL_FOLD_INDICES:
+                continue
+            csv_path = fold_dir / "eval_all.csv"
+            if not csv_path.exists():
+                continue
+            with csv_path.open() as f:
+                for row in csv.DictReader(f):
+                    col = rename.get(row["group"], f"{prefix}{row['group']}")
+                    try:
+                        v = float(row[metric])
+                    except (KeyError, ValueError):
+                        continue
+                    if np.isfinite(v):
+                        per[col][row["label"]][row["case"]].append(v)
+    return {col: {lab: {c: float(np.mean(vs)) for c, vs in cases.items() if vs}
+                  for lab, cases in labs.items()}
+            for col, labs in per.items()}
+
+
 def paired(ref_cases: dict, comp_cases: dict, col: str) -> tuple:
     """Aligned (x_ref, y_comp) arrays over shared cases for one contrast column."""
     r, c = ref_cases.get(col, {}), comp_cases.get(col, {})
@@ -226,13 +270,36 @@ def find_ref_key(run_keys: list) -> str | None:
 
 
 def significance_column(sources: list, runs_ordered: list, ref_key: str,
-                        all_contrasts: list, metric: str) -> dict:
+                        all_contrasts: list, metric: str, contrast_groups: dict = None) -> dict:
     """method_key -> Holm-corrected one-sided ("ref better") macroΔ p-value vs
     ref, across ALL tested contrasts (equal weight per contrast — the same
     estimand as the summary table's `all` column). Same test as
     significance_from_config.py's headline block, imported from stat_tests.py
-    so there is one implementation. NaN (blank cell) for the ref's own row."""
+    so there is one implementation. NaN (blank cell) for the ref's own row.
+
+    contrast_groups (optional): hierarchical pooling tree (see resolve_group's
+    block comment) — when given, `all_contrasts` is ignored and the groups'
+    top-level keys are used instead, resolved via resolve_group so this
+    matches significance_from_config.py's headline test exactly instead of
+    silently disagreeing with it."""
     higher_better = metric == "dice"
+    if contrast_groups:
+        label_data = {k: load_run_cases_by_label(sources, k, metric) for k in runs_ordered}
+        ref_by_label = label_data[ref_key]
+        competitors = [k for k in runs_ordered if k != ref_key]
+        p1s = []
+        for key in competitors:
+            arrs = []
+            for g in contrast_groups.values():
+                arr = resolve_group(g, ref_by_label, label_data[key])
+                if len(arr):
+                    arrs.append(arr)
+            _, _, p1 = macro_perm(arrs, higher_better)
+            p1s.append(p1)
+        hp = holm(p1s)
+        out = {ref_key: float("nan")}
+        out.update(dict(zip(competitors, hp)))
+        return out
     ref_cases = load_run_cases(sources, ref_key, metric)
     competitors = [k for k in runs_ordered if k != ref_key]
     p1s = []
@@ -280,6 +347,144 @@ def cross_fold_class_mean(run_data: dict, metric: str, contrast: str) -> float:
     return m
 
 
+# ── contrast_groups: opt-in hierarchical pooling ────────────────────────────
+#
+# Shared by aggregate_from_config.py (this file — both the displayed "all" column
+# and its own inline "sig. vs ref" column), significance_from_config.py (the
+# standalone OOD/ALL/IND report), and combined_modality_summary.py /
+# meta_task_heatmap.py (one level up again — cross-training-modality and
+# cross-dataset task-level tables). One implementation, four callers, so the
+# displayed numbers and every significance test built on top of them can never
+# silently disagree — this project already cares a lot about keeping the table
+# and the test in sync (see significance_from_config.py's module docstring).
+#
+# Problem this solves: a flat scheme treats every raw column as one equally-
+# weighted "contrast". That silently over-weights whichever raw axis happens to
+# have the most columns — a modality tested via 3 dataset sources outvotes one
+# tested via a single source 3-to-1, and (chaos's CT columns) a multi-organ
+# column like "amos_ct" is ALREADY a within-column blend across liver/spleen/
+# kidney with no visibility into that blend at all. contrast_groups fixes both
+# by letting a config declare, per top-level "contrast" bucket, a small tree of
+# how to pool it:
+#   - a bare column name (or {column, label}) is a LEAF.
+#   - a YAML list POOLS its children (cases/folds concatenated — disjoint case
+#     sets: different sources or labels of the same organ/modality) — "average
+#     CT-liver across every source that has one."
+#   - a YAML dict AVERAGES its children with equal weight per child (mean of
+#     each child's own resolved value/array) — "average liver, spleen, kidney
+#     into CT" — recursing to arbitrary depth, so "average CT, T1w, T2w
+#     together" falls out for free, no special-casing.
+# Entirely opt-in: a config with no `contrast_groups` key (or an explicit
+# `use_contrast_groups: false`) gets the untouched flat per-column behaviour —
+# the toggle back to "current strategy".
+#
+# Two resolvers share this tree shape:
+#   resolve_group_value  — ONE run's own descriptive mean (fold-unit, matches
+#                           cross_fold_class_mean's existing convention) — what
+#                           the "all" column / heatmap cells show.
+#   resolve_group         — a PAIRED diff array (ref − comp, case-unit, matches
+#                           significance testing's existing convention) — what
+#                           the significance tests consume.
+# They intentionally use different units of analysis (fold vs case) because
+# the two existing callers already did before contrast_groups existed — this
+# preserves that pre-existing distinction, only fixes the WEIGHTING scheme.
+def _leaf_refs(node) -> list:
+    """Flatten a leaf or a (possibly nested) list of leaves into [(column, label), ...].
+    Raises on a dict nested inside a list — not a shape any real config needs;
+    dicts must be the outermost node of whatever contains them."""
+    if isinstance(node, str):
+        return [(node, None)]
+    if isinstance(node, dict) and "column" in node:
+        return [(node["column"], node.get("label"))]
+    if isinstance(node, list):
+        out = []
+        for n in node:
+            out += _leaf_refs(n)
+        return out
+    raise ValueError(f"contrast_groups: dict not supported nested inside a list: {node!r}")
+
+
+def resolve_group_value(node, run_data: dict, metric: str) -> float:
+    """Recursively resolve a contrast_groups node to ONE descriptive value for
+    a single run (cross-fold mean, same unit as cross_fold_class_mean)."""
+    if isinstance(node, dict) and "column" not in node:
+        vals = [resolve_group_value(child, run_data, metric) for child in node.values()]
+        vals = [v for v in vals if np.isfinite(v)]
+        return float(np.mean(vals)) if vals else float("nan")
+    refs = _leaf_refs(node)
+    per_fold: dict = defaultdict(list)
+    for col, label in refs:
+        by_contrast = run_data.get(metric, {}).get(col, {})
+        labels = [label] if label is not None else list(by_contrast.keys())
+        for lab in labels:
+            for fold, vs in by_contrast.get(lab, {}).items():
+                per_fold[fold].extend(vs)
+    m, _, _ = cross_fold_stats(per_fold)
+    return m
+
+
+def _leaf_diff(ref_by_label: dict, comp_by_label: dict, leaf) -> np.ndarray:
+    col, label = leaf if isinstance(leaf, tuple) else (leaf, None)
+    if isinstance(leaf, dict):
+        col, label = leaf["column"], leaf.get("label")
+    elif isinstance(leaf, str):
+        col, label = leaf, None
+    r_labs, c_labs = ref_by_label.get(col, {}), comp_by_label.get(col, {})
+    if label is not None:
+        r_cases, c_cases = r_labs.get(label, {}), c_labs.get(label, {})
+    else:
+        r_cases, c_cases = _collapse_labels(r_labs), _collapse_labels(c_labs)
+    common = sorted(set(r_cases) & set(c_cases))
+    if not common:
+        return np.array([])
+    x = np.array([r_cases[c] for c in common])
+    y = np.array([c_cases[c] for c in common])
+    return x - y
+
+
+def _collapse_labels(labs: dict) -> dict:
+    per_case = defaultdict(list)
+    for cases in labs.values():
+        for c, v in cases.items():
+            per_case[c].append(v)
+    return {c: float(np.mean(vs)) for c, vs in per_case.items()}
+
+
+def resolve_group(node, ref_by_label: dict, comp_by_label: dict) -> np.ndarray:
+    """Recursively resolve a contrast_groups node to a 1D diff array (ref − comp)."""
+    if isinstance(node, str) or (isinstance(node, dict) and "column" in node):
+        return _leaf_diff(ref_by_label, comp_by_label, node)
+    if isinstance(node, list):
+        parts = [resolve_group(n, ref_by_label, comp_by_label) for n in node]
+        parts = [p for p in parts if len(p)]
+        return np.concatenate(parts) if parts else np.array([])
+    if isinstance(node, dict):
+        means = [resolve_group(child, ref_by_label, comp_by_label) for child in node.values()]
+        means = [m for m in means if len(m)]
+        return np.array([m.mean() for m in means]) if means else np.array([])
+    raise ValueError(f"bad contrast_groups node: {node!r}")
+
+
+def _describe_group(node, indent: int = 0) -> list:
+    pad = "  " * indent
+    lines = []
+    if isinstance(node, str):
+        lines.append(f"{pad}- `{node}` (all labels averaged)")
+    elif isinstance(node, dict) and "column" in node:
+        lab = node.get("label")
+        lines.append(f"{pad}- `{node['column']}`" + (f" — label `{lab}` only" if lab else " (all labels averaged)"))
+    elif isinstance(node, list):
+        lines.append(f"{pad}- pooled (cases concatenated):")
+        for n in node:
+            lines += _describe_group(n, indent + 1)
+    elif isinstance(node, dict):
+        lines.append(f"{pad}- averaged (equal weight per child):")
+        for name, child in node.items():
+            lines.append(f"{pad}  **{name}**:")
+            lines += _describe_group(child, indent + 2)
+    return lines
+
+
 def _best_per_col(mat: np.ndarray, metric: str) -> list:
     """Return the best-row index per column (-1 if column is all NaN)."""
     best = []
@@ -299,7 +504,7 @@ def _display_key(key: str) -> str:
 
 def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, prefix: str,
                   in_domain_contrast: str = None, column_order: list = None,
-                  sig_by_metric: dict = None, ref_key: str = None):
+                  sig_by_metric: dict = None, ref_key: str = None, contrast_groups: dict = None):
     all_contrasts_set = {c for d in runs_data.values() for c in d.get("dice", {})}
     if column_order:
         ordered = [c for c in column_order if c in all_contrasts_set]
@@ -330,11 +535,20 @@ def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, pr
         f"Modalities: {', '.join(all_contrasts)}",
         "",
         "Each cell is the **cross-fold, cross-class average** (mean over all labels and folds). "
-        "`all` = average across modalities. **Bold** = best per column. "
+        "`all` = average across modalities"
+        + (", pooled per the contrast-group tree below (raw per-column cells stay unpooled — "
+           "transparency only)" if contrast_groups else "") + ". **Bold** = best per column. "
         + (f"**{in_domain_contrast}** = in-domain contrast. " if in_domain_contrast else "")
         + "— = no data." + sig_note,
         "",
     ]
+    if contrast_groups:
+        lines.append("`all` pooling (contrast-group pooling active):")
+        lines.append("")
+        for g, node in contrast_groups.items():
+            lines.append(f"- **{g}**:")
+            lines += _describe_group(node, indent=1)
+        lines.append("")
 
     matrices = {}
     for metric, heading, prec in (("dice", "Dice ↑", 4), ("hd95", "HD95 mm ↓", 2)):
@@ -343,7 +557,12 @@ def build_summary(runs_ordered, runs_data, fold_counts, title, out_dir: Path, pr
             per_mod = [cross_fold_class_mean(runs_data[key], metric, c) for c in all_contrasts]
             for j, v in enumerate(per_mod):
                 mat[i, j] = v
-            finite = [v for v in per_mod if np.isfinite(v)]
+            if contrast_groups:
+                grp_vals = [resolve_group_value(node, runs_data[key], metric)
+                           for node in contrast_groups.values()]
+                finite = [v for v in grp_vals if np.isfinite(v)]
+            else:
+                finite = [v for v in per_mod if np.isfinite(v)]
             mat[i, -1] = float(np.mean(finite)) if finite else np.nan
         matrices[metric] = mat
 
@@ -562,6 +781,10 @@ def main():
         print("No runs with evaluation data found.", file=sys.stderr)
         sys.exit(1)
 
+    # contrast_groups (opt-in — see the block comment above resolve_group_value()).
+    # Disabled by omitting the key, or by `use_contrast_groups: false`.
+    contrast_groups = cfg.get("contrast_groups") if cfg.get("use_contrast_groups", True) else None
+
     # Inline "sig. vs ref" column: auto-wired whenever the config's run list
     # includes the headline OURS method (REF_SUBSTR) and has data for it, unless
     # explicitly disabled (`no_significance: true`) or overridden (`sig_ref: <exact run id>`).
@@ -571,7 +794,8 @@ def main():
         if ref_key is not None and ref_key in runs_ordered and runs_data.get(ref_key):
             all_contrasts = sorted({c for d in runs_data.values() for c in d.get("dice", {})})
             sig_by_metric = {
-                metric: significance_column(sources, runs_ordered, ref_key, all_contrasts, metric)
+                metric: significance_column(sources, runs_ordered, ref_key, all_contrasts, metric,
+                                            contrast_groups=contrast_groups)
                 for metric in ("dice", "hd95")
             }
         else:
@@ -579,7 +803,7 @@ def main():
 
     build_summary(runs_ordered, runs_data, fold_counts, title, out_dir, output_prefix,
                   in_domain_contrast=in_domain_contrast, column_order=column_order,
-                  sig_by_metric=sig_by_metric, ref_key=ref_key)
+                  sig_by_metric=sig_by_metric, ref_key=ref_key, contrast_groups=contrast_groups)
 
 
 if __name__ == "__main__":

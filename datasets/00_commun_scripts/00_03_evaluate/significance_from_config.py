@@ -81,7 +81,14 @@ _agg = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_agg)
 resolve_run_dir = _agg.resolve_run_dir
 load_run_cases = _agg.load_run_cases
+load_run_cases_by_label = _agg.load_run_cases_by_label
 paired = _agg.paired
+# contrast_groups hierarchical pooling: implementation lives in
+# aggregate_from_config.py (shared with its own inline sig column + "all"
+# column, and with combined_modality_summary.py / meta_task_heatmap.py one
+# level up) — see the block comment above resolve_group_value there.
+resolve_group = _agg.resolve_group
+_describe_group = _agg._describe_group
 
 
 def main():
@@ -138,10 +145,11 @@ def main():
 
     all_cols = sorted({c for d in data.values() for c in d})
     if column_order:
-        cols = [c for c in column_order if c in all_cols] + \
+        raw_cols = [c for c in column_order if c in all_cols] + \
                [c for c in all_cols if c not in column_order]
     else:
-        cols = all_cols
+        raw_cols = all_cols
+    cols = raw_cols
 
     higher_better = args.metric == "dice"
     sign = 1.0 if higher_better else -1.0  # positive "diff" = ref is better
@@ -150,21 +158,66 @@ def main():
     unit = "Dice pts" if higher_better else "mm HD95"
     B_BOOT = 5000
 
-    # In-domain (training) contrast. For multi-source configs the column is already prefixed
-    # (e.g. "chaos_t2spir"); in_domain_contrast is written to match. OOD = held-out contrasts
-    # that are NOT the training contrast; IND = the training contrast only.
-    in_dom = in_domain_contrast if (in_domain_contrast in cols) else None
-    ood_cols = [c for c in cols if c != in_dom]
-    ind_cols = [c for c in cols if c == in_dom]
+    # contrast_groups (opt-in — see the block comment above resolve_group()). Disabled
+    # by omitting the key entirely, or by `use_contrast_groups: false` (kept as an
+    # explicit toggle so a config can carry a contrast_groups block for reference
+    # without it being live — the "go back to current strategy" switch).
+    contrast_groups = cfg.get("contrast_groups") if cfg.get("use_contrast_groups", True) else None
+    group_note_lines = []
 
-    def diff_arrays(comp, subset):
-        """List of per-contrast paired-diff arrays (ref − comp over shared cases)."""
-        out = []
-        for col in subset:
-            x, y = paired(data[ref], data[comp], col)
-            if len(x):
-                out.append(x - y)
-        return out
+    if contrast_groups:
+        label_data = {r: load_run_cases_by_label(sources, r, args.metric) for r in runs}
+        group_names = list(contrast_groups.keys())
+        # in_domain_contrast usually names a raw column (e.g. "open-ms_flair"), but a
+        # group pooling that same modality across sources is typically named without
+        # the dataset prefix (e.g. "flair"). Prefer an explicit in_domain_group; fall
+        # back to in_domain_contrast only when it happens to also be a group name
+        # (true for atlas-liver-hcc/chaos's configs, where the in-domain group was
+        # deliberately kept same-named as its raw column).
+        in_dom_group_cfg = cfg.get("in_domain_group", in_domain_contrast)
+        in_dom = in_dom_group_cfg if in_dom_group_cfg in group_names else None
+        ood_cols = [g for g in group_names if g != in_dom]
+        ind_cols = [g for g in group_names if g == in_dom]
+        cols = group_names  # drives the "ALL contrasts" block + its note text
+
+        def diff_arrays(comp, subset):
+            """List of per-group paired-diff arrays (ref − comp), each group
+            resolved per its contrast_groups tree (may itself be a nested
+            pool-then-average over organs/sources — see resolve_group)."""
+            out = []
+            for g in subset:
+                arr = resolve_group(contrast_groups[g], label_data[ref], label_data[comp])
+                if len(arr):
+                    out.append(arr)
+            return out
+
+        group_note_lines = [
+            "## Contrast-group pooling (active)", "",
+            "Each headline \"contrast\" below is a **group**, not a raw column — pooled/averaged "
+            "per this tree (list = pool cases across sources; nested dict = equal-weight average "
+            "across the named children, e.g. organs, recursing to arbitrary depth). Raw per-column "
+            "figures are still in the per-contrast transparency table at the bottom, unpooled.", "",
+        ]
+        for g in group_names:
+            group_note_lines.append(f"- **{g}**:")
+            group_note_lines += _describe_group(contrast_groups[g], indent=1)
+        group_note_lines.append("")
+    else:
+        # In-domain (training) contrast. For multi-source configs the column is already
+        # prefixed (e.g. "chaos_t2spir"); in_domain_contrast is written to match. OOD =
+        # held-out contrasts that are NOT the training contrast; IND = training contrast only.
+        in_dom = in_domain_contrast if (in_domain_contrast in cols) else None
+        ood_cols = [c for c in cols if c != in_dom]
+        ind_cols = [c for c in cols if c == in_dom]
+
+        def diff_arrays(comp, subset):
+            """List of per-contrast paired-diff arrays (ref − comp over shared cases)."""
+            out = []
+            for col in subset:
+                x, y = paired(data[ref], data[comp], col)
+                if len(x):
+                    out.append(x - y)
+            return out
 
     def block_table(subset, heading, note):
         # HEADLINE = one-sided directional ("ours better") p, Holm-corrected across
@@ -206,7 +259,13 @@ def main():
              "the hypothesis is directional (our method is designed to improve generalization); "
              "`p (2-sided)` is kept as a secondary column and is what flags a significant in-domain "
              "LOSS (where the 1-sided 'ours better' p is ≈1 and correctly unstarred). `case W/L` = "
-             "held-out cases where ref wins/loses. Per-case scores are fold-0-2-capped means over labels.", ""]
+             "held-out cases where ref wins/loses (for a grouped contrast, counts pooled/organ-mean "
+             "units, not raw cases — see the group tree below). Per-case scores are fold-0-2-capped "
+             "means over labels.",
+             "",
+             f"Contrast-group pooling: **{'ON' if contrast_groups else 'OFF (flat per-column, current default strategy)'}**.",
+             ""]
+    lines += group_note_lines
 
     # HEADLINE — OOD cross-contrast generalization (training contrast EXCLUDED).
     lines += block_table(
@@ -235,12 +294,17 @@ def main():
             "(auglab_default) is an expected trade-off, not a failure.")
 
     # Per-contrast transparency: mean Δ + raw (uncorrected) Wilcoxon p, in-domain flagged.
+    # Always the flat RAW columns (never grouped) — this is the ungrouped, un-pooled
+    # ground truth the group tree above was built from; kept visible regardless of
+    # whether contrast_groups is active.
+    in_dom_raw = in_domain_contrast if (in_domain_contrast in raw_cols) else None
     lines += ["## Per-contrast mean Δ (ref − competitor) with raw Wilcoxon p", "",
-              "| competitor | " + " | ".join((f"{c} *" if c == in_dom else c) for c in cols) + " |",
-              "|" + "---|" * (len(cols) + 1)]
+              "_Raw, un-pooled columns — independent of contrast-group pooling above._", "",
+              "| competitor | " + " | ".join((f"{c} *" if c == in_dom_raw else c) for c in raw_cols) + " |",
+              "|" + "---|" * (len(raw_cols) + 1)]
     for comp in competitors:
         cells = []
-        for col in cols:
+        for col in raw_cols:
             x, y = paired(data[ref], data[comp], col)
             cells.append(f"{np.mean(x - y) * scale:+.2f} ({fmt_p(wilcoxon_p(x, y))})" if len(x) else "—")
         lines.append(f"| {comp} | " + " | ".join(cells) + " |")
