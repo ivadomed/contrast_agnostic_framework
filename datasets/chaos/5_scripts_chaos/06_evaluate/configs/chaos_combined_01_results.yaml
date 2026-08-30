@@ -1,22 +1,42 @@
-# CHAOS — combined training modalities (T1in + T2spir pooled), cross-contrast.
-# Consumed by datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py
-# via 06_33_combined_modality_summary.sh. Companion to chaos_t1in_03_results.yaml /
-# chaos_t2spir_01_results.yaml (each ONE training modality) — this pools BOTH into
-# one row per method, with an inline significance column (ref = OURS train050_val000)
-# after the usual "all" column.
+# CHAOS — combined training modalities (T1in + T2spir pooled), cross-contrast
+# AND cross-dataset. Consumed by
+# datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
+# 06_33_combined_modality_summary.sh. Companion to chaos_t1in_03_results.yaml /
+# chaos_t2spir_01_results.yaml (each ONE training modality) — this pools BOTH
+# into one row per method, with an inline significance column (ref = OURS
+# train050_val000) after the usual "all" column.
+#
+# Extended 2026-08-04 to also fold in cross-dataset generalization (AMOS,
+# SLIVER07), mirroring what each single-modality
+# cross_dataset_t1in/t2spir_01_results.yaml already reports per training
+# modality — this is the same data, pooled across BOTH training modalities the
+# way the within-dataset columns already were. kidney-t2w, cirrmri-liver, and
+# MSD-Spleen are deliberately excluded (internally justified, not reported
+# here or in the paper — MSD-Spleen removed 2026-08-04, was included in error;
+# see cross_dataset_t1in_01_results.yaml's `sources:` comments for the
+# kidney-t2w/cirrmri-liver reasoning if it needs revisiting). Each modality's
+# first source (its own metrics_dir, no prefix) reproduces the original
+# t1in/t2spir/ct/t1out columns unchanged; the added sources contribute the new
+# columns.
 #
 # Same fixed 7-method order as the per-modality configs (no others): baseline,
 # synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2
 # train050_val000, then train050_val100.
-title: "CHAOS — combined training modalities (T1in + T2spir), cross-contrast"
+title: "CHAOS — combined training modalities (T1in + T2spir), cross-contrast + cross-dataset"
 output_dir: "${METRICS_ROOT}/chaos_model/combined_contrasts"
 output_prefix: "01_results"
 ref: auglabAug_v26_6_2_train050_val000
-column_order: [t1in, t2spir, ct, t1out]
+column_order: [t1in, t2spir, ct, t1out, amos_ct, amos_mri, sliver07_ct_liver]
 
 modalities:
   - name: t1in
-    metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in"
+        column_prefix: "amos_"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/sliver07/8_results_sliver07/02_metrics/chaos_model/t1in"
+        column_rename:
+          ct: sliver07_ct_liver
     runs:
       baseline: chaos_t1in_baseline_20260614_153230
       synthseg_noEM: chaos_t1in_synthseg_noEM_train100_val000_20260611_120000
@@ -26,7 +46,13 @@ modalities:
       auglabAug_v26_6_2_train050_val000: chaos_t1in_auglabAug_v26_6_2_train050_val000_20260615_213615
       auglabAug_v26_6_2_train050_val100: chaos_t1in_auglabAug_v26_6_2_train050_val100_20260616_112420
   - name: t2spir
-    metrics_dir: "${METRICS_ROOT}/chaos_model/t2spir"
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/chaos_model/t2spir"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir"
+        column_prefix: "amos_"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/sliver07/8_results_sliver07/02_metrics/chaos_model/t2spir"
+        column_rename:
+          ct: sliver07_ct_liver
     runs:
       baseline: chaos_t2spir_baseline_20260620_111146
       synthseg_noEM: chaos_t2spir_synthseg_noEM_20260620_112515
@@ -35,3 +61,29 @@ modalities:
       srcsm: chaos_t2spir_srcsm_20260709_121945
       auglabAug_v26_6_2_train050_val000: chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202
       auglabAug_v26_6_2_train050_val100: chaos_t2spir_auglabAug_v26_6_2_train050_val100_20260723_194053
+
+# Significance/"all"-column pooling (aggregate_from_config.py's contrast_groups
+# machinery, shared with the per-modality cross_dataset_{t1in,t2spir}_01_results.yaml
+# configs -- see their own contrast_groups block for the full rationale). Here
+# CT has 3 columns (ct = chaos's own, unrenamed at this pooling level; amos_ct;
+# sliver07_ct_liver -- msd-spleen deliberately excluded from THIS config, see
+# the header comment above), vs 1 each for t1in/t1out/amos_mri (t2spir is
+# in-domain for this pooled table so it's not "OOD" here, but still gets its
+# own vote same as any other column). Same per-organ-then-cross-organ CT
+# treatment as the per-modality configs. Disable by removing this block or
+# setting use_contrast_groups: false.
+contrast_groups:
+  t1in: t1in
+  t2spir: t2spir
+  t1out: t1out
+  amos_mri: amos_mri
+  CT:
+    liver:
+      - ct
+      - {column: amos_ct, label: liver}
+      - sliver07_ct_liver
+    spleen:
+      - {column: amos_ct, label: spleen}
+    kidney:
+      - {column: amos_ct, label: left_kidney}
+      - {column: amos_ct, label: right_kidney}

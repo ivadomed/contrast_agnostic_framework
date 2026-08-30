@@ -11,7 +11,6 @@ column_order:
   - amos_ct
   - amos_mri
   - sliver07_ct_liver
-  - msd_spleen_ct_spleen
 
 sources:
   # kidney-t2w EXCLUDED 2026-08-01: coronal acquisition, its through-plane
@@ -32,6 +31,9 @@ sources:
   # contrast generalization for this dataset. Not confirmed by direct
   # measurement (this dataset's own GT is liver-only, no spleen/kidney label to
   # check against) -- treated as untrustworthy pending that confirmation.
+  # msd-spleen EXCLUDED 2026-08-29: forgotten exclusion caught during a paper
+  # results-aggregation review -- was never meant to be in this project's
+  # cross-dataset roster. Removed here and from chaos_combined_01_results.yaml.
   - metrics_dir: "${PROJECT_ROOT}/datasets/chaos/8_results_chaos/02_metrics/chaos_model/t2spir"
     column_prefix: "chaos_"
     column_rename:
@@ -41,11 +43,28 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/sliver07/8_results_sliver07/02_metrics/chaos_model/t2spir"
     column_rename:
       ct: sliver07_ct_liver  # sliver07 GT only has liver
-  - metrics_dir: "${PROJECT_ROOT}/datasets/msd-spleen/8_results_msd-spleen/02_metrics/chaos_model/t2spir"
-    column_rename:
-      ct: msd_spleen_ct_spleen  # msd-spleen GT only has spleen
   # NOTE: TRUSTED intentionally NOT included here — its US eval is confounded by a
   # center-bias artifact (see the t1in config note). Excluded from the roll-up.
+
+# Significance-testing pooling (significance_from_config.py only -- see the same
+# block in cross_dataset_t1in_01_results.yaml for the full rationale). Pools CT's 3
+# columns (chaos_ct_liver, amos_ct, sliver07_ct_liver) into ONE top-level "CT" vote
+# via per-organ-then-cross-organ averaging, instead of outvoting t1in/t1out/amos_mri
+# 3-to-1. Disable by removing this block or setting use_contrast_groups: false.
+contrast_groups:
+  chaos_t2spir: chaos_t2spir
+  chaos_t1in: chaos_t1in
+  chaos_t1out: chaos_t1out
+  amos_mri: amos_mri
+  CT:
+    liver:
+      - chaos_ct_liver
+      - {column: amos_ct, label: liver}
+      - sliver07_ct_liver
+    spleen: {column: amos_ct, label: spleen}
+    kidney:
+      - {column: amos_ct, label: left_kidney}
+      - {column: amos_ct, label: right_kidney}
 
 # Canonical method order (CLAUDE.md): baseline, auglab_default, synthseg_noEM,
 # synthseg_EM, v26_6_2 (alone), srcsm (7th arm), OURS val000, OURS val100.

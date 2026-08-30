@@ -1,13 +1,17 @@
-# open-ms FLAIR-trained models — combined cross-dataset results: open-ms's own
-# held-out test set (in-domain flair + cross-contrast t1w/t2w) AND mslesseg's
-# independent 115-scan cohort (an entirely separate dataset/scanner set — see
-# datasets/mslesseg/README.md). Columns are prefixed by dataset so the two
-# don't collide (open-ms_flair, open-ms_t1w, open-ms_t2w, mslesseg_flair,
-# mslesseg_t1w, mslesseg_t2w) — same §14 cross-dataset roll-up pattern as
-# chaos/.../cross_dataset_t1in_01_results.yaml (amos/sliver07 sources).
-# Consumed by 06_10_aggregate_from_config.sh AND 06_11_significance_from_config.sh
-# (same config, run separately — see that script's header for --ref usage).
-title: "open-ms FLAIR models — own test set + mslesseg cross-dataset generalization"
+# open-ms FLAIR-trained models — own test set (in-domain flair + cross-contrast
+# t1w/t2w). Both external cross-dataset sources this file used to also report
+# are now excluded by explicit editorial decision, most recently mslesseg
+# (2026-08-29: isolate the cross-MODALITY effect without an entangled
+# cross-dataset annotation-style confound; see open-ms_combined_01_results.yaml's
+# comment for the full rationale -- no disqualifying data artifact was found,
+# this is a deliberate scope choice) and earlier ms3seg (same reasoning class).
+# Both datasets have been archived to datasets/03_archive/. With no remaining
+# external source, this file is currently equivalent to open-ms_flair_01_results.yaml
+# (own-dataset-only) -- kept as its own file rather than deleted in case a future
+# external cross-dataset source is added back, but there is nothing "cross-dataset"
+# about its current content. Consumed by 06_10_aggregate_from_config.sh AND
+# 06_11_significance_from_config.sh (same config, run separately).
+title: "open-ms FLAIR models — own test set (no external cross-dataset source currently)"
 in_domain_contrast: open-ms_flair
 output_prefix: "04_01_cross_dataset_flair"
 output_dir: "${PROJECT_ROOT}/datasets/open-ms/8_results_open-ms/02_metrics/open_ms_model/flair"
@@ -16,27 +20,16 @@ column_order:
   - open-ms_flair
   - open-ms_t1w
   - open-ms_t2w
-  - mslesseg_flair
-  - mslesseg_t1w
-  - mslesseg_t2w
-  - ms3seg_flair
-  - ms3seg_t1w
-  - ms3seg_t2w
 
 sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/open-ms/8_results_open-ms/02_metrics/open_ms_model/flair"
     column_prefix: "open-ms_"
-  - metrics_dir: "${PROJECT_ROOT}/datasets/mslesseg/8_results_mslesseg/02_metrics/open_ms_model/flair"
-    column_prefix: "mslesseg_"
-  - metrics_dir: "${PROJECT_ROOT}/datasets/ms3seg/8_results_ms3seg/02_metrics/open_ms_model/flair"
-    column_prefix: "ms3seg_"
+
+# No contrast_groups block: with only one source, there is nothing to pool.
 
 # 8-method suite (CLAUDE.md canonical order + srcsm 7th arm): baseline, auglab_default,
 # synthseg_noEM, synthseg_EM, v26_6_2-alone (train050_val100), srcsm, and OURS as the
-# CURRENT val000/val100 pair (train025_val100 was the pre-dual-val checkpoint, now
-# superseded — updated 2026-07-29 to match what's actually been predicted+evaluated on
-# mslesseg/ms3seg). Same RUN_IDs as datasets/mslesseg/.../configs/mslesseg_01_results.yaml
-# (mslesseg evaluates these exact open-ms checkpoints) — kept in sync by hand.
+# CURRENT val000/val100 pair.
 runs:
   - open-ms_flair_baseline_20260706_061243
   - open-ms_flair_auglab_default_20260706_061243

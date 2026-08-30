@@ -5,6 +5,24 @@
 # row per method, with an inline significance column (ref = OURS train050_val000)
 # after the usual "all" column.
 #
+# 2026-08-04: cross-dataset generalization (MSLesSeg) was added here, then
+# REMOVED 2026-08-29 at the user's explicit editorial request: with enough
+# in-dataset contrasts already, and open-ms already being a hard intra-tissue
+# task, the goal is to isolate the cross-MODALITY effect specifically without
+# an entangled cross-DATASET annotation-style confound (a different cohort's
+# annotators are a second, uncontrolled source of variation on top of the one
+# this task is meant to isolate) -- even though a direct empirical check found
+# no disqualifying artifact (MSLesSeg's per-case Dice distribution is smooth,
+# not bimodal/outlier-driven, and its cross-contrast ordering and degradation
+# match open-ms's own pattern almost exactly, just uniformly ~8-12 points
+# lower, consistent with genuine cross-site/cross-population difficulty
+# rather than a broken comparison). ms3seg was similarly added and removed
+# earlier for the same class of reasoning (internally justified, not reported
+# here or in the paper). MSLesSeg itself has been archived to
+# datasets/03_archive/mslesseg. Own-dataset-only again below; no external
+# sources, no contrast_groups pooling needed (that machinery existed only to
+# combine own + MSLesSeg columns).
+#
 # Same fixed 7-method order as the per-modality configs (no others): baseline,
 # synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2
 # train050_val000, then train050_val100.
