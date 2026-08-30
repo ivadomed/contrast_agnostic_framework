@@ -7,7 +7,7 @@
 | Machine | Type / backend | Role |
 |---|---|---|
 | **Vulcan** (AMII / Alliance) | Slurm cluster | **Primary.** All datasets + checkpoints live here; the main place to train/predict/eval. GitHub push works from here (done manually). Can be queue-congested when priority is low. |
-| **Killarney** (Alliance) | Slurm cluster (same as Vulcan) | **Overflow GPU.** Same cluster type. Datasets staged there as of 2026-07-10: **chaos** (`1_BIDS_chaos/chaos-abdominal`, `2_nnUNet_chaos`) and **open-ms**. brats2024-glioma / on-harmony / others not yet staged — rsync from Vulcan first if needed there. Used when Vulcan priority runs low and we need more GPU. |
+| **Killarney** (Alliance) | Slurm cluster (same as Vulcan) | **Overflow GPU.** Same cluster type. Datasets staged there as of 2026-07-10: **chaos** (`1_BIDS_chaos/chaos-abdominal`, `2_nnUNet_chaos`) and **open-ms**. brats2024-glioma / on-harmony / others not yet staged — rsync from Vulcan first if needed there. Used when Vulcan priority runs low and we need more GPU. ⚠️ **Naming drift (2026-08-28):** Vulcan's `1_BIDS_chaos` leaf was renamed `chaos-abdominal` → `abdomen-chaos`, and `1_BIDS_open-ms`'s leaf `open-ms-brain` → `ms-brain-openms`, for git-annex upload prep — Killarney's already-staged copies still use the **old** leaf names until separately re-synced/renamed there. Don't assume the two clusters' paths match until that's done. |
 | **romane** (NeuroPoly lab) | `set_slot` workstation | **Limited-use lab box, only 4 GPUs.** The original dev machine; used for smaller/interactive GPU jobs. |
 | **TamIA** (Alliance) | Slurm cluster (same family as Vulcan/Killarney) | **Newest, biggest-GPU cluster — added 2026-07-25.** Whole-node H100/H200 allocations (see below), much more GPU per node than Vulcan/Killarney's L40S. **Use these GPUs properly — a coworker was already warned by Alliance staff about under-utilizing allocated GPUs on this account, and TamIA's whole-node model makes idle GPUs especially visible.** Currently only reachable via a relay through Vulcan (see below); as of 2026-07-31 all 4 datasets (`brats2024-glioma`, `chaos`, `on-harmony`, `open-ms`) are staged there, and **all data currently lives on `$SCRATCH` only** (nothing in `$PROJECT` yet) — see the TamIA-specific subsection for what that means operationally. |
 
@@ -256,32 +256,28 @@ Predicting/evaluating at a **non-default checkpoint** (project default is `check
 
 ---
 
-## Analysis pipelines (paper: the two mechanism "pillars")
+## Analysis pipelines (paper: texture preservation + the causal ablation ladder)
 
-The paper explains *why* our method works via two input-space analyses on the **generated augmentation
-volumes** (same volumes + same 4 methods — palette, synthseg_em, synthseg_noem, auglab_default — feed both):
+**Correction 2026-08-28:** this section used to describe "two mechanism pillars." That framing is
+retired — the paper explains *why* our method works via texture preservation (below) plus the causal
+ablation ladder / dissociation table (see "The causal-ablation ladder" further down this file), not via
+a second histogram-coverage analysis. Do not reintroduce "Pillar 2" language without a deliberate
+decision to reopen it; see `paper/NARRATIVE.md` §3 for the same correction on the paper-narrative side.
 
-- **Pillar 1 — texture preservation.** `datasets/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/`.
+- **Texture preservation.** `datasets/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/`.
   Census / rank-transform |correlation| (contrast+inversion-invariant) + NMI, source vs each generated
   volume, per anatomical ROI (on-harmony: 31 SynthSeg classes). Grounding: that dir's `LITERATURE_REVIEW.md`.
-- **Pillar 2 — histogram-manifold coverage.** `.../histogram_coverage_lvl_1/`. Per-(scanner×contrast)-group
-  **Coverage** (Naeem 2020) macro-averaged + **Vendi** (Friedman & Dieng 2023), on 31-class regional
-  histograms, with PCA + UMAP plots. Grounding: that dir's `GROUNDING_AUDIT.md` + `LITERATURE_REVIEW.md`.
-  Metrics computed by `compute_coverage_metrics.py` (fast precomputed-distance bootstrap), plotted by
-  `plot_coverage_metrics.py` / `plot_manifold.py`.
+  Same input-space method feeds the paper's NGF (Normalized Gradient Field) supplementary table.
 
-**open-ms variants** of both pillars use only the labels open-ms provides — a 2-region **[lesion, overall]**
-feature instead of 31 anatomical ROIs (no SynthSeg parcellation; brainmask deliberately unused). See
-`datasets/open-ms/7_analysis_open-ms/histogram_coverage_lvl_1/README.md`.
-
-Vendi API: `from vendi_score import vendi; vendi.score_X(X)` (no `model` arg). Metric deps: `prdc`,
-`vendi-score`, `umap-learn` (in `requirements.txt`).
-
-**Previous experiment (deprecated — do NOT build on it):** `.../contrast_manifold/` was an earlier
-manifold-coverage exploration (feature extraction → PCA/UMAP/PRDC/Vendi with a custom IND/OOD split and
-hand-rolled spread/hull/recall@Nx metrics, feature types like `regional_hist_64`/`hog3d_512`/CURIA). Its
-numbers were deemed unreliable and it is **superseded by Pillar 2** above. Kept only for history; not
-currently relevant.
+**Histogram-manifold coverage — explored, permanently out of scope for the paper.**
+`.../histogram_coverage_lvl_1/` (Coverage (Naeem 2020) macro-averaged + Vendi (Friedman & Dieng 2023) on
+31-class regional histograms) and the open-ms 2-region **[lesion, overall]** variant both have finished,
+grounded numbers on disk — but the honest result needs more justification than it's worth for CVPR, so it
+will never be written up in the paper. Kept only as a reference pipeline, not a paper contribution;
+don't cite its numbers as paper-supporting evidence. The still-earlier `.../contrast_manifold/` pipeline
+(feature extraction → PCA/UMAP/PRDC/Vendi with a custom IND/OOD split and hand-rolled spread/hull/recall@Nx
+metrics) predates this one and was already deemed unreliable before the histogram-coverage redo — both are
+now equally out of scope, kept only for history.
 
 ---
 
