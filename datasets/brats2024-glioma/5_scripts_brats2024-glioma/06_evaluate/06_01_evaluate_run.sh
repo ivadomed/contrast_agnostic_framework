@@ -39,13 +39,13 @@
 # to already exist.
 
 set -euo pipefail
-source "$(dirname "$0")/../00_utils/env.sh"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${HERE}/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
 
 RUN_ID="${1:?RUN_ID required}"
 FOLD="${2:-all}"
 DATASET_ID="${DATASET_ID:-051}"
-HERE="$(cd "$(dirname "$0")" && pwd)"
 
 # CATEGORY: use the env override if given, else auto-detect by finding which
 # PREDICTIONS_ROOT/{MODEL_TYPE}/{TRAINING_CONTRAST}/<category>/ subdir contains this RUN_ID.

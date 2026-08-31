@@ -38,13 +38,13 @@
 # below needs every modality's CSV to actually exist before it runs.
 
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${HERE}/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
 
 RUN_ID="${1:?RUN_ID required}"
 FOLD="${2:-all}"
 DATASET_ID="${DATASET_ID:-60}"
-HERE="$(cd "$(dirname "$0")" && pwd)"
 
 # CATEGORY: env override if given, else auto-detect which
 # PREDICTIONS_ROOT/{MODEL_TYPE}/{TRAINING_CONTRAST}/<category>/ subdir contains this RUN_ID.
