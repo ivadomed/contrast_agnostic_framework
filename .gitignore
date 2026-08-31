@@ -10,6 +10,8 @@ wandb/
 additional_contents/
 outputs/
 logs/
+*.log
+.DS_Store
 ms-exvivo-nih/
 results/visualizations/
 Dataset0*/
