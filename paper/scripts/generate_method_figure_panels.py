@@ -42,7 +42,7 @@ import nibabel as nib
 import numpy as np
 import torch
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO))
 
 from src.synthesis.v26_6_synthesis import (  # noqa: E402

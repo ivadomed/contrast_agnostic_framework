@@ -23,7 +23,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parent.parent.parent
 CASE = "BraTSGLI02108101"
 
 RAW051 = REPO / "datasets/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset051_BraTS2024GliomaT1n"
@@ -31,7 +31,7 @@ GT_DIR = REPO / "datasets/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset
 P_REAL = REPO / "datasets/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217/fold0/t1n"
 P_NOISE = REPO / "datasets/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659/fold0/t1n"
 
-OUT = Path(__file__).resolve().parent / "cvpr_format_latex" / "figures" / "snfh_et_zoom.pdf"
+OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "snfh_et_zoom.pdf"
 
 LABEL_COLORS = {1: (0.56, 0.27, 0.68), 2: (0.16, 0.50, 0.73), 3: (0.75, 0.22, 0.17), 4: (0.84, 0.65, 0.06)}
 SNFH, ET = 2, 3

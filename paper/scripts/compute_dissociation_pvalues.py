@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
 from ladder_ood_common import load_case_means, resolve_run_dir  # noqa: E402

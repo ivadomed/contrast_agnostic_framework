@@ -26,8 +26,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-REPO = Path(__file__).resolve().parent.parent
-OUT = Path(__file__).resolve().parent / "cvpr_format_latex" / "figures" / "ladder_panels"
+REPO = Path(__file__).resolve().parent.parent.parent
+OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "ladder_panels"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Remove the old per-task (5 dataset x 2 metric = 10) panels this script used

@@ -32,13 +32,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
 from ladder_ood_common import load_case_means, resolve_run_dir, rung_means  # noqa: E402
 from stat_tests import holm, wilcoxon_p  # noqa: E402
 
-OUT = Path(__file__).resolve().parent / "cvpr_format_latex" / "figures" / "per_contrast_curves"
+OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "per_contrast_curves"
 OUT.mkdir(parents=True, exist_ok=True)
 
 
