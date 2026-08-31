@@ -69,7 +69,12 @@ SLOT0_TYPE = "raw"    # 0_raw_<dataset>  — non-BIDS
 SLOT1_TYPE = "BIDS"   # 1_BIDS_<dataset> — BIDS
 
 # Entries directly under datasets/ that are NOT datasets and must be skipped.
-IGNORED_ENTRIES = {"00_commun_scripts", "__pycache__"}
+IGNORED_ENTRIES = {
+    "00_commun_scripts", "__pycache__",
+    "01_commun_results",   # cross-dataset comparison tables, not a per-dataset tree
+    "03_archive",          # gitignored dump of excluded/superseded datasets
+    "_script_backups",     # pre-edit .bak_YYYYMMDD snapshots, relocated out of 5_scripts_*
+}
 
 # Non-dir items permitted at the dataset root (documentation only).
 ALLOWED_ROOT_FILES = {"README.md"}
@@ -95,8 +100,11 @@ def validate_dataset(ds_path: Path) -> list[str]:
     slot_map: dict[str, str] = {}  # slot_num → dir_name
 
     for name, path in children.items():
-        # A top-level README documenting the dataset is allowed (and encouraged).
-        if name in ALLOWED_ROOT_FILES:
+        # Top-level documentation is allowed (and encouraged): README.md plus any
+        # other *.md doc a dataset wants at its root (e.g. a cluster-handoff note) --
+        # docs are self-explanatory by construction, so there's nothing to enforce
+        # beyond "it's a .md file", unlike code or data slots.
+        if name in ALLOWED_ROOT_FILES or path.suffix == ".md":
             continue
         if not path.is_dir() and not path.is_symlink():
             errors.append(f"  [root] unexpected file (not a dir): {name}")
@@ -167,9 +175,20 @@ def validate_dataset(ds_path: Path) -> list[str]:
             # 00_utils is a config/helper dir — file naming not enforced there
             if item.name == "00_utils":
                 continue
-            # files inside each numbered step subdir must follow NN_NN_name.ext
+            # files inside each numbered step subdir must follow NN_NN_name.ext --
+            # enforced for code only (.py/.sh); a generated data artifact (a JSON
+            # lookup table, a .md report) can sit alongside the script that made it
+            # without being forced into the same numbering scheme.
+            DATA_EXTS = {".json", ".md", ".csv", ".png", ".pdf", ".txt", ".yaml", ".yml"}
             for f in sorted(item.iterdir()):
                 if f.name.startswith(".") or f.is_dir():
+                    continue
+                if ".bak_" in f.name:
+                    errors.append(f"  [5_scripts/{item.name}] pre-edit backup left in the live "
+                                  f"tree, should live outside 5_scripts_* (see paper's "
+                                  f"cvpr_format_latex_archive/ convention): {f.name!r}")
+                    continue
+                if f.suffix in DATA_EXTS:
                     continue
                 # nnU-Net trainer registration shims must keep their exact class-derived
                 # name (recursive_find_python_class scans by filename) — see CLAUDE.md.
