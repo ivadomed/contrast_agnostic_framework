@@ -35,7 +35,10 @@ from matplotlib.lines import Line2D
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
-from ladder_ood_common import load_case_means, resolve_run_dir, rung_means  # noqa: E402
+from ladder_ood_common import (  # noqa: E402
+    load_case_means, resolve_run_dir, rung_means,
+    _cross_dataset_contrast_labels, _per_contrast_rung_means_cross_dataset, _dataset_name,
+)
 from stat_tests import holm, wilcoxon_p  # noqa: E402
 
 OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "per_contrast_curves"
@@ -58,20 +61,30 @@ WRAPPERS = [
     ("ON-Harmony T2w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
     ("Brats-GLI T2w", "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
     ("Open-MS T1w", "datasets/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
+    ("ATLAS-Liver-HCC", "datasets/atlas-liver-hcc/5_scripts_atlas-liver-hcc/06_evaluate/06_13_ladder_summary.py"),
 ]
 
 FILL_SWAP_IDX = 4
 RUNG_SHORT = ["base", "+km", "+lbl", "+vor", "+real", "+AL(v000)", "+AL(v100)"]
 IMPROVE, WORSEN, FLAT = "#2f7d6b", "#c0392b", "#8a8a8a"
 FILLSWAP_BAND = "#f0c96b"
-T1_FAMILY = {"Brats-GLI T1n", "Open-MS T1w", "CHAOS T1in", "ON-Harmony T1w"}
+# ATLAS-Liver-HCC trains on one modality (T1w) permanently -- it has no second
+# training-modality sibling, so it gets exactly one plot_panel() call (below)
+# and lands in T1_FAMILY (solid line) since it IS T1-weighted.
+T1_FAMILY = {"Brats-GLI T1n", "Open-MS T1w", "CHAOS T1in", "ON-Harmony T1w", "ATLAS-Liver-HCC"}
 INTERFACE_TASKS = {"CHAOS T1in", "CHAOS T2spir", "ON-Harmony T1w", "ON-Harmony T2w"}
+CROSS_DATASET_TASKS = {"ATLAS-Liver-HCC"}
 
 MARKER = {
     "t1in": "o", "t1out": "s", "t2spir": "^", "ct": "D",
     "t1n": "v", "t1c": "P", "t2w": "X", "t2f": "*",
     "flair": "h", "t1w": "<", "bold": ">", "dwi_ap": "p",
     "epi_ap": "8", "gre_echo1_mag": "d",
+    # ATLAS-Liver-HCC's cross-dataset OOD streams ('<dataset>/<item>' labels,
+    # see ladder_ood_common._cross_dataset_contrast_labels).
+    "lld-mmri-hcc/t2wi": "^", "lld-mmri-hcc/dwi": "v",
+    "liverhccseg/ce-pre_t1w": "o", "liverhccseg/ce-art_t1w": "s",
+    "liverhccseg/ce-pv_t1w": "D", "liverhccseg/ce-del_t1w": "P",
 }
 
 plt.rcParams.update({
@@ -87,28 +100,64 @@ def norm(c):
     return c.lower()
 
 
+def _cross_dataset_item_source(ood_sources, label):
+    """label is '<dataset>/<item>' (see _cross_dataset_contrast_labels) -- find
+    which of ood_sources produced it, and the bare item name within it."""
+    ds_name, item = label.split("/", 1)
+    for metrics_root in ood_sources:
+        if _dataset_name(metrics_root) == ds_name:
+            return metrics_root, item
+    raise KeyError(f"no source for {label!r}")
+
+
 def gather(metric: str):
     task_data = {}
     for name, rel in WRAPPERS:
         mod = _load_wrapper(REPO / rel)
         per_contrast = {}
         pvals_this_task, contrasts_this_task = [], []
-        for contrast in mod.OOD_CONTRASTS:
-            series = []
-            for label, ingredient, run_key in mod.RUNGS:
-                v, _ = rung_means(mod.METRICS_ROOT, run_key, metric, mod.IN_DOMAIN, [contrast])
-                series.append(v)
-            run3 = resolve_run_dir(mod.METRICS_ROOT, mod.RUNGS[3][2])
-            run4 = resolve_run_dir(mod.METRICS_ROOT, mod.RUNGS[4][2])
-            c3 = load_case_means(run3, metric).get(contrast, {})
-            c4 = load_case_means(run4, metric).get(contrast, {})
-            common = sorted(set(c3) & set(c4))
-            x = np.array([c3[k] for k in common])
-            y = np.array([c4[k] for k in common])
-            p = wilcoxon_p(x, y) if len(x) else float("nan")
-            pvals_this_task.append(p)
-            contrasts_this_task.append(contrast)
-            per_contrast[contrast] = series
+        if name in CROSS_DATASET_TASKS:
+            # Cross-dataset ladder (single training modality): OOD "contrasts" are
+            # '<dataset>/<item>' streams pooled from multiple evaluator datasets,
+            # not columns within one dataset's own metrics tree (see
+            # ladder_ood_common.run_ladder_cross_dataset).
+            labels = []
+            for _, _, run_key in mod.RUNGS:
+                found = _cross_dataset_contrast_labels(mod.OOD_SOURCES, run_key, metric)
+                if len(found) > len(labels):
+                    labels = found
+            for label in labels:
+                series = [_per_contrast_rung_means_cross_dataset(mod.OOD_SOURCES, run_key, metric, [label])[label]
+                          for _, _, run_key in mod.RUNGS]
+                src, item = _cross_dataset_item_source(mod.OOD_SOURCES, label)
+                run3 = resolve_run_dir(src, mod.RUNGS[3][2])
+                run4 = resolve_run_dir(src, mod.RUNGS[4][2])
+                c3 = load_case_means(run3, metric).get(item, {}) if run3.is_dir() else {}
+                c4 = load_case_means(run4, metric).get(item, {}) if run4.is_dir() else {}
+                common = sorted(set(c3) & set(c4))
+                x = np.array([c3[k] for k in common])
+                y = np.array([c4[k] for k in common])
+                p = wilcoxon_p(x, y) if len(x) else float("nan")
+                pvals_this_task.append(p)
+                contrasts_this_task.append(label)
+                per_contrast[label] = series
+        else:
+            for contrast in mod.OOD_CONTRASTS:
+                series = []
+                for label, ingredient, run_key in mod.RUNGS:
+                    v, _ = rung_means(mod.METRICS_ROOT, run_key, metric, mod.IN_DOMAIN, [contrast])
+                    series.append(v)
+                run3 = resolve_run_dir(mod.METRICS_ROOT, mod.RUNGS[3][2])
+                run4 = resolve_run_dir(mod.METRICS_ROOT, mod.RUNGS[4][2])
+                c3 = load_case_means(run3, metric).get(contrast, {})
+                c4 = load_case_means(run4, metric).get(contrast, {})
+                common = sorted(set(c3) & set(c4))
+                x = np.array([c3[k] for k in common])
+                y = np.array([c4[k] for k in common])
+                p = wilcoxon_p(x, y) if len(x) else float("nan")
+                pvals_this_task.append(p)
+                contrasts_this_task.append(contrast)
+                per_contrast[contrast] = series
         adj = holm(pvals_this_task)
         sig = dict(zip(contrasts_this_task, adj))
         task_data[name] = {"series": per_contrast, "sig": sig, "n": len(common)}
@@ -149,20 +198,22 @@ def build_figure(metric: str, ylabel: str, out_name: str, higher_is_better: bool
         ax.spines["right"].set_visible(False)
         ax.tick_params(axis="both", labelsize=9, length=3)
 
-    fig = plt.figure(figsize=(16.5, 6.3))
-    gs = fig.add_gridspec(1, 4, wspace=0.38, left=0.05, right=0.985, top=0.80, bottom=0.30)
-    axes = [fig.add_subplot(gs[0, i]) for i in range(4)]
+    fig = plt.figure(figsize=(20.0, 6.3))
+    gs = fig.add_gridspec(1, 5, wspace=0.38, left=0.04, right=0.988, top=0.80, bottom=0.30)
+    axes = [fig.add_subplot(gs[0, i]) for i in range(5)]
 
     plot_panel(axes[0], "CHAOS T1in", "CHAOS")
     plot_panel(axes[1], "ON-Harmony T1w", "ON-Harmony")
     plot_panel(axes[2], "Brats-GLI T1n", "BraTS-GLI")
     plot_panel(axes[3], "Open-MS FLAIR", "Open-MS")
+    plot_panel(axes[4], "ATLAS-Liver-HCC", "ATLAS-Liver-HCC")
     axes[0].set_ylabel(ylabel, fontsize=10.5)
 
     plot_panel(axes[0], "CHAOS T2spir", "CHAOS")
     plot_panel(axes[1], "ON-Harmony T2w", "ON-Harmony")
     plot_panel(axes[2], "Brats-GLI T2w", "BraTS-GLI")
     plot_panel(axes[3], "Open-MS T1w", "Open-MS")
+    # ATLAS-Liver-HCC trains on T1w only -- no second-modality sibling call.
 
     fig.canvas.draw()
 
@@ -179,7 +230,7 @@ def build_figure(metric: str, ylabel: str, out_name: str, higher_is_better: bool
                                        color="#2a2a2a", linewidth=1.3))
 
     group_header(axes[0], axes[1], "Tissue interface")
-    group_header(axes[2], axes[3], "No tissue interface")
+    group_header(axes[2], axes[4], "No tissue interface")
 
     ls_handles = [Line2D([0], [0], color="#2a2a2a", linestyle="-", label="trained on T1-weighted", linewidth=1.8),
                   Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on T2-weighted/FLAIR", linewidth=1.8)]

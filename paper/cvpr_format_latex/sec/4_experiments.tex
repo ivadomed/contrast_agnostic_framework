@@ -48,10 +48,11 @@ independent external cohorts, one same-contrast-family
 (LiverHccSeg~\cite{gross2023liverhccseg}) and one genuinely cross-contrast
 (T2WI/DWI, the HCC subset of LLD-MMRI~\cite{lou2025sdrformer}, with masks
 produced using MedSAM2~\cite{ma2025medsam2}). It therefore contributes
-to the task-level comparison of \cref{tab:meta} but not to the per-setting
-breakdown of \cref{sec:suppl-persetting} or the causal-ablation ladder of
-\cref{subsec:e-ablation}, both of which require the cross-contrast axis the
-other four tasks have and this one does not.
+to the task-level comparison of \cref{tab:meta} and, via a cross-\emph{dataset}
+rather than cross-\emph{contrast} OOD axis, to the causal-ablation ladder of
+\cref{subsec:e-ablation} (\cref{tab:dissociation}) -- but not to the
+per-setting breakdown of \cref{sec:suppl-persetting}, which requires the
+cross-contrast axis the other four tasks have and this one does not.
 
 \begin{table}[t]
 \centering
@@ -126,12 +127,12 @@ add-one-component test isolating the contribution of the PALETTE transform.
 \toprule
  & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Liver-HCC & \textbf{overall} & $p$ vs ours \\
 \midrule
-Baseline        & 21.7 & 29.3 & 31.1 & 21.0 & 42.0 & 29.0 & 1.0e-46 \\
-SynthSeg-noEM   &  8.6 & 59.6 & 66.3 &  4.3 & 19.0 & 31.6 & 5.3e-74 \\
-SynthSeg-EM     & 43.6 & 83.0 & 67.4 & 33.9 & 47.3 & 55.1 & 5.2e-12 \\
-SRCSM           & 42.1 & 83.9 & 66.6 & 33.0 & 41.2 & 53.3 & 1.1e-32 \\
-Auglab          & 46.7 & 83.3 & 67.4 & 34.3 & 46.9 & 55.7 & 3.4e-10 \\
-\textbf{PALETTE (ours)} & \textbf{46.8} & \textbf{85.0} & \textbf{68.2} & \textbf{38.5} & \textbf{49.7} & \textbf{57.6} & --- \\
+Baseline        & 21.7 & 29.3 & 31.1 & 21.0 & 33.3 & 27.3 & 1.0e-46 \\
+SynthSeg-noEM   &  8.6 & 59.6 & 66.3 &  4.3 & 16.2 & 31.0 & 5.3e-74 \\
+SynthSeg-EM     & 43.6 & 83.0 & 67.4 & 33.9 & 43.3 & 54.2 & 5.2e-12 \\
+SRCSM           & 42.1 & 83.9 & 66.6 & 33.0 & 33.6 & 51.8 & 1.1e-32 \\
+Auglab          & 46.7 & 83.3 & 67.4 & 34.3 & 40.9 & 54.5 & 3.4e-10 \\
+\textbf{PALETTE (ours)} & \textbf{46.8} & \textbf{85.0} & \textbf{68.2} & \textbf{38.5} & \textbf{45.3} & \textbf{56.7} & --- \\
 \bottomrule
 \end{tabular}%
 }
@@ -220,12 +221,16 @@ across all seven rungs; colour is the fill-swap step's own significance
 teal = significant improvement, red = significant worsening, grey = not
 significant. Solid/dashed = trained on a T1-weighted vs.\ T2-weighted/FLAIR
 contrast; marker shape = eval contrast, one mapping reused across every
-panel. No-tissue-interface tasks (BraTS-GLI, Open-MS): 8 of 10 curves
-improve significantly at the fill swap, 1 worsens significantly
-(BraTS-GLI T2w$\to$T1n, discussed below), 1 is flat. Tissue-interface tasks
-(CHAOS, ON-Harmony): only 1 of 16 improves and 1 worsens significantly --
-the step is a non-event for 14 of 16 (88\%). Dice numbers pooled per ladder
-in \cref{tab:dissociation}; HD95 in \cref{sec:suppl-persetting}.}
+panel. No-tissue-interface tasks (BraTS-GLI, Open-MS, ATLAS-Liver-HCC): 8 of
+16 curves improve significantly at the fill swap, 1 worsens significantly
+(BraTS-GLI T2w$\to$T1n, discussed below), 7 are flat -- six of these are
+ATLAS-Liver-HCC's individual cross-dataset evaluation streams, each too
+small on its own to clear the corrected per-task threshold even though the
+pooled effect across all six is significant (\cref{tab:dissociation}).
+Tissue-interface tasks (CHAOS, ON-Harmony): only 1 of 16 improves and 1
+worsens significantly -- the step is a non-event for 14 of 16 (88\%). Dice
+numbers pooled per ladder in \cref{tab:dissociation}; HD95 in
+\cref{sec:suppl-persetting}.}
 \label{fig:ladder}
 \end{figure*}
 
@@ -237,33 +242,44 @@ in \cref{tab:dissociation}; HD95 in \cref{sec:suppl-persetting}.}
 \toprule
 Task & boundary type & $\Delta$ Dice & $p$ \\
 \midrule
-CHAOS T1in      & tissue interface & $+1.07$ & 6.9e-4 \\
+CHAOS T1in      & tissue interface & $+1.07$ & 8.6e-4 \\
 CHAOS T2spir    & tissue interface & $-1.14$ & 0.37 \\
-ON-Harmony T1w  & tissue interface$^\dagger$ & $\mathbf{-4.48}$ & 4.0e-6 \\
-ON-Harmony T2w  & tissue interface$^\dagger$ & $-1.43$ & 1.3e-7 \\
+ON-Harmony T1w  & tissue interface$^\dagger$ & $\mathbf{-4.48}$ & 4.6e-6 \\
+ON-Harmony T2w  & tissue interface$^\dagger$ & $-1.43$ & 1.4e-7 \\
 \midrule
-Open-MS FLAIR   & no tissue interface & $\mathbf{+7.69}$ & 3.1e-4 \\
+Open-MS FLAIR   & no tissue interface & $\mathbf{+7.69}$ & 3.7e-4 \\
 Open-MS T1w     & no tissue interface & $+0.79$ & 0.43 \\
-Brats-GLI T1n   & no tissue interface & $\mathbf{+7.22}$ & 2.1e-25 \\
+Brats-GLI T1n   & no tissue interface & $\mathbf{+7.22}$ & 2.4e-25 \\
 Brats-GLI T2w   & no tissue interface & $+0.60$ & 0.37 \\
+ATLAS-Liver-HCC T1w & no tissue interface$^\ddagger$ & $+2.09$ & 3.5e-3 \\
 \bottomrule
 \end{tabular}
 \caption{Effect of replacing label-style noise fill with the real-intensity
 remap, \emph{holding the partition and per-region statistics fixed}, on
-out-of-domain Dice, across all four headline tasks, both training
-modalities each. $p$ is a Holm-corrected paired Wilcoxon test on this one
-step, pooled over each task's OOD contrasts, across all eight rows. Two
-patterns emerge: large and significant on the \emph{primary} modality of
-the no-tissue-interface tasks, small on their secondary modality (still
-positive, but no longer significant); and small-to-negative, rarely
-significant, on tissue-interface tasks -- ON-Harmony's dense anatomical
-parcellation included (\S\ref{subsec:e-ablation}). HD95 for this same step
-is reported in \cref{sec:suppl-persetting}, where the separation is not as
-clean.
+out-of-domain Dice, across all five headline tasks (both training
+modalities each, except ATLAS-Liver-HCC's single modality). $p$ is a
+Holm-corrected paired Wilcoxon test on this one step, pooled over each
+task's OOD contrasts, across all nine rows. Two patterns emerge: large and
+significant on the \emph{primary} modality of the no-tissue-interface
+tasks, small on their secondary modality (still positive, but no longer
+significant); and small-to-negative, rarely significant, on tissue-interface
+tasks -- ON-Harmony's dense anatomical parcellation included
+(\S\ref{subsec:e-ablation}). ATLAS-Liver-HCC, tested under a harder
+cross-\emph{dataset} OOD axis rather than a held-out in-house contrast,
+lands in between: positive and significant, but smaller than either
+no-tissue-interface task's primary-modality effect -- consistent with the
+same mechanism at a reduced, harder-generalization strength rather than a
+counterexample to it. HD95 for this same step is reported in
+\cref{sec:suppl-persetting}, where the separation is not as clean.
 $^\dagger$31 regions, all bounded by a genuine tissue-type transition
 (ventricles against CSF, cortex/nuclei against white matter), just packed
 across near-total brain volume rather than a handful of large organs like
-CHAOS -- see discussion below.}
+CHAOS -- see discussion below.
+$^\ddagger$Single training modality, so there is no second in-house
+contrast to hold out; OOD instead pools case-level pairs across two
+independent external cohorts (LiverHccSeg, LLD-MMRI-HCC) rather than a
+held-out contrast within the training dataset -- see
+\cref{subsec:e-ablation} and \cref{tab:datasets}.}
 \label{tab:dissociation}
 \end{table}
 
@@ -299,6 +315,25 @@ than CHAOS's near-null one, though still never a significant \emph{gain}.
 Whether that labelling \emph{density} carries its own separate effect,
 beyond boundary type alone, is a question one densely-labelled task cannot
 answer; we leave it to a dedicated follow-up with a second such task.
+
+A fifth task lets us test the same dissociation on a third organ system.
+ATLAS-Liver-HCC's target, hepatocellular carcinoma, is exactly the kind of
+texture-only, no-interface label ON-Harmony's regions are not: a tumour
+margin defined by enhancement pattern against surrounding liver
+parenchyma, not a fixed anatomical boundary. It groups with BraTS-GLI and
+Open-MS by the same criterion used above, and its fill-swap effect is
+positive and significant, in the predicted direction
+(\cref{tab:dissociation}). The magnitude is smaller than either
+no-tissue-interface task's primary-modality effect, which we attribute to
+the harder generalization axis rather than a weaker mechanism:
+ATLAS-Liver-HCC's OOD is cross-\emph{dataset} (different institutions,
+scanners and acquisition protocols entirely) rather than
+cross-\emph{contrast} within one scanner protocol, so part of the effect
+is plausibly absorbed by domain shift the other four tasks' ladders do not
+have to cross. A third appearance-defined task, on a third organ system,
+moving in the predicted direction strengthens the dissociation's
+generality, even though its smaller size is a real, stated limitation
+rather than a clean replication.
 
 Two further properties of this test are worth stating explicitly. First, it
 is not a comparison between methods but between two versions of the same
