@@ -215,21 +215,25 @@ attributable to texture preservation alone.
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast}
 \caption{The one-variable test (rung sequence as above), shown per held-out
 \emph{eval contrast} rather than pooled, one panel per dataset, grouped by
-boundary type. Each line is one (training modality, eval contrast) pair
-across all seven rungs; colour is the fill-swap step's own significance
-(Holm-corrected paired Wilcoxon within that ladder's own contrast family):
-teal = significant improvement, red = significant worsening, grey = not
-significant. Solid/dashed = trained on a T1-weighted vs.\ T2-weighted/FLAIR
+boundary type. Each thin line is one (training modality, eval contrast)
+pair; only its real-fill segment (shaded band) is coloured, by that curve's
+\emph{own} significance at this one step (Holm-corrected paired Wilcoxon
+within that ladder's own contrast family) -- light teal = significant
+improvement, light red = significant worsening, grey = not significant --
+since that is the only step being tested; every other segment is plain
+grey context. The bold black line is the panel's pooled average across
+every curve and training modality, with its own real-fill segment coloured
+to match the panel-level annotation above it exactly: a single p-value
+pooling \emph{both} training modalities into one paired Wilcoxon test
+(Holm-corrected across the five panels) -- a coarser, dataset-level
+reading than \cref{tab:dissociation}'s finer per-(task,modality) rows,
+which keep the modality-specific breakdown this panel-level view
+collapses. Four of five panels move significantly in the predicted
+direction; ON-Harmony's panel-pooled effect is a significant
+\emph{worsening} (labelled accordingly, not a low $p$ defaulting to read
+as "helps"). Solid/dashed = trained on a T1-weighted vs.\ T2-weighted/FLAIR
 contrast; marker shape = eval contrast, one mapping reused across every
-panel. No-tissue-interface tasks (BraTS-GLI, Open-MS, ATLAS-Liver-HCC): 8 of
-16 curves improve significantly at the fill swap, 1 worsens significantly
-(BraTS-GLI T2w$\to$T1n, discussed below), 7 are flat -- six of these are
-ATLAS-Liver-HCC's individual cross-dataset evaluation streams, each too
-small on its own to clear the corrected per-task threshold even though the
-pooled effect across all six is significant (\cref{tab:dissociation}).
-Tissue-interface tasks (CHAOS, ON-Harmony): only 1 of 16 improves and 1
-worsens significantly -- the step is a non-event for 14 of 16 (88\%). Dice
-numbers pooled per ladder in \cref{tab:dissociation}; HD95 in
+panel. Dice numbers pooled per ladder in \cref{tab:dissociation}; HD95 in
 \cref{sec:suppl-persetting}.}
 \label{fig:ladder}
 \end{figure*}

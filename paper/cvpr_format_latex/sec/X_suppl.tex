@@ -117,14 +117,16 @@ no single competitor is reliably second; SRCSM is close enough in aggregate
 \centering
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_hd95}
 \caption{The causal-ablation ladder of \cref{fig:ladder} (main paper), same
-per-dataset panels, same boundary-type grouping and same fill-swap rung,
-reported on HD95 instead of Dice (same significance colouring, now against
-the HD95 direction: lower is better, so \emph{improvement} means the
-fill-swap step lowers HD95). The separation is messier than Dice: 7 of 26
-curves improve significantly, 6 worsen significantly, 13 are flat --
-tissue-interface tasks alone split 1/6/9, so HD95 disagrees with Dice most
-in exactly the group where Dice found nothing. Underlying deltas in
-\cref{tab:dissociation-hd95}.}
+per-dataset panels, same boundary-type grouping, same fill-swap rung and
+same visual scheme (per-curve colour only on the real-fill segment; bold
+black panel average; one panel-pooled $p$-value per panel), reported on
+HD95 instead of Dice (\emph{improvement} means the fill-swap step lowers
+HD95, since lower is better here). The separation is messier than Dice:
+only three of five panels reach panel-pooled significance -- BraTS-GLI and
+ATLAS-Liver-HCC improve, ON-Harmony worsens -- while CHAOS and Open-MS are
+not significant, so HD95 disagrees with Dice most in exactly the two
+tasks (CHAOS, Open-MS) where the pooled effect is otherwise weakest.
+Underlying deltas in \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
 \end{figure*}
 
