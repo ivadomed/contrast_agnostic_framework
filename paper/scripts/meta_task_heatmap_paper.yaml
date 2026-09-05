@@ -1,27 +1,32 @@
 # PAPER-SCOPED copy of scripts/evaluate/meta_task_heatmap.yaml, restricted to
-# the 5 tasks this paper actually reports (brats2024-glioma, chaos,
-# on-harmony, open-ms, atlas-liver-hcc). The shared config also lists a 6th
-# task, healthy-spine-tum, added by a separate, unrelated workstream in this
-# repo (2026-08-29) -- correct for that broader project, out of scope for
-# this paper. Rather than edit the shared config (which that other
-# workstream depends on) or let that task silently drift into the paper's
-# headline table, this file pins the paper's own task list, output to a
-# paper-local dir so it never collides with datasets/01_commun_results/
-# meta_task_heatmap_summary.md (now serving the broader, multi-task project).
+# the 4 tasks this paper reports (brats2024-glioma, chaos, on-harmony,
+# open-ms). The shared config also lists a 5th task, healthy-spine-tum,
+# added by a separate, unrelated workstream in this repo (2026-08-29) --
+# correct for that broader project, out of scope for this paper. Rather than
+# edit the shared config (which that other workstream depends on) or let
+# that task silently drift into the paper's headline table, this file pins
+# the paper's own task list, output to a paper-local dir so it never
+# collides with datasets/01_commun_results/meta_task_heatmap_summary.md (now
+# serving the broader, multi-task project).
 #
-# atlas-liver-hcc (liver tumour, HCC) added 2026-08-29: single training
-# modality (CE-T1w), so its "combined" config
-# (atlas-liver-hcc_combined_01_results.yaml) wraps that one modality only --
-# combined_modality_summary.py's >=2-modality guard was relaxed to >=1 to
-# allow this (regression-tested against on-harmony's existing 2-modality
-# config first: byte-identical output apart from the timestamp). It has no
-# train050_val100 run yet, so it contributes no data to that row/column
-# (excluded from those cells' averages, not counted as 0 -- same convention
-# already used for any other missing task/method combination here).
+# atlas-liver-hcc (liver tumour, HCC) REMOVED 2026-09-02: the whole
+# atlas-liver-hcc extension (training set + its two eval-only companions
+# lld-mmri-hcc/lld-mmri-malignant + liverhccseg) is excluded from the paper
+# entirely -- see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)" for the
+# full rationale (LLD-MMRI's redistribution terms block the git-annex
+# reproducibility path; the causal-ablation ladder's OOD contrast pool
+# turned out to hinge on an ambiguous contrast -- Dixon out-of-phase reads as
+# appearance-adjacent to ATLAS's own fat-suppressed CE-T1w training data,
+# and the ladder's sign flips depending on whether it's included; and
+# ATLAS's own training cohort is itself an uncontrolled mix of CE-T1w
+# phases, undermining a clean in-domain/out-of-domain split). The dataset
+# directories moved to datasets/03_archive/. It was briefly a 5th task here
+# (added 2026-08-29, single training modality CE-T1w, no second in-house
+# contrast to cross-evaluate -- see the pre-2026-09-02 git history of this
+# file for that config if it's ever needed for reference).
 #
-# Otherwise identical to the shared config: same ref, same per-task configs
-# (which already carry the contrast_groups fix for chaos/open-ms/atlas-liver-hcc).
-title: "Cross-dataset — task-level heatmap (7-method suite, paper's 5 tasks)"
+# Otherwise identical to the shared config: same ref, same per-task configs.
+title: "Cross-dataset — task-level heatmap (7-method suite, paper's 4 tasks)"
 output_dir: "${PROJECT_ROOT}/paper/generated_results"
 output_prefix: "meta_task_heatmap_paper"
 ref: auglabAug_v26_6_2_train050_val000
@@ -39,6 +44,3 @@ tasks:
   - name: open-ms
     dataset: open-ms
     config: "${PROJECT_ROOT}/datasets/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_combined_01_results.yaml"
-  - name: atlas-liver-hcc
-    dataset: atlas-liver-hcc
-    config: "${PROJECT_ROOT}/datasets/atlas-liver-hcc/5_scripts_atlas-liver-hcc/06_evaluate/configs/atlas-liver-hcc_combined_01_results.yaml"

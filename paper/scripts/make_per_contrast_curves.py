@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
 Causal-ablation figures: one panel per DATASET (CHAOS, ON-Harmony, Brats-GLI,
-Open-MS, ATLAS-Liver-HCC), grouped under two boundary-type headers ("Tissue
-interface": CHAOS + ON-Harmony; "No tissue interface": Brats-GLI, Open-MS,
-ATLAS-Liver-HCC -- see paper/NARRATIVE.md and the on-harmony
-label-composition check in sec/4_experiments.tex for why ON-Harmony now
-groups with CHAOS rather than standing as a separate "dense label map"
-category). Produces two versions: Dice (main-paper fig:ladder) and HD95
-(supplementary fig:ladder-hd95).
+Open-MS), grouped under two boundary-type headers ("Tissue interface": CHAOS
++ ON-Harmony; "No tissue interface": Brats-GLI, Open-MS -- see
+paper/NARRATIVE.md and the on-harmony label-composition check in
+sec/4_experiments.tex for why ON-Harmony now groups with CHAOS rather than
+standing as a separate "dense label map" category). Produces two versions:
+Dice (main-paper fig:ladder) and HD95 (supplementary fig:ladder-hd95).
+
+ATLAS-Liver-HCC was a 5th panel here until 2026-09-02, when the whole
+atlas-liver-hcc extension was excluded from the paper -- see CLAUDE.md
+"Atlas-Liver-HCC exclusion (2026-09-02)".
 
 Each panel overlays every held-out EVAL CONTRAST as its own curve across all
 7 rungs. As of 2026-08-31 (requested by the user's supervisor, after an
@@ -31,7 +34,7 @@ effect is a significant WORSENING, labeled and colored as such). Line style
 = which of the dataset's two training modalities produced that curve (solid
 = trained on a T1-weighted contrast, dashed = T2-weighted/FLAIR); marker
 shape = which eval contrast, one consistent mapping reused across every
-panel and both metrics.
+panel and both metrics. Holm-corrected across the 4 panels.
 
 Usage:
   .venv/bin/python make_per_contrast_curves.py
@@ -77,7 +80,8 @@ WRAPPERS = [
     ("ON-Harmony T2w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
     ("Brats-GLI T2w", "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
     ("Open-MS T1w", "datasets/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
-    ("ATLAS-Liver-HCC", "datasets/atlas-liver-hcc/5_scripts_atlas-liver-hcc/06_evaluate/06_13_ladder_summary.py"),
+    # ATLAS-Liver-HCC REMOVED 2026-09-02 -- dataset excluded from the paper
+    # entirely, see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)".
 ]
 
 FILL_SWAP_IDX = 4
@@ -95,13 +99,13 @@ PANELS = [
     ("ON-Harmony", ["ON-Harmony T1w", "ON-Harmony T2w"]),
     ("BraTS-GLI", ["Brats-GLI T1n", "Brats-GLI T2w"]),
     ("Open-MS", ["Open-MS FLAIR", "Open-MS T1w"]),
-    ("ATLAS-Liver-HCC", ["ATLAS-Liver-HCC"]),
 ]
-# ATLAS-Liver-HCC trains on one modality (T1w) permanently -- it has no second
-# training-modality sibling, so it gets exactly one plot_panel() call (below)
-# and lands in T1_FAMILY (solid line) since it IS T1-weighted.
-T1_FAMILY = {"Brats-GLI T1n", "Open-MS T1w", "CHAOS T1in", "ON-Harmony T1w", "ATLAS-Liver-HCC"}
-CROSS_DATASET_TASKS = {"ATLAS-Liver-HCC"}
+T1_FAMILY = {"Brats-GLI T1n", "Open-MS T1w", "CHAOS T1in", "ON-Harmony T1w"}
+# Dead since 2026-09-02 (ATLAS-Liver-HCC, the only cross-dataset-ladder task,
+# was excluded from the paper -- see CLAUDE.md "Atlas-Liver-HCC exclusion").
+# Left empty rather than removing the cross-dataset branches below wholesale,
+# since every remaining task uses the within-dataset path unconditionally.
+CROSS_DATASET_TASKS = set()
 
 MARKER = {
     "t1in": "o", "t1out": "s", "t2spir": "^", "ct": "D",
@@ -322,22 +326,20 @@ def build_figure(metric: str, ylabel: str, out_name: str, higher_is_better: bool
         ax.spines["right"].set_visible(False)
         ax.tick_params(axis="both", labelsize=9, length=3)
 
-    fig = plt.figure(figsize=(20.0, 6.3))
-    gs = fig.add_gridspec(1, 5, wspace=0.38, left=0.04, right=0.988, top=0.80, bottom=0.30)
-    axes = [fig.add_subplot(gs[0, i]) for i in range(5)]
+    fig = plt.figure(figsize=(16.0, 6.3))
+    gs = fig.add_gridspec(1, 4, wspace=0.38, left=0.04, right=0.988, top=0.80, bottom=0.30)
+    axes = [fig.add_subplot(gs[0, i]) for i in range(4)]
 
     draw(axes[0], "CHAOS T1in", "CHAOS")
     draw(axes[1], "ON-Harmony T1w", "ON-Harmony")
     draw(axes[2], "Brats-GLI T1n", "BraTS-GLI")
     draw(axes[3], "Open-MS FLAIR", "Open-MS")
-    draw(axes[4], "ATLAS-Liver-HCC", "ATLAS-Liver-HCC")
     axes[0].set_ylabel(ylabel, fontsize=10.5)
 
     draw(axes[0], "CHAOS T2spir", "CHAOS")
     draw(axes[1], "ON-Harmony T2w", "ON-Harmony")
     draw(axes[2], "Brats-GLI T2w", "BraTS-GLI")
     draw(axes[3], "Open-MS T1w", "Open-MS")
-    # ATLAS-Liver-HCC trains on T1w only -- no second-modality sibling call.
 
     # Bold black panel average: pooled mean at every rung across all curves/
     # modalities/sources in that panel. Its real-fill segment is colored to
@@ -384,7 +386,7 @@ def build_figure(metric: str, ylabel: str, out_name: str, higher_is_better: bool
                                        color="#2a2a2a", linewidth=1.3))
 
     group_header(axes[0], axes[1], "Tissue interface")
-    group_header(axes[2], axes[4], "No tissue interface")
+    group_header(axes[2], axes[3], "No tissue interface")
 
     ls_handles = [Line2D([0], [0], color="#2a2a2a", linestyle="-", label="trained on T1-weighted", linewidth=1.8),
                   Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on T2-weighted/FLAIR", linewidth=1.8),

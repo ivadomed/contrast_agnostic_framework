@@ -34,24 +34,21 @@ Wilcoxon signed-rank test~\cite{wilcoxon1945} instead, since there each
 setting is judged on its own rather than pooled into a cross-task estimand.
 All tests are Holm-corrected~\cite{holm1979} for multiple comparisons.
 
-\paragraph{Contrast-group pooling.} For CHAOS and Liver-HCC, the same
-tested modality is sometimes evidenced by more than one external source:
-CHAOS's CT evidence comes from its own held-out CT split plus AMOS and
-SLIVER07; Liver-HCC's LiverHccSeg evidence comes from four contrast-enhanced
-phases (pre/arterial/portal-venous/delayed) of the same underlying modality.
-Averaging every raw column with equal weight -- the natural first
-implementation -- silently lets a modality with more contributing sources
-or phases outvote one with fewer in both the displayed \emph{all} average
-and the significance test, since it then supplies more of the
-equally-weighted columns being averaged. We instead pool disjoint sources
-(or phases) of the \emph{same} modality by concatenating their cases into
-one group before any averaging happens, then average modality groups with
-equal weight -- for CHAOS this additionally means averaging equal-weight
-across liver/spleen/kidney \emph{within} the pooled CT evidence, since
-AMOS's own CT column already blends all three organs into one number before
-it reaches this step. This changed some task-level numbers for CHAOS and
-Liver-HCC from earlier drafts of this paper; the other three tasks have no
-multi-source modality and are unaffected.
+\paragraph{Contrast-group pooling.} For CHAOS, the same tested modality is
+sometimes evidenced by more than one source: CHAOS's CT evidence comes from
+its own held-out CT split plus AMOS and SLIVER07. Averaging every raw
+column with equal weight -- the natural first implementation -- silently
+lets a modality with more contributing sources outvote one with fewer in
+both the displayed \emph{all} average and the significance test, since it
+then supplies more of the equally-weighted columns being averaged. We
+instead pool disjoint sources of the \emph{same} modality by concatenating
+their cases into one group before any averaging happens, then average
+modality groups with equal weight -- for CHAOS this additionally means
+averaging equal-weight across liver/spleen/kidney \emph{within} the pooled
+CT evidence, since AMOS's own CT column already blends all three organs
+into one number before it reaches this step. This changed some task-level
+numbers for CHAOS from earlier drafts of this paper; the other three tasks
+have no multi-source modality and are unaffected.
 
 \input{sec/_suppl_tables}
 
@@ -75,10 +72,9 @@ rather than in the main paper's headline table -- not because it is
 uninformative. \cref{tab:meta-hd95} gives the same task-level breakdown as
 \cref{tab:meta} (main paper). The no-augmentation baseline and SynthSeg-noEM
 are worst on both metrics, and PALETTE is at or near the best on every task
-except Liver-HCC (where SynthSeg-EM is noticeably ahead), and is
-significantly better in aggregate than four of the five competitors;
-SynthSeg-EM is close enough (29.8mm vs.\ our 30.8mm) that the two are not
-statistically distinguished ($p=1.00$). When HD95 disagrees with Dice for a
+and is significantly better in aggregate than four of the five competitors;
+SRCSM is close enough (18.8mm vs.\ our 18.6mm) that the two are not
+statistically distinguished ($p=0.61$). When HD95 disagrees with Dice for a
 given method -- a noticeably better HD95 than its
 Dice would predict -- the usual explanation is low recall: a method that
 predicts only a small, confident, well-localized fragment of the true
@@ -92,16 +88,16 @@ competitive.
 \small
 \setlength{\tabcolsep}{3.5pt}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc|c}
+\begin{tabular}{lccccc|c}
 \toprule
- & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Liver-HCC & \textbf{overall} & $p$ vs ours \\
+ & Brats-GLI & CHAOS & ON-Harm. & Open-MS & \textbf{overall} & $p$ vs ours \\
 \midrule
-Baseline        & 47.9 & 124.4 & 28.6 & 35.2 & 75.5 & 62.3 & 1.4e-29 \\
-SynthSeg-noEM   & 78.9 &  89.9 &  7.5 & 41.9 & 172.0 & 78.0 & 7.7e-114 \\
-SynthSeg-EM     & 17.4 &  31.8 &  4.7 & 24.7 & \textbf{70.4} & \textbf{29.8} & 1.0000 \\
-SRCSM           & 18.3 & \textbf{26.7} &  5.6 & 24.6 & 84.1 & 31.9 & 0.0018 \\
-Auglab          & \textbf{15.0} &  39.3 &  4.7 & 26.5 & 81.6 & 33.4 & 0.0018 \\
-\textbf{PALETTE (ours)} & 15.2 & 30.6 & \textbf{4.2} & \textbf{24.3} & 80.0 & 30.8 & --- \\
+Baseline        & 47.9 & 124.4 & 28.6 & 35.2 & 59.0 & 1.6e-29 \\
+SynthSeg-noEM   & 78.9 &  89.9 &  7.5 & 41.9 & 54.6 & 2.9e-60 \\
+SynthSeg-EM     & 17.4 &  31.8 &  4.7 & 24.7 & 19.7 & 0.0056 \\
+SRCSM           & 18.3 & \textbf{26.7} &  5.6 & 24.6 & 18.8 & 0.6103 \\
+Auglab          & \textbf{15.0} &  39.3 &  4.7 & 26.5 & 21.4 & 0.0012 \\
+\textbf{PALETTE (ours)} & 15.2 & 30.6 & \textbf{4.2} & \textbf{24.3} & \textbf{18.6} & --- \\
 \bottomrule
 \end{tabular}%
 }
@@ -122,8 +118,8 @@ same visual scheme (per-curve colour only on the real-fill segment; bold
 black panel average; one panel-pooled $p$-value per panel), reported on
 HD95 instead of Dice (\emph{improvement} means the fill-swap step lowers
 HD95, since lower is better here). The separation is messier than Dice:
-only three of five panels reach panel-pooled significance -- BraTS-GLI and
-ATLAS-Liver-HCC improve, ON-Harmony worsens -- while CHAOS and Open-MS are
+only two of four panels reach panel-pooled significance -- BraTS-GLI
+improves, ON-Harmony worsens -- while CHAOS and Open-MS are
 not significant, so HD95 disagrees with Dice most in exactly the two
 tasks (CHAOS, Open-MS) where the pooled effect is otherwise weakest.
 Underlying deltas in \cref{tab:dissociation-hd95}.}
@@ -328,28 +324,27 @@ Brats-GLI    & 46.8 & \textbf{47.3} & 15.2 & \textbf{14.7} \\
 CHAOS        & 85.0 & \textbf{85.2} & 30.6 & \textbf{28.7} \\
 ON-Harmony   & 68.2 & \textbf{68.4} &  4.2 & \textbf{4.1}  \\
 Open-MS      & \textbf{38.5} & 37.9 & 24.3 & \textbf{24.2} \\
-Liver-HCC    & \textbf{49.7} & 49.1 & 80.0 & \textbf{69.2} \\
 \midrule
-\textbf{overall} & 57.6 & 57.6 & 30.8 & \textbf{28.2} \\
+\textbf{overall} & 59.6 & \textbf{59.7} & 18.6 & \textbf{17.9} \\
 \bottomrule
 \end{tabular}
 \caption{Applying PALETTE at validation time as well as at training time,
-all five tasks. The two configurations are statistically indistinguishable
-at task level (Dice $p = 0.73$, HD95 $p = 1.00$, same task-stratified test
+all four tasks. The two configurations are statistically indistinguishable
+at task level (Dice $p = 0.49$, HD95 $p = 0.93$, same task-stratified test
 as \cref{tab:meta}), so we report the like-for-like \emph{val000}
 configuration in the main paper and note \emph{val100} as a free additional
 gain where it helps -- it requires no extra data, annotation or training
-cost, only applying the same transform to the validation split. Liver-HCC's
-own Dice moves the other way (49.7 $\to$ 49.1), which is why \textbf{overall}
-Dice is an exact wash across the two configurations.}
+cost, only applying the same transform to the validation split. Open-MS's
+own Dice moves the other way (38.5 $\to$ 37.9), which keeps \textbf{overall}
+Dice an effective wash across the two configurations (59.6 vs.\ 59.7, not a
+significant difference) despite three of four tasks favoring val100.}
 \label{tab:suppl-val100}
 \end{table}
 
 Validation-time randomization improves most tasks on both metrics
 (\cref{tab:suppl-val100}), most visibly on boundary distance for CHAOS
-($30.6 \rightarrow 28.7$~mm) and for Liver-HCC
-($80.0 \rightarrow 69.2$~mm). The effect is not significant at task level,
-and Open-MS and Liver-HCC Dice both move slightly the other way, so we do
+($30.6 \rightarrow 28.7$~mm). The effect is not significant at task level,
+and Open-MS Dice moves slightly the other way, so we do
 not claim it as a separate contribution; we report it because it costs
 nothing and because it indicates that the benefit of contrast randomization
 extends to model selection and is not confined to the gradient updates.

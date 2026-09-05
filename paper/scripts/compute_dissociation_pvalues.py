@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
 Computes the paired significance of the fill-swap step (rung 3, "+voronoi
-noise fill" -> rung 4, "v26_6_2 real fill") for each of the 9 causal-ablation
-ladders (4 headline tasks x both training modalities, plus atlas-liver-hcc's
-single-modality cross-dataset ladder), for tab:dissociation in the paper
-(which reports Delta Dice + p, moving the Delta HD95 column to supplementary
-per user request).
+noise fill" -> rung 4, "v26_6_2 real fill") for each of the 8 causal-ablation
+ladders (4 headline tasks x both training modalities), for tab:dissociation
+in the paper (which reports Delta Dice + p, moving the Delta HD95 column to
+supplementary per user request).
 
-atlas-liver-hcc trains on one modality only, so it has no held-out training
-CONTRAST to use as OOD the way the other 8 rows do -- its OOD is pooled
-cross-DATASET generalization onto lld-mmri-hcc + liverhccseg instead (see
-ladder_ood_common.run_ladder_cross_dataset). Its case-level pairs for the
-fill-swap step are pooled across every <dataset>/<item> stream from both
-evaluators, exactly mirroring what the 8 within-dataset rows do across their
-own OOD_CONTRASTS -- same statistic, different source of the "OOD" cases.
+atlas-liver-hcc's single-modality cross-dataset ladder (a 9th row here until
+2026-09-02) was REMOVED along with the whole atlas-liver-hcc extension --
+see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)" for the full
+rationale. Its own investigation found its OOD contrast pool hinged on an
+ambiguous contrast (Dixon out-of-phase reading as appearance-adjacent to
+ATLAS's fat-suppressed training data), with the ladder's sign flipping
+depending on whether it was included -- exactly the kind of fragility this
+script's paired-significance framing is meant to rule out for the 8 rows
+that remain.
 
 Reuses load_case_means/resolve_run_dir from the shared ladder engine and
 wilcoxon_p/holm from stat_tests.py -- no new statistical machinery.
@@ -70,7 +71,8 @@ WRAPPERS = [
     ("CHAOS T2spir", "datasets/chaos/5_scripts_chaos/06_evaluate/06_33_ladder_summary_t2spir.py"),
     ("ON-Harmony T1w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"),
     ("ON-Harmony T2w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
-    ("ATLAS-Liver-HCC T1w", "datasets/atlas-liver-hcc/5_scripts_atlas-liver-hcc/06_evaluate/06_13_ladder_summary.py"),
+    # ATLAS-Liver-HCC REMOVED 2026-09-02 -- dataset excluded from the paper
+    # entirely, see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)".
 ]
 
 pvals = []
