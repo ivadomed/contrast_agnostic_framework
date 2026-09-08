@@ -34,8 +34,12 @@
 # predict dir is verified to hold EXACTLY the expected case count before evaluation.
 set -uo pipefail
 PROJECT_ROOT="/project/aip-jcohen/paulh/mri_synthesis_project"
-TF2="${PROJECT_ROOT}/datasets/toothfairy2/5_scripts_toothfairy2"
-HS="${PROJECT_ROOT}/datasets/hanseg/5_scripts_hanseg"
+# Suffixed _DIR: these are read INSIDE subshells that source cluster env files, and a
+# sourced env file setting a same-named variable silently rewrites them (that is
+# exactly how tamia_env_hanseg.sh's old bare `HS` sent every hanseg wrapper path to
+# /scratch/... and recorded zero cross-modality tasks). Keep these distinctive.
+TF2_DIR="${PROJECT_ROOT}/datasets/toothfairy2/5_scripts_toothfairy2"
+HS_DIR="${PROJECT_ROOT}/datasets/hanseg/5_scripts_hanseg"
 PACK_DIR="/scratch/p/paulh/toothfairy2/_packruns/predict_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "${PACK_DIR}"
 echo "[pp] host=$(hostname) job=${SLURM_JOB_ID:-?} pack=${PACK_DIR}"
@@ -71,8 +75,8 @@ want() { [ -z "${TF2_ONLY}" ] && return 0; case " ${TF2_ONLY} " in *" $1 "*) ret
 
 # ── Phase 0: inputs + which runs are actually trained ────────────────────────
 ( set -e; cd "${PROJECT_ROOT}"
-  source "${TF2}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_toothfairy2.sh"
-  bash "${TF2}/05_predict/05_00_build_test_inputs.sh" )
+  source "${TF2_DIR}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_toothfairy2.sh"
+  bash "${TF2_DIR}/05_predict/05_00_build_test_inputs.sh" )
 TF2_RAW=/scratch/p/paulh/toothfairy2/2_nnUNet/raw/Dataset110_ToothFairy2CBCT
 HS_RAW=/scratch/p/paulh/hanseg/2_nnUNet/raw
 N_OWN=$(ls "${TF2_RAW}/imagesTs_cbct" 2>/dev/null | wc -l)
@@ -105,21 +109,34 @@ done
 # is the documented env-clobbering bug that has hit every cross-eval dataset here.
 PD_OWN="${PACK_DIR}/own"; PD_HS="${PACK_DIR}/hanseg"; mkdir -p "${PD_OWN}" "${PD_HS}"
 ( cd "${PROJECT_ROOT}"
-  source "${TF2}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_toothfairy2.sh"
+  source "${TF2_DIR}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_toothfairy2.sh"
   for row in "${SELECTED[@]}"; do
     IFS=: read -r TOK OWNW HSW RID CAT SUB <<< "${row}"
-    RUN_JOB_PACK_DIR="${PD_OWN}" bash "${TF2}/05_predict/${OWNW}" "${RID}" all
+    RUN_JOB_PACK_DIR="${PD_OWN}" bash "${TF2_DIR}/05_predict/${OWNW}" "${RID}" all
   done ) > "${PACK_DIR}/record_own.log" 2>&1
 ( cd "${PROJECT_ROOT}"
-  source "${HS}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_hanseg.sh"
+  source "${HS_DIR}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_hanseg.sh"
   for row in "${SELECTED[@]}"; do
     IFS=: read -r TOK OWNW HSW RID CAT SUB <<< "${row}"
-    RUN_JOB_PACK_DIR="${PD_HS}" bash "${HS}/05_predict/${HSW}" "${RID}" all
+    RUN_JOB_PACK_DIR="${PD_HS}" bash "${HS_DIR}/05_predict/${HSW}" "${RID}" all
   done ) > "${PACK_DIR}/record_hanseg.log" 2>&1
 cat "${PD_OWN}/index.tsv" "${PD_HS}/index.tsv" > "${PACK_DIR}/index.tsv" 2>/dev/null
 N=$(grep -c . "${PACK_DIR}/index.tsv" 2>/dev/null || echo 0)
-echo "[pp] recorded ${N} fold-predict tasks (expect ${#SELECTED[@]} runs x 3 folds x 2 datasets = $(( ${#SELECTED[@]} * 6 )))"
-[ "${N}" -gt 0 ] || { echo "[pp] ERROR: nothing recorded; see ${PACK_DIR}/record_*.log" >&2; tail -20 "${PACK_DIR}"/record_*.log; exit 1; }
+N_OWN_REC=$(grep -c . "${PD_OWN}/index.tsv" 2>/dev/null || echo 0)
+N_HS_REC=$(grep -c . "${PD_HS}/index.tsv" 2>/dev/null || echo 0)
+EXPECT=$(( ${#SELECTED[@]} * 6 ))
+echo "[pp] recorded ${N} fold-predict tasks (own=${N_OWN_REC} hanseg=${N_HS_REC}, expect ${#SELECTED[@]} runs x 3 folds x 2 datasets = ${EXPECT})"
+# HARD FAIL on a short recording. Continuing with a partial index is how you get a
+# results table that looks complete but is missing an entire evaluation axis: the
+# first run of this job recorded 24/48 because every hanseg wrapper path had been
+# clobbered, the errors went to a side log, and the job carried on to predict and
+# evaluate only the in-domain half. A missing cross-modality half must stop the job.
+if [ "${N}" != "${EXPECT}" ]; then
+    echo "[pp] ERROR: recorded ${N} tasks but expected ${EXPECT} (own=${N_OWN_REC}/$(( ${#SELECTED[@]} * 3 )), hanseg=${N_HS_REC}/$(( ${#SELECTED[@]} * 3 )))" >&2
+    echo "[pp] --- record_own.log ---" >&2;    tail -15 "${PACK_DIR}/record_own.log" >&2
+    echo "[pp] --- record_hanseg.log ---" >&2; tail -15 "${PACK_DIR}/record_hanseg.log" >&2
+    exit 1
+fi
 
 # ── Phase 2: bounded worker pool, 2 concurrent tasks per GPU ─────────────────
 mapfile -t LINES < "${PACK_DIR}/index.tsv"
@@ -160,7 +177,7 @@ for row in "${SELECTED[@]}"; do
     n=$(find "$D" -name '*.nii.gz' 2>/dev/null | wc -l)
     if [ "$n" != "71" ]; then echo "[pp] BAD OWN COUNT ${n}/71: $D" >&2; fail=1; continue; fi
     OUT="${TF2_METRICS}${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"; mkdir -p "$OUT"
-    "$PY" "${TF2}/06_evaluate/06_00_evaluate.py" --pred_dir "$D" --gt_dir "${TF2_RAW}/labelsTs_cbct" \
+    "$PY" "${TF2_DIR}/06_evaluate/06_00_evaluate.py" --pred_dir "$D" --gt_dir "${TF2_RAW}/labelsTs_cbct" \
       --dataset_json "$DJ" --labels mandible lower_teeth pharynx --name cbct \
       --out_csv "${OUT}/cbct_metrics.csv" --workers 6 > "${OUT}/cbct_eval.log" 2>&1 \
       || { echo "[pp] own eval FAILED ${RID} fold${F}" >&2; fail=1; continue; }
@@ -181,10 +198,10 @@ for row in "${SELECTED[@]}"; do
     n=$(find "$D" -name '*.nii.gz' 2>/dev/null | wc -l)
     if [ "$n" != "42" ]; then echo "[pp] BAD HANSEG COUNT ${n}/42: $D" >&2; fail=1; continue; fi
     M="${D}_mandible_union"
-    "$PY" "${HS}/05_predict/05_20_merge_mandible_union.py" --pred_dir "$D" --out_dir "$M" >/dev/null 2>&1 \
+    "$PY" "${HS_DIR}/05_predict/05_20_merge_mandible_union.py" --pred_dir "$D" --out_dir "$M" >/dev/null 2>&1 \
       || { echo "[pp] union merge FAILED ${RID} fold${F}" >&2; fail=1; continue; }
     OUT="${HS_METRICS}${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"; mkdir -p "$OUT"
-    "$PY" "${HS}/06_evaluate/06_00_evaluate.py" --pred_dir "$M" --gt_dir "${HS_RAW}/labelsTs_ct" \
+    "$PY" "${HS_DIR}/06_evaluate/06_00_evaluate.py" --pred_dir "$M" --gt_dir "${HS_RAW}/labelsTs_ct" \
       --label_map '{"mandible": [1, 1]}' --name ct \
       --out_csv "${OUT}/ct_metrics.csv" --workers 6 > "${OUT}/ct_eval.log" 2>&1 \
       || { echo "[pp] hanseg eval FAILED ${RID} fold${F}" >&2; fail=1; continue; }

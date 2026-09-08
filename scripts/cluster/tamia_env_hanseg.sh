@@ -4,20 +4,30 @@
 # under /scratch/p/paulh/toothfairy2 (CLAUDE.md: bulk data on tamia is scratch-only).
 # Override outright — common_env's ${VAR:-default} guards have already fired.
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
-HS="$SCRATCH/hanseg"; TF2="$SCRATCH/toothfairy2"
+# ⚠️ Underscore-prefixed, dataset-qualified names ON PURPOSE. This file is SOURCED
+# into a caller's shell, so any short generic name it sets silently overwrites the
+# caller's variable of the same name. Earlier versions used bare `HS` and `TF2`,
+# which clobbered the script-directory variables of the same names in
+# toothfairy2's 05_31 predict+evaluate job — every hanseg predict wrapper then
+# resolved to "/scratch/p/paulh/hanseg/05_predict/..." instead of the repo path,
+# and the ENTIRE cross-modality half of the run recorded zero tasks while the
+# in-domain half succeeded. It failed loudly in a side log but the job carried on,
+# which is exactly how a half-empty results table gets produced. Never introduce a
+# short unprefixed variable in a sourced env file.
+_HANSEG_SCRATCH="$SCRATCH/hanseg"; _TF2_SCRATCH="$SCRATCH/toothfairy2"
 
-export BIDS_ROOT="$HS/1_BIDS/headneck-hanseg"
-export RAW_ROOT="$HS/0_raw"
-export nnUNet_raw="$HS/2_nnUNet/raw"
-export SPLITS_DIR="$HS/4_splits"
-export PREDICTIONS_ROOT="$HS/8_results/01_predictions"
-export METRICS_ROOT="$HS/8_results/02_metrics"
-export RESULTS_DIR="$HS/8_results"
+export BIDS_ROOT="$_HANSEG_SCRATCH/1_BIDS/headneck-hanseg"
+export RAW_ROOT="$_HANSEG_SCRATCH/0_raw"
+export nnUNet_raw="$_HANSEG_SCRATCH/2_nnUNet/raw"
+export SPLITS_DIR="$_HANSEG_SCRATCH/4_splits"
+export PREDICTIONS_ROOT="$_HANSEG_SCRATCH/8_results/01_predictions"
+export METRICS_ROOT="$_HANSEG_SCRATCH/8_results/02_metrics"
+export RESULTS_DIR="$_HANSEG_SCRATCH/8_results"
 
-export TF2_PREDICTIONS_ROOT="$TF2/8_results/01_predictions"
-export TF2_NNUNET_RAW="$TF2/2_nnUNet/raw"
-export TF2_NNUNET_PREPROCESSED="$TF2/2_nnUNet/preprocessed"
-export TF2_DATASET_JSON="$TF2/2_nnUNet/raw/Dataset110_ToothFairy2CBCT/dataset.json"
+export TF2_PREDICTIONS_ROOT="$_TF2_SCRATCH/8_results/01_predictions"
+export TF2_NNUNET_RAW="$_TF2_SCRATCH/2_nnUNet/raw"
+export TF2_NNUNET_PREPROCESSED="$_TF2_SCRATCH/2_nnUNet/preprocessed"
+export TF2_DATASET_JSON="$_TF2_SCRATCH/2_nnUNet/raw/Dataset110_ToothFairy2CBCT/dataset.json"
 
 export RUN_JOB_ACCOUNT="aip-jcohen"
 export RUN_JOB_GPU_TYPE="h100"
