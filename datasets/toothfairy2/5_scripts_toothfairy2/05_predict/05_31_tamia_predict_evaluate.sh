@@ -80,10 +80,20 @@ want() { [ -z "${TF2_ONLY}" ] && return 0; case " ${TF2_ONLY} " in *" $1 "*) ret
 TF2_RAW=/scratch/p/paulh/toothfairy2/2_nnUNet/raw/Dataset110_ToothFairy2CBCT
 HS_RAW=/scratch/p/paulh/hanseg/2_nnUNet/raw
 N_OWN=$(ls "${TF2_RAW}/imagesTs_cbct" 2>/dev/null | wc -l)
-N_HS=$(ls "${HS_RAW}/imagesTs_ct" 2>/dev/null | wc -l)
-echo "[pp] own test cases=${N_OWN} (expect 71)   hanseg cases=${N_HS} (expect 42)"
+# hanseg now has TWO items: ct (native GT) and mrt1 (GT propagated from CT by
+# registration, with QC-failing cases excluded — so its count is <= ct's and must be
+# derived, never hardcoded).
+HS_ITEMS=""
+declare -A HS_N
+for it in ct mrt1; do
+    n=$(ls "${HS_RAW}/imagesTs_${it}" 2>/dev/null | wc -l)
+    if [ "${n}" -gt 0 ]; then HS_ITEMS="${HS_ITEMS}${HS_ITEMS:+ }${it}"; HS_N[$it]=$n; fi
+done
+echo "[pp] own test cases=${N_OWN} (expect 71)"
+for it in ${HS_ITEMS}; do echo "[pp] hanseg item ${it}: ${HS_N[$it]} cases"; done
 [ "${N_OWN}" = "71" ] || { echo "[pp] ERROR: own test inputs not 71" >&2; exit 1; }
-[ "${N_HS}"  = "42" ] || { echo "[pp] ERROR: hanseg inputs not 42" >&2; exit 1; }
+[ -n "${HS_ITEMS}" ]  || { echo "[pp] ERROR: no hanseg items built" >&2; exit 1; }
+export HANSEG_EVAL_ITEMS="${HS_ITEMS}"
 
 TF2_PRED_ROOT=/scratch/p/paulh/toothfairy2/8_results/01_predictions/toothfairy2_model/cbct
 SELECTED=()
@@ -124,8 +134,12 @@ cat "${PD_OWN}/index.tsv" "${PD_HS}/index.tsv" > "${PACK_DIR}/index.tsv" 2>/dev/
 N=$(grep -c . "${PACK_DIR}/index.tsv" 2>/dev/null || echo 0)
 N_OWN_REC=$(grep -c . "${PD_OWN}/index.tsv" 2>/dev/null || echo 0)
 N_HS_REC=$(grep -c . "${PD_HS}/index.tsv" 2>/dev/null || echo 0)
+# predict_common records ONE task per (run, fold) per DATASET — that task loops
+# over all of that dataset's items internally — so the expectation is
+# runs x 3 folds x 2 datasets regardless of how many items hanseg has.
 EXPECT=$(( ${#SELECTED[@]} * 6 ))
-echo "[pp] recorded ${N} fold-predict tasks (own=${N_OWN_REC} hanseg=${N_HS_REC}, expect ${#SELECTED[@]} runs x 3 folds x 2 datasets = ${EXPECT})"
+N_HS_ITEMS=$(echo ${HS_ITEMS} | wc -w)
+echo "[pp] recorded ${N} fold-predict tasks (own=${N_OWN_REC} hanseg=${N_HS_REC}; hanseg items: ${HS_ITEMS})"
 # HARD FAIL on a short recording. Continuing with a partial index is how you get a
 # results table that looks complete but is missing an entire evaluation axis: the
 # first run of this job recorded 24/48 because every hanseg wrapper path had been

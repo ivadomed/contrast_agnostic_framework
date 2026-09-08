@@ -2,9 +2,9 @@
 # ============================================================================
 #  HaN-Seg prediction — USES MODELS TRAINED ON toothfairy2 (CBCT).
 #  hanseg is EVALUATION-ONLY. These load toothfairy2-trained checkpoints and run
-#  them over the 42 FOV-matched head-and-neck CT cases (see
-#  01_prepare/01_01_prepare_ct.py), measuring cross-MODALITY generalization
-#  CBCT -> conventional CT on the mandible.
+#  them over the FOV-matched head-and-neck cases, measuring cross-MODALITY
+#  generalization CBCT -> conventional CT (01_01_prepare_ct.py) and
+#  CBCT -> T1 MRI (01_02_prepare_mr.py) on the mandible.
 #
 #  This is the OOD half of the toothfairy2 task. toothfairy2 has one training
 #  modality, so its own held-out CBCT test set is entirely in-domain — the
@@ -22,7 +22,11 @@ PREDICT_MODE="cross"
 SOURCE_PREFIX="TF2"
 PREDICT_JOB_PREFIX="hanseg_predict"
 PREDICT_LOG_PREFIX="hanseg_predict"
-PREDICT_ITEMS_DEFAULT="ct"
+# Two evaluation items: `ct` (native GT) and `mrt1` (GT propagated from CT by
+# registration — see 01_prepare/01_02_prepare_mr.py). They are deliberately kept
+# as SEPARATE columns, never pooled: their ground truth has different provenance
+# and pooling them would launder registration error into the headline number.
+PREDICT_ITEMS_DEFAULT="ct mrt1"
 PREDICT_FOLD_DEFAULT="all"
 PREDICT_TIME="00:45:00"
 PREDICT_EXTRA_FLAGS="-npp 4 -nps 2"
