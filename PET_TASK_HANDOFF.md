@@ -4,22 +4,29 @@ Written 2026-09-08 at the end of the ToothFairy2/HaN-Seg session. Start a fresh
 session with this file; it exists so that session does not have to rediscover any of
 the below.
 
-## HARD REQUIREMENT: the task must have >= 2 contrasts/modalities
+## HARD REQUIREMENT: >= 2 modalities available FOR TESTING
 
-Stated by the user 2026-09-08. This is not a nice-to-have — every other training task
-in this project trains the 6-method suite TWICE, once per contrast, and the
-cross-contrast generalization of a model trained on ONE of them **is the headline
-result**. `combined_modality_summary.py` and the cross-dataset meta-heatmap both assume
-it. ToothFairy2 is the sole exception (CBCT only) and had to borrow its entire OOD axis
-from an external dataset, which is exactly the fragility to avoid repeating.
+Stated by the user 2026-09-08, and clarified: what is required is at least two
+modalities **to test on**, so that cross-modality generalization can be measured.
+Training on only ONE of them is acceptable — that is exactly the shape ToothFairy2
+has (trains CBCT, tests CBCT in-domain + hanseg CT cross-modality). Two TRAINING arms
+are a bonus, not the requirement.
+
+What this rules in and out:
+- a single-modality dataset with no compatible second-modality test set is OUT — it
+  cannot produce the headline result at all;
+- a dataset with two modalities where only one is trained is IN.
 
 Two further conditions, both learned the hard way and both easy to violate here:
-- the two modalities must be the **SAME PATIENTS** (as chaos t1in/t2spir, brats t1n/t2w,
-  ispy2 t1wce/t2w all are), not two cohorts. Two cohorts confounds contrast with
-  disease/site and is what made the atlas-liver-hcc ladder flip sign;
-- the ground truth must be **genuinely visible in BOTH modalities**. A label defined by
-  one modality's physics and transported to the other reproduces, one level down, the
-  exact reason PET was rejected as a ToothFairy2 arm.
+- the test modalities should be the **SAME PATIENTS** where possible (as chaos
+  t1in/t2spir, brats t1n/t2w, ispy2 t1wce/t2w are). Two separate cohorts confounds
+  contrast with disease/site, which is what made the atlas-liver-hcc ladder flip sign.
+  An external same-label test set is acceptable (chaos -> amos/sliver07; toothfairy2 ->
+  hanseg) but the label definitions must match exactly;
+- the ground truth must be **genuinely visible in BOTH modalities** — including in the
+  one used only for TESTING. A label defined by one modality's physics and evaluated
+  on another reproduces, one level down, the exact reason PET was rejected as a
+  ToothFairy2 arm: every method scores ~0 and the test measures nothing.
 
 ## Why this task
 
@@ -64,16 +71,23 @@ that preferred AutoPET; the 2-modality requirement is what flips it.)
 | content | head & neck FDG PET/CT | whole-body PET/CT | two tracers |
 | size | 883 cases (524 train, 7-9 centers) | 1014 FDG / 900 pts + 597 PSMA / 378 pts | as left |
 | labels | GTVp (1) + GTVn (2) | tracer-avid lesions | as left |
-| 2nd modality same patients? | YES — PET registered to CT | YES | **NO — different cohorts/diseases** |
-| GT visible in both? | YES — contoured on FUSED PET/CT | doubtful — "tracer-avid", i.e. PET-defined | n/a |
+| 2nd TEST modality, same patients? | YES — PET registered to CT | YES | **NO — different cohorts/diseases** |
+| GT visible in both (needed even if only one is TRAINED)? | YES — contoured on FUSED PET/CT | doubtful — "tracer-avid", i.e. PET-defined | n/a |
 | license | challenge registration — verify | CC BY-NC 4.0 (PSMA via TCIA) | as left |
 
 Why HECKTOR wins: its GTV is delineated on the FUSED PET/CT, so the label is by
-construction supported in both channels — which is what makes a CT training arm
-well-posed rather than a repeat of the mandible-in-PET problem. AutoPET's lesions are
-identified by tracer avidity, so a CT-trained arm would be asked to find something
-partly defined by information CT does not carry. And AutoPET's FDG/PSMA split is two
-different patient populations, not two contrasts of the same patient.
+construction supported in both channels. That matters even under the weaker
+"train one, test two" requirement — a PET-trained model TESTED on CT still needs the
+tumour to be findable in CT, or the cross-modality number is vacuous rather than hard.
+AutoPET's lesions are identified by tracer avidity, so its CT arm — whether trained or
+merely tested — is asked to find something partly defined by information CT does not
+carry. And AutoPET's FDG/PSMA split is two different patient populations, not two
+contrasts of the same patient.
+
+Minimum viable plan with HECKTOR: train on PET only (one arm, like ToothFairy2), test
+on PET (in-domain) + CT (cross-modality). If the CT arm proves well-posed, adding a
+second CT TRAINING arm is a cheap upgrade that restores full symmetry with the other
+tasks.
 
 ⚠️ Verify for HECKTOR before committing: **is the CT diagnostic or low-dose
 attenuation-correction CT?** PET/CT usually ships low-dose non-contrast CT, on which
