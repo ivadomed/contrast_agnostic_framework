@@ -89,44 +89,51 @@ merely tested — is asked to find something partly defined by information CT do
 carry. And AutoPET's FDG/PSMA split is two different patient populations, not two
 contrasts of the same patient.
 
-### RECOMMENDED DESIGN: HECKTOR trains, HNTS-MRG is the MRI test set
+### THE PLAN: HECKTOR ALONE. One dataset. Do not add a second.
 
-Because several single-modality datasets may be combined, the strongest available
-design is a THREE-modality one, all with real expert annotations:
+Decided with the user 2026-09-08 after an earlier draft proposed pairing HECKTOR with
+HNTS-MRG for a third (MRI) modality. **That was scope creep and is explicitly rejected.**
 
-| role | dataset | modality | label |
+| role | source | modality | label |
 |---|---|---|---|
 | TRAIN + in-domain test | HECKTOR 2022 (524 train cases) | **PET** (new modality) | GTVp + GTVn |
-| cross-modality test A | HECKTOR's own paired CT | CT | same GT, SAME patients, registered grid |
-| cross-modality test B | HNTS-MRG 2024 (150 cases) | **T2w MRI** | GTVp + GTVn |
+| cross-modality test | HECKTOR's OWN paired CT | CT | same GT, same patients |
 
-HNTS-MRG was dismissed earlier in this file's research as "tumour-only, no overlap" —
-that was correct when the target label was ToothFairy2's mandible, and WRONG here: for
-a tumour-segmentation task, tumour is exactly the label. Same anatomy (head & neck),
-same clinical task (RT planning), same label names, real expert GT (3-4 independent
-annotators), CC BY 4.0 on Zenodo.
+Why one dataset is not a weaker result, it is a better one:
+- PET and CT here are **hardware-registered onto the same grid at acquisition**. That
+  deletes, in one stroke, every category of work that has actually consumed this
+  project's time: no cross-dataset label-definition matching, no FOV cropping, no
+  cohort confound, no registration of our own. Compare the ToothFairy2 session, where
+  the external test set required a FOV-matched crop, a label UNION, and then an entire
+  MR registration effort that had to be thrown away.
+- PET vs CT is plausibly the **largest domain gap in the whole project** — metabolic
+  uptake vs X-ray attenuation. It does not need a third modality to be convincing.
+- It matches ToothFairy2's shape (train one modality, test two), which the shared
+  drivers already handle.
 
-This yields PET -> CT -> MRI, i.e. one genuinely new modality plus a cross-MODALITY
-axis spanning three physics, on a texture-defined target. Train PET only to start
-(one arm, ToothFairy2's shape); add a CT training arm later if that arm proves
-well-posed.
+**HNTS-MRG 2024 (head/neck T2w MRI, GTVp+GTVn, 150 cases, CC BY 4.0) is a legitimate
+OPTIONAL extension** — for a tumour task, tumour is exactly the label, so the overlap is
+real. But treat it as a stretch goal AFTER the core PET/CT task is trained and
+evaluated, never as part of the initial build. If it is ever added, the blocking checks
+are: GTVp/GTVn definition match (merge to one "tumour" class in both if they differ),
+PRE-RT scans only (mid-RT tumours have shrunk under treatment), FOV comparison and
+cropping to the training FOV distribution, and confirming the tumour is conspicuous on
+T2w so the arm is hard rather than vacuous.
 
-⚠️ MUST VERIFY before committing to the HNTS-MRG pairing — these are the compatibility
-checks that decide whether it is legitimate, and the project has been burned by each:
-1. **Label definition match.** Does HECKTOR's GTVp/GTVn mean the same as HNTS-MRG's?
-   Both are RT gross tumour volumes, but consistency of nodal inclusion, and whether
-   GTVn is one merged mask or per-node, must be checked case-side, not assumed. If they
-   differ, merge to a single "tumour" class in BOTH rather than fudging a mapping.
-2. **Use PRE-RT only.** HNTS-MRG ships pre-RT and mid-RT scans; mid-RT tumours have
-   shrunk under treatment and are a different distribution. Pre-RT is the comparable one.
-3. **FOV.** Some HECKTOR editions crop to a bounding box around the oropharynx while
-   HNTS-MRG covers the whole head and neck. This is the single most recurrent trap in
-   this project (see toothfairy2 -> hanseg, where the CT had to be cropped to a
-   mandible-centred box matched to the training FOV). Compare physical extents FIRST
-   and crop the test set to the training FOV distribution if they differ.
-4. **T2w vs PET appearance** is a genuinely large domain gap — which is the point — but
-   confirm the tumour is actually conspicuous on T2w in this cohort so the arm is hard
-   rather than vacuous.
+### FIRST TASK, AND IT IS A GO/NO-GO GATE
+
+Before writing ANY pipeline code, verify **the CT arm is well-posed** — i.e. that the
+tumour is actually findable in HECKTOR's CT. PET/CT normally ships LOW-DOSE
+NON-CONTRAST CT, on which head-and-neck tumours are far less conspicuous than on
+diagnostic contrast CT. If the tumour is effectively invisible there, the CT arm is
+vacuous, the task has no cross-modality axis, and the whole plan fails the >=2-modality
+requirement — better to find that out in an hour than after training 30 fold-jobs.
+
+Concretely: take ~20 cases, and for the GTV mask measure tumour-vs-surrounding contrast
+in CT and in PET (e.g. mean intensity inside the mask vs in a dilated shell, plus the
+boundary-gradient check used in
+`datasets/hanseg/5_scripts_hanseg/01_prepare/01_03_validate_mr_registration.py`). Report
+both. If CT contrast is near zero, say so and stop rather than proceeding.
 
 ⚠️ Verify for HECKTOR before committing: **is the CT diagnostic or low-dose
 attenuation-correction CT?** PET/CT usually ships low-dose non-contrast CT, on which
