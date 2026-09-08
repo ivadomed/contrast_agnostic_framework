@@ -22,11 +22,17 @@ PREDICT_MODE="cross"
 SOURCE_PREFIX="TF2"
 PREDICT_JOB_PREFIX="hanseg_predict"
 PREDICT_LOG_PREFIX="hanseg_predict"
-# Two evaluation items: `ct` (native GT) and `mrt1` (GT propagated from CT by
-# registration — see 01_prepare/01_02_prepare_mr.py). They are deliberately kept
-# as SEPARATE columns, never pooled: their ground truth has different provenance
-# and pooling them would launder registration error into the headline number.
-PREDICT_ITEMS_DEFAULT="ct mrt1"
+# `ct` ONLY. The mrt1 arm is built and working but is DISABLED by decision
+# (2026-09-08) — see 01_prepare/01_02_prepare_mr.py's "STATUS" block. Its ground
+# truth is propagated from CT by our own registration, and validation showed the QC
+# gate used to accept it (tissue_frac) is ANTI-correlated with accuracy: a mask
+# displaced 12 mm scores BETTER (0.967) than the correct one (0.943). The
+# registration itself has support (edge_score peaks sharply at 0 displacement), but
+# "GT we generated, validated by a metric we also designed" is not a defensible basis
+# for a cross-modality claim in a paper.
+# Re-enable deliberately with HANSEG_EVAL_ITEMS / by editing this line — do not turn
+# it back on by accident.
+PREDICT_ITEMS_DEFAULT="ct"
 PREDICT_FOLD_DEFAULT="all"
 PREDICT_TIME="00:45:00"
 PREDICT_EXTRA_FLAGS="-npp 4 -nps 2"

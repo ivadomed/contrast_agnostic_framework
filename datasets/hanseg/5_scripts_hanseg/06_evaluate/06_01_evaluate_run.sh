@@ -28,7 +28,7 @@ RUN_ID="${1:?need RUN_ID}"
 CATEGORY="${2:?need CATEGORY (nnUNet|auglab)}"
 FOLD_ARG="${3:-all}"
 CKPT_TAG="${CKPT_TAG:-best}"
-read -ra ITEMS <<< "${HANSEG_EVAL_ITEMS:-ct mrt1}"
+read -ra ITEMS <<< "${HANSEG_EVAL_ITEMS:-ct}"   # mrt1 disabled by decision, see 05_01
 
 PRED_BASE="${PREDICTIONS_ROOT}/${TF2_MODEL_TYPE}/${TF2_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 _PRED_SUBDIR=""; [ "${CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${CKPT_TAG}/"

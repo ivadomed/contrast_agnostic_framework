@@ -1,5 +1,25 @@
 #!/usr/bin/env python3
 """
+STATUS: BUILT AND WORKING, BUT DISABLED BY DECISION (2026-09-08). NOT USED FOR RESULTS.
+--------------------------------------------------------------------------------------
+Kept because the machinery is correct and documented, not because the arm is usable.
+The ground truth here is propagated from CT by our own registration, and
+01_03_validate_mr_registration.py showed the QC gate that accepted all 42 cases
+(tissue_frac) is ANTI-CORRELATED with accuracy: displacing a mask by 12 mm RAISES
+tissue_frac from 0.943 to 0.967, because sliding the mask off bone onto soft tissue
+increases the "on tissue" fraction. It would have passed a centimetre-scale error.
+The registration itself does have support — edge_score (mean MR gradient on the mask
+boundary) peaks sharply at zero displacement (1.969) and falls monotonically to 1.420
+at 12 mm — but "ground truth we generated ourselves, validated post-hoc by a metric we
+also designed" cannot carry a cross-modality claim. Do not re-enable without an
+INDEPENDENT validation (e.g. agreement with a second, independently-implemented
+registration, or real human annotations on the MR).
+Searched for a real-GT replacement and found none compatible: no public MRI dataset
+annotates mandible or teeth; the one open manually-annotated airway MRI database
+(53 vocal-tract volumes, 10 French speakers) labels the airway INCLUDING the open oral
+cavity during phonation, which is a different structure from this task's `pharynx` in
+occlusion; and public head/neck PET datasets label tumours, not anatomy.
+
 HaN-Seg MR-T1 -> FOV-matched MRI test set for toothfairy2 models, with the mandible
 label brought over from CT by registration.
 
@@ -60,7 +80,8 @@ bogus result, so every case is checked and failures are dropped rather than ship
   * `centroid_shift_mm` — how far the mandible centroid moved between the coarse and
     the mandible-local pass; a large value means the two passes disagree.
 Cases below QC_TISSUE_FRAC are written to the audit as excluded and never enter the
-nnU-Net test dirs. QC overlay PNGs are written for spot-checking.
+nnU-Net test dirs. (An earlier version of this docstring claimed QC overlay PNGs were
+written for spot-checking — they never were; no visual check was ever performed.)
 
 Run via 01_02_prepare_mr.sh.
 """
