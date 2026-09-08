@@ -15,7 +15,12 @@ are a bonus, not the requirement.
 What this rules in and out:
 - a single-modality dataset with no compatible second-modality test set is OUT — it
   cannot produce the headline result at all;
-- a dataset with two modalities where only one is trained is IN.
+- a dataset with two modalities where only one is trained is IN;
+- **SEVERAL single-modality datasets are IN, if they are compatible and one can test
+  models trained on the other** (user, 2026-09-08). This is the established
+  chaos -> amos/sliver07 and toothfairy2 -> hanseg pattern, and it widens the candidate
+  space a long way: the cross-modality axis does NOT have to come from inside one
+  dataset. What must match is the LABEL DEFINITION, not the cohort.
 
 Two further conditions, both learned the hard way and both easy to violate here:
 - the test modalities should be the **SAME PATIENTS** where possible (as chaos
@@ -84,10 +89,44 @@ merely tested — is asked to find something partly defined by information CT do
 carry. And AutoPET's FDG/PSMA split is two different patient populations, not two
 contrasts of the same patient.
 
-Minimum viable plan with HECKTOR: train on PET only (one arm, like ToothFairy2), test
-on PET (in-domain) + CT (cross-modality). If the CT arm proves well-posed, adding a
-second CT TRAINING arm is a cheap upgrade that restores full symmetry with the other
-tasks.
+### RECOMMENDED DESIGN: HECKTOR trains, HNTS-MRG is the MRI test set
+
+Because several single-modality datasets may be combined, the strongest available
+design is a THREE-modality one, all with real expert annotations:
+
+| role | dataset | modality | label |
+|---|---|---|---|
+| TRAIN + in-domain test | HECKTOR 2022 (524 train cases) | **PET** (new modality) | GTVp + GTVn |
+| cross-modality test A | HECKTOR's own paired CT | CT | same GT, SAME patients, registered grid |
+| cross-modality test B | HNTS-MRG 2024 (150 cases) | **T2w MRI** | GTVp + GTVn |
+
+HNTS-MRG was dismissed earlier in this file's research as "tumour-only, no overlap" —
+that was correct when the target label was ToothFairy2's mandible, and WRONG here: for
+a tumour-segmentation task, tumour is exactly the label. Same anatomy (head & neck),
+same clinical task (RT planning), same label names, real expert GT (3-4 independent
+annotators), CC BY 4.0 on Zenodo.
+
+This yields PET -> CT -> MRI, i.e. one genuinely new modality plus a cross-MODALITY
+axis spanning three physics, on a texture-defined target. Train PET only to start
+(one arm, ToothFairy2's shape); add a CT training arm later if that arm proves
+well-posed.
+
+⚠️ MUST VERIFY before committing to the HNTS-MRG pairing — these are the compatibility
+checks that decide whether it is legitimate, and the project has been burned by each:
+1. **Label definition match.** Does HECKTOR's GTVp/GTVn mean the same as HNTS-MRG's?
+   Both are RT gross tumour volumes, but consistency of nodal inclusion, and whether
+   GTVn is one merged mask or per-node, must be checked case-side, not assumed. If they
+   differ, merge to a single "tumour" class in BOTH rather than fudging a mapping.
+2. **Use PRE-RT only.** HNTS-MRG ships pre-RT and mid-RT scans; mid-RT tumours have
+   shrunk under treatment and are a different distribution. Pre-RT is the comparable one.
+3. **FOV.** Some HECKTOR editions crop to a bounding box around the oropharynx while
+   HNTS-MRG covers the whole head and neck. This is the single most recurrent trap in
+   this project (see toothfairy2 -> hanseg, where the CT had to be cropped to a
+   mandible-centred box matched to the training FOV). Compare physical extents FIRST
+   and crop the test set to the training FOV distribution if they differ.
+4. **T2w vs PET appearance** is a genuinely large domain gap — which is the point — but
+   confirm the tumour is actually conspicuous on T2w in this cohort so the arm is hard
+   rather than vacuous.
 
 ⚠️ Verify for HECKTOR before committing: **is the CT diagnostic or low-dose
 attenuation-correction CT?** PET/CT usually ships low-dose non-contrast CT, on which
