@@ -89,8 +89,17 @@ python3 - "$CFG" "$BASELINE" "$AUGDEF" "$SSNOEM" <<'PY'
 import sys, re
 p, base, aug, ss = sys.argv[1:5]
 s = open(p).read()
+# Match the METHOD token followed by its timestamp (\d), NOT a bare prefix: plain
+# "baseline_" also substring-matches "baseline_kmeans_*", so a bare-prefix rewrite
+# would silently replace a ladder rung with the baseline run id the day someone adds
+# a rung to this config. Anchored + verified, rather than relying on the emitted
+# line order.
 for token, real in (("baseline_", base), ("auglab_default_", aug), ("synthseg_noEM_", ss)):
-    s = re.sub(rf"^  - .*{re.escape(token)}.*$", f"  - {real}", s, count=1, flags=re.M)
+    pat = rf"^  - \S*{re.escape(token)}\d\S*$"
+    s, n = re.subn(pat, f"  - {real}", s, count=1, flags=re.M)
+    if n != 1:
+        sys.exit(f"config patch failed: {n} lines matched {pat!r} in {p} "
+                 f"(expected exactly 1) — refusing to write a half-patched config")
 open(p, "w").write(s)
 print("patched suiteA run ids into", p)
 PY
