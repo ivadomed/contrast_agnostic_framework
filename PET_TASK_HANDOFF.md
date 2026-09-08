@@ -4,6 +4,23 @@ Written 2026-09-08 at the end of the ToothFairy2/HaN-Seg session. Start a fresh
 session with this file; it exists so that session does not have to rediscover any of
 the below.
 
+## HARD REQUIREMENT: the task must have >= 2 contrasts/modalities
+
+Stated by the user 2026-09-08. This is not a nice-to-have — every other training task
+in this project trains the 6-method suite TWICE, once per contrast, and the
+cross-contrast generalization of a model trained on ONE of them **is the headline
+result**. `combined_modality_summary.py` and the cross-dataset meta-heatmap both assume
+it. ToothFairy2 is the sole exception (CBCT only) and had to borrow its entire OOD axis
+from an external dataset, which is exactly the fragility to avoid repeating.
+
+Two further conditions, both learned the hard way and both easy to violate here:
+- the two modalities must be the **SAME PATIENTS** (as chaos t1in/t2spir, brats t1n/t2w,
+  ispy2 t1wce/t2w all are), not two cohorts. Two cohorts confounds contrast with
+  disease/site and is what made the atlas-liver-hcc ladder flip sign;
+- the ground truth must be **genuinely visible in BOTH modalities**. A label defined by
+  one modality's physics and transported to the other reproduces, one level down, the
+  exact reason PET was rejected as a ToothFairy2 arm.
+
 ## Why this task
 
 ToothFairy2 (CBCT, onboarded this session) added a new modality on the
@@ -37,31 +54,51 @@ cohorts are study-internal), and the one open manually-annotated airway MRI data
 cavity during phonation — a different structure from `pharynx` in occlusion. NPC MRI
 (277 patients) and HNTS-MRG 2024 (150 cases) are both tumour-only.
 
-## Candidate datasets — pick one, verify before committing
+## Candidate datasets — ranked against the 2-modality requirement
 
-| | AutoPET (II/III) | HECKTOR 2022 |
-|---|---|---|
-| content | whole-body FDG PET/CT | head & neck PET/CT |
-| size | ~1014 studies / 900+ patients | 524 training cases |
-| labels | whole-body lesions (real, expert) | primary GTV (+ nodes in some editions) |
-| license | CC BY (TCIA) — verify | challenge registration — verify |
-| second modality | CT, same grid | CT, same grid |
+**HECKTOR 2022 is the recommendation.** (This reverses an earlier draft of this file
+that preferred AutoPET; the 2-modality requirement is what flips it.)
 
-**AutoPET is the better default**: larger, permissively licensed, and its paired CT is
-resampled onto the PET grid, which gives a FREE second training modality (PET and CT of
-the same patient, same grid, same GT) — that restores the two-training-modality
-symmetry ToothFairy2 had to give up, and gives an in-house cross-modality axis without
-any external dataset at all.
+| | HECKTOR 2022 | AutoPET III (PET+CT) | AutoPET III (FDG+PSMA) |
+|---|---|---|---|
+| content | head & neck FDG PET/CT | whole-body PET/CT | two tracers |
+| size | 883 cases (524 train, 7-9 centers) | 1014 FDG / 900 pts + 597 PSMA / 378 pts | as left |
+| labels | GTVp (1) + GTVn (2) | tracer-avid lesions | as left |
+| 2nd modality same patients? | YES — PET registered to CT | YES | **NO — different cohorts/diseases** |
+| GT visible in both? | YES — contoured on FUSED PET/CT | doubtful — "tracer-avid", i.e. PET-defined | n/a |
+| license | challenge registration — verify | CC BY-NC 4.0 (PSMA via TCIA) | as left |
 
-⚠️ Verify before building, do not assume:
-- the exact label semantics (AutoPET marks *all* FDG-avid lesions, including
-  physiological uptake exclusions — read the label definition carefully);
+Why HECKTOR wins: its GTV is delineated on the FUSED PET/CT, so the label is by
+construction supported in both channels — which is what makes a CT training arm
+well-posed rather than a repeat of the mandible-in-PET problem. AutoPET's lesions are
+identified by tracer avidity, so a CT-trained arm would be asked to find something
+partly defined by information CT does not carry. And AutoPET's FDG/PSMA split is two
+different patient populations, not two contrasts of the same patient.
+
+⚠️ Verify for HECKTOR before committing: **is the CT diagnostic or low-dose
+attenuation-correction CT?** PET/CT usually ships low-dose non-contrast CT, on which
+head-and-neck tumours are far less conspicuous than on contrast-enhanced diagnostic CT.
+That does not make the CT arm vacuous (HECKTOR entrants do gain from the CT channel),
+but it may make the CT arm systematically weaker, and that must be understood BEFORE
+interpreting a cross-modality gap as a method effect. Check a handful of cases visually
+and quantify tumour-to-background contrast on CT vs PET.
+
+Also verify access: HECKTOR is behind challenge registration, which may or may not
+still be open — confirm the data is actually obtainable before building anything. If it
+is not, fall back to AutoPET PET+CT and treat the weak-CT-arm caveat as a first-class
+limitation rather than a footnote.
+
+⚠️ Verify for whichever is chosen, do not assume:
+- the exact label semantics (read the definition — AutoPET marks *all* tracer-avid
+  lesions with physiological-uptake exclusions; HECKTOR separates GTVp from GTVn and a
+  choice must be made whether to train both classes or merge);
 - how many studies are lesion-NEGATIVE (AutoPET deliberately includes negative
   controls; an all-empty-GT case behaves differently in Dice and must be handled
   explicitly, cf. toothfairy2's edentulous lower_teeth cases);
-- whether PET is stored as SUV or raw counts (normalization choice depends on it —
-  `CTNormalization` is wrong for PET; nnU-Net's `ZScoreNormalization` or a
-  SUV-aware scheme is likely right).
+- whether PET is stored as SUV or raw counts (normalization depends on it —
+  `CTNormalization` is WRONG for PET; z-score or a SUV-aware scheme is likely right,
+  and the CT arm and PET arm will need DIFFERENT normalization schemes even though
+  they share a grid and a label).
 
 ## Recipe — copy ToothFairy2, it is the freshest and cleanest scaffold
 
