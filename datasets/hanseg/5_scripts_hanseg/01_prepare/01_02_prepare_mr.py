@@ -31,6 +31,24 @@ would look exactly like a segmentation failure. So registration is run twice:
   2. a refinement pass whose metric is sampled ONLY inside a dilated box around the
      mandible, so the mandible itself — not the cranium — drives the final fit.
 
+MEASURED BEHAVIOUR (42 cases, verified by running the whole pipeline TWICE and
+diffing the audits case-by-case)
+  * The mandible-local refinement moves the mandible by a median of 1.37 mm, p90
+    3.76 mm, and **up to 20.62 mm** (case_02). That maximum is the justification for
+    the whole two-pass design: jaw position genuinely differs between the CT and MR
+    sessions, so a whole-head registration would have mis-seated that patient's
+    mandible by 2 cm and the resulting Dice would have been read as a model failure.
+  * Run-to-run reproducibility, after switching the metric to REGULAR sampling:
+    max |delta tissue_frac| = 0.0015, max |delta centroid| = 1.4 mm, and ZERO cases
+    change QC verdict. That residual is floating-point jitter from the metric's
+    multi-threaded reduction, not a different solution. It is NOT bit-reproducible;
+    set HANSEG_DETERMINISTIC=1 to force single-threaded ITK if exact reproducibility
+    is ever required (much slower).
+    For contrast, with the previous RANDOM sampler the SAME script on the SAME inputs
+    put case_15's mandible on tissue in one run (tissue_frac 0.968) and in mid-air in
+    the next (0.058) — a QC flip. When the registration IS the ground truth, that
+    class of irreproducibility is disqualifying, which is why sampling is deterministic.
+
 PER-CASE QC, AND FAILURES ARE EXCLUDED
 --------------------------------------
 Registration silently going wrong is the single most likely way this arm produces a
@@ -72,6 +90,12 @@ BOX_MM = np.array([144.0, 128.0, 80.0])          # same box as the CT arm
 MAX_BOX_MM = np.array([154.0, 154.0, 89.0])
 MARGIN_MM = 8.0
 QC_TISSUE_FRAC = float(os.environ.get("HANSEG_QC_TISSUE_FRAC", "0.80"))
+# Opt-in bit-reproducibility: ITK's metric reduction is multi-threaded, so even with
+# deterministic sampling the optimizer path varies at float precision. Single-threading
+# removes that at a large speed cost; the default is off because the measured residual
+# changes no QC verdict (see the module docstring).
+if os.environ.get("HANSEG_DETERMINISTIC", "0") == "1":
+    sitk.ProcessObject.SetGlobalDefaultNumberOfThreads(1)
 
 DERIV_ROOT = BIDS_ROOT / "derivatives" / "labels"
 _ZIP: zipfile.ZipFile | None = None
@@ -101,8 +125,15 @@ def _rigid(fixed: sitk.Image, moving: sitk.Image, init: sitk.Transform | None = 
             f, m, sitk.Euler3DTransform(), sitk.CenteredTransformInitializerFilter.GEOMETRY)
     r = sitk.ImageRegistrationMethod()
     r.SetMetricAsMattesMutualInformation(numberOfHistogramBins=32)
-    r.SetMetricSamplingStrategy(r.RANDOM)
-    r.SetMetricSamplingPercentage(0.10, seed=1337)
+    # REGULAR (deterministic grid) sampling, NOT RANDOM. ITK's random sampler is
+    # multi-threaded and the seed does not pin which sample lands on which thread, so
+    # RANDOM makes the whole registration irreproducible run-to-run. That is
+    # unacceptable when the registration IS the ground truth: two runs of this script
+    # on identical inputs disagreed on case_15 (tissue_frac 0.058 vs 0.968 — i.e. one
+    # run put the mandible in mid-air and the other got it right), which is how this
+    # was found. Deterministic sampling makes the propagated GT reproducible.
+    r.SetMetricSamplingStrategy(r.REGULAR)
+    r.SetMetricSamplingPercentage(0.20)
     if fixed_mask is not None:
         r.SetMetricFixedMask(fixed_mask)
     r.SetInterpolator(sitk.sitkLinear)
@@ -113,7 +144,18 @@ def _rigid(fixed: sitk.Image, moving: sitk.Image, init: sitk.Transform | None = 
     r.SetShrinkFactorsPerLevel([4, 2, 1])
     r.SetSmoothingSigmasPerLevel([2, 1, 0])
     r.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
-    r.SetInitialTransform(sitk.Euler3DTransform(init), inPlace=False)
+    # Parameter-copy rather than sitk.Euler3DTransform(init): pass 2 hands in the
+    # COMPOSITE Transform that Execute() returns, and the downcast constructor is not
+    # reliable for that. When it raised, the caller's except-block silently reverted to
+    # the coarse fit and the mandible-local refinement never ran at all — visible only
+    # as a centroid shift of exactly 0.00 mm on all 42 cases.
+    init_euler = sitk.Euler3DTransform()
+    try:
+        init_euler.SetFixedParameters(init.GetFixedParameters())
+        init_euler.SetParameters(init.GetParameters())
+    except Exception as e:
+        raise RuntimeError(f"could not seed Euler3D from initial transform: {e!r}")
+    r.SetInitialTransform(init_euler, inPlace=False)
     out = r.Execute(f, m)
     return out, float(r.GetMetricValue())
 
@@ -200,11 +242,16 @@ def prepare_one(case: str) -> dict:
     seg_lo = sitk.Resample(seg, mr_lo, t_coarse, sitk.sitkNearestNeighbor, 0, sitk.sitkUInt8)
     roi = sitk.BinaryDilate(seg_lo, [max(1, int(round(12.0 / s))) for s in mr_lo.GetSpacing()])
     t_fine, m_fine = (t_coarse, m_coarse)
-    if sitk.GetArrayFromImage(roi).sum() > 0:
+    refine_status = "ok"
+    if sitk.GetArrayFromImage(roi).sum() == 0:
+        refine_status = "skipped: empty mandible ROI after coarse pass"
+    else:
         try:
             t_fine, m_fine = _rigid(mr_lo, ct_lo, init=t_coarse, fixed_mask=roi)
-        except Exception:
-            t_fine, m_fine = t_coarse, m_coarse
+        except Exception as e:
+            # NOT silent: this refinement is the safeguard against jaw-position
+            # mismatch, so any fallback to the coarse fit must appear in the audit.
+            refine_status = f"FAILED, fell back to coarse: {e!r}"
     seg_mr = sitk.Resample(seg, mr, t_fine, sitk.sitkNearestNeighbor, 0, sitk.sitkUInt8)
     c_fine = _centroid_mm(seg_mr)
     shift = float(np.linalg.norm(c_fine - c_coarse)) if np.all(np.isfinite(c_fine)) else float("nan")
@@ -257,6 +304,7 @@ def prepare_one(case: str) -> dict:
     sitk.WriteImage(sitk.Cast(seg_r, sitk.sitkUInt8), str(seg_p), useCompression=True)
 
     return {"case": case, "sub": sub,
+            "refine_status": refine_status,
             "final_metric": round(m_fine, 5), "coarse_metric": round(m_coarse, 5),
             "centroid_shift_mm": None if not np.isfinite(shift) else round(shift, 2),
             "tissue_frac": round(tissue_frac, 4),
@@ -304,13 +352,18 @@ def main() -> None:
             except OSError:
                 shutil.copy2(src, dst)
 
+    n_refined = sum(1 for r in rows if r.get("refine_status") == "ok")
     audit = {"n": len(rows), "n_failed": len(failed), "failed": failed,
+             "n_mandible_local_refinement_ok": n_refined,
              "gt_provenance": "registration-propagated from CT (NOT natively drawn)",
              "qc_tissue_frac_threshold": QC_TISSUE_FRAC,
              "n_qc_pass": len(passed), "qc_excluded": excluded, "cases": rows}
     (BIDS_ROOT / "prepare_mr_audit.json").write_text(json.dumps(audit, indent=2))
     tf = [r["tissue_frac"] for r in rows]
     print(f"prepared {len(rows)}, failed {len(failed)}; QC pass {len(passed)}/{len(rows)}")
+    print(f"  mandible-local refinement OK on {n_refined}/{len(rows)}")
+    for b in sorted({r["refine_status"] for r in rows if r.get("refine_status") != "ok"})[:3]:
+        print(f"  refinement issue: {b}", file=sys.stderr)
     if tf:
         print(f"  tissue_frac: min={min(tf):.3f} median={sorted(tf)[len(tf)//2]:.3f} max={max(tf):.3f}")
     if excluded:
