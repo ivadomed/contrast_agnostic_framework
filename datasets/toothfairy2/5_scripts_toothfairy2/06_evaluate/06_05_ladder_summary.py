@@ -19,8 +19,16 @@ RUN_IDs are read from the TamIA packs' own RUN_IDS.env (see
 launch, and reading them back from the pack is what guarantees the ladder scores the
 runs that actually trained.
 
+⚠️ TWO suite packs, for the same reason 06_04_write_configs.py needs both: the
+6-method suite was launched as two node-packs, and EACH pack's RUN_IDS.env lists all
+six ids regardless of which three it actually trained. The ladder's rung 1 (baseline)
+comes from suite pack A; rungs 6/7 (OURS DualVal + its val100 mirror) come from pack
+B. Reading rung 1 from pack B yields an id that was never trained, and the rung
+silently renders as "—" — which is exactly how a ladder loses its anchor without
+anything erroring.
+
 Usage:
-  bash 06_05_ladder_summary.sh <SUITE_PACK_DIR> <LADDER_PACK_DIR>
+  bash 06_05_ladder_summary.sh <SUITE_A_PACK> <SUITE_B_PACK> <LADDER_PACK>
 """
 from __future__ import annotations
 
@@ -49,7 +57,10 @@ def read_env(pack: Path) -> dict[str, str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--suite-pack", required=True, type=Path)
+    ap.add_argument("--suite-pack-a", required=True, type=Path,
+                    help="pack that trained baseline (ladder rung 1)")
+    ap.add_argument("--suite-pack-b", required=True, type=Path,
+                    help="pack that trained OURS (ladder rungs 6/7)")
     ap.add_argument("--ladder-pack", required=True, type=Path)
     a = ap.parse_args()
 
@@ -66,9 +77,11 @@ def main() -> None:
         str(DATASET_ROOT.parent / "hanseg" / "8_results_hanseg" / "02_metrics"))) \
         / "toothfairy2_model" / "cbct"
 
-    s = read_env(a.suite_pack)
+    sa = read_env(a.suite_pack_a)
+    sb = read_env(a.suite_pack_b)
     l = read_env(a.ladder_pack)
-    ours = s["OURS_RUN_ID"]
+    baseline = sa["BASELINE_RUN_ID"]     # rung 1 anchor — from pack A, see docstring
+    ours = sb["OURS_RUN_ID"]             # rungs 6/7 — from pack B
     if ours.count("_val000_") != 1:
         raise SystemExit(f"OURS RUN_ID {ours!r} must contain '_val000_' exactly once")
 
@@ -77,7 +90,7 @@ def main() -> None:
     # METRICS_SUBDIR=ablations; the headline rungs (1, 6, 7) live flat in the parent.
     rungs = [
         ("baseline (floor)", "— (no augmentation at all)",
-         s["BASELINE_RUN_ID"]),
+         baseline),
         ("+kmeans", "+ K-means intensity clustering",
          f"ablations/{l['R2_RUN_ID']}"),
         ("+label_remap", "+ label remap",

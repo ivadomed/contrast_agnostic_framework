@@ -81,32 +81,20 @@ echo "########## 3. hanseg cross-modality predict + evaluate (OOD)"
 )
 
 echo "########## 4. configs + aggregation"
-bash "${DS}/06_evaluate/06_04_write_configs.sh" "${B}" "${L}"
-# suiteA's ids live in a different pack than suiteB's, so patch them in: the config
-# writer reads ONE pack, and the 6-method suite is deliberately split across two.
-CFG="${DS}/06_evaluate/configs/toothfairy2_cbct_01_results.yaml"
-python3 - "$CFG" "$BASELINE" "$AUGDEF" "$SSNOEM" <<'PY'
-import sys, re
-p, base, aug, ss = sys.argv[1:5]
-s = open(p).read()
-# Match the METHOD token followed by its timestamp (\d), NOT a bare prefix: plain
-# "baseline_" also substring-matches "baseline_kmeans_*", so a bare-prefix rewrite
-# would silently replace a ladder rung with the baseline run id the day someone adds
-# a rung to this config. Anchored + verified, rather than relying on the emitted
-# line order.
-for token, real in (("baseline_", base), ("auglab_default_", aug), ("synthseg_noEM_", ss)):
-    pat = rf"^  - \S*{re.escape(token)}\d\S*$"
-    s, n = re.subn(pat, f"  - {real}", s, count=1, flags=re.M)
-    if n != 1:
-        sys.exit(f"config patch failed: {n} lines matched {pat!r} in {p} "
-                 f"(expected exactly 1) — refusing to write a half-patched config")
-open(p, "w").write(s)
-print("patched suiteA run ids into", p)
-PY
-bash "${DS}/06_evaluate/06_02_aggregate_from_config.sh"
-bash "${DS}/06_evaluate/06_03_significance_from_config.sh" || true
+# Both suite packs are passed: each pack's RUN_IDS.env lists all six method ids
+# regardless of which three it actually trained, so composing from A + B is the only
+# way to get the ids that really exist. (This replaces an earlier regex patch that
+# rewrote lines in the generated config after the fact — fragile, since a bare
+# "baseline_" prefix also matches "baseline_kmeans_*".)
+bash "${DS}/06_evaluate/06_04_write_configs.sh" "${A}" "${B}" "${L}"
+
+bash "${DS}/06_evaluate/06_02_aggregate_from_config.sh"                       # in-domain only
+bash "${DS}/06_evaluate/06_06_cross_dataset_summary.sh"                      # HEADLINE (in-domain + hanseg CT)
+bash "${DS}/06_evaluate/06_07_combined_modality_summary.sh" || true          # per-task roll-up for the meta-heatmap
+bash "${DS}/06_evaluate/06_03_significance_from_config.sh" \
+     "${DS}/06_evaluate/configs/toothfairy2_cross_dataset_01_results.yaml" || true
 
 echo "########## 5. causal-ablation ladder"
-bash "${DS}/06_evaluate/06_05_ladder_summary.sh" "${B}" "${L}" || true
+bash "${DS}/06_evaluate/06_05_ladder_summary.sh" "${A}" "${B}" "${L}" || true
 
 echo "########## DONE"
