@@ -238,10 +238,25 @@ MRI Dice is 3.0 — it predicts almost nothing, and HD95 on near-empty predictio
 comparable to HD95 on real ones. Do not quote the HD95 `all` column without the Dice
 column beside it.
 
-**(d) Label-consistency caveat.** The `cbct` column is a 3-class macro while both hanseg
-columns are a single class, so `all` mixes label sets and the in-domain->OOD drop
-conflates modality with label set. `06_08_eval_mandible_union.py` produces the
-label-consistent view; the LADDER is already consistent (OOD only).
+**(d) Label consistency — RESOLVED, and there are now two tables.** The 3-class
+`cbct` column mixed label sets with the single-class OOD columns. A fully
+label-consistent table now exists in which EVERY column scores the mandible union:
+
+| method | cbct_union | hanseg_ct | hanseg_mrt1 | all | sig. vs ref |
+|---|---|---|---|---|---|
+| baseline | **98.7** | 75.8 | 3.0 | 59.2 | **7.3e-09** |
+| auglab_default | 98.2 | **75.9** | 55.0 | **76.4** | 0.6901 |
+| synthseg_noEM | 84.9 | 48.8 | 24.9 | 52.9 | **6.9e-24** |
+| synthseg_EM | 96.4 | 75.5 | **56.7** | 76.2 | 0.6901 |
+| srcsm | 97.6 | 63.2 | 24.9 | 61.9 | **2.5e-14** |
+| **OURS** | 98.0 | 75.8 | 55.1 | 76.3 | — |
+
+**USE THIS ONE FOR ANY CROSS-MODALITY CLAIM** (`toothfairy2_union_01_results.yaml`,
+built by `06_08_eval_mandible_union.py` -> `06_09_build_union_view.sh`). The 3-class
+table (§7.2) characterises the full task but must not be used for the modality
+comparison. Reassuringly the direction of every conclusion is identical in both.
+The LADDER was already consistent — its OOD values come solely from hanseg, both of
+whose columns are the union.
 
 **(e) The FOV crop is GT-centred.** Position leaks (extent does not — fixed-size box),
 applied identically to all methods, so the comparison is unbiased but absolute Dice is
