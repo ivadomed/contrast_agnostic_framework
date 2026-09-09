@@ -3,12 +3,13 @@
 # every fold x every item, mandible only.
 #
 # TWO ITEMS, KEPT SEPARATE ON PURPOSE:
-#   ct    — native GT, drawn by HaN-Seg's own annotators on the CT grid
-#   mrt1  — GT PROPAGATED from CT by mandible-local rigid registration
-#           (01_prepare/01_02_prepare_mr.py). Carries registration error on top of
-#           model error, so it is NOT directly comparable to `ct` and the two must
-#           never be pooled into one figure — that would launder registration error
-#           into the headline result.
+#   ct    — the CT image
+#   mrt1  — the MR image RESAMPLED INTO THE CT FRAME (01_04_prepare_mr_in_ct_frame.py)
+# BOTH are scored against the SAME original human-drawn labelsTs_ct. No label is ever
+# transformed, so the two columns differ only by image modality — a controlled
+# cross-modality comparison. They are still reported as separate columns (never
+# pooled): the mrt1 arm additionally carries residual registration error in the IMAGE,
+# so a perfect model cannot reach 100% there.
 #
 # Predictions are 3-class (mandible/lower_teeth/pharynx) while HaN-Seg GT is a single
 # Bone_Mandible that INCLUDES the lower dentition, so 05_20_merge_mandible_union.py
@@ -28,7 +29,7 @@ RUN_ID="${1:?need RUN_ID}"
 CATEGORY="${2:?need CATEGORY (nnUNet|auglab)}"
 FOLD_ARG="${3:-all}"
 CKPT_TAG="${CKPT_TAG:-best}"
-read -ra ITEMS <<< "${HANSEG_EVAL_ITEMS:-ct}"   # mrt1 disabled by decision, see 05_01
+read -ra ITEMS <<< "${HANSEG_EVAL_ITEMS:-ct mrt1}"
 
 PRED_BASE="${PREDICTIONS_ROOT}/${TF2_MODEL_TYPE}/${TF2_TRAINING_CONTRAST}/${CATEGORY}/${RUN_ID}"
 _PRED_SUBDIR=""; [ "${CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${CKPT_TAG}/"
@@ -48,7 +49,12 @@ cd '${PROJECT_ROOT}'
 for F in ${FOLDS}; do
     for item in ${ITEMS[*]}; do
         PRED_DIR='${PRED_BASE}'/fold\${F}/${_PRED_SUBDIR}\${item}
-        GT_DIR='${nnUNet_raw}'/labelsTs_\${item}
+        # GT is ALWAYS labelsTs_ct, for EVERY item. The mrt1 arm is the MR image
+        # resampled into the CT frame (01_04_prepare_mr_in_ct_frame.py), so both
+        # arms are scored against the SAME original human-drawn masks — that is
+        # what makes the CT-vs-MR comparison controlled. Never point this at a
+        # per-item label dir; there is deliberately no labelsTs_mrt1.
+        GT_DIR='${nnUNet_raw}'/labelsTs_ct
         [ -d \"\${PRED_DIR}\" ] || { echo \"  skip fold\${F}/\${item}: no preds\"; continue; }
         [ -d \"\${GT_DIR}\" ]   || { echo \"  skip fold\${F}/\${item}: no GT (\${GT_DIR})\"; continue; }
         MERGED=\"\${PRED_DIR}_mandible_union\"

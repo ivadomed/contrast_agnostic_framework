@@ -172,69 +172,83 @@ cases) but none are released. **PET is excluded for physics, not availability**:
 bone has near-zero FDG uptake at ~4-5 mm resolution, so every method would score ~0 and
 the test would be vacuous rather than hard.
 
-## 7. Results
+## 7. Results (FINAL — two OOD modalities, CT + MRI)
 
-### 7.1 Causal-ablation ladder (the reason this dataset exists)
+### 7.0 THE MOST IMPORTANT METHODOLOGICAL FINDING
 
-Cross-modality OOD. ⚠️ Numbers below are the CT-arm-only version; they are being
-recomputed now that the MR arm exists and the OOD pool spans two modalities.
+**Adding the second OOD modality reversed the headline conclusion.** With hanseg CT as
+the only OOD arm, OURS did NOT beat the baseline (one-sided p = 1.0000) and the task
+read as a null result. With CT **and** MRI, OURS beats the baseline at **p = 1.3e-08**.
 
-| rung | adds | OOD Dice | OOD HD95 | ΔDice | ΔHD95 |
+The reason is visible in the per-modality numbers: CBCT and CT are both X-ray
+attenuation, so the CT arm barely discriminates — the non-contrast-agnostic baseline
+still reaches 75.8 Dice there. MRI is the actual test of contrast-agnosticism, and the
+baseline **collapses to 2.98 Dice** while every augmentation method reaches 49-57.
+
+Do not report a single-OOD-modality version of this task: it understates the effect to
+the point of inverting the conclusion.
+
+### 7.1 Causal-ablation ladder — per modality and pooled
+
+| rung | adds | CT | MRI | pooled Dice | pooled HD95 | ΔDice | ΔHD95 |
+|---|---|---|---|---|---|---|---|
+| baseline (floor) | — | 75.85 | **2.98** | 39.85 | 30.75 | | |
+| +kmeans | K-means clustering | 79.85 | 49.16 | 64.69 | 33.60 | +24.84 | +2.85 |
+| +label_remap | label remap | 80.64 | 50.81 | 65.91 | 35.63 | +1.22 | +2.03 |
+| +voronoi (noise fill) | Voronoi sub-parcellation | **83.22** | 53.71 | 68.64 | 31.90 | +2.74 | −3.73 |
+| **v26_6_2 (real fill)** | **same partition, REAL fill** | 82.86 | **55.11** | **69.15** | **31.66** | **+0.51** | **−0.25** |
+| +AugLab (val000) | full AugLab recipe | 75.76 | 55.10 | 65.55 | 35.87 | −3.60 | +4.22 |
+| +AugLab (val100) | 100%-synth validation | 75.92 | 55.19 | 65.68 | 35.49 | +0.13 | −0.39 |
+
+**Rung 4->5 (noise fill -> real-intensity fill, partition identical) = +0.51 Dice /
+−0.25 HD95 pooled** (CT −0.35, MRI +1.40). Near-zero, which is the prediction for a
+BOUNDARY-defined target, against ~+7 Dice on texture-defined ones (open-ms lesions,
+brats sub-regions). The conclusion is unchanged by adding the second modality, and is
+now measured across two.
+
+### 7.2 Headline table (Dice; `sig. vs ref` = Holm-corrected one-sided "OURS better")
+
+| method | cbct | hanseg_ct | hanseg_mrt1 | all | sig. vs ref |
 |---|---|---|---|---|---|
-| baseline (floor) | — | 75.85 | 25.25 | | |
-| +kmeans | K-means intensity clustering | 79.85 | 30.74 | +4.00 | +5.49 |
-| +label_remap | label remap | 80.64 | 30.99 | +0.79 | +0.24 |
-| +voronoi (noise fill) | Voronoi sub-parcellation | 83.22 | 24.22 | +2.57 | −6.77 |
-| **v26_6_2 (real fill)** | **same partition, REAL fill** | **82.86** | **23.93** | **−0.35** | **−0.29** |
-| +AugLab (val000) | full AugLab recipe | 75.76 | 31.85 | −7.10 | +7.92 |
-| +AugLab (val100) | 100%-synth validation | 75.92 | 31.43 | +0.16 | −0.42 |
+| baseline | **95.4** | 75.8 | 3.0 | 58.1 | **1.3e-08** |
+| auglab_default | 94.3 | **75.9** | 55.0 | **75.1** | 0.5976 |
+| synthseg_noEM | 78.8 | 48.8 | 24.9 | 50.8 | **7.5e-25** |
+| synthseg_EM | 90.9 | 75.5 | **56.7** | 74.3 | 0.0664 |
+| srcsm | 93.1 | 63.2 | 24.9 | 60.4 | **1.1e-14** |
+| **OURS (train050_val000)** | 94.1 | 75.8 | 55.1 | 75.0 | — |
 
-**Rung 4->5 = −0.35 Dice / −0.29 HD95.** That step swaps noise fill for real-intensity
-fill with the partition otherwise identical — the one-variable test of whether texture
-preservation causally drives Dice. Near-zero is exactly the prediction for a
-BOUNDARY-defined target, against ~+7 Dice on texture-defined ones.
-
-### 7.2 Headline table (Dice)
-
-| method | cbct (in-domain) | hanseg_ct | all | sig. vs ref |
-|---|---|---|---|---|
-| baseline | **95.4** | 75.8 | **85.6** | 1.0000 |
-| auglab_default | 94.3 | **75.9** | 85.1 | 1.0000 |
-| synthseg_noEM | 78.8 | 48.8 | 63.8 | 6.8e-19 |
-| synthseg_EM | 90.9 | 75.5 | 83.2 | 4.1e-06 |
-| srcsm | 93.1 | 63.2 | 78.2 | 4.0e-09 |
-| **OURS (train050_val000)** | 94.1 | 75.8 | 84.9 | — |
+OURS decisively beats baseline (1.3e-08), synthseg_noEM (7.5e-25) and srcsm (1.1e-14);
+ties auglab_default (p=0.60); is marginally ahead of synthseg_EM (p=0.066, and
+synthseg_EM is actually best on the MRI column at 56.7).
 
 ## 8. FINDINGS THAT MUST NOT BE BURIED
 
-**(a) OURS does not beat baseline or auglab_default here.** 84.9 vs 85.6 / 85.1, with a
-one-sided "OURS better" p of 1.0000 against both. It DOES significantly beat
-synthseg_noEM, synthseg_EM and srcsm. A null result against the no-synthesis references
-is CONSISTENT with the thesis on a boundary-defined target — synthesis is not supposed to
-help where the target is an anatomical interface — but it is a null result and must be
-written as one, not framed as a win.
+**(a) OURS ties auglab_default and only marginally leads synthseg_EM.** The clear wins
+are over baseline, srcsm and synthseg_noEM. Report the ties as ties.
 
-**(b) The intermediate ladder rungs BEAT both the floor and OURS, and this is
-unexplained.** Rungs 3-5 reach 80.6 / 83.2 / 82.9 against a 75.9 floor and 75.8 for
-OURS; adding the full AugLab recipe on top of v26_6_2 costs **7.10 OOD Dice** and
-+7.9 mm HD95. Leading hypothesis, NOT verified: rungs 2-5 use spatialDA-only configs
-while OURS adds the full `default01-23` intensity augmentation, which may be actively
-harmful on a boundary-defined bone task under a large modality+FOV shift. Needs an
-explicit ablation. As it stands **the best cross-modality configuration on this dataset
-is an intermediate rung, not the method.**
+**(b) The full AugLab recipe COSTS 7.10 Dice on the CT arm** (rung 5 82.86 -> rung 6
+75.76) while being neutral on MRI (55.11 -> 55.10). So the penalty is modality-specific,
+which the pooled column hides (−3.60). Unexplained. Leading hypothesis, NOT verified:
+rungs 2-5 use spatialDA-only configs while OURS adds full `default01-23` intensity
+augmentation. Needs an explicit ablation; on the CT arm the best configuration remains
+an intermediate rung.
 
-**(c) A label-consistency caveat in the headline table.** The `cbct` column is a 3-class
-macro while `hanseg_ct` is a single class, so `all` averages incommensurable quantities
-and the in-domain->OOD drop conflates "harder modality" with "different label set".
-`06_08_eval_mandible_union.py` produces a label-consistent view (in-domain scored on the
-same mandible union) — use that for the cross-modality claim, and the 3-class table only
-to characterise the full task. The LADDER is already label-consistent (its OOD values
-come solely from hanseg).
+**(c) HD95 ranks the baseline BEST overall (20.9), which is a metric artifact.** Its
+MRI Dice is 3.0 — it predicts almost nothing, and HD95 on near-empty predictions is not
+comparable to HD95 on real ones. Do not quote the HD95 `all` column without the Dice
+column beside it.
 
-**(d) The FOV crop is GT-centred.** Position leaks (extent does not — the box is fixed
-size). Applied identically to every method so the comparison is unbiased, but absolute
-Dice is inflated relative to a real localize-then-segment pipeline and must never be
-presented as clinical performance.
+**(d) Label-consistency caveat.** The `cbct` column is a 3-class macro while both hanseg
+columns are a single class, so `all` mixes label sets and the in-domain->OOD drop
+conflates modality with label set. `06_08_eval_mandible_union.py` produces the
+label-consistent view; the LADDER is already consistent (OOD only).
+
+**(e) The FOV crop is GT-centred.** Position leaks (extent does not — fixed-size box),
+applied identically to all methods, so the comparison is unbiased but absolute Dice is
+inflated vs a real localize-then-segment pipeline.
+
+**(f) Case counts differ slightly between OOD arms**: 42 CT vs 41 MRI (case_15 fails
+registration QC reproducibly and is excluded).
 
 ## 9. Reproducing every table
 

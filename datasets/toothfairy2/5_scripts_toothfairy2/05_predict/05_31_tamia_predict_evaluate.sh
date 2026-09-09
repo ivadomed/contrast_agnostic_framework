@@ -73,25 +73,35 @@ ROWS=(
 
 want() { [ -z "${TF2_ONLY}" ] && return 0; case " ${TF2_ONLY} " in *" $1 "*) return 0;; *) return 1;; esac; }
 
+# SKIP_OWN=1 restricts the whole job to the hanseg (cross-modality) side. Use it when
+# the in-domain CBCT predictions/metrics are already valid and must not be recomputed
+# or overwritten — e.g. when only a newly built hanseg item is being added.
+SKIP_OWN="${SKIP_OWN:-0}"
+
 # ── Phase 0: inputs + which runs are actually trained ────────────────────────
+if [ "${SKIP_OWN}" = "0" ]; then
 ( set -e; cd "${PROJECT_ROOT}"
   source "${TF2_DIR}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_toothfairy2.sh"
   bash "${TF2_DIR}/05_predict/05_00_build_test_inputs.sh" )
+fi
 TF2_RAW=/scratch/p/paulh/toothfairy2/2_nnUNet/raw/Dataset110_ToothFairy2CBCT
 HS_RAW=/scratch/p/paulh/hanseg/2_nnUNet/raw
 N_OWN=$(ls "${TF2_RAW}/imagesTs_cbct" 2>/dev/null | wc -l)
 # hanseg now has TWO items: ct (native GT) and mrt1 (GT propagated from CT by
 # registration, with QC-failing cases excluded — so its count is <= ct's and must be
 # derived, never hardcoded).
+# HS_ITEMS_OVERRIDE lets a run target ONE hanseg item (e.g. only the newly built
+# mrt1 arm) so existing, still-valid predictions/metrics for the other item are not
+# recomputed and cannot be overwritten with a partially-different pipeline.
 HS_ITEMS=""
 declare -A HS_N
-for it in ct mrt1; do
+for it in ${HS_ITEMS_OVERRIDE:-ct mrt1}; do
     n=$(ls "${HS_RAW}/imagesTs_${it}" 2>/dev/null | wc -l)
     if [ "${n}" -gt 0 ]; then HS_ITEMS="${HS_ITEMS}${HS_ITEMS:+ }${it}"; HS_N[$it]=$n; fi
 done
-echo "[pp] own test cases=${N_OWN} (expect 71)"
+echo "[pp] own test cases=${N_OWN} (expect 71)   SKIP_OWN=${SKIP_OWN}"
 for it in ${HS_ITEMS}; do echo "[pp] hanseg item ${it}: ${HS_N[$it]} cases"; done
-[ "${N_OWN}" = "71" ] || { echo "[pp] ERROR: own test inputs not 71" >&2; exit 1; }
+[ "${SKIP_OWN}" = "1" ] || [ "${N_OWN}" = "71" ] || { echo "[pp] ERROR: own test inputs not 71" >&2; exit 1; }
 [ -n "${HS_ITEMS}" ]  || { echo "[pp] ERROR: no hanseg items built" >&2; exit 1; }
 export HANSEG_EVAL_ITEMS="${HS_ITEMS}"
 
@@ -118,17 +128,19 @@ done
 # nnUNet_raw/PREDICTIONS_ROOT, and sourcing one env after the other in the same shell
 # is the documented env-clobbering bug that has hit every cross-eval dataset here.
 PD_OWN="${PACK_DIR}/own"; PD_HS="${PACK_DIR}/hanseg"; mkdir -p "${PD_OWN}" "${PD_HS}"
+if [ "${SKIP_OWN}" = "0" ]; then
 ( cd "${PROJECT_ROOT}"
   source "${TF2_DIR}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_toothfairy2.sh"
   for row in "${SELECTED[@]}"; do
     IFS=: read -r TOK OWNW HSW RID CAT SUB <<< "${row}"
     RUN_JOB_PACK_DIR="${PD_OWN}" bash "${TF2_DIR}/05_predict/${OWNW}" "${RID}" all
   done ) > "${PACK_DIR}/record_own.log" 2>&1
+fi
 ( cd "${PROJECT_ROOT}"
   source "${HS_DIR}/00_utils/env.sh"; source "${PROJECT_ROOT}/scripts/cluster/tamia_env_hanseg.sh"
   for row in "${SELECTED[@]}"; do
     IFS=: read -r TOK OWNW HSW RID CAT SUB <<< "${row}"
-    RUN_JOB_PACK_DIR="${PD_HS}" bash "${HS_DIR}/05_predict/${HSW}" "${RID}" all
+    RUN_JOB_PACK_DIR="${PD_HS}" bash "${HS_DIR}/05_predict/${HSW}" "${RID}" all ${HS_ITEMS}
   done ) > "${PACK_DIR}/record_hanseg.log" 2>&1
 cat "${PD_OWN}/index.tsv" "${PD_HS}/index.tsv" > "${PACK_DIR}/index.tsv" 2>/dev/null
 N=$(grep -c . "${PACK_DIR}/index.tsv" 2>/dev/null || echo 0)
@@ -137,7 +149,7 @@ N_HS_REC=$(grep -c . "${PD_HS}/index.tsv" 2>/dev/null || echo 0)
 # predict_common records ONE task per (run, fold) per DATASET — that task loops
 # over all of that dataset's items internally — so the expectation is
 # runs x 3 folds x 2 datasets regardless of how many items hanseg has.
-EXPECT=$(( ${#SELECTED[@]} * 6 ))
+if [ "${SKIP_OWN}" = "1" ]; then EXPECT=$(( ${#SELECTED[@]} * 3 )); else EXPECT=$(( ${#SELECTED[@]} * 6 )); fi
 N_HS_ITEMS=$(echo ${HS_ITEMS} | wc -w)
 echo "[pp] recorded ${N} fold-predict tasks (own=${N_OWN_REC} hanseg=${N_HS_REC}; hanseg items: ${HS_ITEMS})"
 # HARD FAIL on a short recording. Continuing with a partial index is how you get a
@@ -183,8 +195,10 @@ DJ="${TF2_RAW}/dataset.json"
 fail=0
 
 echo "[pp] ==== PHASE 3+4a: own held-out CBCT (in-domain), 3 labels ===="
+if [ "${SKIP_OWN}" = "1" ]; then echo "[pp]   SKIPPED (SKIP_OWN=1) — existing in-domain metrics preserved"; fi
 TF2_METRICS=/scratch/p/paulh/toothfairy2/8_results/02_metrics/toothfairy2_model/cbct
 for row in "${SELECTED[@]}"; do
+  [ "${SKIP_OWN}" = "1" ] && break
   IFS=: read -r TOK OWNW HSW RID CAT SUB <<< "${row}"
   for F in 0 1 2; do
     D="${TF2_PRED_ROOT}/${CAT}/${RID}/fold${F}/cbct"
@@ -208,21 +222,32 @@ HS_METRICS=/scratch/p/paulh/hanseg/8_results/02_metrics/toothfairy2_model/cbct
 for row in "${SELECTED[@]}"; do
   IFS=: read -r TOK OWNW HSW RID CAT SUB <<< "${row}"
   for F in 0 1 2; do
-    D="${HS_PRED}/${CAT}/${RID}/fold${F}/ct"
+   # Loop the ITEMS actually built (ct and/or mrt1). An earlier version hardcoded `ct`
+   # here while the predict phase honoured HS_ITEMS — so an mrt1-only run predicted the
+   # MR arm and then re-evaluated the CT arm, producing zero mrt1 metrics. GT is always
+   # labelsTs_ct: the mrt1 arm is the MR image resampled into the CT frame, so both
+   # items are scored against the SAME original human-drawn masks.
+   for IT in ${HS_ITEMS}; do
+    D="${HS_PRED}/${CAT}/${RID}/fold${F}/${IT}"
+    EXP=${HS_N[$IT]}
     n=$(find "$D" -name '*.nii.gz' 2>/dev/null | wc -l)
-    if [ "$n" != "42" ]; then echo "[pp] BAD HANSEG COUNT ${n}/42: $D" >&2; fail=1; continue; fi
+    if [ "$n" != "$EXP" ]; then echo "[pp] BAD HANSEG COUNT ${n}/${EXP}: $D" >&2; fail=1; continue; fi
     M="${D}_mandible_union"
     "$PY" "${HS_DIR}/05_predict/05_20_merge_mandible_union.py" --pred_dir "$D" --out_dir "$M" >/dev/null 2>&1 \
-      || { echo "[pp] union merge FAILED ${RID} fold${F}" >&2; fail=1; continue; }
+      || { echo "[pp] union merge FAILED ${RID} fold${F} ${IT}" >&2; fail=1; continue; }
     OUT="${HS_METRICS}${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"; mkdir -p "$OUT"
     "$PY" "${HS_DIR}/06_evaluate/06_00_evaluate.py" --pred_dir "$M" --gt_dir "${HS_RAW}/labelsTs_ct" \
-      --label_map '{"mandible": [1, 1]}' --name ct \
-      --out_csv "${OUT}/ct_metrics.csv" --workers 6 > "${OUT}/ct_eval.log" 2>&1 \
-      || { echo "[pp] hanseg eval FAILED ${RID} fold${F}" >&2; fail=1; continue; }
-    rows=$(( $(wc -l < "${OUT}/ct_metrics.csv") - 1 ))
-    echo "[pp] hanseg eval ${TOK} fold${F}: ${rows} rows"
-    "$PY" "$SUMMARIZE" "$OUT" "$RID" "$F" --groups ct --group-col contrast --groups-word Contrasts \
-      >> "${OUT}/ct_eval.log" 2>&1
+      --label_map '{"mandible": [1, 1]}' --name "${IT}" \
+      --out_csv "${OUT}/${IT}_metrics.csv" --workers 6 > "${OUT}/${IT}_eval.log" 2>&1 \
+      || { echo "[pp] hanseg eval FAILED ${RID} fold${F} ${IT}" >&2; fail=1; continue; }
+    rows=$(( $(wc -l < "${OUT}/${IT}_metrics.csv") - 1 ))
+    echo "[pp] hanseg eval ${TOK} fold${F} ${IT}: ${rows} rows"
+   done
+   OUT="${HS_METRICS}${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"
+   if ls "${OUT}"/*_metrics.csv >/dev/null 2>&1; then
+     "$PY" "$SUMMARIZE" "$OUT" "$RID" "$F" --groups ${HS_ITEMS} --group-col contrast \
+       --groups-word Contrasts >> "${OUT}/summarize.log" 2>&1
+   fi
   done
 done
 echo "[pp] eval fail flag = ${fail}"

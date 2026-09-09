@@ -22,17 +22,13 @@ PREDICT_MODE="cross"
 SOURCE_PREFIX="TF2"
 PREDICT_JOB_PREFIX="hanseg_predict"
 PREDICT_LOG_PREFIX="hanseg_predict"
-# `ct` ONLY. The mrt1 arm is built and working but is DISABLED by decision
-# (2026-09-08) — see 01_prepare/01_02_prepare_mr.py's "STATUS" block. Its ground
-# truth is propagated from CT by our own registration, and validation showed the QC
-# gate used to accept it (tissue_frac) is ANTI-correlated with accuracy: a mask
-# displaced 12 mm scores BETTER (0.967) than the correct one (0.943). The
-# registration itself has support (edge_score peaks sharply at 0 displacement), but
-# "GT we generated, validated by a metric we also designed" is not a defensible basis
-# for a cross-modality claim in a paper.
-# Re-enable deliberately with HANSEG_EVAL_ITEMS / by editing this line — do not turn
-# it back on by accident.
-PREDICT_ITEMS_DEFAULT="ct"
+# Two items, both scored against the SAME original labelsTs_ct:
+#   ct    — the CT image
+#   mrt1  — the MR image resampled into the CT frame (01_04_prepare_mr_in_ct_frame.py)
+# No label is ever transformed. This replaces the earlier label-propagation attempt
+# (01_02_prepare_mr.py, disabled) and follows what the HaN-Seg challenge teams did:
+# register MR->CT and keep the ground truth in CT space.
+PREDICT_ITEMS_DEFAULT="ct mrt1"
 PREDICT_FOLD_DEFAULT="all"
 PREDICT_TIME="00:45:00"
 PREDICT_EXTRA_FLAGS="-npp 4 -nps 2"
