@@ -367,6 +367,10 @@ def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
     dump = {
         "task_name": task_name, "contrast_label": contrast_label,
         "labels": [r[0] for r in rungs], "ingredients": [r[1] for r in rungs],
+        # run ids per rung, so a downstream consumer (the paper figure) can
+        # reach the underlying per-case metrics without re-importing this
+        # dataset's wrapper module -- some build their rungs inside main().
+        "run_keys": [r[2] for r in rungs],
         "dice": series["dice"], "hd95": series["hd95"],
         "all_dice": series_all["dice"], "all_hd95": series_all["hd95"],
         "in_domain": in_domain, "ood_contrasts": ood_contrasts,
@@ -623,6 +627,10 @@ def run_ladder_cross_dataset(*, task_name, contrast_label, ood_sources, ablation
     dump = {
         "task_name": task_name, "contrast_label": contrast_label,
         "labels": [r[0] for r in rungs], "ingredients": [r[1] for r in rungs],
+        # run ids per rung, so a downstream consumer (the paper figure) can
+        # reach the underlying per-case metrics without re-importing this
+        # dataset's wrapper module -- some build their rungs inside main().
+        "run_keys": [r[2] for r in rungs],
         "dice": series["dice"], "hd95": series["hd95"],
         "ood_sources": [str(p) for p in ood_sources],
         "grouped_pooling": bool(contrast_groups),
