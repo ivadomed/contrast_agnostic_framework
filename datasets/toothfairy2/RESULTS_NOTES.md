@@ -226,12 +226,31 @@ synthseg_EM is actually best on the MRI column at 56.7).
 **(a) OURS ties auglab_default and only marginally leads synthseg_EM.** The clear wins
 are over baseline, srcsm and synthseg_noEM. Report the ties as ties.
 
-**(b) The full AugLab recipe COSTS 7.10 Dice on the CT arm** (rung 5 82.86 -> rung 6
-75.76) while being neutral on MRI (55.11 -> 55.10). So the penalty is modality-specific,
-which the pooled column hides (−3.60). Unexplained. Leading hypothesis, NOT verified:
-rungs 2-5 use spatialDA-only configs while OURS adds full `default01-23` intensity
-augmentation. Needs an explicit ablation; on the CT arm the best configuration remains
-an intermediate rung.
+**(b) The AugLab drop is REAL, PERSISTS, and is MODALITY-SPECIFIC.** Adding the full
+AugLab recipe on top of v26_6_2 (ladder rung 5 -> 6) costs:
+
+| arm | rung 5 (v26_6_2 real fill) | rung 6 (+AugLab val000) | Δ |
+|---|---|---|---|
+| hanseg **CT** | 82.86 | 75.76 | **−7.10** |
+| hanseg **MRI** | 55.11 | 55.10 | **−0.01** |
+| pooled | 69.15 | 65.55 | −3.60 |
+
+It survived every change made since first observed (the second OOD modality, the
+label-consistent union view, the eval_all.csv repair), so it is not an artifact of any
+of those. The two-modality view LOCALISES it: the penalty is entirely on the CT arm and
+exactly zero on MRI — which the pooled −3.60 hides, and which a CT-only evaluation would
+have reported as a flat 7-point loss with no way to see it was modality-specific.
+
+Interpretation is open. It is NOT simply "AugLab is bad": on MRI the recipe is neutral,
+and OURS (which IS rung 6) still ties auglab_default and synthseg_EM overall. Leading
+hypothesis, NOT verified: ladder rungs 2-5 use spatialDA-only configs
+(`*_spatialDA_train050.json`) while rung 6 adds the full `default01-23` intensity
+augmentation, which may be harmful specifically where the OOD modality is
+appearance-adjacent to training (CBCT->CT are both X-ray attenuation, so aggressive
+intensity randomisation may destroy a cue that transfers; CBCT->MRI shares no such cue,
+so there is nothing left to destroy). A single ablation isolates it: rung 6 with
+spatialDA-only augmentation. **On the CT arm the best configuration remains an
+intermediate rung, and that must be stated.**
 
 **(c) HD95 ranks the baseline BEST overall (20.9), which is a metric artifact.** Its
 MRI Dice is 3.0 — it predicts almost nothing, and HD95 on near-empty predictions is not
