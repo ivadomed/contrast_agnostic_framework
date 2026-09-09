@@ -1,30 +1,32 @@
 #!/usr/bin/env python3
 """
-Computes the paired significance of the fill-swap step (rung 3, "+voronoi
-noise fill" -> rung 4, "v26_6_2 real fill") for each of the 8 causal-ablation
-ladders (4 headline tasks x both training modalities), for tab:dissociation
-in the paper (which reports Delta Dice + p, moving the Delta HD95 column to
-supplementary per user request).
+Builds tab:dissociation: the fill-swap step (rung 3 "+voronoi noise fill" ->
+rung 4 "v26_6_2 real fill") for every causal-ablation ladder, Holm-corrected
+across the whole family.
 
-atlas-liver-hcc's single-modality cross-dataset ladder (a 9th row here until
-2026-09-02) was REMOVED along with the whole atlas-liver-hcc extension --
-see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)" for the full
-rationale. Its own investigation found its OOD contrast pool hinged on an
-ambiguous contrast (Dixon out-of-phase reading as appearance-adjacent to
-ATLAS's fat-suppressed training data), with the ladder's sign flipping
-depending on whether it was included -- exactly the kind of fragility this
-script's paired-significance framing is meant to rule out for the 8 rows
-that remain.
+Reads each ladder's `ladder_series.json` -- written by the shared engine
+(00_commun_scripts/00_03_evaluate/ladder_ood_common.py), which computes the
+per-contrast and pooled fill-swap Wilcoxon tests itself and stores them under
+`fill_swap_significance`. That JSON is the single source of truth; this script
+only selects which ladders are paper rows, applies the across-ladder Holm
+correction (which no individual ladder can do, since it cannot see the others),
+and formats the table.
 
-Reuses load_case_means/resolve_run_dir from the shared ladder engine and
-wilcoxon_p/holm from stat_tests.py -- no new statistical machinery.
+Rewritten 2026-09-09 (was: import each dataset's wrapper module and re-derive
+the statistic from METRICS_ROOT/OOD_CONTRASTS). The import approach could not
+reach cross-dataset ladders whose wrappers build their rungs inside main()
+rather than at module level -- toothfairy2's does -- and it maintained a second
+implementation of a test the engine already runs. Reading the JSON removes both
+problems and makes adding a task a one-line change. Verified equivalent on the
+original 8 rows: the engine's raw pooled p reproduces the old import-based
+value exactly (e.g. CHAOS T1in 1.721e-4).
 
 Usage:
   .venv/bin/python compute_dissociation_pvalues.py
 """
 from __future__ import annotations
 
-import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -32,76 +34,125 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
-from ladder_ood_common import load_case_means, resolve_run_dir  # noqa: E402
-from stat_tests import holm, wilcoxon_p  # noqa: E402
+from stat_tests import holm  # noqa: E402
 
+M = "datasets/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
 
-def cross_dataset_pairs(ood_sources, run_key3, run_key4, metric):
-    """Pooled case-level (x, y) pairs for the fill-swap step, across every
-    <dataset>/item stream in ood_sources -- the cross-dataset counterpart of
-    pooling across OOD_CONTRASTS within one dataset's own metrics tree."""
-    x, y = [], []
-    for metrics_root in ood_sources:
-        dir3 = resolve_run_dir(metrics_root, run_key3)
-        dir4 = resolve_run_dir(metrics_root, run_key4)
-        cases3 = load_case_means(dir3, metric) if dir3.is_dir() else {}
-        cases4 = load_case_means(dir4, metric) if dir4.is_dir() else {}
-        for item in set(cases3) | set(cases4):
-            c3, c4 = cases3.get(item, {}), cases4.get(item, {})
-            for case_id in sorted(set(c3) & set(c4)):
-                x.append(c3[case_id])
-                y.append(c4[case_id])
-    return np.array(x), np.array(y)
-
-
-def _load_wrapper(path: Path):
-    spec = importlib.util.spec_from_file_location(path.stem, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-WRAPPERS = [
-    ("Open-MS FLAIR", "datasets/open-ms/5_scripts_open-ms/06_evaluate/06_14_ladder_summary_ood.py"),
-    ("Open-MS T1w", "datasets/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
-    ("Brats-GLI T1n", "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
-    ("Brats-GLI T2w", "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
-    ("CHAOS T1in", "datasets/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py"),
-    ("CHAOS T2spir", "datasets/chaos/5_scripts_chaos/06_evaluate/06_33_ladder_summary_t2spir.py"),
-    ("ON-Harmony T1w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"),
-    ("ON-Harmony T2w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
-    # ATLAS-Liver-HCC REMOVED 2026-09-02 -- dataset excluded from the paper
-    # entirely, see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)".
+# (paper row label, boundary type, ladder_series.json path)
+#
+# ONE ROW PER (task, training modality), each on that task's OWN held-out
+# contrast axis. Two notes on what is deliberately NOT here:
+#
+#  * ToothFairy2 trains on CBCT only, so it has no held-out in-house contrast
+#    and its OOD axis is necessarily cross-DATASET (HaN-Seg CT + MR). Footnoted
+#    in the table rather than silently mixed in with the cross-contrast rows.
+#  * The Duke-breast-MRI ladders are external-cohort confirmations of the
+#    I-SPY2 result, not separate tasks, and one of them (t1wce-trained tested on
+#    Duke t1wce) is cross-dataset at the SAME contrast -- not held-out-contrast
+#    evidence at all. Both are reported in the supplement, not here, so this
+#    table stays one estimand throughout.
+ROWS = [
+    ("CHAOS T1in",      "tissue interface",
+     M.format(ds="chaos", model="chaos_model", contrast="t1in")),
+    ("CHAOS T2spir",    "tissue interface",
+     M.format(ds="chaos", model="chaos_model", contrast="t2spir")),
+    ("ON-Harmony T1w",  r"tissue interface$^\dagger$",
+     M.format(ds="on-harmony", model="on_harmony_model", contrast="T1w")),
+    ("ON-Harmony T2w",  r"tissue interface$^\dagger$",
+     M.format(ds="on-harmony", model="on_harmony_model", contrast="T2w")),
+    ("ToothFairy2 CBCT", r"tissue interface$^\ddagger$",
+     M.format(ds="toothfairy2", model="toothfairy2_model", contrast="cbct")),
+    ("Open-MS FLAIR",   "no tissue interface",
+     M.format(ds="open-ms", model="open_ms_model", contrast="flair")),
+    ("Open-MS T1w",     "no tissue interface",
+     M.format(ds="open-ms", model="open_ms_model", contrast="t1w")),
+    ("Brats-GLI T1n",   "no tissue interface",
+     M.format(ds="brats2024-glioma", model="brats2024_glioma_model", contrast="t1n")),
+    ("Brats-GLI T2w",   "no tissue interface",
+     M.format(ds="brats2024-glioma", model="brats2024_glioma_model", contrast="t2w")),
+    ("I-SPY2 T1WCE",    "no tissue interface",
+     M.format(ds="ispy2", model="ispy2_model", contrast="t1wce")),
+    ("I-SPY2 T2w",      "no tissue interface",
+     M.format(ds="ispy2", model="ispy2_model", contrast="t2w")),
 ]
 
-pvals = []
-names = []
-for name, rel in WRAPPERS:
-    mod = _load_wrapper(REPO / rel)
-    rung3_key = mod.RUNGS[3][2]  # "+voronoi (noise fill)"
-    rung4_key = mod.RUNGS[4][2]  # "v26_6_2 (real fill)"
-    if hasattr(mod, "OOD_SOURCES"):
-        x, y = cross_dataset_pairs(mod.OOD_SOURCES, rung3_key, rung4_key, "dice")
-    else:
-        dir3 = resolve_run_dir(mod.METRICS_ROOT, rung3_key)
-        dir4 = resolve_run_dir(mod.METRICS_ROOT, rung4_key)
-        cases3 = load_case_means(dir3, "dice")
-        cases4 = load_case_means(dir4, "dice")
-        x, y = [], []
-        for contrast in mod.OOD_CONTRASTS:
-            c3 = cases3.get(contrast, {})
-            c4 = cases4.get(contrast, {})
-            for case_id in sorted(set(c3) & set(c4)):
-                x.append(c3[case_id])
-                y.append(c4[case_id])
-        x, y = np.array(x), np.array(y)
-    p = wilcoxon_p(x, y)
-    pvals.append(p)
-    names.append(name)
-    print(f"{name}: n={len(x)} p_raw={p:.4g}")
+# Supplementary: external-cohort confirmation of the I-SPY2 (breast) ladder.
+SUPPLEMENTARY = [
+    ("Duke T2w-trained $\\to$ t1wce (cross-contrast + cross-dataset)",
+     M.format(ds="duke-breast-mri", model="ispy2_model", contrast="t2w")),
+    ("Duke T1WCE-trained $\\to$ t1wce (cross-dataset, SAME contrast)",
+     M.format(ds="duke-breast-mri", model="ispy2_model", contrast="t1wce")),
+]
 
-adj = holm(pvals)
-print("\nHolm-corrected:")
-for name, p in zip(names, adj):
-    print(f"  {name}: p={p:.4g}")
+FILL = 4  # index of the "v26_6_2 (real fill)" rung; delta is FILL-1 -> FILL
+
+
+def read(rel: str, metric: str = "dice"):
+    p = REPO / rel
+    if not p.exists():
+        return None
+    d = json.loads(p.read_text())
+    series = d.get(metric, [])
+    sig = (d.get("fill_swap_significance") or {}).get(metric)
+    if len(series) <= FILL or not sig:
+        return None
+    return {
+        "delta": series[FILL] - series[FILL - 1],
+        "p_raw": sig["pooled_p"],
+        "n": sig.get("n_cases"),
+        "per_contrast": sig.get("per_contrast", {}),
+    }
+
+
+def fmt_p(p):
+    """2 significant figures, matching the table's existing style (6.9e-4, 0.37)."""
+    if not np.isfinite(p):
+        return "---"
+    return f"{p:.2g}".replace("e-0", "e-")
+
+
+def main():
+    got = [(label, btype, read(rel)) for label, btype, rel in ROWS]
+    missing = [l for l, _, r in got if r is None]
+    rows = [(l, b, r) for l, b, r in got if r is not None]
+    if missing:
+        print(f"WARNING: no ladder data for: {', '.join(missing)}\n", file=sys.stderr)
+
+    adj = holm([r["p_raw"] for _, _, r in rows])
+
+    print(f"Fill-swap step, Holm-corrected across {len(rows)} ladders (dice)\n")
+    print(f"{'task':<20} {'boundary':<32} {'dDice':>7} {'p_raw':>10} {'p_holm':>10} {'n':>5}")
+    for (label, btype, r), pa in zip(rows, adj):
+        plain = btype.replace(r"$^\dagger$", "+").replace(r"$^\ddagger$", "*")
+        print(f"{label:<20} {plain:<32} {r['delta']:+7.2f} {r['p_raw']:10.3g} "
+              f"{pa:10.3g} {r['n'] or '-':>5}")
+
+    print("\n--- LaTeX rows for tab:dissociation ---")
+    prev = None
+    for (label, btype, r), pa in zip(rows, adj):
+        if prev is not None and btype.startswith("no") != prev.startswith("no"):
+            print(r"\midrule")
+        bold = abs(r["delta"]) >= 4.0          # match existing convention: bold the LARGE effects
+        d = f"{r['delta']:+.2f}"
+        d = rf"$\mathbf{{{d}}}$" if bold else f"${d}$"
+        print(f"{label:<20}& {btype} & {d} & {fmt_p(pa)} \\\\")
+        prev = btype
+
+    print("\n--- supplementary (external-cohort breast confirmation, not in tab:dissociation) ---")
+    sup = [(l, read(rel)) for l, rel in SUPPLEMENTARY]
+    sup = [(l, r) for l, r in sup if r is not None]
+    if sup:
+        sadj = holm([r["p_raw"] for _, r in sup])
+        for (l, r), pa in zip(sup, sadj):
+            print(f"  {l:<62} {r['delta']:+6.2f}  p_raw={r['p_raw']:.3g}  "
+                  f"p_holm={pa:.3g}  n={r['n']}")
+
+    print("\n--- per-contrast (drives fig:ladder's per-curve colouring) ---")
+    for label, _, r in rows:
+        if r["per_contrast"]:
+            cells = "  ".join(f"{c}={p:.3g}" for c, p in r["per_contrast"].items())
+            print(f"  {label:<20} {cells}")
+
+
+if __name__ == "__main__":
+    main()
