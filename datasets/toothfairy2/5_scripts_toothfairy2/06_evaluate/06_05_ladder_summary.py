@@ -64,7 +64,13 @@ def main() -> None:
     ap.add_argument("--ladder-pack", required=True, type=Path)
     a = ap.parse_args()
 
-    metrics_root = Path(os.environ["METRICS_ROOT"]) / "toothfairy2_model" / "cbct"
+    # Repo-relative default rather than a bare os.environ[...]: METRICS_ROOT points at
+    # SCRATCH on TamIA but aggregation runs on Vulcan against the repo copy, and an unset
+    # value would otherwise KeyError (or, in the shell wrappers, write to a literal
+    # "${METRICS_ROOT}" dir — a bug this repo has already been bitten by).
+    metrics_root = Path(os.environ.get(
+        "METRICS_ROOT",
+        DATASET_ROOT / "8_results_toothfairy2" / "02_metrics")) / "toothfairy2_model" / "cbct"
     ablations_root = metrics_root / "ablations"
 
     # Cross-dataset OOD evaluators. hanseg is the companion external test set
