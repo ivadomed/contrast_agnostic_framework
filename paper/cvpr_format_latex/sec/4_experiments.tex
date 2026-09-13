@@ -192,8 +192,9 @@ texture intervention of \cref{subsec:e-ablation} is among the largest and
 most significant in the study ($+3.7$ and $+3.6$ Dice, \cref{tab:dissociation}),
 while the full recipe that wraps it loses. The ingredient that this paper
 makes a claim about is helping on Breast; what costs us the task is the
-surrounding Auglab configuration, whose largest penalties anywhere in the
-study fall on exactly these two newest tasks. A benchmark win and a causal
+surrounding Auglab configuration, whose two largest penalties anywhere in the
+study fall on Mandible and Breast T2w --- the same two settings, as the
+per-rung numbers in \cref{sec:suppl-persetting} show directly. A benchmark win and a causal
 account are separate claims, and only the second is what we argue for.
 
 \paragraph{The Dice advantage is not uniform.} Where PALETTE does lead, the
@@ -213,8 +214,8 @@ original tasks --- PALETTE is best on ON-Harmony and Open-MS and within
 $0.2$mm and $4$mm of the best on Brats-GLI and CHAOS --- but on the two
 newest tasks it does not: Auglab is better by $1.10$mm on Mandible
 ($p=0.032$) and by $7.56$mm on Breast ($p=8.6\!\times\!10^{-25}$), and the
-no-augmentation baseline is better still on Mandible. Across tasks the two
-are not distinguishable ($p=1.00$ in both directions). We give the
+no-augmentation baseline is better still on Mandible. The cross-task test
+does not show PALETTE ahead of Auglab on this metric ($p=1.00$). We give the
 recall-based reading for the cases where HD95 and Dice disagree in the
 supplementary section.
 
@@ -256,11 +257,11 @@ pooling \emph{both} training modalities into one paired Wilcoxon test
 (Holm-corrected across the six panels) -- a coarser, dataset-level
 reading than \cref{tab:dissociation}'s finer per-(task,modality) rows,
 which keep the modality-specific breakdown this panel-level view
-collapses. Four of the six panels move significantly in the predicted
-direction; ToothFairy2's is not significant either way, which is the
-prediction for a tissue-interface target coming true rather than a null
-result; and ON-Harmony's panel-pooled effect is a significant
-\emph{worsening} (labelled accordingly, not a low $p$ defaulting to read
+collapses. All three no-tissue-interface panels move significantly in the
+predicted direction. Of the three tissue-interface panels, ToothFairy2's is
+not significant either way --- the prediction for such a target coming true,
+rather than a null result --- CHAOS's is a small but significant gain
+($+0.72$), and ON-Harmony's is a significant \emph{worsening} (labelled accordingly, not a low $p$ defaulting to read
 as ``helps''). Solid/dashed = trained on a T1-weighted vs.\ T2-weighted/FLAIR
 contrast; marker shape = eval contrast, one mapping reused across every
 panel. Dice numbers pooled per ladder in \cref{tab:dissociation}; HD95 in

@@ -27,10 +27,11 @@ $-4.5$ and $-1.4$ on a third, far more densely-labelled interface task
 tissue-interface targets too -- negative rather than merely small,
 plausibly because so much more of the volume is relabelled at once, but
 never a significant gain either way.
-Across cross-contrast, cross-modality and cross-dataset transfer on
-healthy-brain, MS-lesion, brain-tumour, abdominal-organ, and liver-tumour
-segmentation, one nnU-Net configuration trained with PALETTE attains the
-best Dice on every task and improves significantly over all five competing
-methods on Dice, remaining at or near the best on boundary distance without
-being the outright aggregate winner there.
+Across cross-contrast, cross-modality and cross-dataset transfer on six
+tasks --- healthy-brain, MS-lesion, brain-tumour, abdominal-organ, mandible
+and breast-lesion segmentation --- one nnU-Net configuration trained with
+PALETTE attains the best Dice on four, and improves over all five competing
+methods on a task-stratified test. On the other two it places second: a
+statistical tie on mandible, and a real if small loss on breast, where the
+texture intervention nonetheless remains among the strongest in the study.
 \end{abstract}

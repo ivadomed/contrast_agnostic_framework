@@ -23,6 +23,33 @@ spleen, both kidneys), evaluated across the CHAOS MR contrasts and, as a
 cross-modality transfer, on held-out CT from AMOS~\cite{ji2022amos} and
 SLIVER07~\cite{heimann2009comparison}.
 
+\paragraph{ToothFairy2} \cite{bolelli2025toothfairy2} --- mandible segmentation
+in dental cone-beam CT, the one non-CT, non-MRI training modality here. The
+released label set is 42 classes, but annotation coverage is cohort-dependent:
+several structures are annotated in only part of the cohort, so scoring them
+would measure which cohort a case came from as much as the model. We therefore
+reduce to the mandibular structures annotated throughout, and every column of
+this task --- in-domain and cross-dataset alike --- is scored on that same
+common label, so the numbers being averaged are commensurable. ToothFairy2
+acquires CBCT only, so its held-out evidence is entirely
+cross-modality: HaN-Seg~\cite{podobnik2023hanseg} head-and-neck CT and MR-T1.
+Only HaN-Seg's CT arm is usable as a paired test; its MR is not registered to
+its CT, and the MR-T1 column is scored against its own MR annotation.
+
+\paragraph{I-SPY2 and Duke-Breast-MRI} \cite{li2022ispy2,saha2018duke} ---
+breast-lesion segmentation. I-SPY2 (CC BY 4.0) is a neoadjuvant-chemotherapy
+trial whose enrolment requires biopsy-proven invasive cancer, and its reference
+is the trial's own functional tumour volume mask; training uses its
+first-post-contrast T1 (T1-CE) and its T2w. Duke-Breast-MRI, obtained through
+the MAMA-MIA release~\cite{garrucho2025mamamia} (CC BY-NC 4.0, so it carries a
+non-commercial term the other cohorts here do not), is an external
+cross-dataset test cohort only, contributing a T1-CE and a pre-contrast column.
+Both are malignant-only cohorts with expert tumour masks. I-SPY2's DCE series
+are acquired unilaterally at some sites and bilaterally at others; both
+field-of-view variants are generated per patient rather than discarding either,
+which is why the two training contrasts yield different test-case counts (102
+for T1-CE, 168 for T2w) from the same 84 held-out patients.
+
 \begin{table}[h]
 \centering
 \small
@@ -35,6 +62,8 @@ CHAOS          & 16  & 24 \\
 ON-Harmony     & 84  & 8  \\
 Open-MS        & 22  & 8  \\
 Brats2024-GLI  & 630 & 70 \\
+ToothFairy2    & 408 & 71 \\
+I-SPY2         & 476 & 84 \\
 \bottomrule
 \end{tabular}
 \caption{Per-task subject/case counts, pooled across the 3 folds used
@@ -42,6 +71,11 @@ everywhere in this paper ($\pm 1$ between folds). ON-Harmony counts are scan
 sessions, not unique subjects, since its travelling-heads design scans some
 subjects at multiple sites. CHAOS test includes its own held-out CT split,
 separate from the AMOS/SLIVER07 cross-dataset transfer counted
-independently (external cohorts, not re-tabulated here).}
+independently (external cohorts, not re-tabulated here); likewise
+ToothFairy2's HaN-Seg transfer and I-SPY2's Duke-Breast-MRI transfer. I-SPY2
+counts are patients: each held-out patient yields one T1-CE case and, where
+both field-of-view variants exist, more than one T2w case, giving the 102 and
+168 per-contrast case counts quoted above. ToothFairy2 excludes one case with
+no mandible label.}
 \label{tab:suppl-datasets}
 \end{table}

@@ -70,13 +70,17 @@ augmentation built on this observation, partitions the foreground by
 unsupervised $k$-means and a Voronoi sub-parcellation and applies a signed
 affine remap of the real intensities within each sub-region, requiring
 neither a dense anatomical label map nor any target-domain data. Across
-eight cross-contrast and cross-modality settings plus a fifth,
-single-modality liver-tumour task, and cross-dataset external test sets,
-spanning abdominal, brain, brain-tumor, and liver imaging, a single nnU-Net
-configuration trained with PALETTE attains the best Dice in every task and
-improves significantly over all five competing methods on Dice, remaining
-at or near the best on boundary distance without always being the outright
-aggregate winner there. We regard the
+eleven source-modality settings spanning six tasks --- abdominal, brain,
+brain-tumour, dental and breast imaging --- together with four cross-dataset
+external test cohorts, a single nnU-Net configuration trained with PALETTE
+attains the best Dice on four of the six tasks and improves over all five
+competing methods on a task-stratified test. It does not win everywhere, and
+the two exceptions are informative rather than embarrassing: on mandible the
+top three methods are statistically indistinguishable, and on breast the
+Auglab pipeline we build on is genuinely ahead while the texture
+intervention this paper argues for is, on that same task, among the
+strongest effects we measure. A benchmark ranking and a causal account are
+separate claims; we regard the
 task-level account as the more durable contribution: it predicts in advance
 where a texture-preserving augmentation will and will not pay off, and that
 prediction is testable on any new task.

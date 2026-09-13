@@ -105,10 +105,12 @@ In summary, we make the following contributions:
     exploits this, requiring no dense anatomical label map and using only the
     sparse task labels a segmentation dataset already provides.
     \item \textbf{Breadth evidence.} Across cross-contrast, cross-modality and
-    cross-dataset transfer on healthy-brain, MS-lesion, brain-tumour,
-    abdominal-organ, and liver-tumour segmentation, with one configuration
-    reused across datasets, PALETTE attains the best Dice on every task and
-    improves significantly over all five competing methods on Dice, remaining
-    at or near the best on boundary distance without always being the
-    outright aggregate winner there.
+    cross-dataset transfer on six tasks --- healthy-brain, MS-lesion,
+    brain-tumour, abdominal-organ, mandible and breast-lesion segmentation ---
+    with one configuration reused across datasets, PALETTE attains the best
+    Dice on four and improves over all five competing methods on a
+    task-stratified test, though only thinly over the strongest of them. It
+    places second on the other two, and we report there what the usual
+    one-sided comparison cannot say: whether the method ahead of us is
+    actually ahead. One is a tie; one is not.
 \end{itemize}
