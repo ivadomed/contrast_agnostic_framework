@@ -1,0 +1,50 @@
+# ispy2 -- OWN-model, combined training modalities (t1wce + t2w pooled),
+# cross-contrast. Consumed by
+# datasets/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
+# 06_03_combined_modality_summary.sh. Companion to ispy2_t1wce_01_results.yaml /
+# ispy2_t2w_01_results.yaml (each ONE training modality) -- pools BOTH into one
+# row per method, with an inline significance column (ref = OURS
+# train050_val000) after the usual "all" column.
+#
+# Each training modality pools THREE test sources, not one: I-SPY2's own
+# held-out patients plus both arms of the external duke-breast-mri (MAMA-MIA)
+# cohort, which was predicted and evaluated on every method of this suite. Same
+# `sources:` mechanism chaos uses for amos/sliver07 and toothfairy2 uses for
+# hanseg -- an external cohort is a test column here, not a separate task.
+# Prefixed `duke_` so duke's t1wce arm cannot collide with I-SPY2's own t1wce
+# column (they are different cohorts scored on the same contrast name).
+title: "I-SPY2 own-model -- combined training modalities (t1wce + t2w), cross-contrast"
+output_dir: "${METRICS_ROOT}/ispy2_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [t1wce, t2w, duke_t1wce, duke_precontrast]
+
+modalities:
+  - name: t1wce
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce"
+        column_prefix: "duke_"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/precontrast"
+        column_prefix: "duke_"
+    runs:
+      baseline: ispy2_t1wce_baseline_20260905_163655
+      auglab_default: ispy2_t1wce_auglab_default_20260905_163655
+      synthseg_noEM: ispy2_t1wce_synthseg_noEM_20260905_163655
+      synthseg_EM: ispy2_t1wce_synthseg_EM_20260905_163655
+      srcsm: ispy2_t1wce_srcsm_20260905_163655
+      auglabAug_v26_6_2_train050_val000: ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
+  - name: t2w
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w"
+        column_prefix: "duke_"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/precontrast"
+        column_prefix: "duke_"
+    runs:
+      baseline: ispy2_t2w_baseline_20260905_163655
+      auglab_default: ispy2_t2w_auglab_default_20260905_163655
+      synthseg_noEM: ispy2_t2w_synthseg_noEM_20260905_163655
+      synthseg_EM: ispy2_t2w_synthseg_EM_20260905_163655
+      srcsm: ispy2_t2w_srcsm_20260905_163655
+      auglabAug_v26_6_2_train050_val000: ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

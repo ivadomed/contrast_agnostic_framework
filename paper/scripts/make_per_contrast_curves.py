@@ -55,6 +55,13 @@ from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
 OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "per_contrast_curves"
 OUT.mkdir(parents=True, exist_ok=True)
 
+# Same figure, PNG, in the repo's cross-dataset roll-up dir -- the home
+# CLAUDE.md gives to summaries that span every task at once (it already holds
+# meta_task_heatmap_*). The ablation ladders are exactly that: one panel per
+# task, and the only place all of them are visible side by side. Keeping a copy
+# here means reading the cross-task result does not require building the paper.
+COMMUN = REPO / "datasets" / "01_commun_results"
+
 M = "datasets/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
 
 
@@ -337,8 +344,14 @@ def build(metric, ylabel, out_name, higher_is_better):
 
     out = OUT / out_name
     fig.savefig(out, dpi=300)
+    written = [out]
+    if COMMUN.is_dir():
+        png = COMMUN / f"ablation_ladders_{Path(out_name).stem}.png"
+        fig.savefig(png, dpi=200)
+        written.append(png)
     plt.close(fig)
-    print("wrote", out)
+    for w in written:
+        print("wrote", w)
     for t, _, _ in loaded:
         p, dl = stats[t]
         print(f"  [{metric}] {t}: panel-pooled p={fmt_p(p)} delta={dl:+.3f}")

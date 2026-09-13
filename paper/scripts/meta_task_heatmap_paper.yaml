@@ -26,7 +26,7 @@
 # file for that config if it's ever needed for reference).
 #
 # Otherwise identical to the shared config: same ref, same per-task configs.
-title: "Cross-dataset — task-level heatmap (7-method suite, paper's 4 tasks)"
+title: "Cross-dataset — task-level heatmap (7-method suite, paper's 6 tasks)"
 output_dir: "${PROJECT_ROOT}/paper/generated_results"
 output_prefix: "meta_task_heatmap_paper"
 ref: auglabAug_v26_6_2_train050_val000
@@ -44,3 +44,9 @@ tasks:
   - name: open-ms
     dataset: open-ms
     config: "${PROJECT_ROOT}/datasets/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_combined_01_results.yaml"
+  - name: toothfairy2
+    dataset: toothfairy2
+    config: "${PROJECT_ROOT}/datasets/toothfairy2/5_scripts_toothfairy2/06_evaluate/configs/toothfairy2_combined_01_results.yaml"
+  - name: ispy2
+    dataset: ispy2
+    config: "${PROJECT_ROOT}/datasets/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml"

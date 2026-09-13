@@ -5,7 +5,7 @@
 # inline significance vs ref. Consumed by
 # datasets/00_commun_scripts/00_03_evaluate/meta_task_heatmap.py (see its header for
 # the full statistical model) via run_meta_task_heatmap.sh.
-title: "Cross-dataset — task-level heatmap (7-method suite, all 6 datasets)"
+title: "Cross-dataset — task-level heatmap (7-method suite, all 7 datasets)"
 output_dir: "${PROJECT_ROOT}/datasets/01_commun_results"
 output_prefix: "meta_task_heatmap"
 ref: auglabAug_v26_6_2_train050_val000
@@ -23,12 +23,18 @@ tasks:
   - name: open-ms
     dataset: open-ms
     config: "${PROJECT_ROOT}/datasets/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_combined_01_results.yaml"
+  - name: toothfairy2
+    dataset: toothfairy2
+    config: "${PROJECT_ROOT}/datasets/toothfairy2/5_scripts_toothfairy2/06_evaluate/configs/toothfairy2_combined_01_results.yaml"
+  - name: ispy2
+    dataset: ispy2
+    config: "${PROJECT_ROOT}/datasets/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml"
   - name: healthy-spine-tum
     dataset: healthy-spine-tum
     config: "${PROJECT_ROOT}/datasets/healthy-spine-tum/5_scripts_healthy-spine-tum/06_evaluate/configs/healthy-spine-tum_combined_01_results.yaml"
-  - name: atlas-liver-hcc
-    dataset: atlas-liver-hcc
-    # Single training modality (T1w) -- this "combined" column is pure cross-dataset
-    # evidence (lld-mmri-hcc + liverhccseg), not a within-dataset multi-modality pool
-    # like the other tasks. See combined_modality_summary.py's >=1-modality guard.
-    config: "${PROJECT_ROOT}/datasets/atlas-liver-hcc/5_scripts_atlas-liver-hcc/06_evaluate/configs/atlas-liver-hcc_combined_01_results.yaml"
+  # atlas-liver-hcc REMOVED 2026-09-02 -- excluded from the paper and all
+  # meta-evaluation/aggregation. See CLAUDE.md "Atlas-Liver-HCC exclusion
+  # (2026-09-02)" for the full rationale (LLD-MMRI redistribution/git-annex
+  # block, outphase in-domain ambiguity, ATLAS's own CE-T1w phase mix). The
+  # dataset itself moved to datasets/03_archive/atlas-liver-hcc (+ its two
+  # eval-only companions lld-mmri-hcc, lld-mmri-malignant, liverhccseg).
