@@ -150,9 +150,10 @@ def _fill_swap_pairs(metrics_root, rungs, fill_idx, metric, ood_contrasts,
     cur = load_case_means(resolve_run_dir(metrics_root, cur_key), metric)
     pairs = {c: _paired_cases(prev.get(c, {}), cur.get(c, {})) for c in ood_contrasts}
     for src in (extra_ood_sources or []):
-        ds = _dataset_name(src)
-        p_src = load_case_means(resolve_run_dir(src, prev_key), metric)
-        c_src = load_case_means(resolve_run_dir(src, cur_key), metric)
+        root = _src_root(src)
+        ds = _dataset_name(root)
+        p_src = load_case_means(resolve_run_dir(root, _src_key(src, prev_key)), metric)
+        c_src = load_case_means(resolve_run_dir(root, _src_key(src, cur_key)), metric)
         for item in set(p_src) | set(c_src):
             pairs[f"{ds}/{item}"] = _paired_cases(p_src.get(item, {}), c_src.get(item, {}))
     return pairs
@@ -252,8 +253,8 @@ def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
     multi-task plotting script) into ablations_root, plus the dataset-local pooled
     2-panel PNG and a per-eval-contrast "sub-ladder" 2-panel PNG. Returns the dump dict.
 
-    extra_ood_sources (optional): list of cross-dataset metrics-root Paths (e.g.
-    amos/sliver07 for chaos) whose item columns are pooled INTO the same OOD
+    extra_ood_sources (optional): list of cross-dataset sources whose item
+    columns are pooled INTO the same OOD
     average as ood_contrasts, with equal weight per item — matching this
     function's existing equal-weight-per-contrast convention (deliberately NOT
     the case-count-weighted pooling run_ladder_cross_dataset uses, so adding a
@@ -264,7 +265,13 @@ def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
     headline table — each rung's run_key must resolve under every source given
     here for that source to contribute (missing sources are silently skipped
     per rung, not treated as an error, so a partially-predicted extension still
-    reports the sources that ARE ready).
+    reports the sources that ARE ready). An entry is normally a plain
+    metrics-root Path (e.g. amos/sliver07 for chaos); a source that keeps a
+    second test contrast in a parallel subdir is given as
+    {"metrics_root": Path, "run_subdir": "<segment>"} instead -- see _src_key.
+    Each entry contributes only the item columns actually present under it, so
+    listing the same root twice with different run_subdirs adds each of its
+    test contrasts as its own equally-weighted OOD item.
 
     2026-09-01: reports BOTH the OOD-only figure (unchanged) and an "all contrasts"
     figure — equal weight per contrast, in_domain included alongside ood_contrasts —
@@ -292,7 +299,7 @@ def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
     series_all = {"dice": [], "hd95": []}      # NEW: OOD + in-domain, equal weight per contrast
     per_contrast = {"dice": {c: [] for c in full_labels}, "hd95": {c: [] for c in full_labels}}
     src_note = (f" plus {len(extra_labels)} cross-dataset item(s) pooled in with equal weight "
-               f"(sources: {', '.join(_dataset_name(p) for p in extra_ood_sources)})"
+               f"(sources: {', '.join(sorted({_dataset_name(_src_root(p)) for p in extra_ood_sources}))})"
                if extra_ood_sources else "")
     lines = [f"# {task_name} — causal ablation ladder", "",
              "Each rung adds exactly one ingredient on top of the previous rung — the "
@@ -374,6 +381,15 @@ def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
         "dice": series["dice"], "hd95": series["hd95"],
         "all_dice": series_all["dice"], "all_hd95": series_all["hd95"],
         "in_domain": in_domain, "ood_contrasts": ood_contrasts,
+        # Cross-dataset roots pooled into the OOD set alongside ood_contrasts,
+        # each with the run_subdir needed to address it (see _src_key). Without
+        # these a downstream consumer re-deriving case-level pairs from
+        # run_keys would silently see only the OWN dataset's contrasts and
+        # report a narrower pool than this ladder's own numbers.
+        "extra_ood_sources": [{"metrics_root": str(_src_root(src)),
+                               "run_subdir": (src.get("run_subdir")
+                                              if isinstance(src, dict) else None)}
+                              for src in extra_ood_sources],
         "per_contrast": per_contrast,
         "fill_swap_significance": sig,
     }
@@ -476,13 +492,40 @@ def _dataset_name(p: Path) -> str:
     return p.parent.parent.name
 
 
+def _src_root(src) -> Path:
+    """An `extra_ood_sources` entry -> its metrics root. An entry is either a
+    plain Path (the common case: the source shares the ladder's own run_keys)
+    or a dict {"metrics_root": Path, "run_subdir": str} -- see _src_key."""
+    return src["metrics_root"] if isinstance(src, dict) else src
+
+
+def _src_key(src, run_key: str) -> str:
+    """Rewrite one rung's run_key for one source.
+
+    Rung run_keys are written against the OWN dataset's metrics layout, and
+    every extra source normally reuses them verbatim. A source that stores a
+    SECOND test contrast in a parallel subdir cannot: duke-breast-mri keeps its
+    t1wce evaluation at <root>/[ablations/]<run_id> but its pre-contrast
+    evaluation at <root>/[ablations/]precontrast/<run_id>. `run_subdir` inserts
+    that segment immediately before the run id, leaving any `ablations/` prefix
+    in place -- so ONE rung list can address both of a source's test contrasts,
+    instead of forking the rung list or pooling the two ladders by hand.
+    """
+    if not isinstance(src, dict) or not src.get("run_subdir"):
+        return run_key
+    head, _, run_id = run_key.rpartition("/")
+    sub = src["run_subdir"]
+    return f"{head}/{sub}/{run_id}" if head else f"{sub}/{run_id}"
+
+
 def _cross_dataset_contrast_labels(ood_sources, run_key, metric):
     """Discover the (source, item) columns actually present for a rung, labeled
     '<dataset>/<item>' (e.g. 'lld-mmri-hcc/t2wi') -- the cross-dataset counterpart
     of a plain contrast name, since each source evaluator has its own item set."""
     labels = []
-    for metrics_root in ood_sources:
-        run_dir = resolve_run_dir(metrics_root, run_key)
+    for src in ood_sources:
+        metrics_root = _src_root(src)
+        run_dir = resolve_run_dir(metrics_root, _src_key(src, run_key))
         if not run_dir.is_dir():
             continue
         data = load_case_means(run_dir, metric)
@@ -496,8 +539,9 @@ def _per_contrast_rung_means_cross_dataset(ood_sources, run_key, metric, contras
     of rung_means_cross_dataset's pooled figure."""
     scale = 100 if metric == "dice" else 1
     per_source = {}
-    for metrics_root in ood_sources:
-        run_dir = resolve_run_dir(metrics_root, run_key)
+    for src in ood_sources:
+        metrics_root = _src_root(src)
+        run_dir = resolve_run_dir(metrics_root, _src_key(src, run_key))
         ds = _dataset_name(metrics_root)
         data = load_case_means(run_dir, metric) if run_dir.is_dir() else {}
         for item, cases in data.items():

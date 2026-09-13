@@ -49,7 +49,7 @@ from matplotlib.lines import Line2D
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
-from ladder_ood_common import load_case_means, resolve_run_dir  # noqa: E402
+from ladder_ood_common import load_case_means, resolve_run_dir, _src_key as _engine_src_key  # noqa: E402
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
 
 OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "per_contrast_curves"
@@ -109,6 +109,11 @@ plt.rcParams.update({
 })
 
 
+def _src_key(run_subdir, run_key: str) -> str:
+    """Engine's per-source run_key rewrite, keyed by a bare run_subdir."""
+    return _engine_src_key({"run_subdir": run_subdir} if run_subdir else None, run_key)
+
+
 def load(rel: str):
     p = REPO / rel
     if not p.exists():
@@ -128,12 +133,23 @@ def ood_contrasts(d) -> list:
 
 
 def metrics_roots(d) -> list:
-    """Where this ladder's per-case CSVs live, for panel-level pooling.
-    Within-dataset: the ablations dir's parent. Cross-dataset: the evaluator
-    roots the engine recorded."""
+    """(root, run_subdir) pairs naming every place this ladder's per-case CSVs
+    live, for panel-level pooling.
+
+      * cross-dataset ladder  -> the evaluator roots the engine recorded
+      * within-dataset ladder -> the ablations dir's parent, PLUS any
+        extra_ood_sources the wrapper pooled in (I-SPY2 pools the external Duke
+        cohort). Missing that second part would re-derive the panel test from a
+        narrower pool than the ladder's own reported numbers.
+
+    run_subdir is the segment a source needs inserted before the run id (see
+    _src_key in the engine); None for the ordinary case."""
     if d.get("ood_sources"):
-        return [Path(s) for s in d["ood_sources"]]
-    return [d["_path"].parent.parent]
+        return [(Path(s), None) for s in d["ood_sources"]]
+    roots = [(d["_path"].parent.parent, None)]
+    roots += [(Path(e["metrics_root"]), e.get("run_subdir"))
+              for e in d.get("extra_ood_sources", [])]
+    return roots
 
 
 def panel_pooled(ladders, metric, higher_is_better):
@@ -157,9 +173,10 @@ def panel_pooled(ladders, metric, higher_is_better):
             continue
         prev_key, cur_key = keys[FILL - 1], keys[FILL]
         oods = set(ood_contrasts(d))
-        for root in metrics_roots(d):
-            prev = load_case_means(resolve_run_dir(root, prev_key), metric)
-            cur = load_case_means(resolve_run_dir(root, cur_key), metric)
+        for root, subdir in metrics_roots(d):
+            pk, ck = _src_key(subdir, prev_key), _src_key(subdir, cur_key)
+            prev = load_case_means(resolve_run_dir(root, pk), metric)
+            cur = load_case_means(resolve_run_dir(root, ck), metric)
             for item in set(prev) | set(cur):
                 # cross-dataset per_contrast keys are '<dataset>/<item>'
                 if oods and item not in oods and not any(o.endswith("/" + item) for o in oods):

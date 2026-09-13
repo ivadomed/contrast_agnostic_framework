@@ -46,11 +46,16 @@ M = "datasets/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder
 #  * ToothFairy2 trains on CBCT only, so it has no held-out in-house contrast
 #    and its OOD axis is necessarily cross-DATASET (HaN-Seg CT + MR). Footnoted
 #    in the table rather than silently mixed in with the cross-contrast rows.
-#  * The Duke-breast-MRI ladders are external-cohort confirmations of the
-#    I-SPY2 result, not separate tasks, and one of them (t1wce-trained tested on
-#    Duke t1wce) is cross-dataset at the SAME contrast -- not held-out-contrast
-#    evidence at all. Both are reported in the supplement, not here, so this
-#    table stays one estimand throughout.
+#  * The Duke-breast-MRI (MAMA-MIA) cohort is an external confirmation of the
+#    I-SPY2 result, not a separate task, so it gets no row of its own. Its
+#    genuinely held-out-contrast arms are instead POOLED INTO the two I-SPY2
+#    rows as extra equally-weighted OOD items by the ladder wrappers themselves
+#    (ispy2 06_04/06_05 `extra_ood_sources`) -- duke pre-contrast for the
+#    T1WCE-trained ladder, duke t1wce + pre-contrast for the T2w-trained one.
+#    The one combination that is NOT held-out-contrast evidence -- the
+#    T1WCE-trained model tested on duke t1wce, i.e. cross-DATASET at the SAME
+#    contrast -- is deliberately excluded from the pool and reported in the
+#    supplement below, so every row of this table stays one estimand.
 ROWS = [
     ("CHAOS T1in",      "tissue interface",
      M.format(ds="chaos", model="chaos_model", contrast="t1in")),
@@ -76,10 +81,11 @@ ROWS = [
      M.format(ds="ispy2", model="ispy2_model", contrast="t2w")),
 ]
 
-# Supplementary: external-cohort confirmation of the I-SPY2 (breast) ladder.
+# Supplementary: the one Duke arm held OUT of the pooled I-SPY2 rows above,
+# because it is cross-DATASET at the SAME contrast the model trained on rather
+# than held-out-contrast evidence. Reported so the exclusion is visible, not
+# silent -- it is by far the largest fill-swap effect anywhere in the study.
 SUPPLEMENTARY = [
-    ("Duke T2w-trained $\\to$ t1wce (cross-contrast + cross-dataset)",
-     M.format(ds="duke-breast-mri", model="ispy2_model", contrast="t2w")),
     ("Duke T1WCE-trained $\\to$ t1wce (cross-dataset, SAME contrast)",
      M.format(ds="duke-breast-mri", model="ispy2_model", contrast="t1wce")),
 ]
