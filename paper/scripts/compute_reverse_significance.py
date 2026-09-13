@@ -23,6 +23,14 @@ used by the shared aggregate layer, with the paired differences negated to swap
 the tested direction (arrs are ref-minus-competitor, so -arrs is
 competitor-minus-ref and macro_perm's "ref better" becomes "competitor better").
 
+Accepts either shape of aggregation config:
+  * a per-modality `*_01_results.yaml` (top-level metrics_dir/sources + runs list)
+  * a `*_combined_01_results.yaml` (a `modalities:` list, each with its own
+    sources + method->run_id map), which is the shape the paper's task columns
+    are actually built from -- so the question "does the method that leads us on
+    the BREAST task lead significantly" is answered on the same pooled estimand
+    the table displays, not on one training modality at a time.
+
 Usage:
   .venv/bin/python compute_reverse_significance.py <config.yaml> [<config.yaml> ...]
 """
@@ -42,6 +50,7 @@ from aggregate_from_config import (  # noqa: E402
     load_run_cases, load_run_cases_by_label, paired, resolve_group,
     find_ref_key, load_run_from_sources,
 )
+import combined_modality_summary as _comb  # noqa: E402
 from stat_tests import holm, macro_perm, fmt_p  # noqa: E402
 
 
@@ -98,8 +107,84 @@ def _diff_arrays(sources, ref_key, comp_key, metric, all_contrasts, contrast_gro
     return arrs
 
 
+def _modalities_from_cfg(cfg):
+    """Normalise a combined config's `modalities:` into the shape
+    combined_modality_summary.load_combined_cases expects -- same normalisation
+    its own main() does, kept in step with it rather than reimplemented."""
+    out = []
+    for m in cfg["modalities"]:
+        if "sources" in m:
+            sources = [{"metrics_dir": _expand(s["metrics_dir"]),
+                        "column_prefix": s.get("column_prefix", ""),
+                        "column_rename": s.get("column_rename", {})}
+                       for s in m["sources"]]
+        else:
+            sources = [{"metrics_dir": _expand(m["metrics_dir"]),
+                        "column_prefix": "", "column_rename": {}}]
+        out.append({"name": m["name"], "sources": sources, "runs": m.get("runs", {})})
+    return out
+
+
+def analyse_combined(config_path: Path, cfg):
+    """Reverse test on a pooled-training-modality table (the task-column estimand)."""
+    modalities = _modalities_from_cfg(cfg)
+    run_keys = list(modalities[0]["runs"])
+    for m in modalities[1:]:
+        run_keys += [k for k in m["runs"] if k not in run_keys]
+    ref_key = cfg["ref"]
+    competitors = [k for k in run_keys if k != ref_key]
+
+    print(f"\n{'=' * 78}\n{cfg.get('title', config_path.name)}\n  config: {config_path}")
+    print(f"  ref (OURS): {ref_key}   [pooled across {len(modalities)} training modality/ies]")
+
+    for metric in ("dice", "hd95"):
+        higher_better = metric == "dice"
+        scale = 100.0 if metric == "dice" else 1.0
+        ref_cases = _comb.load_combined_cases(modalities, ref_key, metric)
+        all_cols = sorted(ref_cases)
+        rows, p_ours_raw, p_them_raw, p_two_raw = [], [], [], []
+        for key in competitors:
+            comp_cases = _comb.load_combined_cases(modalities, key, metric)
+            arrs = []
+            for col in all_cols:
+                x, y = _comb.paired(ref_cases, comp_cases, col)
+                if len(x):
+                    arrs.append(x - y)
+            if not arrs:
+                continue
+            macro_d, p_two, p_ours = macro_perm(arrs, higher_better, scale=scale)
+            _, _, p_them = macro_perm([-a for a in arrs], higher_better)
+            rows.append((key, macro_d))
+            p_ours_raw.append(p_ours)
+            p_them_raw.append(p_them)
+            p_two_raw.append(p_two)
+        if not rows:
+            continue
+        _print_block(metric, higher_better, rows,
+                     holm(p_ours_raw), holm(p_them_raw), holm(p_two_raw), all_cols)
+
+
+def _print_block(metric, higher_better, rows, p_ours_adj, p_them_adj, p_two_adj, cols):
+    unit = "Dice pts" if metric == "dice" else "mm"
+    better = "higher" if higher_better else "lower"
+    print(f"\n  --- {metric.upper()} ({better} is better) "
+          f"over {len(cols)} test column(s): {', '.join(cols)} ---")
+    print(f"  {'method':<52} {'macroD':>9} {'p_ours':>9} {'p_them':>9} {'p_two':>9}")
+    for (key, macro_d), po, pt, p2 in zip(rows, p_ours_adj, p_them_adj, p_two_adj):
+        they_lead = (macro_d < 0) if higher_better else (macro_d > 0)
+        flag = ""
+        if they_lead:
+            flag = "  <- THEY LEAD, SIGNIFICANTLY" if (np.isfinite(pt) and pt < 0.05) \
+                else "  <- they lead, NOT significant"
+        print(f"  {key[:52]:<52} {macro_d:+9.2f} {fmt_p(po):>9} {fmt_p(pt):>9} {fmt_p(p2):>9}{flag}")
+    print(f"  (macroD = OURS minus competitor, in {unit}; "
+          f"p_ours/p_them one-sided, p_two two-sided; each Holm-corrected within its family)")
+
+
 def analyse(config_path: Path):
     cfg = yaml.safe_load(config_path.read_text())
+    if "modalities" in cfg:
+        return analyse_combined(config_path, cfg)
     sources = _sources_from_cfg(cfg)
     run_keys = cfg.get("runs", [])
     contrast_groups = (cfg.get("contrast_groups")
@@ -136,22 +221,8 @@ def analyse(config_path: Path):
             p_two_raw.append(p_two)
         if not rows:
             continue
-        p_ours_adj, p_them_adj, p_two_adj = holm(p_ours_raw), holm(p_them_raw), holm(p_two_raw)
-
-        unit = "Dice pts" if metric == "dice" else "mm"
-        better = "higher" if higher_better else "lower"
-        print(f"\n  --- {metric.upper()} ({better} is better) ---")
-        print(f"  {'method':<52} {'macroD':>9} {'p_ours':>9} {'p_them':>9} {'p_two':>9}")
-        for (key, macro_d), po, pt, p2 in zip(rows, p_ours_adj, p_them_adj, p_two_adj):
-            # macroD is always ref-minus-competitor; "they lead" depends on metric direction.
-            they_lead = (macro_d < 0) if higher_better else (macro_d > 0)
-            flag = ""
-            if they_lead:
-                flag = "  <- THEY LEAD, SIGNIFICANTLY" if (np.isfinite(pt) and pt < 0.05) \
-                    else "  <- they lead, NOT significant"
-            print(f"  {key[:52]:<52} {macro_d:+9.2f} {fmt_p(po):>9} {fmt_p(pt):>9} {fmt_p(p2):>9}{flag}")
-        print(f"  (macroD = OURS minus competitor, in {unit}; "
-              f"p_ours/p_them one-sided, p_two two-sided; each Holm-corrected within its family)")
+        _print_block(metric, higher_better, rows, holm(p_ours_raw), holm(p_them_raw),
+                     holm(p_two_raw), all_contrasts)
 
 
 if __name__ == "__main__":

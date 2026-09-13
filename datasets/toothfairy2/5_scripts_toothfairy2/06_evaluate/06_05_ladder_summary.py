@@ -27,8 +27,18 @@ B. Reading rung 1 from pack B yields an id that was never trained, and the rung
 silently renders as "—" — which is exactly how a ladder loses its anchor without
 anything erroring.
 
+The packs live on TamIA's scratch, but aggregation runs on Vulcan, where they
+do not exist. `--from-metrics` recovers the same seven RUN_IDs from the
+already-evaluated metrics dirs instead, so the ladder can be rebuilt wherever
+the results live -- needed whenever the shared engine changes and every
+ladder has to be regenerated. It is a recovery path, not a replacement: it
+requires each rung to match EXACTLY one directory and aborts otherwise,
+because "silently picked the wrong run id" is precisely the failure the pack
+files were introduced to prevent.
+
 Usage:
   bash 06_05_ladder_summary.sh <SUITE_A_PACK> <SUITE_B_PACK> <LADDER_PACK>
+  bash 06_05_ladder_summary.sh --from-metrics
 """
 from __future__ import annotations
 
@@ -55,14 +65,36 @@ def read_env(pack: Path) -> dict[str, str]:
     return out
 
 
+def one_run_id(d: Path, pattern: str) -> str:
+    """The single run dir under `d` matching `pattern`, minus its category prefix.
+
+    Aborts on zero or several matches rather than picking one: this is the
+    recovery path for a missing pack file, and a ladder rung bound to the wrong
+    run id renders as a plausible number with nothing erroring."""
+    hits = sorted(x.name for x in d.glob(pattern) if x.is_dir())
+    if len(hits) != 1:
+        raise SystemExit(f"--from-metrics: {len(hits)} matches for {pattern!r} under {d} "
+                         f"(need exactly 1): {hits}")
+    name = hits[0]
+    for prefix in ("nnUNet_", "auglab_"):
+        if name.startswith(prefix):
+            return name[len(prefix):]
+    return name
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--suite-pack-a", required=True, type=Path,
+    ap.add_argument("--from-metrics", action="store_true",
+                    help="recover RUN_IDs from the evaluated metrics dirs instead "
+                         "of the TamIA packs (which only exist on TamIA)")
+    ap.add_argument("--suite-pack-a", type=Path,
                     help="pack that trained baseline (ladder rung 1)")
-    ap.add_argument("--suite-pack-b", required=True, type=Path,
+    ap.add_argument("--suite-pack-b", type=Path,
                     help="pack that trained OURS (ladder rungs 6/7)")
-    ap.add_argument("--ladder-pack", required=True, type=Path)
+    ap.add_argument("--ladder-pack", type=Path)
     a = ap.parse_args()
+    if not a.from_metrics and not (a.suite_pack_a and a.suite_pack_b and a.ladder_pack):
+        ap.error("give all three pack dirs, or --from-metrics")
 
     # Repo-relative default rather than a bare os.environ[...]: METRICS_ROOT points at
     # SCRATCH on TamIA but aggregation runs on Vulcan against the repo copy, and an unset
@@ -83,11 +115,20 @@ def main() -> None:
         str(DATASET_ROOT.parent / "hanseg" / "8_results_hanseg" / "02_metrics"))) \
         / "toothfairy2_model" / "cbct"
 
-    sa = read_env(a.suite_pack_a)
-    sb = read_env(a.suite_pack_b)
-    l = read_env(a.ladder_pack)
-    baseline = sa["BASELINE_RUN_ID"]     # rung 1 anchor — from pack A, see docstring
-    ours = sb["OURS_RUN_ID"]             # rungs 6/7 — from pack B
+    if a.from_metrics:
+        abl = metrics_root / "ablations"
+        baseline = one_run_id(metrics_root, "*_baseline_*")
+        ours = one_run_id(metrics_root, "*_auglabAug_v26_6_2_train050_val000_*")
+        l = {"R2_RUN_ID": one_run_id(abl, "*_baseline_kmeans_2*"),
+             "R3_RUN_ID": one_run_id(abl, "*_baseline_kmeans_label_remap_2*"),
+             "R4_RUN_ID": one_run_id(abl, "*_baseline_kmeans_label_remap_voronoi_*"),
+             "R5_RUN_ID": one_run_id(abl, "*_v26_6_2_train050_val100_*")}
+    else:
+        sa = read_env(a.suite_pack_a)
+        sb = read_env(a.suite_pack_b)
+        l = read_env(a.ladder_pack)
+        baseline = sa["BASELINE_RUN_ID"]  # rung 1 anchor — from pack A, see docstring
+        ours = sb["OURS_RUN_ID"]          # rungs 6/7 — from pack B
     if ours.count("_val000_") != 1:
         raise SystemExit(f"OURS RUN_ID {ours!r} must contain '_val000_' exactly once")
 

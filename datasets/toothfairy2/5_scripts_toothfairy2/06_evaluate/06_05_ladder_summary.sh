@@ -5,10 +5,16 @@
 # in pack B, and each pack's RUN_IDS.env lists all six ids regardless of which it
 # trained.
 #   bash 06_05_ladder_summary.sh <SUITE_A_PACK> <SUITE_B_PACK> <LADDER_PACK>
+#   bash 06_05_ladder_summary.sh --from-metrics   # packs live on TamIA; use this on Vulcan
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "${HERE}/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
-.venv/bin/python "${HERE}/06_05_ladder_summary.py" \
-    --suite-pack-a "${1:?need suiteA pack}" --suite-pack-b "${2:?need suiteB pack}" \
-    --ladder-pack "${3:?need ladder pack}"
+if [ "${1:-}" = "--from-metrics" ]; then
+    .venv/bin/python "${HERE}/06_05_ladder_summary.py" --from-metrics
+else
+    .venv/bin/python "${HERE}/06_05_ladder_summary.py" \
+        --suite-pack-a "${1:?need suiteA pack (or --from-metrics)}" \
+        --suite-pack-b "${2:?need suiteB pack}" \
+        --ladder-pack "${3:?need ladder pack}"
+fi

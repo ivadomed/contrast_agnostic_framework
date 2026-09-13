@@ -201,6 +201,44 @@ def _fill_swap_significance(pairs_by_contrast):
             "n_cases": int(sum(len(a) for a in xs))}
 
 
+def _rung_step_significance(pairs_fn, rungs):
+    """Every rung-to-rung transition tested, not just the fill swap.
+
+    `pairs_fn(i)` returns the {contrast: (x, y)} case pairs for the step from
+    rung i-1 to rung i -- the same pairing _fill_swap_significance consumes,
+    which is why this reuses it wholesale instead of re-deriving the statistic.
+    Returns one entry per transition with the pooled p, Holm-corrected within
+    THIS ladder's own family of transitions (a ladder cannot see the others),
+    plus whether the step was a decrease, which is what lets a table render a
+    significant worsening differently from a significant gain rather than
+    letting a small p default to reading as "helps".
+
+    Added 2026-09-13 because the paper's per-rung table was built by a script
+    that re-imported each dataset's wrapper and rebuilt the OOD pool from
+    METRICS_ROOT/OOD_CONTRASTS alone. That silently missed any extra pooled
+    source (I-SPY2's external cohort) and could not reach a wrapper that builds
+    its rungs inside main() at all. The engine already knows the true pool, so
+    it is the only place this can be computed without the two diverging.
+    """
+    out = []
+    for i in range(1, len(rungs)):
+        pairs = pairs_fn(i)
+        xs = [x for x, _ in pairs.values() if len(x)]
+        ys = [y for _, y in pairs.values() if len(y)]
+        if not xs:
+            out.append({"from": rungs[i - 1][0], "to": rungs[i][0],
+                        "p_raw": float("nan"), "decrease": False, "n_cases": 0})
+            continue
+        x, y = np.concatenate(xs), np.concatenate(ys)
+        out.append({"from": rungs[i - 1][0], "to": rungs[i][0],
+                    "p_raw": wilcoxon_p(x, y),
+                    "decrease": bool(np.mean(y) < np.mean(x)),
+                    "n_cases": int(len(x))})
+    for entry, adj in zip(out, holm([e["p_raw"] for e in out])):
+        entry["p_holm"] = adj
+    return out
+
+
 def _sig_color(p, delta, light=False):
     """Paper's colour convention: teal = significant improvement, red =
     significant worsening, grey = not significant. `delta` must already be
@@ -370,6 +408,10 @@ def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
             sig[metric] = _fill_swap_significance(
                 _fill_swap_pairs(metrics_root, rungs, fill_idx, metric, ood_contrasts,
                                  extra_ood_sources=extra_ood_sources))
+    steps = {m: _rung_step_significance(
+        lambda i, m=m: _fill_swap_pairs(metrics_root, rungs, i, m, ood_contrasts,
+                                        extra_ood_sources=extra_ood_sources), rungs)
+        for m in ("dice", "hd95")}
 
     dump = {
         "task_name": task_name, "contrast_label": contrast_label,
@@ -392,6 +434,7 @@ def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
                               for src in extra_ood_sources],
         "per_contrast": per_contrast,
         "fill_swap_significance": sig,
+        "rung_step_significance": steps,
     }
     (ablations_root / "ladder_series.json").write_text(json.dumps(dump, indent=2))
     print(f"→ {ablations_root / 'ladder_series.json'}")
@@ -667,6 +710,9 @@ def run_ladder_cross_dataset(*, task_name, contrast_label, ood_sources, ablation
         for metric in ("dice", "hd95"):
             sig[metric] = _fill_swap_significance(
                 _fill_swap_pairs_cross_dataset(ood_sources, rungs, fill_idx, metric))
+    steps = {m: _rung_step_significance(
+        lambda i, m=m: _fill_swap_pairs_cross_dataset(ood_sources, rungs, i, m), rungs)
+        for m in ("dice", "hd95")}
 
     dump = {
         "task_name": task_name, "contrast_label": contrast_label,
@@ -680,6 +726,7 @@ def run_ladder_cross_dataset(*, task_name, contrast_label, ood_sources, ablation
         "grouped_pooling": bool(contrast_groups),
         "per_contrast": per_contrast,
         "fill_swap_significance": sig,
+        "rung_step_significance": steps,
     }
     (ablations_root / "ladder_series.json").write_text(json.dumps(dump, indent=2))
     print(f"→ {ablations_root / 'ladder_series.json'}")
