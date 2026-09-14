@@ -1,0 +1,16 @@
+# ispy2 -- OWN-model, T2w-trained headline methods, own held-out test cases
+# (84 patients, t1wce+t2w items). FULL 6-method suite, completed 2026-09-06
+# (baseline + auglab_default were the last two missing methods -- verified via
+# real eval_all.csv, not just checkpoint presence).
+title: "I-SPY2 own-model -- T2w-trained (full 6-method suite)"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w"
+output_prefix: "01_results"
+in_domain_contrast: t2w
+
+runs:
+  - ispy2_t2w_baseline_20260905_163655
+  - ispy2_t2w_auglab_default_20260905_163655
+  - ispy2_t2w_synthseg_noEM_20260905_163655
+  - ispy2_t2w_synthseg_EM_20260905_163655
+  - ispy2_t2w_srcsm_20260905_163655
+  - ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

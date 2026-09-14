@@ -1,0 +1,17 @@
+# ispy2 -- OWN-model, T1WCE-trained headline methods, own held-out test cases
+# (84 patients, t1wce+t2w items -- see 06_evaluate/06_01_evaluate_own_run.sh).
+# FULL 6-method suite, completed 2026-09-06 (synthseg_EM + OURS predict/eval
+# were the last two missing methods -- verified via real eval_all.csv, not
+# just checkpoint presence).
+title: "I-SPY2 own-model -- T1WCE-trained (full 6-method suite)"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce"
+output_prefix: "01_results"
+in_domain_contrast: t1wce
+
+runs:
+  - ispy2_t1wce_baseline_20260905_163655
+  - ispy2_t1wce_auglab_default_20260905_163655
+  - ispy2_t1wce_synthseg_noEM_20260905_163655
+  - ispy2_t1wce_synthseg_EM_20260905_163655
+  - ispy2_t1wce_srcsm_20260905_163655
+  - ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
