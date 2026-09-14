@@ -87,7 +87,16 @@ def macro_perm(arrs: list, higher_better: bool, scale: float = 1.0) -> tuple:
     approximation). `arrs` is a list of per-contrast paired-diff arrays
     (ref − competitor). Returns (macroΔ*scale, p_two_sided, p_one_sided) where
     the one-sided p tests "ref is better" in the direction implied by
-    `higher_better` (dice: higher=better; hd95: lower=better)."""
+    `higher_better` (dice: higher=better; hd95: lower=better).
+
+    The sign-flip null's mean (0) and variance are exact; the TAIL is a normal
+    approximation, not an enumeration or a resampling — so this is not an
+    "exact test", and callers should not describe it as one. Checked against a
+    200k-draw Monte-Carlo sign-flip null on this project's borderline case
+    (0.0237 vs 0.0245, 2026-09-14). It is least accurate for heavy-tailed diffs
+    at small n, where it is CONSERVATIVE (a synthetic n=8 array with one large
+    outlier gave 0.127 here against a true 0.004), so a borderline NEW result
+    should be re-checked by resampling rather than trusted from this alone."""
     if not arrs:
         return float("nan"), float("nan"), float("nan")
     obs = macro_stat(arrs)

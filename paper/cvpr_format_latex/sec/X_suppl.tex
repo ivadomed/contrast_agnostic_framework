@@ -17,25 +17,78 @@
 
 \cref{tab:meta} in the main paper reports results at the task level, pooling
 each task's held-out test contrasts and both of its source modalities. This
-section reports the same evaluation broken out into the eight individual
+section reports the same evaluation broken out into the eleven individual
 source-modality settings. Every number is a cross-fold, cross-class average
 over all held-out contrasts of that setting, under the protocol of
 \cref{subsec:e-setup}.
 
 \paragraph{Statistical test construction.} All tests are paired at the
 level of the individual test case, never per-fold, so significance reflects
-consistency across cases rather than aggregate noise. The task-level test
-(\cref{tab:meta}) is a one-sided sign-flip permutation test on the
-macro-averaged per-case difference, stratified by task so that each task
-contributes equally regardless of how many test cases it contributes. It is
-a test \emph{across} tasks, not an average \emph{of} them: the main paper
-deliberately prints no cross-task mean Dice, since averaging a whole-liver
-Dice against a breast-lesion Dice yields a quantity with no clinical
-referent, but a stratified test over the same tasks is still well defined
-and is what the $p$ column reports. Per-setting comparisons (below) use the paired
-Wilcoxon signed-rank test~\cite{wilcoxon1945} instead, since there each
-setting is judged on its own rather than pooled into a cross-task estimand.
-All tests are Holm-corrected~\cite{holm1979} for multiple comparisons.
+consistency across cases rather than aggregate noise. A case's score is its
+mean over labels and over the evaluated folds, giving one observation per
+held-out case; treating each fold's re-scoring of the same patient as an
+independent sample would be pseudo-replication and would inflate the
+effective sample size. Per-setting comparisons (below) use the paired
+Wilcoxon signed-rank test~\cite{wilcoxon1945}, since there each setting is
+judged on its own. All tests are Holm-corrected~\cite{holm1979} for multiple
+comparisons.
+
+\paragraph{Why the aggregate tests are sign-flip tests on a macro-average.}
+The aggregate tests (\cref{tab:meta} and the per-dataset headline blocks)
+are not paired Wilcoxon tests, which is the more usual choice in this
+literature, so we state the reason rather than leave it implicit.
+
+\emph{The estimand.} What we claim is $\text{macro}\Delta$: the mean, over
+held-out contrasts, of that contrast's mean paired per-case difference
+(ours minus competitor) --- equal weight per contrast, which is exactly what
+the \emph{all} column of every table reports, so the test and the table
+measure the same thing. Equal weighting is not cosmetic here. The claim
+under test is cross-contrast generalization, and a contrast's held-out case
+count reflects how large a public cohort happens to be, not how much that
+contrast should say about generalizing. CHAOS is the extreme case: its
+held-out CT evidence includes an external cohort contributing $200$ cases,
+while each of its three MR contrasts contributes $8$. Weighting by case
+count would let one CT cohort cast more than half the votes in a test whose
+conclusion is about transfer across MR contrasts.
+
+\emph{Why not a pooled Wilcoxon.} The signed-rank test is defined on a
+single undifferentiated sample of paired differences. Applying it to the
+concatenation of all contrasts therefore tests a case-weighted null --- the
+imbalance above, reintroduced --- and there is no standard reweighting of
+the signed-rank statistic that recovers the equal-per-contrast estimand.
+The two tests do disagree on our data, and not in a way that flatters us. On
+ON-Harmony against SRCSM, $\text{macro}\Delta = +1.60$ Dice with a
+stratified $p$ of $0.012$, while the pooled Wilcoxon returns $p = 0.13$ and
+would miss it. In the other direction, on Mandible against SynthSeg-EM the
+pooled test returns $p < 10^{-4}$ for a $\text{macro}\Delta$ of $+0.11$
+Dice --- a tenth of a Dice point --- where the stratified test correctly
+declines to call a difference ($p = 0.35$).
+
+\emph{The test.} Under the null that the two methods are exchangeable on a
+given case, that case's paired difference is equally likely to carry either
+sign. Sign-flipping is therefore a valid randomization null for \emph{any}
+statistic computed from those differences, $\text{macro}\Delta$ included,
+which is what makes it applicable where the signed-rank test is not. We
+report the one-sided $p$ in the direction of the stated hypothesis, with the
+two-sided $p$ retained as a secondary column, and give a $95\%$ confidence
+interval from a hierarchical bootstrap that resamples cases within each
+contrast before averaging across contrasts.
+
+\emph{Implementation and its one approximation.} We evaluate the sign-flip
+null in closed form, from its exact mean and variance under sign symmetry
+with a normal approximation to the tail, rather than by resampling. Several
+settings have few held-out cases ($16$ on Open-MS; $8$ per MR contrast on
+CHAOS), which is where such an approximation is least safe, so we checked it
+rather than assuming it: against a $200{,}000$-draw Monte-Carlo sign-flip
+null on the one comparison anywhere near the decision boundary --- the
+cross-task test against Auglab --- the resampled $p$ is $0.0237$ against the
+closed form's $0.0245$. No conclusion in this paper turns on the difference.
+
+\emph{What is reported alongside.} Every generated significance report also
+carries a per-contrast table of mean $\Delta$ with the raw, uncorrected
+Wilcoxon $p$ for each contrast individually, and the per-setting tables in
+this section are Wilcoxon throughout. The standard test is reported; it is
+simply not the one the pooled headline number rests on.
 
 \paragraph{Contrast-group pooling.} For CHAOS, the same tested modality is
 sometimes evidenced by more than one source: CHAOS's CT evidence comes from

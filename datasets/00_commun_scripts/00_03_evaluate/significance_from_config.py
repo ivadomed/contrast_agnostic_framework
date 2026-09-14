@@ -24,10 +24,20 @@ Statistical model (why this is the right test):
     per-case *pooled* Wilcoxon weighted by case count (micro), which let one large external
     set dominate (e.g. chaos t2spir: the n=20 CT set drowned the n=4 MR-contrast wins →
     p=0.83 despite macroΔ=+1.3) — a real mismatch that misrepresented the truth.
-  * TEST = contrast-stratified paired SIGN-FLIP permutation on macroΔ. Under H0 (no method
-    difference) paired diffs are symmetric about 0, so flipping each case's sign is exact;
-    no normality assumption, correct for small/skewed samples. 95% CI = hierarchical
-    bootstrap (resample cases within each contrast). Holm-corrected across competitors.
+  * TEST = contrast-stratified paired SIGN-FLIP randomization null on macroΔ. Under H0 (no
+    method difference) each case's paired diff is equally likely to carry either sign, so
+    sign-flipping is a valid null for ANY statistic of those diffs — including macroΔ, which
+    a signed-rank test cannot target (see macro_perm in stat_tests.py).
+    ⚠️ The TAIL IS EVALUATED IN CLOSED FORM: macro_perm computes the null's exact mean and
+    variance under sign symmetry and then uses a NORMAL APPROXIMATION (stats.norm) — it does
+    NOT enumerate or resample sign flips. This docstring previously claimed the test was
+    "exact; no normality assumption", which was wrong about the implementation; corrected
+    2026-09-14. Verified against a 200k-draw Monte-Carlo sign-flip null on the comparison
+    nearest the 0.05 boundary (cross-task vs auglab_default): MC p=0.0237 vs closed-form
+    0.0245, no conclusion affected. The approximation is weakest for heavy-tailed diffs at
+    small n, so re-check with Monte Carlo before resting a NEW borderline claim on it.
+    95% CI = hierarchical bootstrap (resample cases within each contrast). Holm across
+    competitors.
 
 Report sections per (reference vs each competitor):
   * HEADLINE — OOD cross-contrast generalization: TRAINING (in-domain) contrast EXCLUDED
