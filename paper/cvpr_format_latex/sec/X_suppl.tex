@@ -35,8 +35,14 @@ comparisons.
 
 \paragraph{Why the aggregate tests are sign-flip tests on a macro-average.}
 The aggregate tests (\cref{tab:meta} and the per-dataset headline blocks)
-are not paired Wilcoxon tests, which is the more usual choice in this
-literature, so we state the reason rather than leave it implicit.
+are not paired Wilcoxon signed-rank tests, which is the more usual choice in
+this literature: SynthSeg+, from the lineage we compare against, marks a
+method as better than its competitors using a one-sided Bonferroni-corrected
+Wilcoxon signed-rank test on paired Dice~\cite{billot2023synthsegplus}. We
+therefore give our reason rather than leave it implicit. The \emph{estimand}
+we test, by contrast, is not unusual at all --- it is the same
+equal-weight-per-stratum principle the Medical Segmentation Decathlon
+adopted, for the same reason, as set out below.
 
 \emph{The estimand.} What we claim is $\text{macro}\Delta$: the mean, over
 held-out contrasts, of that contrast's mean paired per-case difference
@@ -50,6 +56,19 @@ held-out CT evidence includes an external cohort contributing $200$ cases,
 while each of its three MR contrasts contributes $8$. Weighting by case
 count would let one CT cohort cast more than half the votes in a test whose
 conclusion is about transfer across MR contrasts.
+
+This is the same problem, and the same answer, as the Medical Segmentation
+Decathlon's. Facing sample sizes that ``varied heavily across all tasks and
+target ROIs,'' it ranked algorithms within each target ROI, averaged those
+ranks per task, and averaged the per-task ranks for the final score ---
+choosing that over a flat average across ROIs precisely because the flat
+scheme means ``tasks with multiple target ROIs \ldots{} would be
+over-weighted''~\cite{antonelli2022decathlon}. Our $\text{macro}\Delta$
+applies the same principle one level across, with the held-out contrast in
+place of the target ROI. Where we differ is only in how that weighted
+quantity is reached: the Decathlon arrives at it through counts of pairwise
+Wilcoxon outcomes at an uncorrected per-comparison $\alpha$, whereas we test
+the weighted difference itself and Holm-correct across competitors.
 
 \emph{Why not a pooled Wilcoxon.} The signed-rank test is defined on a
 single undifferentiated sample of paired differences. Applying it to the
@@ -67,8 +86,9 @@ declines to call a difference ($p = 0.35$).
 \emph{The test.} Under the null that the two methods are exchangeable on a
 given case, that case's paired difference is equally likely to carry either
 sign. Sign-flipping is therefore a valid randomization null for \emph{any}
-statistic computed from those differences, $\text{macro}\Delta$ included,
-which is what makes it applicable where the signed-rank test is not. We
+statistic computed from those differences~\cite{ernst2004permutation},
+$\text{macro}\Delta$ included, which is what makes it applicable where the
+signed-rank test is not. We
 report the one-sided $p$ in the direction of the stated hypothesis, with the
 two-sided $p$ retained as a secondary column, and give a $95\%$ confidence
 interval from a hierarchical bootstrap that resamples cases within each
