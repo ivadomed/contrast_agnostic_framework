@@ -33,6 +33,7 @@ LLD_MMRI_Annotation*.json
 *.mhd
 *.tar
 *.zip
+*.xlsx
 .claude/
 python_usage.html
 running_jobs.html
