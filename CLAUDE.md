@@ -81,10 +81,13 @@ Wrap remote commands in `bash -lc "..."` — a bare `ssh tamia.alliancecan.ca 'c
 | `h100:4` (the bulk of the cluster) | 4× H100 | 48 | 500,000 MB | **Default — use this class** |
 | `h200:8` | 8× H200 | 64 | 1,000,000 MB | Bigger node class — do **not** request unless explicitly asked |
 
-Partitions are `gpubase_bynode_b1/b2/b3` — **allocation is whole-node** (no per-GPU partition), so a submitted job gets all 4 (or 8) GPUs on the node whether it uses them or not. `run_job` env overrides for the default h100 class: `RUN_JOB_GPU_TYPE=h100`, `RUN_JOB_CPUS_PER_GPU=12` (48/4), **`RUN_JOB_MEM_PER_GPU=115G`**. ⚠️ That variable is parsed in **GiB**, not MB — `run_job_slurm.sh` does `mem="$(( ${RUN_JOB_MEM_PER_GPU%G} * gpus ))G"`, stripping a trailing `G` and re-appending one. Passing the raw MB figure (`125000`) requests 500000 **G** and sbatch rejects the job with "Memory specification can not be satisfied" (cost a lost submission 2026-08-02). Leave headroom under the node's 500000 MB: 115G × 4 = 460G. As always, these are env-var overrides only — `run_job_slurm.sh` itself is never forked per cluster. Do **not** pass `--partition` explicitly on TamIA (rejected even for partitions `sinfo` lists as valid) — submit without it and let the scheduler route.
+Partitions are `gpubase_bynode_b1/b2/b3` — **allocation is whole-node** (no per-GPU partition), so a submitted job gets all 4 (or 8) GPUs on the node whether it uses them or not. `run_job` env overrides for the default h100 class: `RUN_JOB_GPU_TYPE=h100`, `RUN_JOB_CPUS_PER_GPU=12` (48/4), **`RUN_JOB_MEM_PER_GPU=115G`**. ⚠️ That variable is parsed in **GiB**, not MB — `run_job_slurm.sh` does `mem="$(( ${RUN_JOB_MEM_PER_GPU%G} * gpus ))G"`, stripping a trailing `G` and re-appending one. Passing the raw MB figure (`125000`) requests 500000 **G** and sbatch rejects the job with "Memory specification can not be satisfied" (cost a lost submission 2026-08-02). Leave headroom under the node's 500000 MB: 115G × 4 = 460G. As always, these are env-var overrides only — `run_job_slurm.sh` itself is never forked per cluster. Do **not** pass `--partition` explicitly on TamIA for **GPU** jobs (rejected even for partitions `sinfo` lists as valid) — submit without it and let the scheduler route.
+
+**CPU-only `sbatch` submission on TamIA has been inconsistent** — a bare script (only `--cpus-per-task`/`--mem`, no `--gres`) has both failed with `sbatch: error: No partition specified or system default partition` AND succeeded with no `--partition` at all, on different submissions of similar jobs the same day (2026-09-07, duke-breast-mri cross-dataset eval pipeline). Adding an explicit `--partition=cpubase_bynode_b1/b2` did **not** reliably fix it either — one attempt was then rejected with "partition does not exist or job cannot fit in it," and a bare resubmission of the exact same script immediately after succeeded. Root cause undetermined (possibly transient scheduler/queue state, possibly a `--mem` value that doesn't fit some partitions' per-node limit — unconfirmed). **Don't assume either explicit or omitted `--partition` is the fix** — if a CPU-only submission fails on one, retry with the other before assuming something else is wrong; this has resolved it both times so far.
 
 **Use the GPUs properly — this is now a hard requirement, not a nice-to-have.** Because allocation is whole-node, a job that only exercises 1 of 4 (or 1 of 8) GPUs wastes the other 3 (or 7) for the whole wall-clock duration — highly visible to Alliance staff, and **a coworker on this account has already been warned about under-utilizing allocated GPUs.** Concretely, for the H100 nodes:
 - Node-pack placement is explicit when it needs to be: `run_job_pack_submit.sh` spreads recorded folds round-robin (`i%4`) by default, but **`PACK_GPU_MAP`** (one GPU index per `index.tsv` row) overrides that. Use it whenever folds cost very different amounts — notably **srcsm, which is ~3x slower per epoch than every other method**: round-robin will pair a srcsm fold with a second fold and make it the straggler that holds the whole node *and its whole dependency chain* open. Give srcsm folds a GPU to themselves and double up the cheap folds instead. **Don't assume the 3x figure transfers to a new dataset — measure it first**: a 2026-08 attempt on a since-abandoned dataset (unreliable voxel-level annotations, unrelated to this tooling) found srcsm running no slower than the other methods there, the opposite of brats/on-harmony's pattern.
+- **`PACK_DIR` must be qualified per training contrast — never share one `PACK_DIR` across two training-contrast batches.** Recording predict/eval jobs for two contrasts (e.g. t1wce and t2w) into the same `PACK_DIR` produces bare-method-name collisions (`baseline_kmeans` means something different per contrast) that silently overwrite each other's cmd files before submission — the **last-recorded contrast wins, the first is silently lost, no error**. Hit 3 times on this project already. Fix: always use a separate, contrast-qualified `PACK_DIR` per batch, and **grep-verify the recorded cmd files reference the right contrast before submitting** (e.g. `grep -oE '<model>/t[12][a-z]*w?/' cmdfile`) — don't trust the recording step silently.
 - Before choosing a layout, **run a sizing probe** — a few epochs of the heaviest and the slowest method side by side on one real node, reporting per-fold VRAM + epoch time, using a throwaway results base so it can't pollute real checkpoints. CLAUDE.md already required measuring rather than assuming; write this probe fresh per dataset rather than assuming a prior one's numbers transfer.
 - Prefer packing **multiple folds onto the same node's GPUs** in one job rather than 1 fold = 1 whole node. With 4 GPUs/node, that means either 4 folds in parallel per job, or — since the current fold policy trains only folds 0/1/2 — 1 GPU sits idle unless a second task (a different method, modality, or ablation arm) is packed alongside.
 - The bigger H100 memory headroom vs Vulcan's L40S (each H100 has more VRAM) also means **larger batch sizes are affordable** — this changes the training config (not the shared script), so treat it as a per-cluster override the same way GPU type/CPU/mem are already overridden, not a hand-edit of `train_common.sh`.
@@ -164,6 +167,39 @@ dataset ("task"), + `overall` + significance vs OURS — the single "which metho
 overall" table. See `combined_modality_summary.py` in the shared layer below for the
 per-dataset table this rolls up.
 
+**⚠️ Task-roster drift risk — verify `scripts/evaluate/meta_task_heatmap.yaml`'s `tasks:` list
+directly before citing a task count anywhere.** The paper's own copy
+(`paper/scripts/meta_task_heatmap_paper.yaml`) and the project-side one above are **edited
+independently** — a task landing in the paper (breast/ispy2, toothfairy2, ...) does not mean
+someone also wired it into the project-side "which method wins overall" table, and vice versa.
+Don't assume they're in sync; `grep -c '^  - name:' scripts/evaluate/meta_task_heatmap.yaml` costs
+nothing and prevents citing a stale count.
+
+### Dataset onboarding — pre-flight checklist (do these BEFORE a download completes, not after)
+
+Three checks this project has paid for skipping (each cost real engineering time to unwind after
+the fact — see the AMBL and Atlas-Liver-HCC sections below for the concrete cost of skipping #2/#3):
+
+1. **License, verified independently, not read off one page.** The established method (see
+   `datasets/ispy2/0_raw_ispy2/README.md` / any archived AMBL README for the template): (a) the
+   collection/source page's own license statement, (b) the actual API/metadata license fields on a
+   real sample of series/records (not just the page's prose), (c) the LICENSE file bundled inside a
+   downloaded file itself, if one exists. All three should agree before you call a license settled.
+   Duke-breast-mri (via MAMA-MIA/Synapse) got fully downloaded and processed once with **zero**
+   license check — caught only when someone else asked. Do the check before, not after.
+2. **Claimed-N vs. directly-counted usable-N.** A collection page's "N patients"/"masks for all
+   patients" is marketing copy, not a manifest — count the real annotated population yourself from
+   the raw series/object metadata (AMBL: 632 claimed → 99 actually have a lesion SEG; I-SPY2: 719 →
+   561 with both a real DCE and a real T2w series). Do this **before** choosing between candidate
+   datasets, not after committing engineering effort to one.
+3. **Ground-truth label semantics, read from the source data/README, not inherited from a script
+   docstring.** A docstring calling a dataset "malignant-only" or "tumor-only" is a claim, not a
+   fact — verify it against the actual segmentation object's own per-segment labels (`SegmentLabel`/
+   `SegmentDescription` in a DICOM-SEG, or equivalent). This exact failure already happened once this
+   project (a "malignant-only external test set" docstring was wrong — the real mask unions tumor
+   AND benign segments into one class) and was only caught on a second, independent read of the
+   source README.
+
 ---
 
 ## How experiments work — ALWAYS use the shared standardized scripts
@@ -215,7 +251,7 @@ Models are contrast-agnostic, so evaluation is **cross-contrast**: a model train
 - `00_00_utils/` — shared libs: `common_env.sh`, `splits_lib.py`, `orient.py`, `fov.py`, `eval_metrics.py`/`eval_folds.py`/`eval_aggregate.py`, `stat_tests.py`, `nnunet_convert_lib.py`.
 - `00_01_train/train_common.sh` — training driver (fold fan-out via `run_job`; honours optional `TRAIN_FOLDS`, default `"0 1 2 3"`).
 - `00_02_predict/predict_common.sh` — prediction driver (own- and cross-model modes).
-- `00_03_evaluate/` — `evaluate.py` (Dice+HD95), `summarize_fold.py`, `aggregate_results.py`, `aggregate_from_config.py` (per-modality summary table + heatmap; also the home of `load_run_cases`/`paired`/`macro_perm`-based `significance_column` — see below), `significance_from_config.py` (full paired-significance report: OOD/IND/per-contrast breakdowns), `combined_modality_summary.py` (pools a dataset's 2 training modalities into one table), `meta_task_heatmap.py` (pools all 4 datasets into one table — see "Standardized output layout" below for all three).
+- `00_03_evaluate/` — `evaluate.py` (Dice+HD95), `summarize_fold.py`, `aggregate_results.py`, `aggregate_from_config.py` (per-modality summary table + heatmap; also the home of `load_run_cases`/`paired`/`macro_perm`-based `significance_column` — see below), `significance_from_config.py` (full paired-significance report: OOD/IND/per-contrast breakdowns), `combined_modality_summary.py` (pools a dataset's 2 training modalities into one table), `meta_task_heatmap.py` (pools all 4 datasets into one table — see "Standardized output layout" below for all three), `ladder_ood_common.py` (the causal-ablation ladder engine, `run_ladder()`/`run_ladder_cross_dataset()` — see "The causal-ablation ladder" below; **OOD-only plots as of the 2026-09-07 rework**, `ladder_series.json` carries a `fill_swap_significance` field per source), `ladder_cross_dataset_plot.py` (added 2026-09-08: overlays several already-computed `ladder_series.json` sources' OOD-pooled curves on one comparison figure per training direction, reusing `ladder_ood_common.py`'s own `_write_per_contrast_png` rather than a bespoke plot — see its docstring for the grouping convention).
 - `00_04_analysis/` — `texture_advantage.py`, `mechanism_illustration.py`.
 
 ### The 3-tier wrapper pattern — follow it for every new method/dataset
@@ -251,6 +287,18 @@ Config-driven aggregation + significance consume YAML configs (`06_evaluate/conf
 Within `02_metrics/<model>/<contrast>/`, a non-headline result set gets its **own dedicated subdir** rather than mixing into the flat headline layout — established conventions so far: `checkpoint_comparison/` (checkpoint_best vs checkpoint_final sweep, all 8 training sets) and `ablations/` (the causal-ablation ladder studies — open-ms FLAIR, chaos T1in, chaos T2spir, brats2024-glioma T1n so far). Headline run dirs stay in the parent and are referenced unprefixed by any config that needs them (cross-dataset tables, `checkpoint_comparison/best_vs_final` configs); run dirs exclusive to the subdir's own study move into it and are referenced as `<subdir>/<run_id>`. `06_01_evaluate_run.sh`'s `METRICS_SUBDIR` env var (e.g. `METRICS_SUBDIR=ablations`, chaos + brats2024-glioma so far) routes evaluation output straight into a subdir like this — set it before evaluating a new ablation run rather than evaluating flat and moving the directory by hand afterward.
 
 **The causal-ablation ladder** (one `06_1X_ladder_summary.py`-style script per dataset/train-contrast — `open-ms/.../06_12_ladder_summary.py`, `brats2024-glioma/.../06_13_ladder_summary.py`, `chaos/.../06_33_ladder_summary_t2spir.py` — reusing `00_commun_scripts/00_03_evaluate/significance_from_config.py`'s `load_run_cases`/`resolve_run_dir` for OOD extraction; don't hand-roll a new CSV loader for a new dataset's ladder): a baseline-anchored rung sequence — `baseline → +K-means intensity clustering → +label-remap → +Voronoi sub-parcellation (noise fill) → v26_6_2/PALETTE alone (identical partition, real-intensity fill) → +AugLab (val000) → +AugLab (val100)` — where each rung adds exactly one ingredient on top of the previous, so the OOD Dice/HD95 delta between two adjacent rungs is attributable to that ingredient alone. The rung 4→5 step (noise-fill → real-fill, partition otherwise unchanged) is the key one-variable test of whether texture preservation causally drives Dice: large (~+7 Dice, ~-4 to -5mm HD95) on texture-defined segmentation targets (open-ms MS lesions, brats2024-glioma tumor sub-regions) and near-zero/noise-level on boundary-defined ones (chaos organs, both T1in and T2spir) — texture preservation only pays off when the segmentation target actually depends on texture.
+
+**⚠️ Cross-dataset ladder gotcha: group by TRUE held-out-contrast identity, not by source dataset.**
+When a second dataset's own item happens to be the SAME contrast as training (e.g. a t1wce-trained
+model tested on another dataset's own t1wce acquisition), that is cross-dataset generalization ONLY —
+it is **not** OOD-contrast evidence and must not be pooled into an "OOD" bucket alongside a genuine
+held-out contrast (breast: I-SPY2 t1wce-trained → I-SPY2's own t2w is real OOD; the *same* model →
+duke-breast-mri's t1wce is cross-dataset-only, excluded from that bucket; the *t2w-trained* model →
+duke-breast-mri's t1wce IS genuine OOD and correctly pools with I-SPY2's own analogous contrast). This
+is a smaller-scale version of the Atlas-Liver-HCC in-domain-ambiguity problem below — get the
+in-domain/OOD call right per training direction, don't default to "cross-dataset = OOD."
+`ladder_cross_dataset_plot.py` (above) takes explicit named groups for exactly this reason — it does
+not infer grouping from source dataset on its own.
 
 Predicting/evaluating at a **non-default checkpoint** (project default is `checkpoint_best.pth`) is a uniform mechanism across all 4 dataset families: `predict_common.sh`'s `CHECKPOINT` env var and each dataset's `06_01_evaluate_*.sh`'s `CKPT_TAG` env var route non-best predictions/metrics to sibling `fold{k}/<tag>/` / `{category}_{run_id}_<tag>/` paths, never touching the default best-checkpoint data. Conclusion from the 2026-07-31 sweep (see each dataset's `checkpoint_comparison/best_vs_final_ckpt_summary.md`): `checkpoint_best` beats `checkpoint_final` overall, most clearly on open-ms — final-checkpoint results are not a drop-in upgrade.
 
@@ -335,6 +383,93 @@ it buffers until exit, so a working job looks hung.
 
 ---
 
+## Atlas-Liver-HCC exclusion (2026-09-02)
+
+**The whole atlas-liver-hcc extension — training set + its cross-dataset eval companions
+(`lld-mmri-hcc`, `lld-mmri-malignant`, `liverhccseg`) — is excluded from the paper and from all
+cross-dataset meta-evaluation/aggregation, permanently, not as a temporary hold.** Moved to
+`datasets/03_archive/{atlas-liver-hcc,lld-mmri-hcc,lld-mmri-malignant,liverhccseg}`. Do not re-add
+without a deliberate decision to reopen this — the three reasons below are independent, any one of
+them alone would justify the exclusion:
+
+1. **Reproducibility/redistribution blocker.** LLD-MMRI-MedSAM2 (source for `lld-mmri-hcc` and
+   `lld-mmri-malignant`) carries a custom Data Use Agreement, not a plain CC BY-NC license despite
+   the badge at the bottom of its own README: verbatim, "you agree not to further copy, publish, or
+   distribute any part of the LLD-MMRI dataset, except for internal use at a single site within the
+   same organization... including annotations and cropped image parts." That rules out ever adding
+   these two to the public git-annex upload (unlike on-harmony/open-ms/chaos/amos/sliver07 — see
+   `project_git_annex_bids_upload` memory) and makes qualitative figures showing its images a real
+   gray area. ATLAS itself (CC BY-NC-SA 4.0) and LiverHccSeg (CC BY 4.0, Zenodo) are both fine —
+   this reason is specific to LLD-MMRI.
+2. **The causal-ablation ladder's OOD contrast pool turned out to hinge on an ambiguous contrast.**
+   Investigation (2026-09-01/02) found ATLAS's own CE-T1w training cohort is fat-suppressed, and
+   lld-mmri-hcc's Dixon **out-of-phase** contrast reads as appearance-adjacent to it (partial fat
+   cancellation lands close to ATLAS's own fat-suppressed appearance; the baseline, non-contrast-
+   agnostic model ranks 1st of 7 methods on outphase — same pattern as the known in-domain
+   `ce-art` column, nowhere else). In-phase was checked and ruled clean (recall collapses on
+   in-phase, unlike outphase, ruling out the same appearance-similarity explanation). Whether
+   outphase counts as in-domain or OOD **flips the ladder's sign**: real-fill vs. noise-fill
+   macroΔ is −1.85 (p=0.0060, real-fill worse) with outphase included in the 4-contrast OOD pool,
+   +2.21 (p=0.0064, real-fill better) restricted to the two unambiguous contrasts (t2wi, dwi), and
+   the ambiguity got *worse*, not better, after adding `lld-mmri-malignant`'s 109 extra
+   (non-HCC-but-same-cohort) cases as a robustness check. A causal claim that flips sign depending
+   on a defensible contrast-inclusion call cannot be reported as a stable result.
+3. **ATLAS's own training cohort is itself an uncontrolled mix of CE-T1w phases** (33 arterial / 10
+   portal / 8 delayed / 7 unknown / 2 no-contrast-agent, per its own `patient_info_train.json`),
+   which is why the `CE_T1w_all`/`in_domain_group` pooling scheme had to exist at all — a clean
+   in-domain/out-of-domain split was never fully achievable for this dataset the way it is for the
+   other four headline tasks (each single-source-modality with a genuinely held-out second
+   in-house contrast).
+
+**What was updated when this landed:** `scripts/evaluate/meta_task_heatmap.yaml` and
+`paper/scripts/meta_task_heatmap_paper.yaml` (task entry removed, both regenerated — paper's
+4-task `overall` is now 59.6% Dice / 18.6mm HD95 for Ours val000, was 56.7%/32.8mm as a stale
+5-task figure); `paper/scripts/{compute_dissociation_pvalues,make_per_contrast_curves,
+make_per_contrast_curves_with_ind}.py` (ATLAS-Liver-HCC panel/row removed, 5-panel figures
+rebuilt as 4-panel); `sec/4_experiments.tex`, `sec/X_suppl.tex`, `sec/_suppl_data.tex` (headline
+table, dataset roster, causal-ablation dissociation table + its now-retracted `+2.09, p=3.5e-3`
+row, val000-vs-val100 table, and every paragraph of Liver-HCC-specific prose — all removed or
+renumbered for 4 tasks); PDF rebuilt clean (17 pages, was 18). `scripts/cluster/tamia_env_*` for
+the 4 archived datasets were left in place (harmless, orphaned).
+
+---
+
+## Breast task: I-SPY2 (training) + duke-breast-mri (eval) — AMBL archived (2026-09-13)
+
+**Current roster for the breast task: `ispy2` trains, `duke-breast-mri` is the cross-dataset eval
+companion. `ambl` is archived at `datasets/03_archive/ambl` — do not re-add without a deliberate
+decision to reopen this**, matching the Atlas-Liver-HCC precedent above. AMBL was I-SPY2's original
+training-set candidate and later its planned external test set (see memory
+`project_ambl_breast_onboarding_launch`/`project_ispy2_becomes_training_set` for the full pivot
+history) — both roles are now retired. Proximate reason for the final archival: AMBL's own
+`0_raw_ambl/README.md` documents that its DICOM-SEG segments a radiologist-delineated **every**
+enhancing/suspicious finding, labeled `Tumor` OR `Benign` per segment, and the BIDS conversion
+**unions both into one binary lesion class** — a "malignant-only" label repeated in at least one
+ladder script's docstring was never independently verified against this and was wrong. I-SPY2
+(Functional Tumor Volume mask, neoadjuvant-chemo trial, enrollment requires biopsy-proven invasive
+cancer) and duke-breast-mri (its own download script: "expert tumour mask", cancer-treatment
+patients) are both clean malignant-only cohorts and are unaffected by this.
+
+**Licenses, verified 2026-09-02/09-13:** I-SPY2 = **CC BY 4.0** (verified 3 ways per the pre-flight
+checklist above, see its own README). duke-breast-mri (downloaded via MAMA-MIA/Synapse
+`syn60868042`) = **CC BY-NC 4.0** — confirmed via the TCIA wiki collection page and MAMA-MIA's own
+GitHub README, which states Duke-Breast-Cancer-MRI is specifically why the combined MAMA-MIA release
+is CC BY-NC rather than plain CC BY (the other 3 MAMA-MIA source cohorts are CC BY). This is **not**
+a redistribution-blocking custom DUA like the retired LLD-MMRI case — CC BY-NC permits sharing/
+adapting derivatives for non-commercial purposes with attribution, it only blocks commercial use — but
+it does mean duke-breast-mri needs its own NC tag if it's ever folded into the CC-BY git-annex upload
+(`project_git_annex_bids_upload` memory), not blended in as if plain CC BY.
+
+**I-SPY2 training config, for reference:** 1000 epochs (a real deviation from the other datasets'
+epoch counts in the table above — not yet confirmed as a deliberate choice vs. a leftover default,
+flag if revisited), folds 0/1/2, both training contrasts (t1wce/t2w). I-SPY2's raw DCE acquisitions
+split into unilateral-crop and bilateral-FOV cases per site; both FOV variants are generated per
+patient rather than dropping one, which is why the two training contrasts' held-out test-set sizes
+differ (102 vs. 168 cases) despite sharing the same 84 held-out patients — this has not been
+independently checked for double-counting/bias, flag if it becomes load-bearing for a paper claim.
+
+---
+
 ## Cleanup notes (read before deleting anything in the repo root)
 
 **Untracked but load-bearing — do NOT `git clean`:**
@@ -356,6 +491,9 @@ it buffers until exit, so a working job looks hung.
   space in the filename).
 - `paper/cvpr_format_latex.stale_bak_1783838883/` (2.9 MB), `CLAUDE.md.bak.*`, `.scratch_analysis/`
   (29 MB of one-off probes).
+- `scripts/cluster/{tamia_env_ambl.sh,tamia_env_ambl_ispy2_target.sh,_ambl_run_aggregation.sh}` —
+  orphaned now that AMBL is archived (see "Breast task" section above). Same call as the archived
+  liver-HCC datasets' `tamia_env_*` files: harmless, leave in place unless doing a dedicated pass.
 
 **Known inconsistency worth fixing during cleanup:** the four ablation ladders do not share a summary
 format — BraTS T1n and CHAOS T2spir have `ablations/ladder_summary.md` with explicit rung tables,
