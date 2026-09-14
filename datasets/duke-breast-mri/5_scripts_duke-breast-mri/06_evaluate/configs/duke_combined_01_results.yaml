@@ -1,0 +1,34 @@
+# duke-breast-mri (291 MAMA-MIA-expert-masked cases) -- combined ISPY2-trained
+# training modalities (t1wce-trained + t2w-trained pooled), cross-dataset.
+# Mirrors ambl_cross_dataset_ispy2trained_combined_01_results.yaml's pattern
+# exactly (same mechanism: pool per-fold eval_all.csv rows from BOTH training-
+# modality run dirs into one 6-fold mean per method). Duke has only ONE test
+# item (t1wce/DCE -- no t2w acquisition in this cohort), so column_order has a
+# single entry; the t1wce-trained model's row is same-modality-family (still
+# cross-institution), the t2w-trained model's row is cross-contrast, and both
+# get pooled equally into one number per method.
+title: "duke-breast-mri (291 cases) -- combined ISPY2-trained modalities (t1wce + t2w), cross-dataset"
+output_dir: "${METRICS_ROOT}/ispy2_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [t1wce]
+
+modalities:
+  - name: t1wce
+    metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce"
+    runs:
+      baseline: ispy2_t1wce_baseline_20260905_163655
+      auglab_default: ispy2_t1wce_auglab_default_20260905_163655
+      synthseg_noEM: ispy2_t1wce_synthseg_noEM_20260905_163655
+      synthseg_EM: ispy2_t1wce_synthseg_EM_20260905_163655
+      srcsm: ispy2_t1wce_srcsm_20260905_163655
+      auglabAug_v26_6_2_train050_val000: ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
+  - name: t2w
+    metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w"
+    runs:
+      baseline: ispy2_t2w_baseline_20260905_163655
+      auglab_default: ispy2_t2w_auglab_default_20260905_163655
+      synthseg_noEM: ispy2_t2w_synthseg_noEM_20260905_163655
+      synthseg_EM: ispy2_t2w_synthseg_EM_20260905_163655
+      srcsm: ispy2_t2w_srcsm_20260905_163655
+      auglabAug_v26_6_2_train050_val000: ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

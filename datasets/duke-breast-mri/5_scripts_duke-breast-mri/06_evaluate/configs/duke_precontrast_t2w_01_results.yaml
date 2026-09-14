@@ -1,0 +1,15 @@
+# duke-breast-mri (291 cases) -- PRE-CONTRAST (native T1w, no Gd) test contrast,
+# ISPY2 T2W-trained models. Sibling of duke_precontrast_t1wce_01_results.yaml --
+# see that file's header for the full rationale.
+title: "duke-breast-mri (291 cases) -- PRE-CONTRAST test contrast, ISPY2 T2W-trained models"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w/precontrast"
+output_prefix: "01_results"
+sig_ref: "ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655"
+
+runs:
+  - ispy2_t2w_baseline_20260905_163655
+  - ispy2_t2w_auglab_default_20260905_163655
+  - ispy2_t2w_synthseg_noEM_20260905_163655
+  - ispy2_t2w_synthseg_EM_20260905_163655
+  - ispy2_t2w_srcsm_20260905_163655
+  - ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

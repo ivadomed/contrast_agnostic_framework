@@ -1,0 +1,20 @@
+# duke-breast-mri (291 cases) -- PRE-CONTRAST (native T1w, no Gd) test contrast,
+# ISPY2 T1WCE-trained models. A third test contrast alongside t1wce/t2w -- see
+# 02_nnunet/02_02_convert_test_precontrast.py's docstring for why this is a
+# genuinely clean new-contrast test (I-SPY2's own t1wce training data is
+# UNIFORMLY the first post-contrast DCE phase, verified via that dataset's own
+# BIDS README, not a mix -- so pre-contrast is a real held-out contrast, not a
+# variant of anything seen in training). Same 291 patients/masks as
+# duke_t1wce_01_results.yaml, only the image contrast differs.
+title: "duke-breast-mri (291 cases) -- PRE-CONTRAST test contrast, ISPY2 T1WCE-trained models"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce/precontrast"
+output_prefix: "01_results"
+sig_ref: "ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655"
+
+runs:
+  - ispy2_t1wce_baseline_20260905_163655
+  - ispy2_t1wce_auglab_default_20260905_163655
+  - ispy2_t1wce_synthseg_noEM_20260905_163655
+  - ispy2_t1wce_synthseg_EM_20260905_163655
+  - ispy2_t1wce_srcsm_20260905_163655
+  - ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655

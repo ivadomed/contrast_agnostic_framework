@@ -1,0 +1,21 @@
+# duke-breast-mri (291 MAMA-MIA-expert-masked Duke-Breast-Cancer-MRI cases,
+# t1wce/DCE only) -- cross-dataset results against the ISPY2 T1WCE-TRAINED
+# models (same-modality-family: I-SPY2 t1wce == post-contrast T1w DCE, the
+# same broad acquisition as Duke's own post-contrast channel). Modeled on
+# ambl_cross_dataset_ispy2trained_01_results.yaml, split per ISPY2 training
+# contrast (Duke has only ONE target item, t1wce, so unlike ambl there is no
+# "column_order" of multiple target items to pool -- see duke_t2w_01_results.yaml
+# for the cross-contrast sibling table, ispy2 t2w-trained models on this same
+# Duke t1wce data).
+title: "duke-breast-mri (291 cases) -- ISPY2 T1WCE-trained models (cross-dataset, same-modality-family)"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce"
+output_prefix: "01_results"
+sig_ref: "ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655"
+
+runs:
+  - ispy2_t1wce_baseline_20260905_163655
+  - ispy2_t1wce_auglab_default_20260905_163655
+  - ispy2_t1wce_synthseg_noEM_20260905_163655
+  - ispy2_t1wce_synthseg_EM_20260905_163655
+  - ispy2_t1wce_srcsm_20260905_163655
+  - ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655

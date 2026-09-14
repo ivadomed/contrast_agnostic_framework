@@ -1,0 +1,18 @@
+# duke-breast-mri (291 MAMA-MIA-expert-masked Duke-Breast-Cancer-MRI cases,
+# t1wce/DCE only) -- cross-dataset results against the ISPY2 T2W-TRAINED
+# models (cross-contrast: I-SPY2 t2w model tested on Duke's t1wce/DCE imaging).
+# Sibling of duke_t1wce_01_results.yaml -- see that file's header for the full
+# rationale (Duke has only one target item; TRAINING_CONTRAST here selects
+# which ispy2 model trained the run, not which Duke item is scored).
+title: "duke-breast-mri (291 cases) -- ISPY2 T2W-trained models (cross-dataset, cross-contrast)"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w"
+output_prefix: "01_results"
+sig_ref: "ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655"
+
+runs:
+  - ispy2_t2w_baseline_20260905_163655
+  - ispy2_t2w_auglab_default_20260905_163655
+  - ispy2_t2w_synthseg_noEM_20260905_163655
+  - ispy2_t2w_synthseg_EM_20260905_163655
+  - ispy2_t2w_srcsm_20260905_163655
+  - ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655
