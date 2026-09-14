@@ -229,13 +229,25 @@ def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, m
 def build_combined_summary(runs_ordered, runs_data, fold_counts, sig_by_metric, title,
                             out_dir: Path, prefix: str, ref_key: str, modalities: list,
                             column_order: list = None, contrast_groups: dict = None):
-    all_contrasts_set = {c for d in runs_data.values() for c in d.get("dice", {})}
-    if column_order:
-        ordered = [c for c in column_order if c in all_contrasts_set]
-        remaining = sorted(c for c in all_contrasts_set if c not in ordered)
-        all_contrasts = ordered + remaining
+    # See aggregate_from_config.py::build_summary for the full rationale (shared
+    # design, 2026-08-31): when contrast_groups is set, each displayed column IS
+    # a group (one column for CT, one per real contrast), not one per raw source.
+    if contrast_groups:
+        group_names = list(contrast_groups.keys())
+        if column_order:
+            ordered = [c for c in column_order if c in group_names]
+            remaining = [c for c in group_names if c not in ordered]
+            all_contrasts = ordered + remaining
+        else:
+            all_contrasts = group_names
     else:
-        all_contrasts = sorted(all_contrasts_set)
+        all_contrasts_set = {c for d in runs_data.values() for c in d.get("dice", {})}
+        if column_order:
+            ordered = [c for c in column_order if c in all_contrasts_set]
+            remaining = sorted(c for c in all_contrasts_set if c not in ordered)
+            all_contrasts = ordered + remaining
+        else:
+            all_contrasts = sorted(all_contrasts_set)
     if not all_contrasts:
         print("No eval data — nothing to aggregate.", file=sys.stderr)
         return
@@ -249,15 +261,17 @@ def build_combined_summary(runs_ordered, runs_data, fold_counts, sig_by_metric, 
         f"Modalities: {', '.join(all_contrasts)}", "",
         "Each cell is the **cross-fold, cross-class, cross-training-modality average** "
         "(mean over all labels, folds, AND the two training-modality models of the same "
-        "method). `all` = average across tested contrasts"
-        + (", pooled per the contrast-group tree below (raw per-column cells stay unpooled — "
-           "transparency only)" if contrast_groups else "") + ". **Bold** = best per column. "
+        "method)"
+        + (" — each column is one contrast-group (pooled from its raw sources per the tree "
+           "below; a group with a single source is just that source, unchanged)" if contrast_groups else "")
+        + f". `all` = average across {'contrast-groups' if contrast_groups else 'tested contrasts'}. "
+        "**Bold** = best per column. "
         f"`sig. vs ref` = Holm-corrected one-sided (ref better) macroΔ p-value of "
         f"`{_agg._display_key(ref_key)}` vs that row (blank on the ref's own row); "
         "**bold** = p < 0.05. — = no data.", "",
     ]
     if contrast_groups:
-        lines.append("`all` pooling (contrast-group pooling active):")
+        lines.append("Contrast-group pooling (one column per group; raw sources shown for reference):")
         lines.append("")
         for g, node in contrast_groups.items():
             lines.append(f"- **{g}**:")
@@ -268,15 +282,14 @@ def build_combined_summary(runs_ordered, runs_data, fold_counts, sig_by_metric, 
     for metric, heading, prec in (("dice", "Dice ↑", 4), ("hd95", "HD95 mm ↓", 2)):
         mat = np.full((len(runs_ordered), len(cols)), np.nan)
         for i, key in enumerate(runs_ordered):
-            per_mod = [_agg.cross_fold_class_mean(runs_data[key], metric, c) for c in all_contrasts]
+            if contrast_groups:
+                per_mod = [_agg.resolve_group_value(contrast_groups[c], runs_data[key], metric)
+                          for c in all_contrasts]
+            else:
+                per_mod = [_agg.cross_fold_class_mean(runs_data[key], metric, c) for c in all_contrasts]
             for j, v in enumerate(per_mod):
                 mat[i, j] = v
-            if contrast_groups:
-                grp_vals = [_agg.resolve_group_value(node, runs_data[key], metric)
-                           for node in contrast_groups.values()]
-                finite = [v for v in grp_vals if np.isfinite(v)]
-            else:
-                finite = [v for v in per_mod if np.isfinite(v)]
+            finite = [v for v in per_mod if np.isfinite(v)]
             mat[i, -1] = float(np.mean(finite)) if finite else np.nan
         matrices[metric] = mat
 
