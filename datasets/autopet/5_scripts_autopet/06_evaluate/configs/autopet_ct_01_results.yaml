@@ -1,0 +1,26 @@
+# autopet CT-trained models — per-modality results table (own-contrast + cross-contrast
+# + cross-institution/cross-tracer, all in one pass — see 06_01_evaluate_run.sh header).
+# Single foreground label ("lesion"), so no contrast_groups/per-organ pooling is needed
+# (unlike chaos's multi-organ CT column).
+#
+# ⚠️ TEMPLATE — RUN_IDs below are placeholders. Fill in the real RUN_ID for each method
+# once 04_07_run_all_ct.sh has actually produced them (each 04_0X_train_ct_*.sh prints
+# its RUN_ID; DualVal produces the val000 RUN_ID directly, val100 is its materialized
+# sibling — see CLAUDE.md's DualVal note, both from the SAME run).
+title: "AutoPET CT-trained — cross-contrast + cross-institution results"
+output_dir: "${METRICS_ROOT}/autopet_model/ct"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [ct, pet, psma_ct, psma_pet]
+
+sources:
+  - metrics_dir: "${METRICS_ROOT}/autopet_model/ct"
+
+runs:
+  baseline: TODO_autopet_ct_baseline_<TS>
+  auglab_default: TODO_autopet_ct_auglab_default_<TS>
+  synthseg_noEM: TODO_autopet_ct_synthseg_noEM_<TS>
+  synthseg_EM: TODO_autopet_ct_synthseg_EM_<TS>
+  srcsm: TODO_autopet_ct_srcsm_<TS>
+  auglabAug_v26_6_2_train050_val000: TODO_autopet_ct_auglabAug_v26_6_2_train050_val000_<TS>
+  auglabAug_v26_6_2_train050_val100: TODO_autopet_ct_auglabAug_v26_6_2_train050_val100_<TS>
