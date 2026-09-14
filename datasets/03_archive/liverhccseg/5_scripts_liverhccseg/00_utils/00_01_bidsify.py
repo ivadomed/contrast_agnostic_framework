@@ -35,11 +35,11 @@ Reads:   0_raw_liverhccseg/nifti_and_segms/<TCGA-ID>/<date>/{pre,art,pv,del}.nii
 Writes:  1_BIDS_liverhccseg/liverhccseg/
            dataset_description.json, participants.tsv, case_id_map.json
            sub-liverhccsegNNN/anat/sub-liverhccsegNNN_{phase}.nii.gz (+ .json sidecars)
-           derivatives/manual_masks/sub-liverhccsegNNN/anat/
-             sub-liverhccsegNNN_{phase}_liver-rater1_dseg.nii.gz
-             sub-liverhccsegNNN_{phase}_liver-rater2_dseg.nii.gz
-             sub-liverhccsegNNN_{phase}_tumour-rater1_dseg.nii.gz  (only the 14 with tumour)
-             sub-liverhccsegNNN_{phase}_tumour-rater2_dseg.nii.gz
+           derivatives/labels/sub-liverhccsegNNN/anat/
+             sub-liverhccsegNNN_{phase}_label-liverRater1_seg.nii.gz
+             sub-liverhccsegNNN_{phase}_label-liverRater2_seg.nii.gz
+             sub-liverhccsegNNN_{phase}_label-tumourRater1_seg.nii.gz  (only the 14 with tumour)
+             sub-liverhccsegNNN_{phase}_label-tumourRater2_seg.nii.gz
 
 Usage:  python 00_01_bidsify.py
 """
@@ -54,7 +54,7 @@ import numpy as np
 DATASET_ROOT = Path(__file__).resolve().parents[2]                    # datasets/liverhccseg
 RAW = DATASET_ROOT / "0_raw_liverhccseg" / "nifti_and_segms"
 BIDS_ROOT = DATASET_ROOT / "1_BIDS_liverhccseg" / "liverhccseg"
-DERIV_DIR = BIDS_ROOT / "derivatives" / "manual_masks"
+DERIV_DIR = BIDS_ROOT / "derivatives" / "labels"
 
 PHASES = {"pre": "ce-pre_T1w", "art": "ce-art_T1w", "pv": "ce-pv_T1w", "del": "ce-del_T1w"}
 
@@ -140,11 +140,12 @@ def bidsify() -> None:
                   {"Modality": "MR", "Description": f"{raw_phase} phase, HCC (TCGA-LIHC)"})
 
             for rater in ("rater1", "rater2"):
+                rater_label = rater.capitalize()   # rater1 -> Rater1
                 liver_src = src_dir / f"{rater}_liver.nii.gz"
-                _link(liver_src, DERIV_DIR / sub / "anat" / f"{sub}_{suffix}_liver-{rater}_dseg.nii.gz")
+                _link(liver_src, DERIV_DIR / sub / "anat" / f"{sub}_{suffix}_label-liver{rater_label}_seg.nii.gz")
                 tumor_src = _merge_tumor_instances(src_dir, rater)
                 if tumor_src is not None:
-                    _link(tumor_src, DERIV_DIR / sub / "anat" / f"{sub}_{suffix}_tumour-{rater}_dseg.nii.gz")
+                    _link(tumor_src, DERIV_DIR / sub / "anat" / f"{sub}_{suffix}_label-tumour{rater_label}_seg.nii.gz")
 
         rows.append(f"{sub}\t{case_dir.name}\t{src_dir.name}\t{has_tumour}")
 

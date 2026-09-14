@@ -26,18 +26,27 @@
 # p=0.11 on lld-mmri-hcc alone). liverhccseg scores tumour only too (see that
 # dataset's README) so every OOD/cross-dataset column measures the same construct.
 title: "atlas-liver-hcc T1w models — cross-dataset (cross-contrast) results"
-in_domain_contrast: atlas_t1w
+# in_domain_contrast highlighting removed 2026-08-31: atlas_t1w is no longer its
+# own column (see contrast_groups below) -- it's pooled into "t1w" together with
+# liverhccseg's external cohort, so there's no single column left that's purely
+# in-domain to highlight.
 output_prefix: "04_01_cross_dataset_t1w"
 output_dir: "${PROJECT_ROOT}/datasets/atlas-liver-hcc/8_results_atlas-liver-hcc/02_metrics/atlas_liver_hcc_model/t1w"
 
 column_order:
   - atlas_t1w
-  - lldmmrihcc_t2wi
-  - lldmmrihcc_dwi
   - liverhccseg_ce-pre_T1w
   - liverhccseg_ce-art_T1w
   - liverhccseg_ce-pv_T1w
   - liverhccseg_ce-del_T1w
+  - lldmmrihcc_ce-pre
+  - lldmmrihcc_ce-art
+  - lldmmrihcc_ce-pv
+  - lldmmrihcc_ce-del
+  - lldmmrihcc_inphase
+  - lldmmrihcc_outphase
+  - lldmmrihcc_t2wi
+  - lldmmrihcc_dwi
 
 sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/atlas-liver-hcc/8_results_atlas-liver-hcc/02_metrics/atlas_liver_hcc_model/t1w"
@@ -47,24 +56,76 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/datasets/liverhccseg/8_results_liverhccseg/02_metrics/atlas_liver_hcc_model/t1w"
     column_prefix: "liverhccseg_"
 
-# Significance-testing pooling (significance_from_config.py only -- does NOT affect
-# this file's own aggregate_from_config.py summary table/heatmap, which stays flat
-# per-column). Without this, liverhccseg's 4 phase columns each count as an
-# independently-weighted "contrast" in the OOD macroΔ average, so liverhccseg alone
-# would outvote lld-mmri-hcc's t2wi+dwi 4-to-2 even though it's one dataset testing
-# one contrast family. Pool liverhccseg's 4 phases into a single "same modality,
-# pooled across cases" group; keep t2wi/dwi separate since they're genuinely
-# different contrasts. Disable by removing this block or setting
-# use_contrast_groups: false (falls back to the flat per-column behaviour above).
+# Column/pooling structure (aggregate_from_config.py's contrast_groups machinery
+# -- feeds BOTH significance_from_config.py AND this file's own aggregate_from_
+# config.py summary table's columns/heatmap; each key below is ONE DISPLAYED
+# COLUMN, not a raw source). Without this, liverhccseg's 4 phase columns each
+# count as an independently-weighted "contrast" in the OOD macroΔ average, so
+# liverhccseg alone would outvote lld-mmri-hcc's t2wi+dwi 4-to-2 even though
+# it's one dataset testing one contrast family.
+#
+# 2026-08-31: atlas_t1w (in-domain, same-distribution held-out test) and
+# liverhccseg's 4 CE-T1w phases (external cohort/scanner, same contrast FAMILY)
+# used to print as separate columns -- atlas_t1w alone, "liverhccseg_t1w" pooled
+# alone -- which looked like the same unfixed problem CHAOS's CT columns had.
+# Explicit call: pool them together into one "t1w" column (cases concatenated),
+# matching the CT precedent exactly, even though atlas_t1w is in-domain and
+# liverhccseg is a genuinely different cohort/scanner -- this trades away the
+# in-domain-vs-external-cohort distinction for this column (baseline alone is
+# 72.6 Dice in-domain vs 57.7 on liverhccseg, pre-merge -- a real gap, now
+# blended into one number). If that distinction turns out to matter later,
+# split `t1w` back into two entries instead of re-deriving this from scratch.
+# t2wi/dwi stay separate from t1w and each other -- genuinely different contrasts.
+# Disable by removing this block or setting use_contrast_groups: false.
+#
+# 2026-09-01, revised again: everything above treated all lld-mmri-hcc/liverhccseg
+# CE-T1w-family evidence (art/pv/del/pre) as OOD/cross-contrast material, on par
+# with t2wi/dwi/inphase/outphase. That's wrong -- ATLAS's OWN training cohort is
+# itself a mix of arterial/delayed/post-contrast/pre-contrast/unknown phases (its
+# curators picked whichever phase best showed the tumour per patient), so the
+# model was already exposed to arterial-, delayed-, and pre-contrast CE-T1w
+# during training. Testing on MORE CE-T1w phases -- even from different cohorts
+# -- is a cross-COHORT test, not a cross-CONTRAST one; pooling it into the "OOD
+# cross-contrast generalization" headline claim conflates two different
+# questions. Only t2wi, dwi, inphase, and outphase are genuinely contrasts/
+# sequences the model never saw (inphase/outphase are a native, no-contrast-
+# agent T1w Dixon dual-echo acquisition -- a different pulse sequence from
+# anything in ATLAS's CE-MRI protocol).
+#
+# Fix: merge everything CE-T1w-ish -- atlas_t1w (own) + ce_external (art/pv/del,
+# still pooled-same-phase-across-sources-then-averaged internally, since HCC's
+# diagnostic signature is the phase-to-phase enhancement/washout change) +
+# t1w_external (ce-pre, which has NO actual enhancement despite the "ce-"
+# filename prefix, but is still the same broad training-contrast family) -- into
+# one `CE_T1w_all` group, and mark it `in_domain_group` so
+# significance_from_config.py excludes it from the OOD headline claim (shown
+# instead in the "IND in-domain" block) while `aggregate_from_config.py`'s `all`
+# column and the "ALL contrasts combined" significance block still include it,
+# matching how in_domain_contrast/in_domain_group already work everywhere else
+# in this project. The OOD headline is now genuinely t2wi/dwi/inphase/outphase
+# only -- 4 groups, equal weight, all real cross-contrast evidence.
+# Disable by removing this block or setting use_contrast_groups: false.
+in_domain_group: CE_T1w_all
 contrast_groups:
-  atlas_t1w: atlas_t1w
-  lldmmrihcc_t2wi: lldmmrihcc_t2wi
+  CE_T1w_all:
+    atlas_own: atlas_t1w
+    ce_external:
+      art:
+        - liverhccseg_ce-art_T1w
+        - lldmmrihcc_ce-art
+      pv:
+        - liverhccseg_ce-pv_T1w
+        - lldmmrihcc_ce-pv
+      del:
+        - liverhccseg_ce-del_T1w
+        - lldmmrihcc_ce-del
+    t1w_external:
+      - liverhccseg_ce-pre_T1w
+      - lldmmrihcc_ce-pre
   lldmmrihcc_dwi: lldmmrihcc_dwi
-  liverhccseg_t1w:
-    - liverhccseg_ce-pre_T1w
-    - liverhccseg_ce-art_T1w
-    - liverhccseg_ce-pv_T1w
-    - liverhccseg_ce-del_T1w
+  lldmmrihcc_t2wi: lldmmrihcc_t2wi
+  lldmmrihcc_inphase: lldmmrihcc_inphase
+  lldmmrihcc_outphase: lldmmrihcc_outphase
 
 # Same 6 headline RUN_IDs as atlas-liver-hcc_t1w_01_results.yaml, plus the
 # train050_val100 DualVal mirror (added 2026-08-29 -- predict+evaluate had

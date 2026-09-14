@@ -2,18 +2,20 @@
 """
 Build the nnUNet test-input dirs for the LLD-MMRI-HCC evaluation set.
 
-Two items -- T2w and dwi (the phases genuinely different in contrast mechanism from
-atlas-liver-hcc's CE-T1w training contrast). atlas-liver-hcc's models are
-single-channel, so each volume is fed as channel _0000.
+Eight items, one per BIDS-ified phase (see 00_utils/00_01_bidsify.py): the original
+t2wi/dwi (genuinely different contrast mechanism from atlas-liver-hcc's CE-T1w
+training contrast), plus 6 more added 2026-09-01 (ce-pre/ce-art/ce-pv/ce-del --
+same phase family as liverhccseg -- and inphase/outphase, Dixon-style T1). Same
+157 patients as before; more ITEMS, not more patients. atlas-liver-hcc's models
+are single-channel, so each volume is fed as channel _0000.
 
 Reads:  ../../1_BIDS_lld-mmri-hcc/lld-mmri-hcc/sub-lldhccNNN/anat/  (+ derivatives masks)
-Writes: ../../2_nnUNet_lld-mmri-hcc/raw/imagesTs_t2wi/{case}_0000.nii.gz
-                                        /labelsTs_t2wi/{case}.nii.gz
-                                        /imagesTs_dwi/{case}_0000.nii.gz
-                                        /labelsTs_dwi/{case}.nii.gz
+Writes: ../../2_nnUNet_lld-mmri-hcc/raw/imagesTs_<item>/{case}_0000.nii.gz
+                                        /labelsTs_<item>/{case}.nii.gz
+        (one imagesTs_*/labelsTs_* pair per item in PHASES below)
 
-Case id = participant label without the sub- prefix (e.g. lldhcc000). The "_t2wi"/
-"_dwi" suffixes mirror atlas-liver-hcc's own "_t1w" per-modality test dir naming so
+Case id = participant label without the sub- prefix (e.g. lldhcc000). Item-name
+suffixes mirror atlas-liver-hcc's own "_t1w" per-modality test dir naming so
 05_predict / 06_evaluate stay parallel across datasets.
 
     python 05_00_build_test_inputs.py
@@ -27,7 +29,11 @@ BIDS_ROOT    = DATASET_ROOT / "1_BIDS_lld-mmri-hcc" / "lld-mmri-hcc"
 DERIV_DIR    = BIDS_ROOT / "derivatives" / "manual_masks"
 NNUNET_RAW   = DATASET_ROOT / "2_nnUNet_lld-mmri-hcc" / "raw"
 
-PHASES = {"t2wi": "T2w", "dwi": "dwi"}   # item name -> BIDS suffix
+PHASES = {
+    "t2wi": "T2w", "dwi": "dwi",
+    "ce-pre": "ce-pre_T1w", "ce-art": "ce-art_T1w", "ce-pv": "ce-pv_T1w", "ce-del": "ce-del_T1w",
+    "inphase": "inphase_T1w", "outphase": "outphase_T1w",
+}   # item name -> BIDS suffix
 
 
 def gzip_copy(src: Path, dst: Path) -> None:

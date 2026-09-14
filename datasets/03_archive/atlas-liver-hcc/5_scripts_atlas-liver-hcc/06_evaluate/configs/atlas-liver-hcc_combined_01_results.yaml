@@ -19,8 +19,9 @@ title: "atlas-liver-hcc — T1w (single modality), cross-contrast + cross-datase
 output_dir: "${METRICS_ROOT}/atlas_liver_hcc_model/combined_contrasts"
 output_prefix: "01_results"
 ref: auglabAug_v26_6_2_train050_val000
-column_order: [atlas_t1w, lldmmrihcc_t2wi, lldmmrihcc_dwi, liverhccseg_ce-pre_T1w,
-               liverhccseg_ce-art_T1w, liverhccseg_ce-pv_T1w, liverhccseg_ce-del_T1w]
+column_order: [atlas_t1w, liverhccseg_ce-pre_T1w, liverhccseg_ce-art_T1w, liverhccseg_ce-pv_T1w,
+               liverhccseg_ce-del_T1w, lldmmrihcc_ce-pre, lldmmrihcc_ce-art, lldmmrihcc_ce-pv,
+               lldmmrihcc_ce-del, lldmmrihcc_inphase, lldmmrihcc_outphase, lldmmrihcc_t2wi, lldmmrihcc_dwi]
 
 modalities:
   - name: t1w
@@ -40,17 +41,37 @@ modalities:
       auglabAug_v26_6_2_train050_val000: atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val000_20260804_062605
       auglabAug_v26_6_2_train050_val100: atlas-liver-hcc_t1w_auglabAug_v26_6_2_train050_val100_20260804_062605
 
-# Significance/"all"-column pooling (aggregate_from_config.py's contrast_groups
-# machinery), copied verbatim from atlas-liver-hcc_cross_dataset_t1w_01_results.yaml:
-# liverhccseg's 4 CE-T1w phase columns pooled into one vote (cases concatenated,
-# same modality family) so it doesn't outvote lld-mmri-hcc's t2wi+dwi 2 votes.
+# Column/pooling structure (aggregate_from_config.py's contrast_groups machinery),
+# copied verbatim from atlas-liver-hcc_cross_dataset_t1w_01_results.yaml -- see
+# that file's header comment for the full revision history and rationale.
+# Current design: atlas_t1w + ce_external (art/pv/del) + t1w_external (ce-pre)
+# are ALL the same broad CE-T1w training-contrast family -- ATLAS's own cohort
+# mixes arterial/delayed/pre-contrast/unknown phases, so external CE-T1w
+# evidence (even from other cohorts) is a cross-COHORT test, not a cross-
+# CONTRAST one. Merged into one `CE_T1w_all` group. `in_domain_group` is set
+# for consistency with the cross_dataset config, but this script
+# (combined_modality_summary.py) has no IND/OOD split at all -- its `all`
+# column and inline "sig. vs ref" always average every top-level group equally,
+# same as before; the field is documentation here, not functional.
 # Disable by removing this block or setting use_contrast_groups: false.
+in_domain_group: CE_T1w_all
 contrast_groups:
-  atlas_t1w: atlas_t1w
-  lldmmrihcc_t2wi: lldmmrihcc_t2wi
+  CE_T1w_all:
+    atlas_own: atlas_t1w
+    ce_external:
+      art:
+        - liverhccseg_ce-art_T1w
+        - lldmmrihcc_ce-art
+      pv:
+        - liverhccseg_ce-pv_T1w
+        - lldmmrihcc_ce-pv
+      del:
+        - liverhccseg_ce-del_T1w
+        - lldmmrihcc_ce-del
+    t1w_external:
+      - liverhccseg_ce-pre_T1w
+      - lldmmrihcc_ce-pre
   lldmmrihcc_dwi: lldmmrihcc_dwi
-  liverhccseg_t1w:
-    - liverhccseg_ce-pre_T1w
-    - liverhccseg_ce-art_T1w
-    - liverhccseg_ce-pv_T1w
-    - liverhccseg_ce-del_T1w
+  lldmmrihcc_t2wi: lldmmrihcc_t2wi
+  lldmmrihcc_inphase: lldmmrihcc_inphase
+  lldmmrihcc_outphase: lldmmrihcc_outphase

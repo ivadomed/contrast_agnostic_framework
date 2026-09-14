@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 BIDSify the ATLAS challenge raw archive (0_raw_atlas-liver-hcc/train/) →
-1_BIDS_atlas-liver-hcc/atlas-liver-hcc/.
+1_BIDS_atlas-liver-hcc/hcc-liver-atlas-t1w/.
 
 Pure directory-layout consistency with the other datasets — nothing in this project's
 pipeline reads from this tree; 02_00_convert.py reads directly from 0_raw (see
@@ -19,11 +19,11 @@ metadata, not as separate BIDS series -- see patient_info_train.json). Segmentat
 
 Reads:   0_raw_atlas-liver-hcc/train/{imagesTr,labelsTr}/{im,lb}{i}.nii.gz
          0_raw_atlas-liver-hcc/train/patient_info_train.json
-Writes:  1_BIDS_atlas-liver-hcc/atlas-liver-hcc/
+Writes:  1_BIDS_atlas-liver-hcc/hcc-liver-atlas-t1w/
            dataset_description.json, participants.tsv
            sub-atlasXXX/anat/sub-atlasXXX_T1w.nii.gz (+ .json sidecar)
-           derivatives/manual_masks/dataset_description.json
-           derivatives/manual_masks/sub-atlasXXX/anat/sub-atlasXXX_T1w_dseg.nii.gz (+ .json)
+           derivatives/labels/dataset_description.json
+           derivatives/labels/sub-atlasXXX/anat/sub-atlasXXX_T1w_label-liverTumor_dseg.nii.gz (+ .json)
 
 Usage:  python 00_01_bidsify.py
 """
@@ -34,8 +34,8 @@ from pathlib import Path
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]                    # datasets/atlas-liver-hcc
 RAW = DATASET_ROOT / "0_raw_atlas-liver-hcc" / "train"
-BIDS_ROOT = DATASET_ROOT / "1_BIDS_atlas-liver-hcc" / "atlas-liver-hcc"
-DERIV_DIR = BIDS_ROOT / "derivatives" / "manual_masks"
+BIDS_ROOT = DATASET_ROOT / "1_BIDS_atlas-liver-hcc" / "hcc-liver-atlas-t1w"
+DERIV_DIR = BIDS_ROOT / "derivatives" / "labels"
 
 N_CASES = 60
 
@@ -73,6 +73,7 @@ def bidsify() -> None:
         "BIDSVersion": "1.9.0",
         "DatasetType": "derivative",
         "GeneratedBy": [{"Name": "Quinton et al. (2023) expert annotation"}],
+        "LabelMap": {"background": 0, "liver": 1, "tumour": 2},
     })
 
     patient_info = json.loads((RAW / "patient_info_train.json").read_text())
@@ -93,8 +94,8 @@ def bidsify() -> None:
             "AcquisitionDate": info.get("date"),
         })
         _link(RAW / "labelsTr" / f"lb{i}.nii.gz",
-              DERIV_DIR / sub / "anat" / f"{sub}_T1w_dseg.nii.gz")
-        _json(DERIV_DIR / sub / "anat" / f"{sub}_T1w_dseg.json", {
+              DERIV_DIR / sub / "anat" / f"{sub}_T1w_label-liverTumor_dseg.nii.gz")
+        _json(DERIV_DIR / sub / "anat" / f"{sub}_T1w_label-liverTumor_dseg.json", {
             "Manual": True,
             "Labels": {"1": "liver", "2": "tumour"},
         })

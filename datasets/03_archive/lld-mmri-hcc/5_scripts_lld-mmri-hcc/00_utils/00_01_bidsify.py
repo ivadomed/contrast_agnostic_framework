@@ -5,11 +5,23 @@ BIDSify the LLD-MMRI-MedSAM2 HCC subset (0_raw_lld-mmri-hcc/LLD-MMRI-MedSAM2/) -
 
 157 hepatocellular-carcinoma patients (category 6 in LLD_MMRI_Annotation_full.json,
 filtered from the full 498-patient/7-lesion-type LLD-MMRI dataset -- see
-0_raw_lld-mmri-hcc/hcc_patient_ids.txt), T2WI + DWI phases only (the two phases
-genuinely different in contrast mechanism from atlas-liver-hcc's CE-T1w -- this
-dataset exists specifically as a cross-contrast eval-only test set for atlas-liver-hcc
-models, see 00_utils/env.sh). Image/label files are HARD-LINKED. Orientation/spacing
-NOT touched.
+0_raw_lld-mmri-hcc/hcc_patient_ids.txt). Originally T2WI + DWI only (the two phases
+genuinely different in contrast mechanism from atlas-liver-hcc's CE-T1w training
+contrast). Extended 2026-09-01 to all 8 phases the source repo actually provides
+masks for -- the source (wanglab/LLD-MMRI-MedSAM2) always had C-pre/C+A/C+V/
+C+Delay (the CE-T1w-family phases -- same phase structure as liverhccseg's
+pre/art/pv/del) and InPhase/OutPhase (T1 Dixon-style, not yet used anywhere else
+in this project), just never downloaded originally. Same 157 patients, same mask
+provenance -- this is "more test items from an already-vetted source", not a new
+independent cohort; see project memory for why a genuinely new independent HCC-MRI
+cohort could not be found (everything else is either already in use, CT-only, or
+lacks tumor masks). Image/label files are HARD-LINKED. Orientation/spacing NOT
+touched by this script. The original T2WI/DWI phases were verified 100% LPS-
+consistent at onboarding (no reorient script exists for this dataset because none
+was needed) -- do NOT assume the same holds for the 6 new phases just because
+they're the same source repo; re-verify nib.aff2axcodes on every case of every
+new phase before trusting anything downstream (this project has hit the opposite
+assumption twice already -- see feedback_verify_orientation_on_onboarding memory).
 
 Subject ids: sequential lldhcc000..lldhcc156 (raw patient ids mix hyphenated/
 non-hyphenated formats -- MR-400851 vs MR102385 -- and BIDS entity labels must be
@@ -42,7 +54,12 @@ RAW = DATASET_ROOT / "0_raw_lld-mmri-hcc" / "LLD-MMRI-MedSAM2"
 BIDS_ROOT = DATASET_ROOT / "1_BIDS_lld-mmri-hcc" / "lld-mmri-hcc"
 DERIV_DIR = BIDS_ROOT / "derivatives" / "manual_masks"
 
-PHASES = {"T2WI": "T2w", "DWI": "dwi"}   # raw phase name -> BIDS suffix
+PHASES = {
+    "T2WI": "T2w", "DWI": "dwi",
+    "C-pre": "ce-pre_T1w", "C+A": "ce-art_T1w", "C+V": "ce-pv_T1w", "C+Delay": "ce-del_T1w",
+    "InPhase": "inphase_T1w", "OutPhase": "outphase_T1w",
+}   # raw phase name -> BIDS suffix. ce-* phases match liverhccseg's own
+    # pre/art/pv/del naming exactly (same underlying phase structure).
 
 
 def _link(src: Path, dst: Path) -> None:
@@ -72,7 +89,8 @@ def bidsify() -> None:
 
     # patient id -> lesion-instance suffix (varies per patient, e.g. MR11115 -> "6")
     # discovered from the actual downloaded filenames.
-    inst_re = re.compile(r"^([A-Za-z0-9\-]+)_([0-9]+)_(T2WI|DWI)_0000\.nii\.gz$")
+    inst_re = re.compile(
+        r"^([A-Za-z0-9\-]+)_([0-9]+)_(T2WI|DWI|C-pre|C\+A|C\+V|C\+Delay|InPhase|OutPhase)_0000\.nii\.gz$")
     pid_to_inst = {}
     for f in (RAW / "images").glob("*.nii.gz"):
         m = inst_re.match(f.name)
@@ -84,7 +102,8 @@ def bidsify() -> None:
 
     _json(BIDS_ROOT / "dataset_description.json", {
         "Name": "LLD-MMRI-HCC -- hepatocellular carcinoma subset of LLD-MMRI-MedSAM2 "
-                "(T2WI + DWI phases), cross-contrast eval-only set for atlas-liver-hcc",
+                "(8 phases: T2WI/DWI/C-pre/C+A/C+V/C+Delay/InPhase/OutPhase), "
+                "cross-contrast eval-only set for atlas-liver-hcc",
         "BIDSVersion": "1.9.0",
         "License": "CC BY-NC 4.0 (research use only, no commercial use)",
         "Authors": ["Lou et al. (2025, LLD-MMRI)", "Ma, Yang et al. (2025, MedSAM2 annotation)"],
