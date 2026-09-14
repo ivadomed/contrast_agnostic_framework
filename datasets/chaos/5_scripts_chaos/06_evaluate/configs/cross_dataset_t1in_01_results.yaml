@@ -7,10 +7,8 @@ column_order:
   - chaos_t1in
   - chaos_t1out
   - chaos_t2spir
-  - chaos_ct_liver
-  - amos_ct
-  - amos_mri
-  - sliver07_ct_liver
+  - t2w
+  - CT
 
 sources:
   # kidney-t2w EXCLUDED 2026-08-01: coronal acquisition, its through-plane
@@ -40,6 +38,15 @@ sources:
       ct: chaos_ct_liver     # chaos CT GT only has liver
   - metrics_dir: "${PROJECT_ROOT}/datasets/amos/8_results_amos/02_metrics/chaos_model/t1in"
     column_prefix: "amos_"
+    # AMOS's "mri" column is one real contrast, not a generic modality bucket --
+    # datasets/amos/5_scripts_amos/00_utils/00_01_bidsify.py bidsifies it as
+    # `_T2w.nii.gz`. Renamed to `t2w` (2026-08-31) so it reads as the actual
+    # contrast it is, not a dataset-provenance label. Kept as its OWN column
+    # rather than pooled into chaos_t2spir: T2spir is a specific fat-suppressed
+    # sequence, plain T2w is a different acquisition -- same reasoning that
+    # already keeps chaos_t1in/chaos_t1out apart instead of merging them.
+    column_rename:
+      mri: t2w
   - metrics_dir: "${PROJECT_ROOT}/datasets/sliver07/8_results_sliver07/02_metrics/chaos_model/t1in"
     column_rename:
       ct: sliver07_ct_liver  # sliver07 GT only has liver
@@ -48,9 +55,12 @@ sources:
   # ~31% Dice, above every chaos model's US), so its numbers don't belong in the
   # cross-dataset comparison. TRUSTED's own results live in datasets/trusted/.
 
-# Significance-testing pooling (significance_from_config.py only -- does NOT touch
-# this file's own aggregate_from_config.py summary table/heatmap, which stays flat
-# per-column). Without this, "CT" gets 3 independently-weighted OOD votes
+# contrast_groups pooling -- feeds BOTH significance_from_config.py AND this file's
+# own aggregate_from_config.py summary table's "all" column/heatmap (corrected
+# 2026-08-31: this comment previously and incorrectly claimed the table/heatmap
+# stayed flat -- it does not; build_summary() reads this same block). Individual
+# per-column cells stay unpooled (raw, for transparency); only "all" is pooled.
+# Without this, "CT" gets 3 independently-weighted OOD votes
 # (chaos_ct_liver, amos_ct, sliver07_ct_liver) against only 1 vote each for
 # t1out/t2spir/amos_mri, AND amos_ct's own vote already silently blends 4 organs
 # (liver+2 kidneys+spleen) into one number. Fix: pool CT into ONE top-level group
@@ -71,7 +81,7 @@ contrast_groups:
   chaos_t1in: chaos_t1in
   chaos_t1out: chaos_t1out
   chaos_t2spir: chaos_t2spir
-  amos_mri: amos_mri
+  t2w: t2w
   CT:
     liver:
       - chaos_ct_liver

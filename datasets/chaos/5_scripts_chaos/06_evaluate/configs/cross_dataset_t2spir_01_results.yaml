@@ -7,10 +7,8 @@ column_order:
   - chaos_t2spir
   - chaos_t1in
   - chaos_t1out
-  - chaos_ct_liver
-  - amos_ct
-  - amos_mri
-  - sliver07_ct_liver
+  - t2w
+  - CT
 
 sources:
   # kidney-t2w EXCLUDED 2026-08-01: coronal acquisition, its through-plane
@@ -40,6 +38,11 @@ sources:
       ct: chaos_ct_liver     # chaos CT GT only has liver
   - metrics_dir: "${PROJECT_ROOT}/datasets/amos/8_results_amos/02_metrics/chaos_model/t2spir"
     column_prefix: "amos_"
+    # AMOS's "mri" column is one real contrast (T2w, per
+    # datasets/amos/5_scripts_amos/00_utils/00_01_bidsify.py), not a generic
+    # modality bucket -- see cross_dataset_t1in_01_results.yaml's fuller note.
+    column_rename:
+      mri: t2w
   - metrics_dir: "${PROJECT_ROOT}/datasets/sliver07/8_results_sliver07/02_metrics/chaos_model/t2spir"
     column_rename:
       ct: sliver07_ct_liver  # sliver07 GT only has liver
@@ -55,7 +58,7 @@ contrast_groups:
   chaos_t2spir: chaos_t2spir
   chaos_t1in: chaos_t1in
   chaos_t1out: chaos_t1out
-  amos_mri: amos_mri
+  t2w: t2w
   CT:
     liver:
       - chaos_ct_liver
