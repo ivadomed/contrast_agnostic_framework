@@ -1,0 +1,38 @@
+# totalseg-pelvic — combined training modalities (CT + MRI pooled), the shape the
+# cross-DATASET meta_task_heatmap consumes (scripts/evaluate/meta_task_heatmap.yaml), same
+# pattern as chaos_combined_01_results.yaml / autopet_combined_01_results.yaml (two real
+# training modalities, pooled 3+3 folds = one equally-weighted 6-fold mean per method via
+# cross_fold_class_mean).
+#
+# ⚠️ TEMPLATE — fill in real RUN_IDs in totalseg-pelvic_ct_01_results.yaml /
+# totalseg-pelvic_mri_01_results.yaml first; this config reads the SAME run ids via the
+# `runs:` map per modality below (kept in sync by hand for now, same as autopet's).
+title: "totalseg-pelvic — combined (CT + MRI training modalities) results"
+output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [ct, mri]
+
+modalities:
+  - name: ct
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
+    runs:
+      baseline: totalseg-pelvic_ct_baseline_YYYYMMDD_HHMMSS
+      auglab_default: totalseg-pelvic_ct_auglab_default_YYYYMMDD_HHMMSS
+      synthseg_noEM: totalseg-pelvic_ct_synthseg_noEM_YYYYMMDD_HHMMSS
+      synthseg_EM: totalseg-pelvic_ct_synthseg_EM_YYYYMMDD_HHMMSS
+      srcsm: totalseg-pelvic_ct_srcsm_YYYYMMDD_HHMMSS
+      auglabAug_v26_6_2_train050_val000: totalseg-pelvic_ct_auglabAug_v26_6_2_train050_val000_YYYYMMDD_HHMMSS
+      auglabAug_v26_6_2_train050_val100: totalseg-pelvic_ct_auglabAug_v26_6_2_train050_val100_YYYYMMDD_HHMMSS
+  - name: mri
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
+    runs:
+      baseline: totalseg-pelvic_mri_baseline_YYYYMMDD_HHMMSS
+      auglab_default: totalseg-pelvic_mri_auglab_default_YYYYMMDD_HHMMSS
+      synthseg_noEM: totalseg-pelvic_mri_synthseg_noEM_YYYYMMDD_HHMMSS
+      synthseg_EM: totalseg-pelvic_mri_synthseg_EM_YYYYMMDD_HHMMSS
+      srcsm: totalseg-pelvic_mri_srcsm_YYYYMMDD_HHMMSS
+      auglabAug_v26_6_2_train050_val000: totalseg-pelvic_mri_auglabAug_v26_6_2_train050_val000_YYYYMMDD_HHMMSS
+      auglabAug_v26_6_2_train050_val100: totalseg-pelvic_mri_auglabAug_v26_6_2_train050_val100_YYYYMMDD_HHMMSS

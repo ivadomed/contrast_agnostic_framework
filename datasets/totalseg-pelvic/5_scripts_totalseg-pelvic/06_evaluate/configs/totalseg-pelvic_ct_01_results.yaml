@@ -1,0 +1,26 @@
+# totalseg-pelvic CT-trained models — per-modality results table (own-contrast +
+# cross-contrast). 10 pelvic/hip labels pooled into the "all" column by the shared
+# aggregator (no contrast_groups pooling needed — single coherent anatomical region, not
+# a multi-organ table like chaos's).
+#
+# ⚠️ TEMPLATE — RUN_IDs below are placeholders. Fill in the real RUN_ID for each method
+# once 04_07_run_all_ct.sh has actually produced them (each 04_0X_train_ct_*.sh prints its
+# RUN_ID; DualVal produces the val000 RUN_ID directly, val100 is its materialized sibling
+# — see CLAUDE.md's DualVal note, both from the SAME run).
+title: "totalseg-pelvic CT-trained — cross-contrast results"
+output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [ct, mri]
+
+sources:
+  - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
+
+runs:
+  baseline: totalseg-pelvic_ct_baseline_YYYYMMDD_HHMMSS
+  auglab_default: totalseg-pelvic_ct_auglab_default_YYYYMMDD_HHMMSS
+  synthseg_noEM: totalseg-pelvic_ct_synthseg_noEM_YYYYMMDD_HHMMSS
+  synthseg_EM: totalseg-pelvic_ct_synthseg_EM_YYYYMMDD_HHMMSS
+  srcsm: totalseg-pelvic_ct_srcsm_YYYYMMDD_HHMMSS
+  auglabAug_v26_6_2_train050_val000: totalseg-pelvic_ct_auglabAug_v26_6_2_train050_val000_YYYYMMDD_HHMMSS
+  auglabAug_v26_6_2_train050_val100: totalseg-pelvic_ct_auglabAug_v26_6_2_train050_val100_YYYYMMDD_HHMMSS

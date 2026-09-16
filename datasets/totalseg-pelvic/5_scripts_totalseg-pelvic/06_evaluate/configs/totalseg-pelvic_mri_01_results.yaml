@@ -1,0 +1,22 @@
+# totalseg-pelvic MRI-trained models — per-modality results table (own-contrast +
+# cross-contrast). See totalseg-pelvic_ct_01_results.yaml's header for the shared notes.
+#
+# ⚠️ TEMPLATE — RUN_IDs below are placeholders. Fill in the real RUN_ID for each method
+# once 04_14_run_all_mri.sh has actually produced them.
+title: "totalseg-pelvic MRI-trained — cross-contrast results"
+output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [ct, mri]
+
+sources:
+  - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
+
+runs:
+  baseline: totalseg-pelvic_mri_baseline_YYYYMMDD_HHMMSS
+  auglab_default: totalseg-pelvic_mri_auglab_default_YYYYMMDD_HHMMSS
+  synthseg_noEM: totalseg-pelvic_mri_synthseg_noEM_YYYYMMDD_HHMMSS
+  synthseg_EM: totalseg-pelvic_mri_synthseg_EM_YYYYMMDD_HHMMSS
+  srcsm: totalseg-pelvic_mri_srcsm_YYYYMMDD_HHMMSS
+  auglabAug_v26_6_2_train050_val000: totalseg-pelvic_mri_auglabAug_v26_6_2_train050_val000_YYYYMMDD_HHMMSS
+  auglabAug_v26_6_2_train050_val100: totalseg-pelvic_mri_auglabAug_v26_6_2_train050_val100_YYYYMMDD_HHMMSS
