@@ -106,9 +106,35 @@ def _to_gzip_bytes(img) -> bytes:
     return gzip.compress(buf.getvalue())
 
 
+def _orthonormalize_affine(affine):
+    """Snap the affine's direction-cosine (rotation) part to the nearest true
+    orthonormal matrix via SVD polar decomposition, preserving per-axis voxel spacing
+    and the translation column exactly. TotalSegmentator's source NIfTI affines carry
+    small (~1e-4, occasionally ~1e-2) floating-point non-orthonormality baked in from
+    the original scanner/PACS pipeline -- nibabel tolerates this silently (orientation
+    checks via nib.aff2axcodes still resolve fine), but SimpleITK's strict NIfTI reader
+    (used by nnU-Net's preprocessing) rejects it outright: "ITK only supports
+    orthonormal direction cosines" -- this crashed MRI preprocessing on case s0104
+    (err=0.0102) even though CT/MRI's own earlier verification pass (orientation +
+    content, nibabel-based) reported zero issues, because that check never tested
+    orthonormality. Correcting here (once, upstream of both nnUNet conversion paths)
+    fixes it at the source rather than patching around it downstream."""
+    import numpy as np
+    affine = affine.copy()
+    rot_scale = affine[:3, :3]
+    scales = np.linalg.norm(rot_scale, axis=0)
+    R = rot_scale / scales
+    U, _, Vt = np.linalg.svd(R)
+    affine[:3, :3] = (U @ Vt) * scales
+    return affine
+
+
 def _reorient_canonical(img):
     import nibabel as nib
-    return nib.as_closest_canonical(img)
+    import numpy as np
+    img = nib.as_closest_canonical(img)
+    fixed_affine = _orthonormalize_affine(img.affine)
+    return nib.Nifti1Image(np.asarray(img.dataobj), fixed_affine, img.header)
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -192,8 +218,13 @@ def _bidsify_case(zf: zipfile.ZipFile, modality: str, case: str) -> str:
     existing = _existing_image_bytes(modality, case)
     if existing is not None:
         # Already-fetched nnUNet image bytes are gzip-compressed nifti, same as what
-        # _load_nifti_bytes expects.
-        image_img = _load_nifti_bytes(existing)
+        # _load_nifti_bytes expects. Still orthonormalize -- images converted before the
+        # affine fix was added carry the same non-orthonormal direction cosines as
+        # anything freshly fetched, since this reuse path predates the fix.
+        import nibabel as nib
+        import numpy as np
+        img = _load_nifti_bytes(existing)
+        image_img = nib.Nifti1Image(np.asarray(img.dataobj), _orthonormalize_affine(img.affine), img.header)
     else:
         with zf.open(img_member) as src:
             image_img = _load_nifti_bytes(src.read())
