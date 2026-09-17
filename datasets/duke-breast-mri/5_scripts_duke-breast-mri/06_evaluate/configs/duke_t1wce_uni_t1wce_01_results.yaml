@@ -1,0 +1,23 @@
+# duke-breast-mri (291 cases, UNILATERAL crop) -- ISPY2 T1WCE-trained models.
+# FOV-matched sibling of duke_t1wce_01_results.yaml: duke's t1wce test images
+# are ~100% bilateral-width, while I-SPY2's own t1wce training pool is only
+# 18% bilateral (82% unilateral-cropped) -- see CLAUDE.md's "Breast task"
+# section. 02_nnunet/02_03_derive_unilateral_crop.py crops each duke case to
+# the lesion-side half (axis 0 only), matching the dominant training FOV,
+# applied uniformly across all 6 methods (same comparability rule as
+# everything else in this project) -- not a per-method or cherry-picked fix.
+# Compare directly against duke_t1wce_01_results.yaml's numbers (same 291
+# patients, same masks-derived-from-same-mask, only the FOV differs) to see
+# whether the FOV mismatch, not the recipe, explains any of the gap.
+title: "duke-breast-mri (291 cases, unilateral crop) -- ISPY2 T1WCE-trained models"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce/t1wce_uni"
+output_prefix: "01_results"
+sig_ref: "ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655"
+
+runs:
+  - ispy2_t1wce_baseline_20260905_163655
+  - ispy2_t1wce_auglab_default_20260905_163655
+  - ispy2_t1wce_synthseg_noEM_20260905_163655
+  - ispy2_t1wce_synthseg_EM_20260905_163655
+  - ispy2_t1wce_srcsm_20260905_163655
+  - ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
