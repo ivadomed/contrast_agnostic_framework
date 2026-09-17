@@ -1,0 +1,26 @@
+# ispy2 T2W-TRAINED model -- own held-out test (in-domain t2w + own
+# cross-contrast t1wce) plus duke-breast-mri as the external cross-dataset OOD
+# companion (t2w + precontrast arms). Same sources shape as
+# ispy2_combined_01_results.yaml's t2w modality block, adapted for
+# significance_from_config.py. Consumed by 06_06_significance_from_config.sh.
+title: "I-SPY2 T2W-TRAINED -- significance (own + duke-breast-mri cross-dataset)"
+in_domain_contrast: t2w
+output_prefix: "01_results"
+output_dir: "${PROJECT_ROOT}/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model/t2w"
+
+column_order: [t2w, t1wce, duke_t2w, duke_precontrast]
+
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model/t2w"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w"
+    column_prefix: "duke_"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/precontrast"
+    column_prefix: "duke_"
+
+runs:
+  - ispy2_t2w_baseline_20260905_163655
+  - ispy2_t2w_auglab_default_20260905_163655
+  - ispy2_t2w_synthseg_noEM_20260905_163655
+  - ispy2_t2w_synthseg_EM_20260905_163655
+  - ispy2_t2w_srcsm_20260905_163655
+  - ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

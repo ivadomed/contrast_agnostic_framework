@@ -1,0 +1,27 @@
+# ispy2 T1WCE-TRAINED model -- own held-out test (in-domain t1wce + own
+# cross-contrast t2w) plus duke-breast-mri as the external cross-dataset OOD
+# companion (t1wce + precontrast arms). Same sources shape as
+# ispy2_combined_01_results.yaml's t1wce modality block, adapted for
+# significance_from_config.py (paired sign-flip macroΔ test, OOD/IND split via
+# in_domain_contrast). Consumed by 06_06_significance_from_config.sh.
+title: "I-SPY2 T1WCE-TRAINED -- significance (own + duke-breast-mri cross-dataset)"
+in_domain_contrast: t1wce
+output_prefix: "01_results"
+output_dir: "${PROJECT_ROOT}/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model/t1wce"
+
+column_order: [t1wce, t2w, duke_t1wce, duke_precontrast]
+
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model/t1wce"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce"
+    column_prefix: "duke_"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/precontrast"
+    column_prefix: "duke_"
+
+runs:
+  - ispy2_t1wce_baseline_20260905_163655
+  - ispy2_t1wce_auglab_default_20260905_163655
+  - ispy2_t1wce_synthseg_noEM_20260905_163655
+  - ispy2_t1wce_synthseg_EM_20260905_163655
+  - ispy2_t1wce_srcsm_20260905_163655
+  - ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
