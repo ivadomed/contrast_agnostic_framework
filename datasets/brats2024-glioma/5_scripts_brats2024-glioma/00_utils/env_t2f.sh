@@ -10,7 +10,19 @@
 # this exact string.
 
 export TRAINING_CONTRAST="t2f"
-export nnUNet_results="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2f/nnUNet"
+# Guarded (${nnUNet_results:-...}), matching env.sh's own t1n default — NOT an
+# unconditional assignment. On a plain Vulcan/Killarney shell nnUNet_results is
+# unset when this file is first sourced, so the guard has no effect and this
+# still resolves to the usual t2f path. On TamIA, scripts/cluster/tamia_env.sh
+# is sourced AFTER this file (per that file's own contract) and exports its own
+# scratch-resident nnUNet_results — but every 04_train wrapper re-sources THIS
+# file at its own top, so an unconditional assignment here would silently clobber
+# tamia_env.sh's override back to the /project path on every wrapper invocation.
+# Hit for real 2026-09-17: a baseline + v26_6_2_train050_val100 TamIA pack wrote
+# checkpoints to /project (tight file-count quota) instead of /scratch before
+# being caught and cancelled. env_t2w.sh had the identical unconditional-assignment
+# bug (never triggered because t2w baseline/v26_6_2 predate TamIA); fixed there too.
+export nnUNet_results="${nnUNet_results:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2f/nnUNet}"
 
 # T2f training jobs run for 2500 epochs; the longest auglab experiments take ~90s/epoch
 # (~62h total). Default to a ~7-day limit, but allow a caller to override (e.g. a resume
