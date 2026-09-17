@@ -18,21 +18,27 @@ modalities:
     sources:
       - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
     runs:
-      baseline: totalseg-pelvic_ct_baseline_YYYYMMDD_HHMMSS
-      auglab_default: totalseg-pelvic_ct_auglab_default_YYYYMMDD_HHMMSS
-      synthseg_noEM: totalseg-pelvic_ct_synthseg_noEM_YYYYMMDD_HHMMSS
-      synthseg_EM: totalseg-pelvic_ct_synthseg_EM_YYYYMMDD_HHMMSS
-      srcsm: totalseg-pelvic_ct_srcsm_YYYYMMDD_HHMMSS
-      auglabAug_v26_6_2_train050_val000: totalseg-pelvic_ct_auglabAug_v26_6_2_train050_val000_YYYYMMDD_HHMMSS
-      auglabAug_v26_6_2_train050_val100: totalseg-pelvic_ct_auglabAug_v26_6_2_train050_val100_YYYYMMDD_HHMMSS
+      baseline: ct_baseline_20260916_072434
+      auglab_default: ct_auglab_default_20260916_072434
+      synthseg_noEM: ct_synthseg_noEM_20260916_072434
+      synthseg_EM: ct_synthseg_EM_20260916_072434
+      srcsm: ct_srcsm_20260916_072434
+      auglabAug_v26_6_2_train050_val000: ct_ours_20260916_072434
+      baseline_kmeans: ct_baseline_kmeans_20260916_072434
+      baseline_kmeans_label_remap: ct_baseline_kmeans_label_remap_20260916_072434
+      baseline_kmeans_label_remap_voronoi: ct_baseline_kmeans_label_remap_voronoi_20260916_072434
+      v26_6_2_train050_val100: ct_v26_6_2_train050_val100_20260916_072434
   - name: mri
     sources:
       - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
     runs:
-      baseline: totalseg-pelvic_mri_baseline_YYYYMMDD_HHMMSS
-      auglab_default: totalseg-pelvic_mri_auglab_default_YYYYMMDD_HHMMSS
-      synthseg_noEM: totalseg-pelvic_mri_synthseg_noEM_YYYYMMDD_HHMMSS
-      synthseg_EM: totalseg-pelvic_mri_synthseg_EM_YYYYMMDD_HHMMSS
-      srcsm: totalseg-pelvic_mri_srcsm_YYYYMMDD_HHMMSS
-      auglabAug_v26_6_2_train050_val000: totalseg-pelvic_mri_auglabAug_v26_6_2_train050_val000_YYYYMMDD_HHMMSS
-      auglabAug_v26_6_2_train050_val100: totalseg-pelvic_mri_auglabAug_v26_6_2_train050_val100_YYYYMMDD_HHMMSS
+      baseline: mri_baseline_20260916_072453
+      auglab_default: mri_auglab_default_20260916_072453
+      synthseg_noEM: mri_synthseg_noEM_20260916_072453
+      synthseg_EM: mri_synthseg_EM_20260916_072453
+      srcsm: mri_srcsm_20260916_072453
+      auglabAug_v26_6_2_train050_val000: mri_ours_20260916_072453
+      baseline_kmeans: mri_baseline_kmeans_20260916_072453
+      baseline_kmeans_label_remap: mri_baseline_kmeans_label_remap_20260916_072453
+      baseline_kmeans_label_remap_voronoi: mri_baseline_kmeans_label_remap_voronoi_20260916_072453
+      v26_6_2_train050_val100: mri_v26_6_2_train050_val100_20260916_072453

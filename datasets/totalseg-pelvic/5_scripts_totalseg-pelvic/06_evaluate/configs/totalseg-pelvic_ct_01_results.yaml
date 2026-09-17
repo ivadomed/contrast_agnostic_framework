@@ -10,17 +10,30 @@
 title: "totalseg-pelvic CT-trained — cross-contrast results"
 output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
 output_prefix: "01_results"
-ref: auglabAug_v26_6_2_train050_val000
+# Our RUN_IDs are short (e.g. "ct_ours_...") and don't embed the full descriptive method
+# name the way chaos's do (e.g. "chaos_t1in_auglabAug_v26_6_2_train050_val000_...") — the
+# REF_SUBSTR auto-detection can't match, so sig_ref is set explicitly (per CLAUDE.md's own
+# override instructions for exactly this case).
+sig_ref: ct_ours_20260916_072434
 column_order: [ct, mri]
 
 sources:
   - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
 
+# NOTE 2026-09-16: `runs:` here is a LIST of real full RUN_ID strings (the schema
+# aggregate_from_config.py/significance_from_config.py actually expect — confirmed against
+# chaos's real configs), NOT the {method: run_id} dict schema combined_modality_summary.py
+# uses. auglabAug_v26_6_2_train050_val100 intentionally omitted for now — the DualVal
+# trainer's val100 checkpoint mirror needs its own dedicated predict pass
+# (05_08_predict_ct_auglabAug_v26_6_2_val100.sh), which hasn't been run yet.
 runs:
-  baseline: totalseg-pelvic_ct_baseline_YYYYMMDD_HHMMSS
-  auglab_default: totalseg-pelvic_ct_auglab_default_YYYYMMDD_HHMMSS
-  synthseg_noEM: totalseg-pelvic_ct_synthseg_noEM_YYYYMMDD_HHMMSS
-  synthseg_EM: totalseg-pelvic_ct_synthseg_EM_YYYYMMDD_HHMMSS
-  srcsm: totalseg-pelvic_ct_srcsm_YYYYMMDD_HHMMSS
-  auglabAug_v26_6_2_train050_val000: totalseg-pelvic_ct_auglabAug_v26_6_2_train050_val000_YYYYMMDD_HHMMSS
-  auglabAug_v26_6_2_train050_val100: totalseg-pelvic_ct_auglabAug_v26_6_2_train050_val100_YYYYMMDD_HHMMSS
+  - ct_baseline_20260916_072434
+  - ct_auglab_default_20260916_072434
+  - ct_synthseg_noEM_20260916_072434
+  - ct_synthseg_EM_20260916_072434
+  - ct_srcsm_20260916_072434
+  - ct_ours_20260916_072434
+  - ct_baseline_kmeans_20260916_072434
+  - ct_baseline_kmeans_label_remap_20260916_072434
+  - ct_baseline_kmeans_label_remap_voronoi_20260916_072434
+  - ct_v26_6_2_train050_val100_20260916_072434
