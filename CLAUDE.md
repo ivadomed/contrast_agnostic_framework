@@ -1,5 +1,24 @@
 # Project: MRI Synthesis — Claude Context
 
+## Working with Doppel and autonomous sessions
+
+Paul runs this project with a coordinating Claude Code session named **Doppel**, plus a rotating set of task-specific Claude Code sessions (one per dataset/task, or spun up ad hoc for audits, paper writing, git-annex work, etc.) that Doppel dispatches and receives reports from. This is a standing, normal way this project operates — not a one-off.
+
+**Sessions live in named tmux windows, each on its OWN dedicated socket (adopted 2026-09-17, corrected same day).** Launch/revive a named session like this:
+```bash
+systemd-run --user --scope --unit="claude-<name>" -- tmux -L <name> new-session -d -s <name> "claude --resume '<Session Name>'"
+```
+Attach with `tmux -L <name> attach -t <name>` (detach `Ctrl-b d`), from any of Paul's connections, whenever he wants to look in or take over. Doppel can create/revive these itself via Bash — legitimate, expected, no need to ask permission each time.
+
+**Why both `systemd-run --user --scope` AND a per-session socket (`-L <name>`) are both required, not just one:**
+- Root cause of the original session-loss incident: a bare `tmux new-session -d` places the tmux *server* process inside the cgroup of whichever specific login session happened to run the command (`session-N.scope`, visible via `cat /proc/<pid>/cgroup`) — when *that particular* session ends (SSH drop, reconnect, timeout), systemd tears down its scope and kills everything in it, tmux server included, **even if Paul has other sessions open elsewhere**. `Linger=no` (`loginctl show-user paulh`) makes this worse (kills things even faster) but isn't the whole story — the session-scope binding is the deeper issue, and Paul doesn't have permission to run `loginctl enable-linger` on this account anyway.
+- `systemd-run --user --scope` moves the process into the persistent `user@<uid>.service/app.slice/` cgroup instead — only torn down if *every* session for the account ends simultaneously (the true linger scenario), not just the one that happened to launch it.
+- **But** if you reuse the default tmux socket for a second/third session, subsequent `tmux new-session` calls just ask the *already-running* server (started earlier, possibly still in the wrong cgroup) to open a new window — the client invocation gets wrapped by `systemd-run`, but the actual server process never moves. Verified live 2026-09-17: wrapping `tmux new-session -d -s <name2>` in `systemd-run` while an old default-socket server was already running left `<name2>`'s pane in the *old* session-scope cgroup, not the new one. **Giving each session its own socket (`-L <name>`) forces a fresh dedicated server process per session, so the `systemd-run` wrapper actually takes effect.**
+
+If a named session ever seems to have vanished, check `tmux -L <name> ls` (each is its own socket now, so `tmux ls` alone with no `-L` only shows the default socket) before assuming the work is lost — the conversation history survives via `claude --resume`, only the live process needs relaunching with the command above.
+
+**Separately: session transcripts themselves also expire** — Claude Code stores them under `~/.claude/projects/` and deletes anything older than `cleanupPeriodDays` (default 30 days), independent of the tmux/systemd issue above; past that, `claude --resume` fails with "No conversation found." This project's `.claude/settings.json` sets `"cleanupPeriodDays": 36500` to keep long-lived named sessions resumable indefinitely — don't remove that setting.
+
 ## Cluster resource management (Vulcan / Slurm)
 
 **Three machines are in active use** (`run_job` auto-detects the backend on each — see below, so pipeline scripts run unchanged everywhere):
