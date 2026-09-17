@@ -3,10 +3,15 @@
 hanseg evaluator — thin shim over the shared evaluator
 datasets/00_commun_scripts/00_03_evaluate/evaluate.py. Same CLI.
 
-hanseg scores ONE label, `mandible`. Predictions must already have been collapsed to
-the mandible union by 05_predict/05_20_merge_mandible_union.py (see that file: HaN-Seg's
-Bone_Mandible = toothfairy2's mandible ∪ lower_teeth), so by the time this runs both
-sides are binary {0,1} and the map is the identity [1, 1].
+hanseg scores ONE label, `mandible`.
+
+⚠️ CORRECTED 2026-09-17: HaN-Seg's Bone_Mandible **EXCLUDES the teeth**, so it does NOT
+equal toothfairy2's mandible ∪ lower_teeth. Current scoring is MANDIBLE-ONLY — the RAW
+3-class prediction is passed straight in with --label_map '{"mandible": [1, 1]}' (labels
+2/3 score as background) by 06_03_eval_mandible_only.sh. The older union path
+(05_predict/05_20_merge_mandible_union.py, which collapses predictions to binary first)
+is kept only to reproduce the superseded union view; re-scoring changed no conclusion,
+but the union is wrong on the facts. See datasets/toothfairy2/RESULTS_NOTES.md.
 """
 import sys
 from pathlib import Path

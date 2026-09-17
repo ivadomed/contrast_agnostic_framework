@@ -35,6 +35,10 @@ WHY THE TRANSFORM IS NEARLY TRIVIAL HERE (measured, not assumed)
 ----------------------------------------------------------------
 Probing 5 cases: rotations 0.25-3.27 deg (mostly <1.6), and the y-translation is
 near-CONSTANT at ~99-105 mm across every case while z varies wildly (-597 to +165).
+(The 5-case probe figures above are what this design was chosen on. Measured
+afterwards over the full 42-case cohort: rotations 0.23-6.74 deg, median 1.03 —
+quote THAT range, not the probe's, in the paper or anywhere external.
+See datasets/toothfairy2/RESULTS_NOTES.md section 6.1.)
 That signature is a coordinate-origin convention difference plus per-scan DICOM table
 position — not patient movement. These are RT-planning scans in an immobilization
 mask, so the anatomy really is in the same pose. This is also why one challenge team

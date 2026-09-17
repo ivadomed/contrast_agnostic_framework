@@ -1,0 +1,50 @@
+# toothfairy2 — MANDIBLE-ONLY correction view (2026-09-17). EVERY column scores the
+# SAME single structure (the mandible bone), in-domain and OOD alike.
+#
+# HAND-WRITTEN, not emitted by 06_04_write_configs.py. It exists because the union
+# scoring the other configs use rests on a FALSE premise: HaN-Seg's `Bone_Mandible`
+# EXCLUDES the teeth (Brouwer et al. 2015 consensus, verbatim "the entire mandible bone,
+# without teeth"; HaN-Seg's own paper follows that guideline; and empirically the mask
+# holds no enamel population while 96.6-99.7% of enamel-range voxels sit outside it).
+# Scoring `mandible u lower_teeth` against that GT charges every method a systematic
+# false-positive penalty that scales with how much tooth it predicts — i.e. NOT uniform
+# across methods, so it can mask real separation.
+#
+# Built by BOTH halves of the correction, which must be run together:
+#   datasets/toothfairy2/.../06_evaluate/06_10_eval_mandible_only_cbct.sh   (in-domain)
+#   datasets/hanseg/.../06_evaluate/06_03_eval_mandible_only.sh             (both OOD arms)
+#
+# NOT EXACT EITHER — say so when reporting. HaN-Seg = bone + roots - crowns (solid
+# envelope, per-slice hole-fill ratio 1.0000); toothfairy2 `mandible` = bone - roots
+# (sockets carved, 1.073), so it UNDER-covers by the roots. Ceiling Dice for a perfect
+# prediction: union 94.93%, mandible-only 97.77%. This more than halves the systematic
+# error but does not eliminate it.
+#
+# Metrics live in parallel `02_metrics_mandible_only` ROOTS rather than a subdir, so the
+# shared ladder engine can be pointed at them unchanged via its METRICS_ROOT /
+# HANSEG_METRICS_ROOT env overrides (it appends `toothfairy2_model/cbct` itself):
+#   METRICS_ROOT=.../toothfairy2/8_results_toothfairy2/02_metrics_mandible_only \
+#   HANSEG_METRICS_ROOT=.../hanseg/8_results_hanseg/02_metrics_mandible_only \
+#   bash 06_05_ladder_summary.sh --from-metrics
+#
+# output_dir is explicit and separate so this can NEVER overwrite the headline
+# *_summary.md / *_significance.md files (the documented trap in CLAUDE.md).
+title: "ToothFairy2 — MANDIBLE-ONLY across CBCT, CT and MRI (union-bug correction)"
+in_domain_contrast: cbct
+output_prefix: "04_mandible_only"
+output_dir: "${PROJECT_ROOT}/datasets/toothfairy2/8_results_toothfairy2/02_metrics_mandible_only/toothfairy2_model/cbct"
+column_order: [cbct, hanseg_ct, hanseg_mrt1]
+
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/datasets/toothfairy2/8_results_toothfairy2/02_metrics_mandible_only/toothfairy2_model/cbct"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/hanseg/8_results_hanseg/02_metrics_mandible_only/toothfairy2_model/cbct"
+    column_prefix: "hanseg_"
+
+runs:
+  - toothfairy2_cbct_baseline_20260908_013025
+  - toothfairy2_cbct_auglab_default_20260908_013025
+  - toothfairy2_cbct_synthseg_noEM_20260908_013025
+  - toothfairy2_cbct_synthseg_EM_20260908_013027
+  - toothfairy2_cbct_srcsm_20260908_013027
+  - toothfairy2_cbct_auglabAug_v26_6_2_train050_val000_20260908_013027
+  - toothfairy2_cbct_auglabAug_v26_6_2_train050_val100_20260908_013027

@@ -18,12 +18,18 @@
 # not two different datasets glued together, which is the failure mode that
 # helped sink the liver-HCC extension (see CLAUDE.md's atlas-liver-hcc exclusion).
 #
-# SHARED CLASS: `mandible` only. HaN-Seg's single `Bone_Mandible` structure
-# INCLUDES the lower dentition, so it corresponds to the UNION of toothfairy2's
-# `mandible` + `lower_teeth` (see toothfairy2_labels.MANDIBLE_UNION_TARGET_IDS).
-# That union is exact, not approximate — it is precisely why toothfairy2's task
-# was reduced to the mandibular block. One-class overlap is the same situation
-# chaos -> sliver07 (liver only) already handles.
+# SHARED CLASS: `mandible` only.
+# ⚠️ CORRECTED 2026-09-17: HaN-Seg's `Bone_Mandible` **EXCLUDES the teeth** (Brouwer
+# et al. 2015 consensus, which HaN-Seg's own paper follows, verbatim "the entire
+# mandible bone, without teeth"; confirmed empirically — no enamel population inside
+# the mask). The old claim here, that it INCLUDES the lower dentition and equals
+# toothfairy2's `mandible` ∪ `lower_teeth`, was WRONG. Scoring is now mandible-only
+# (toothfairy2 label 1 vs Bone_Mandible, one-to-one). Re-scored on all eval sets
+# 2026-09-17: every significant result stayed significant, every tie stayed a tie —
+# the union was wrong on the facts but distorted no conclusion. Neither label is an
+# EXACT match (HaN-Seg is a solid bone envelope with roots inside; toothfairy2's
+# mandible carves the sockets out), but mandible-only more than halves the error.
+# One-class overlap is the same situation chaos -> sliver07 (liver only) handles.
 #
 # ⚠️⚠️ FIELD OF VIEW IS THE CENTRAL RISK HERE, NOT THE MODALITY GAP.
 # A head-and-neck RT planning scan images the whole head and neck; a dental CBCT

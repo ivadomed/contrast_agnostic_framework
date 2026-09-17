@@ -1,0 +1,46 @@
+# HaN-Seg's OWN results table: toothfairy2 CBCT models evaluated on hanseg, MANDIBLE-ONLY.
+#
+# WHY THIS EXISTS (2026-09-17)
+# ----------------------------
+# 1. hanseg is an EVAL-ONLY dataset and therefore holds NO aggregation tables — same as amos
+#    and sliver07. Tables belong to the MODEL's dataset (toothfairy2), which is where this
+#    config writes. (duke-breast-mri keeps 7 tables in its own tree; that is the outlier, not
+#    the convention. Confirmed by Paul 2026-09-17.) This config lives on the hanseg side only
+#    because it defines hanseg's columns; its OUTPUT goes to toothfairy2.
+#
+# 2. This table is OOD-ONLY (hanseg_ct + hanseg_mrt1) BY DESIGN, and that is the point.
+#    The 3-column table on the toothfairy2 side includes the in-domain CBCT column, and its
+#    `all` average is therefore NOT a generalization number — in-domain CBCT is ~98 Dice for
+#    every method that works at all, so it compresses the OOD differences and can flip an
+#    apparent winner. Concretely, mandible-only: Ours beats synthseg_EM by +0.6 on `all`,
+#    but is 0.2 BEHIND it on OOD alone (Ours 76.9/56.4 vs EM 76.6/57.1). The +0.6 is bought
+#    entirely by in-domain (98.0 vs 96.0), which is not the paper's claim.
+#    CLAUDE.md is explicit that cross-contrast generalization IS the headline result, and the
+#    headline significance test already excludes the training contrast — this table matches
+#    that estimand so the two cannot drift apart.
+#
+# Reads the mandible-only metrics (see the correction documented in
+# datasets/toothfairy2/RESULTS_NOTES.md and hanseg 06_03_eval_mandible_only.sh: HaN-Seg's
+# Bone_Mandible EXCLUDES teeth, so the old union scoring was wrong on the facts — though
+# re-scoring changed no conclusion).
+#
+# in_domain_contrast names a column that does not exist here on purpose: every column in
+# this table is a genuine held-out modality, so none should be excluded as in-domain.
+title: "HaN-Seg — ToothFairy2 CBCT models, OOD only (mandible-only scoring)"
+in_domain_contrast: __none__
+output_prefix: "01_hanseg_ood_mandible_only"
+output_dir: "${PROJECT_ROOT}/datasets/toothfairy2/8_results_toothfairy2/02_metrics_mandible_only/toothfairy2_model/cbct"
+column_order: [hanseg_ct, hanseg_mrt1]
+
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/datasets/hanseg/8_results_hanseg/02_metrics_mandible_only/toothfairy2_model/cbct"
+    column_prefix: "hanseg_"
+
+runs:
+  - toothfairy2_cbct_baseline_20260908_013025
+  - toothfairy2_cbct_auglab_default_20260908_013025
+  - toothfairy2_cbct_synthseg_noEM_20260908_013025
+  - toothfairy2_cbct_synthseg_EM_20260908_013027
+  - toothfairy2_cbct_srcsm_20260908_013027
+  - toothfairy2_cbct_auglabAug_v26_6_2_train050_val000_20260908_013027
+  - toothfairy2_cbct_auglabAug_v26_6_2_train050_val100_20260908_013027
