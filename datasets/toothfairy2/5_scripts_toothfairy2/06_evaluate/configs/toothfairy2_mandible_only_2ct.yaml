@@ -1,0 +1,65 @@
+# toothfairy2 — MANDIBLE-ONLY with TWO independent CT sources (2026-09-17).
+#
+# Extends toothfairy2_mandible_only_01_results.yaml by adding the PDDCA CT arm
+# (RTOG 0522, US multi-institution) alongside HaN-Seg CT (Ljubljana). Purpose: HaN-Seg
+# is a single 42-patient cohort, so every CT conclusion for this task rested on one
+# institution. PDDCA raises the CT arm to 82 cases and tests whether the CT findings
+# replicate — above all the +AugLab rung's CT-specific −7 Dice cost.
+#
+# ⚠️⚠️ WHY contrast_groups IS MANDATORY HERE, NOT COSMETIC.
+# Both new and old CT arms are the SAME modality. Flat per-column weighting would make
+# the OOD estimand 2/3 CT + 1/3 MR instead of 1/2 + 1/2 — i.e. adding a dataset would
+# silently change what "OOD" means. That matters concretely: the +AugLab cost lives on
+# CT and is ~0 on MR, so a CT-heavy pool would AMPLIFY it and shift the causal-ablation
+# ladder with no method having changed. Same failure chaos's CT grouping exists to
+# prevent (3 CT sources outvoting the MR contrasts 3-to-1).
+#
+# Pooling shape (see aggregate_from_config.py's contrast_groups docs): a LIST pools
+# disjoint case sets — hanseg_ct (42) and pddca_ct (40) are different patients of the
+# same modality and the same single label, so they concatenate into one 82-case CT
+# stratum. MR stays a single source. The two OOD buckets then carry equal weight.
+#
+# LABEL CONSISTENCY: all three columns score the SAME structure. toothfairy2 `mandible`
+# (label 1) one-to-one against each source's mandible. Both CT sources exclude the teeth
+# and are solid bone envelopes (per-slice hole-fill ratio 1.0000 on BOTH), so they share
+# one convention and the same ~2% root under-coverage vs toothfairy2's socket-carving
+# mandible — a consistent residual, not a new confound. Never the old union, disproven
+# 2026-09-17.
+#
+# ⚠️ PDDCA is ~2x coarser in-plane (~1.0x1.0x2.5-3.0 mm vs hanseg's 0.558x0.558x2.0,
+# training 0.6 iso). Absolute pddca_ct Dice may sit below hanseg_ct for resolution
+# reasons rather than cohort reasons — do not read a pddca-vs-hanseg gap as a cohort
+# effect. It applies identically to every method, so between-method comparison is fair.
+#
+# output_dir is explicit and separate so this can NEVER overwrite the headline files.
+title: "ToothFairy2 — mandible-only, 2 independent CT sources + MR (CT pooled)"
+in_domain_contrast: cbct
+output_prefix: "05_mandible_only_2ct"
+output_dir: "${PROJECT_ROOT}/datasets/toothfairy2/8_results_toothfairy2/02_metrics_mandible_only/toothfairy2_model/cbct"
+column_order: [cbct, CT, MR]
+
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/datasets/toothfairy2/8_results_toothfairy2/02_metrics_mandible_only/toothfairy2_model/cbct"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/hanseg/8_results_hanseg/02_metrics_mandible_only/toothfairy2_model/cbct"
+    column_prefix: "hanseg_"
+  - metrics_dir: "${PROJECT_ROOT}/datasets/pddca/8_results_pddca/02_metrics/toothfairy2_model/cbct"
+    column_prefix: "pddca_"
+
+# cbct = in-domain (excluded from the OOD block by in_domain_contrast above).
+# CT   = the two independent CT cohorts, POOLED as one 82-case stratum.
+# MR   = hanseg's registered T1w arm, the only non-CT modality that exists for this task.
+contrast_groups:
+  cbct: cbct
+  CT:
+    - hanseg_ct
+    - pddca_ct
+  MR: hanseg_mrt1
+
+runs:
+  - toothfairy2_cbct_baseline_20260908_013025
+  - toothfairy2_cbct_auglab_default_20260908_013025
+  - toothfairy2_cbct_synthseg_noEM_20260908_013025
+  - toothfairy2_cbct_synthseg_EM_20260908_013027
+  - toothfairy2_cbct_srcsm_20260908_013027
+  - toothfairy2_cbct_auglabAug_v26_6_2_train050_val000_20260908_013027
+  - toothfairy2_cbct_auglabAug_v26_6_2_train050_val100_20260908_013027
