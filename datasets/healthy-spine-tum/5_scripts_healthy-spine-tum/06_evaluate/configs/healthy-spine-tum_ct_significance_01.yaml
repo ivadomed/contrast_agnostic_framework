@@ -1,0 +1,20 @@
+# healthy-spine-TUM CT-trained model -- own held-out cross-contrast significance
+# (Dice only; HD95 is 100% NaN in this dataset's eval_all.csv, not computable).
+# Only 4 competitors were ever run for this externally-imported dataset (no
+# srcsm, no val100) -- see 5_scripts_healthy-spine-tum/../README.md.
+title: "healthy-spine-TUM CT-trained -- significance"
+in_domain_contrast: spinegan_ct
+output_prefix: "01_results"
+output_dir: "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/healthy-spine-tum/8_results_healthy-spine-tum/02_metrics/healthy_spine_tum_model/ct"
+
+column_order: [spider_T1w, spider_T2w, spinegan_ct, spinegan_dixon_fat, spinegan_dixon_inphase, spinegan_dixon_water]
+
+sources:
+  - metrics_dir: "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/healthy-spine-tum/8_results_healthy-spine-tum/02_metrics/healthy_spine_tum_model/ct"
+
+runs:
+  - healthy-spine-tum_ct_baseline_20260805_130846
+  - healthy-spine-tum_ct_auglab_default_20260805_130846
+  - healthy-spine-tum_ct_synthseg_noEM_20260805_130846
+  - healthy-spine-tum_ct_synthseg_EM_20260805_130846
+  - healthy-spine-tum_ct_auglabAug_v26_6_2_20260805_130846

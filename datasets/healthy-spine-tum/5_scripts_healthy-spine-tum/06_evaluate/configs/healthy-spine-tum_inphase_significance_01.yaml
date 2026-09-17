@@ -1,0 +1,16 @@
+title: "healthy-spine-TUM inphase-trained -- significance"
+in_domain_contrast: spinegan_dixon_inphase
+output_prefix: "01_results"
+output_dir: "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/healthy-spine-tum/8_results_healthy-spine-tum/02_metrics/healthy_spine_tum_model/inphase"
+
+column_order: [spider_T1w, spider_T2w, spinegan_ct, spinegan_dixon_fat, spinegan_dixon_inphase, spinegan_dixon_water]
+
+sources:
+  - metrics_dir: "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/healthy-spine-tum/8_results_healthy-spine-tum/02_metrics/healthy_spine_tum_model/inphase"
+
+runs:
+  - healthy-spine-tum_inphase_baseline_20260805_130846
+  - healthy-spine-tum_inphase_auglab_default_20260805_130846
+  - healthy-spine-tum_inphase_synthseg_noEM_20260805_130846
+  - healthy-spine-tum_inphase_synthseg_EM_20260805_130846
+  - healthy-spine-tum_inphase_auglabAug_v26_6_2_20260805_130846
