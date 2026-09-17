@@ -133,7 +133,21 @@ predict_fold() {
         mkdir -p "$OUTPUT_DIR"
         any_valid=1
         echo "  → fold${F} ${item}: $(ls "$INPUT_DIR" | wc -l) cases → $OUTPUT_DIR"
-        predict_cmds+="echo 'fold${F} ${item}...'; .venv/bin/nnUNetv2_predict -i '${INPUT_DIR}' -o '${OUTPUT_DIR}' -d ${DATASET_ID} -c 3d_fullres -tr ${TRAINER} -f ${F} --disable_tta -chk ${CHECKPOINT}${PREDICT_EXTRA_FLAGS:+ ${PREDICT_EXTRA_FLAGS}}; echo 'fold${F} ${item} done'; "
+        # -d must match the DATASET ID the model was actually TRAINED under (nnU-Net
+        # resolves the checkpoint folder as nnUNet_results/Dataset<-d>_.../<trainer>__...),
+        # which can differ from DATASET_ID (the id whose imagesTs_*/labelsTs_* holds the
+        # test inputs — e.g. autopet consolidates every item's test data under ONE dataset
+        # id regardless of which per-modality Dataset actually trained a given model, see
+        # 05_01_predict_common.sh's own header). PREDICT_MODEL_DATASET_ID defaults to
+        # DATASET_ID for every dataset where they're the same (unchanged behaviour); a
+        # wrapper only needs to set it when they genuinely differ (autopet PET-trained
+        # methods: DATASET_ID=120 for inputs, PREDICT_MODEL_DATASET_ID=121 for the model).
+        # Bug found 2026-09-16: without this split, EVERY autopet PET-trained prediction
+        # silently produced zero output files (nnUNetv2_predict's own FileNotFoundError on
+        # a nonexistent Dataset120_.../dataset.json went to the per-fold pack log, not
+        # anywhere the orchestration script surfaced — predict_common.sh printed "done" for
+        # every fold regardless, since it never checks a case actually got written).
+        predict_cmds+="echo 'fold${F} ${item}...'; .venv/bin/nnUNetv2_predict -i '${INPUT_DIR}' -o '${OUTPUT_DIR}' -d ${PREDICT_MODEL_DATASET_ID:-${DATASET_ID}} -c 3d_fullres -tr ${TRAINER} -f ${F} --disable_tta -chk ${CHECKPOINT}${PREDICT_EXTRA_FLAGS:+ ${PREDICT_EXTRA_FLAGS}}; echo 'fold${F} ${item} done'; "
     done
 
     if [ "$any_valid" = "0" ]; then
