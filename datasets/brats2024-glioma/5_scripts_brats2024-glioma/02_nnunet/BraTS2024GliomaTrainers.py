@@ -45,6 +45,13 @@ try:
     # DualVal: ONE run -> both val000 + val100 checkpoints (opt-in only, see module docstring)
     from brats2024_glioma.trainers.auglab_dualval import nnUNetTrainerBraTS2024GliomaAugLabDualVal  # noqa: F401
     from brats2024_glioma.trainers.auglab_dualval import nnUNetTrainerBraTS2024GliomaT2wAugLabDualVal  # noqa: F401
+    # T2f/FLAIR trainers (Dataset053_BraTS2024GliomaT2f)
+    from brats2024_glioma.trainers.baseline_t2f import nnUNetTrainerBraTS2024GliomaT2fBaseline  # noqa: F401
+    from brats2024_glioma.trainers.v26_6_2_t2f import nnUNetTrainerBraTS2024GliomaT2fV26_6_2  # noqa: F401
+    from brats2024_glioma.trainers.v26_6_2_t2f_train050_val100 import nnUNetTrainerBraTS2024GliomaT2fV26_6_2_train050_val100  # noqa: F401
+    from brats2024_glioma.trainers.auglab_default_t2f import nnUNetTrainerBraTS2024GliomaT2fAugLabDefault  # noqa: F401
+    from brats2024_glioma.trainers.auglab_valsynth_t2f import nnUNetTrainerBraTS2024GliomaT2fAugLabValSynth  # noqa: F401
+    from brats2024_glioma.trainers.auglab_dualval import nnUNetTrainerBraTS2024GliomaT2fAugLabDualVal  # noqa: F401
 except ImportError as e:
     import warnings
     warnings.warn(
