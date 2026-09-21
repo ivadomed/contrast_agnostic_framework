@@ -46,7 +46,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "00_00_utils"))  # sibling: 00_commun_scripts/00_00_utils
 from eval_folds import EVAL_FOLD_INDICES, filter_fold_dirs  # noqa: E402 — single source of truth, see eval_folds.py
-from stat_tests import holm, macro_perm  # noqa: E402 — shared math, see stat_tests.py
+from stat_tests import (holm, macro_perm, macro_perm_design, macro_ci_design,  # noqa: E402 — shared math, see stat_tests.py
+                        stratum_arrays)
 # Full significance reporting (OOD/IND/per-contrast breakdowns) lives in the
 # dedicated companion script datasets/00_commun_scripts/00_03_evaluate/
 # significance_from_config.py (same config, run separately). This module only
@@ -65,6 +66,14 @@ _PREFIXES = ("nnUNet_", "auglab_", "")
 # matches ONLY the headline train050_val000 run in every config checked
 # (2026-08-01 audit: exactly 0 or 1 occurrence in every existing config).
 REF_SUBSTR = "auglabAug_v26_6_2_train050_val000"
+
+# Default sign-flip unit for the significance tests (2026-09-21). "patient": all of one
+# physical patient's diffs — every organ, every trained model, and every test contrast —
+# flip together (CHAOS's 4 MR test patients appear in t1in AND t1out AND t2spir).
+# "stratum": as "patient" within one contrast group, but the same patient in two
+# different groups stays two units (the weaker fix: models/organs merged, contrasts not).
+# Override per config with `unit_scope:`.
+DEFAULT_UNIT_SCOPE = "patient"
 
 # ── multi-source helpers ─────────────────────────────────────────────────────
 
@@ -211,8 +220,21 @@ def load_run_cases(sources: list, key: str, metric: str) -> dict:
             for col, cases in per.items()}
 
 
+def _dataset_ns(metrics_dir, idx: int) -> str:
+    """Patient-identity namespace of a metrics source: the dataset it lives under
+    (`.../datasets/<name>/...`), so two sources of the SAME dataset (e.g. a t1in- and a
+    t2spir-trained model's metrics dirs) share one namespace — their case "MR05" is the
+    same physical patient — while two different datasets never collide on a bare id like
+    "01". A source outside `datasets/` falls back to its position in the source list
+    (the same position across training modalities, distinct across sources)."""
+    m = re.search(r"datasets/([^/]+)/", str(metrics_dir).replace("\\", "/"))
+    return m.group(1) if m else f"src{idx}"
+
+
 def load_run_cases_by_label(sources: list, key: str, metric: str) -> dict:
-    """col -> label -> {case_id: mean metric over folds in EVAL_FOLD_INDICES}.
+    """col -> label -> {case_key: mean metric over folds in EVAL_FOLD_INDICES}, where
+    case_key = "<dataset>|<case_id>" (see _dataset_ns: a namespaced patient identity, so
+    the significance code can tell "same patient" from "same bare id in another dataset").
 
     Same fold-capping and case-unit-of-analysis rules as load_run_cases, but
     WITHOUT collapsing across labels within a column — the label dimension
@@ -225,12 +247,13 @@ def load_run_cases_by_label(sources: list, key: str, metric: str) -> dict:
     `resolve_group`/`_leaf_diff` for how this is consumed.
     """
     per = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    for src in sources:
+    for si, src in enumerate(sources):
         run_dir = resolve_run_dir(src["metrics_dir"], key)
         if run_dir is None:
             continue
         prefix = src.get("column_prefix", "")
         rename = src.get("column_rename", {})
+        ns = _dataset_ns(src["metrics_dir"], si)
         for fold_dir in sorted(run_dir.glob("fold*")):
             try:
                 fold_idx = int(fold_dir.name.replace("fold", ""))
@@ -249,7 +272,7 @@ def load_run_cases_by_label(sources: list, key: str, metric: str) -> dict:
                     except (KeyError, ValueError):
                         continue
                     if np.isfinite(v):
-                        per[col][row["label"]][row["case"]].append(v)
+                        per[col][row["label"]][f"{ns}|{row['case']}"].append(v)
     return {col: {lab: {c: float(np.mean(vs)) for c, vs in cases.items() if vs}
                   for lab, cases in labs.items()}
             for col, labs in per.items()}
@@ -270,7 +293,8 @@ def find_ref_key(run_keys: list) -> str | None:
 
 
 def significance_column(sources: list, runs_ordered: list, ref_key: str,
-                        all_contrasts: list, metric: str, contrast_groups: dict = None) -> dict:
+                        all_contrasts: list, metric: str, contrast_groups: dict = None,
+                        unit_scope: str = DEFAULT_UNIT_SCOPE) -> dict:
     """method_key -> Holm-corrected one-sided ("ref better") macroΔ p-value vs
     ref, across ALL tested contrasts (equal weight per contrast — the same
     estimand as the summary table's `all` column). Same test as
@@ -279,39 +303,18 @@ def significance_column(sources: list, runs_ordered: list, ref_key: str,
 
     contrast_groups (optional): hierarchical pooling tree (see resolve_group's
     block comment) — when given, `all_contrasts` is ignored and the groups'
-    top-level keys are used instead, resolved via resolve_group so this
-    matches significance_from_config.py's headline test exactly instead of
-    silently disagreeing with it."""
+    top-level keys are used instead, so this matches significance_from_config.py's
+    headline test exactly instead of silently disagreeing with it. Without it each raw
+    column is its own stratum. Either way the test runs on patient-level sign-flip
+    units (`unit_scope`, see build_design / stat_tests.py's design-primitives block)."""
     higher_better = metric == "dice"
-    if contrast_groups:
-        label_data = {k: load_run_cases_by_label(sources, k, metric) for k in runs_ordered}
-        ref_by_label = label_data[ref_key]
-        competitors = [k for k in runs_ordered if k != ref_key]
-        p1s = []
-        for key in competitors:
-            arrs = []
-            for g in contrast_groups.values():
-                arr = resolve_group(g, ref_by_label, label_data[key])
-                if len(arr):
-                    arrs.append(arr)
-            _, _, p1 = macro_perm(arrs, higher_better)
-            p1s.append(p1)
-        hp = holm(p1s)
-        out = {ref_key: float("nan")}
-        out.update(dict(zip(competitors, hp)))
-        return out
-    ref_cases = load_run_cases(sources, ref_key, metric)
+    groups = contrast_groups if contrast_groups else {c: c for c in all_contrasts}
+    label_data = {k: load_run_cases_by_label(sources, k, metric) for k in runs_ordered}
     competitors = [k for k in runs_ordered if k != ref_key]
     p1s = []
     for key in competitors:
-        comp_cases = load_run_cases(sources, key, metric)
-        arrs = []
-        for col in all_contrasts:
-            x, y = paired(ref_cases, comp_cases, col)
-            if len(x):
-                arrs.append(x - y)
-        _, _, p1 = macro_perm(arrs, higher_better)
-        p1s.append(p1)
+        entries, K = build_design(groups, label_data[ref_key], label_data[key], unit_scope)
+        p1s.append(macro_perm_design(entries, K, higher_better)[2])
     hp = holm(p1s)
     out = {ref_key: float("nan")}
     out.update(dict(zip(competitors, hp)))
@@ -450,19 +453,86 @@ def _collapse_labels(labs: dict) -> dict:
     return {c: float(np.mean(vs)) for c, vs in per_case.items()}
 
 
-def resolve_group(node, ref_by_label: dict, comp_by_label: dict) -> np.ndarray:
-    """Recursively resolve a contrast_groups node to a 1D diff array (ref − comp)."""
+def unit_of(case_tag: str) -> str:
+    """Physical-patient identity of a case tag. Tags look like "<dataset>|<case>"
+    (single-modality) or "<training_modality>::<dataset>|<case>" (combined tables —
+    the same test patient is scored by every trained arm); drop the training-modality
+    prefix so the arms' scores of one patient share a unit."""
+    return case_tag.split("::", 1)[-1]
+
+
+def _leaf_entries(ref_by_label: dict, comp_by_label: dict, leaf) -> list:
+    """[(leaf_id, case_tag, diff)] for one leaf (column, optional label) — the
+    tag-preserving twin of `_leaf_diff` (same case matching, same label collapse)."""
+    col, label = (leaf, None) if isinstance(leaf, str) else (leaf["column"], leaf.get("label"))
+    r_labs, c_labs = ref_by_label.get(col, {}), comp_by_label.get(col, {})
+    if label is not None:
+        r_cases, c_cases = r_labs.get(label, {}), c_labs.get(label, {})
+    else:
+        r_cases, c_cases = _collapse_labels(r_labs), _collapse_labels(c_labs)
+    return [((col, label), t, r_cases[t] - c_cases[t]) for t in sorted(set(r_cases) & set(c_cases))]
+
+
+def resolve_group_entries(node, ref_by_label: dict, comp_by_label: dict) -> list:
+    """Recursively resolve a contrast_groups node to [(leaf_id, case_tag, weight*diff)],
+    the weights summing to 1 — so Σ of the third column IS the group's paired mean diff
+    (ref − comp), with exactly the pool-cases-in-a-list / equal-weight-per-child-in-a-dict
+    arithmetic the summary tables use. Keeping every case as its own entry (instead of
+    collapsing a nested group to one number per organ, as this used to) is what lets the
+    significance tests see patients — see stat_tests.py's design-primitives block."""
     if isinstance(node, str) or (isinstance(node, dict) and "column" in node):
-        return _leaf_diff(ref_by_label, comp_by_label, node)
+        ents = _leaf_entries(ref_by_label, comp_by_label, node)
+        return [(lid, t, d / len(ents)) for lid, t, d in ents]
     if isinstance(node, list):
-        parts = [resolve_group(n, ref_by_label, comp_by_label) for n in node]
-        parts = [p for p in parts if len(p)]
-        return np.concatenate(parts) if parts else np.array([])
+        # A list POOLS cases across its leaves (concatenate, then mean) — lists only ever
+        # hold leaves / lists of leaves (see _leaf_refs), so weight = 1 / total cases.
+        raw = _raw_leaf_entries(node, ref_by_label, comp_by_label)
+        return [(lid, t, d / len(raw)) for lid, t, d in raw]
     if isinstance(node, dict):
-        means = [resolve_group(child, ref_by_label, comp_by_label) for child in node.values()]
-        means = [m for m in means if len(m)]
-        return np.array([m.mean() for m in means]) if means else np.array([])
+        kids = [resolve_group_entries(v, ref_by_label, comp_by_label) for v in node.values()]
+        kids = [k for k in kids if k]
+        return [(lid, t, c / len(kids)) for k in kids for lid, t, c in k]
     raise ValueError(f"bad contrast_groups node: {node!r}")
+
+
+def _raw_leaf_entries(node, ref_by_label: dict, comp_by_label: dict) -> list:
+    """Unweighted [(leaf_id, tag, diff)] of every leaf under a leaf/list node."""
+    if isinstance(node, list):
+        return [e for n in node for e in _raw_leaf_entries(n, ref_by_label, comp_by_label)]
+    if isinstance(node, str) or (isinstance(node, dict) and "column" in node):
+        return _leaf_entries(ref_by_label, comp_by_label, node)
+    raise ValueError(f"contrast_groups: dict not supported nested inside a list: {node!r}")
+
+
+def build_design(groups: dict, ref_by_label: dict, comp_by_label: dict,
+                 unit_scope: str = DEFAULT_UNIT_SCOPE) -> tuple:
+    """(entries, K) for the design-based tests in stat_tests.py. One stratum per
+    non-empty group in `groups` (name -> contrast_groups node); an entry's unit is the
+    physical patient (`unit_scope="patient"`) or the patient within its stratum
+    (`"stratum"`). Groups with no paired cases are dropped, as before."""
+    if unit_scope not in ("patient", "stratum"):
+        raise ValueError(f"unit_scope must be 'patient' or 'stratum', got {unit_scope!r}")
+    entries, K = [], 0
+    for node in groups.values():
+        ents = resolve_group_entries(node, ref_by_label, comp_by_label)
+        if not ents:
+            continue
+        for lid, tag, c in ents:
+            u = unit_of(tag)
+            entries.append((K, lid, u if unit_scope == "patient" else (K, u), c))
+        K += 1
+    return entries, K
+
+
+def resolve_group(node, ref_by_label: dict, comp_by_label: dict) -> np.ndarray:
+    """One stratum's paired diff array (ref − comp), ONE ELEMENT PER PATIENT, scaled so
+    `arr.mean()` is the group's weighted mean diff and `(arr**2).sum()/arr.size**2` its
+    sign-flip variance (see stat_tests.stratum_arrays). Kept for the flat-array callers
+    (`macro_perm`/`macro_ci`, meta_task_heatmap, paper scripts); those get patient units
+    WITHIN a group but no cross-group patient joining — use `build_design` for that."""
+    ents = resolve_group_entries(node, ref_by_label, comp_by_label)
+    arrs = stratum_arrays([(0, lid, unit_of(t), c) for lid, t, c in ents])
+    return arrs[0] if arrs else np.array([])
 
 
 def _describe_group(node, indent: int = 0) -> list:
@@ -811,7 +881,8 @@ def main():
             all_contrasts = sorted({c for d in runs_data.values() for c in d.get("dice", {})})
             sig_by_metric = {
                 metric: significance_column(sources, runs_ordered, ref_key, all_contrasts, metric,
-                                            contrast_groups=contrast_groups)
+                                            contrast_groups=contrast_groups,
+                                            unit_scope=cfg.get("unit_scope", DEFAULT_UNIT_SCOPE))
                 for metric in ("dice", "hd95")
             }
         else:

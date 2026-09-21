@@ -124,3 +124,123 @@ def macro_ci(arrs: list, scale: float = 1.0, b_boot: int = 5000, seed: int = 0) 
         per[:, j] = a[idx].mean(axis=1)
     lo, hi = np.percentile(per.mean(axis=1), [2.5, 97.5])
     return lo * scale, hi * scale
+
+
+# ── unit-of-independence ("design") primitives — added 2026-09-21 ───────────
+#
+# WHY THIS EXISTS. `macro_perm`/`macro_ci` above take one flat array per contrast
+# and treat EVERY ELEMENT as an independent sign-flip unit. That silently breaks
+# in two ways once a contrast is not literally "one independent case per element":
+#   1. A hierarchical group (contrast_groups' organ tree: per-organ mean, then mean
+#      across organs) used to be collapsed to ONE ELEMENT PER ORGAN before it got
+#      here, so CT's ~140 held-out patients became 3 sign-flip units and adding
+#      cases could never shrink its variance (MRI groups, per-case, could).
+#   2. The same physical patient scored by several models (t1in- AND t2spir-trained
+#      arms), or appearing in several test contrasts (CHAOS's T1-in / T1-out / T2-SPIR
+#      are the same 4 patients), was counted as several independent units.
+#
+# THE MODEL. The statistic is linear in the per-case diffs:
+#     macroΔ = (1/K) Σ_strata Σ_entries c ,   c = weight × (ref − comp) diff
+# where the weights encode the per-organ-then-cross-organ averaging (they sum to 1
+# within a stratum) — so the POINT ESTIMATE is exactly what the tables already show;
+# only the null distribution changes. An ENTRY is (stratum, leaf, unit, c). A UNIT is
+# the thing that flips sign as one block under the sign-flip null: an independent
+# patient (all of its entries — every organ, model, and, at unit_scope="patient",
+# every contrast — flip together). Null: mean 0, variance Σ_units (Σ_entries c / K)².
+#
+#   entries: list of (stratum_idx, leaf_id, unit_id, c)      K: number of strata
+# See aggregate_from_config.build_design for how entries are built and how
+# unit_id is chosen (unit_scope "patient" vs "stratum").
+
+def design_macro(entries: list, K: int) -> float:
+    return float(sum(e[3] for e in entries) / K) if entries and K else float("nan")
+
+
+def _unit_totals(entries: list, K: int) -> dict:
+    tot = {}
+    for _, _, u, c in entries:
+        tot[u] = tot.get(u, 0.0) + c / K
+    return tot
+
+
+# Number of heaviest units whose signs are ENUMERATED exactly by macro_perm_design (2**M
+# sign patterns; the remaining, lighter units are handled by a normal approximation).
+ENUM_UNITS = 20
+
+
+def macro_perm_design(entries: list, K: int, higher_better: bool, scale: float = 1.0) -> tuple:
+    """Sign-flip test on macroΔ over unit-level `entries` — same return contract as
+    `macro_perm`: (macroΔ*scale, p_two_sided, p_one_sided), one-sided = "ref better".
+
+    Tail evaluation (deliberately NOT `macro_perm`'s plain normal approximation): the
+    ENUM_UNITS heaviest units (by |contribution|) have their 2**M sign patterns enumerated
+    EXACTLY, and the remaining lighter units — the many small CT/AMOS patients — enter as a
+    normal term with their exact null variance. With ≤ ENUM_UNITS units this is the exact
+    sign-flip test. Why: in this design a handful of units can carry almost all the null
+    variance (the 4 CHAOS MR patients each span three contrast strata), and a plain normal
+    approximation is then badly conservative — measured 2026-09-21 on the CHAOS combined
+    table: p = 0.013 by normal approximation against < 5e-6 by 200k-draw Monte-Carlo for a
+    comparison where 140 of 164 units agree in sign. Deterministic (no Monte-Carlo noise),
+    and reaches far tails (a many-unit consistent effect is not floored at 1/B)."""
+    if not entries or not K:
+        return float("nan"), float("nan"), float("nan")
+    t = np.array(list(_unit_totals(entries, K).values()))
+    obs = float(t.sum())
+    order = np.argsort(-np.abs(t))
+    top, rest = t[order[:ENUM_UNITS]], t[order[ENUM_UNITS:]]
+    T = np.zeros(1)                                   # all 2**M signed sums of the top units
+    for v in top:
+        T = np.concatenate([T + v, T - v])
+    sd_r = float(np.sqrt((rest ** 2).sum()))
+    tol = 1e-12 * max(1.0, float(np.abs(t).sum()))
+    if sd_r == 0:                                     # exact test (or the rest are all zero)
+        p_hi = float((T >= obs - tol).mean())         # P(T ≥ obs)
+        p_lo = float((T <= obs + tol).mean())         # P(T ≤ obs)
+        p_two = float((np.abs(T) >= abs(obs) - tol).mean())
+    else:
+        p_hi = float(stats.norm.sf((obs - T) / sd_r).mean())
+        p_lo = float(stats.norm.cdf((obs - T) / sd_r).mean())
+        p_two = float((stats.norm.sf((abs(obs) - T) / sd_r) + stats.norm.cdf((-abs(obs) - T) / sd_r)).mean())
+    return obs * scale, p_two, (p_hi if higher_better else p_lo)
+
+
+def macro_ci_design(entries: list, K: int, scale: float = 1.0, b_boot: int = 5000,
+                    seed: int = 0) -> tuple:
+    """95% bootstrap CI of macroΔ over units — the CI counterpart of
+    `macro_perm_design`, so a report's CI and p describe the same model. Units are
+    resampled WITH replacement inside classes of units that share the same
+    (stratum, leaf) footprint (e.g. AMOS patients vs CHAOS-CT patients vs the 4
+    CHAOS MR patients, who span three strata and are resampled jointly), which
+    keeps each source's / organ's sample size fixed the way the observed design has
+    it. Weights are held at their observed values. On flat all-unique-unit data this
+    reduces to `macro_ci`'s resample-cases-within-contrast bootstrap."""
+    if not entries or not K:
+        return float("nan"), float("nan")
+    tot, foot = _unit_totals(entries, K), {}
+    for g, leaf, u, _ in entries:
+        foot.setdefault(u, set()).add((g, leaf))
+    classes = {}
+    for u, f in foot.items():
+        classes.setdefault(frozenset(f), []).append(tot[u])
+    rng = np.random.default_rng(seed)
+    T = np.zeros(b_boot)
+    for vals in classes.values():
+        v = np.asarray(vals)
+        T += v[rng.integers(0, v.size, size=(b_boot, v.size))].sum(axis=1)
+    lo, hi = np.percentile(T, [2.5, 97.5])
+    return lo * scale, hi * scale
+
+
+def stratum_arrays(entries: list, K: int = None) -> list:
+    """One array per stratum, ONE ELEMENT PER UNIT WITHIN THAT STRATUM, scaled so that
+    `arr.mean()` is the stratum's weighted mean diff and `(arr**2).sum()/arr.size**2`
+    is its sign-flip variance. Consequences: (i) the legacy flat-array `macro_perm` /
+    `macro_ci` / `macro_stat` keep working unchanged on hierarchical groups and now see
+    patients, not organ means; (ii) sign counts (win/loss) are per unit. Strata are
+    returned in stratum-index order; empty strata are omitted. (K is unused; kept so
+    call sites read like the other design helpers.)"""
+    per = {}
+    for g, _, u, c in entries:
+        per.setdefault(g, {})
+        per[g][u] = per[g].get(u, 0.0) + c
+    return [np.array(list(per[g].values())) * len(per[g]) for g in sorted(per)]

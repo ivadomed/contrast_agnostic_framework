@@ -15,6 +15,8 @@
 # See ladder_cross_dataset_plot.py's own docstring for the full rationale.
 # Cheap (matplotlib only, reads already-computed ladder_series.json files)
 # -- fine to run on the login node.
+# 2026-09-17: duke inputs are the UNILATERAL-CROP ladders (…/ablations/{t1wce_uni,precontrast_uni}/),
+# the standard duke evaluation; bilateral versions archived under datasets/03_archive/.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -28,15 +30,15 @@ OUT_ROOT="$REPO_ROOT/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model"
 
 ISPY2_T1WCE="$REPO_ROOT/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations/ladder_series.json"
 ISPY2_T2W="$REPO_ROOT/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model/t2w/ablations/ladder_series.json"
-DUKE_T1WCE_TRAINED="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/ladder_series.json"
-DUKE_T2W_TRAINED="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/ladder_series.json"
-DUKE_PRECONTRAST_T1WCE="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/precontrast/ladder_series.json"
-DUKE_PRECONTRAST_T2W="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/precontrast/ladder_series.json"
+DUKE_T1WCE_TRAINED="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/t1wce_uni/ladder_series.json"
+DUKE_T2W_TRAINED="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/t1wce_uni/ladder_series.json"
+DUKE_PRECONTRAST_T1WCE="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/precontrast_uni/ladder_series.json"
+DUKE_PRECONTRAST_T2W="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/precontrast_uni/ladder_series.json"
 
 # DUKE_T1WCE_TRAINED (duke's t1wce test scored against the t1wce-trained
 # model) is deliberately unused here -- same-contrast, cross-dataset only,
 # not an OOD contrast for this direction. Kept as its own ladder
-# (06_21_ladder_summary_ispy2cross_t1wce.py) elsewhere, just not pooled in.
+# (06_25_ladder_summary_ispy2cross_t1wce_uni_t1wce.py) elsewhere, just not pooled in.
 
 echo "=== T1WCE-trained ==="
 "$PY" "$PLOTTER" \

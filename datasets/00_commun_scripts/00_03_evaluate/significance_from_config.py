@@ -78,6 +78,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "00_00_utils"))
 from eval_folds import EVAL_FOLD_INDICES  # noqa: E402 — single source of truth, see eval_folds.py
 from stat_tests import (  # noqa: E402 — shared math, see stat_tests.py
     wilcoxon_p, holm, fmt_p, macro_stat, macro_perm, macro_ci,
+    macro_perm_design, macro_ci_design, stratum_arrays,
 )
 
 # Reuse run-dir resolution AND per-case loading from the aggregator so both
@@ -190,17 +191,6 @@ def main():
         ind_cols = [g for g in group_names if g == in_dom]
         cols = group_names  # drives the "ALL contrasts" block + its note text
 
-        def diff_arrays(comp, subset):
-            """List of per-group paired-diff arrays (ref − comp), each group
-            resolved per its contrast_groups tree (may itself be a nested
-            pool-then-average over organs/sources — see resolve_group)."""
-            out = []
-            for g in subset:
-                arr = resolve_group(contrast_groups[g], label_data[ref], label_data[comp])
-                if len(arr):
-                    out.append(arr)
-            return out
-
         group_note_lines = [
             "## Contrast-group pooling (active)", "",
             "Each headline \"contrast\" below is a **group**, not a raw column — pooled/averaged "
@@ -220,14 +210,18 @@ def main():
         ood_cols = [c for c in cols if c != in_dom]
         ind_cols = [c for c in cols if c == in_dom]
 
-        def diff_arrays(comp, subset):
-            """List of per-contrast paired-diff arrays (ref − comp over shared cases)."""
-            out = []
-            for col in subset:
-                x, y = paired(data[ref], data[comp], col)
-                if len(x):
-                    out.append(x - y)
-            return out
+    # Every headline block runs on the unit-level design (see stat_tests.py's design
+    # primitives + aggregate_from_config.build_design): one stratum per contrast/group in
+    # the block's subset, patient-level sign-flip units. Flat configs = each raw column
+    # is its own stratum (a trivial group).
+    unit_scope = cfg.get("unit_scope", _agg.DEFAULT_UNIT_SCOPE)
+    groups_eff = contrast_groups if contrast_groups else {c: c for c in cols}
+    if not contrast_groups:
+        label_data = {r: load_run_cases_by_label(sources, r, args.metric) for r in runs}
+
+    def design(comp, subset):
+        return _agg.build_design({g: groups_eff[g] for g in subset},
+                                 label_data[ref], label_data[comp], unit_scope)
 
     def block_table(subset, heading, note):
         # HEADLINE = one-sided directional ("ours better") p, Holm-corrected across
@@ -237,13 +231,14 @@ def main():
         # (there the one-sided "ours better" p is ~1 and correctly unstarred).
         p1s, rows = [], []
         for comp in competitors:
-            arrs = diff_arrays(comp, subset)
-            obs, p2, p1 = macro_perm(arrs, higher_better, scale)
-            lo, hi = macro_ci(arrs, scale, b_boot=B_BOOT, seed=0)
+            entries, K = design(comp, subset)
+            obs, p2, p1 = macro_perm_design(entries, K, higher_better, scale)
+            lo, hi = macro_ci_design(entries, K, scale, b_boot=B_BOOT, seed=0)
+            arrs = stratum_arrays(entries)
             better = (lambda a: (a > 0).sum()) if higher_better else (lambda a: (a < 0).sum())
             worse = (lambda a: (a < 0).sum()) if higher_better else (lambda a: (a > 0).sum())
             nw = int(sum(better(a) for a in arrs)); nl = int(sum(worse(a) for a in arrs))
-            rows.append((comp, len(arrs), obs, lo, hi, p1, p2, nw, nl))
+            rows.append((comp, K, obs, lo, hi, p1, p2, nw, nl))
             p1s.append(p1)
         hp = holm(p1s)
         out = [f"## {heading}", "", note, "",
@@ -264,13 +259,15 @@ def main():
              "approximation — deterministic, no Monte-Carlo floor) on the "
              f"**macroΔ** (mean over contrasts of each contrast's mean paired diff, ref − competitor, "
              f"{unit}; equal weight per contrast, matching the summary `all` column — so one large "
-             "external test set can't dominate). 95% CI = hierarchical bootstrap (resample cases "
-             "within contrast). HEADLINE = **`p (1-sided, ours>comp)`** (Holm across competitors) — "
+             "external test set can't dominate). The sign-flip unit is the PATIENT: a patient's "
+             "diffs across organs, trained models"
+             + (" and test contrasts" if unit_scope == "patient" else " (within one contrast)")
+             + " flip together (`unit_scope: " + unit_scope + "`). 95% CI = bootstrap over "
+             "those same patient units (resampled within each source/organ footprint). HEADLINE = **`p (1-sided, ours>comp)`** (Holm across competitors) — "
              "the hypothesis is directional (our method is designed to improve generalization); "
              "`p (2-sided)` is kept as a secondary column and is what flags a significant in-domain "
              "LOSS (where the 1-sided 'ours better' p is ≈1 and correctly unstarred). `case W/L` = "
-             "held-out cases where ref wins/loses (for a grouped contrast, counts pooled/organ-mean "
-             "units, not raw cases — see the group tree below). Per-case scores are fold-0-2-capped "
+             "held-out patients (units) where ref wins/loses, counted per contrast/group. Per-case scores are fold-0-2-capped "
              "means over labels.",
              "",
              f"Contrast-group pooling: **{'ON' if contrast_groups else 'OFF (flat per-column, current default strategy)'}**.",

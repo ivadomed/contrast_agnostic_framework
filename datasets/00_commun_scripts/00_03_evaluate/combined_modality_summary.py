@@ -69,7 +69,7 @@ import yaml
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent / "00_00_utils"))  # sibling: 00_commun_scripts/00_00_utils
 from eval_folds import EVAL_FOLD_INDICES, filter_fold_dirs  # noqa: E402
-from stat_tests import holm, macro_perm  # noqa: E402 — shared math, see stat_tests.py
+from stat_tests import holm, macro_perm, macro_perm_design  # noqa: E402 — shared math, see stat_tests.py
 
 # Reuse run-dir resolution + display/formatting helpers from the per-modality
 # aggregator so a method label renders identically in both table families.
@@ -178,7 +178,8 @@ def paired(ref_cases: dict, comp_cases: dict, col: str) -> tuple:
 
 
 def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, metric: str,
-                        modalities: list, contrast_groups: dict = None) -> dict:
+                        modalities: list, contrast_groups: dict = None,
+                        unit_scope: str = _agg.DEFAULT_UNIT_SCOPE) -> dict:
     """method_key -> Holm-corrected one-sided ("ref better") macroΔ p-value vs ref.
 
     Same estimand/test as significance_from_config.py's headline block
@@ -188,38 +189,19 @@ def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, m
 
     contrast_groups (optional): same hierarchical pooling tree as
     aggregate_from_config.py/significance_from_config.py — see resolve_group's
-    block comment. When given, resolved per-method via load_combined_cases_by_label
-    (still modality-tagged) instead of flat load_combined_cases.
-    """
+    block comment; without it every raw column is its own stratum. Data comes from
+    load_combined_cases_by_label (case tags "<training_modality>::<dataset>|<case>"),
+    and the test runs on patient-level sign-flip units: the same test patient scored by
+    each training modality's model — and, at unit_scope="patient", appearing in several
+    test contrasts — flips as ONE unit (see aggregate_from_config.build_design)."""
     higher_better = metric == "dice"
+    groups = contrast_groups if contrast_groups else {c: c for c in all_contrasts}
+    label_data = {k: load_combined_cases_by_label(modalities, k, metric) for k in runs_ordered}
     competitors = [k for k in runs_ordered if k != ref_key]
-    if contrast_groups:
-        label_data = {k: load_combined_cases_by_label(modalities, k, metric) for k in runs_ordered}
-        ref_by_label = label_data[ref_key]
-        p1s = []
-        for key in competitors:
-            arrs = []
-            for g in contrast_groups.values():
-                arr = _agg.resolve_group(g, ref_by_label, label_data[key])
-                if len(arr):
-                    arrs.append(arr)
-            _, _, p1 = macro_perm(arrs, higher_better)
-            p1s.append(p1)
-        hp = holm(p1s)
-        out = {ref_key: float("nan")}
-        out.update(dict(zip(competitors, hp)))
-        return out
-    ref_cases = load_combined_cases(modalities, ref_key, metric)
     p1s = []
     for key in competitors:
-        comp_cases = load_combined_cases(modalities, key, metric)
-        arrs = []
-        for col in all_contrasts:
-            x, y = paired(ref_cases, comp_cases, col)
-            if len(x):
-                arrs.append(x - y)
-        _, _, p1 = macro_perm(arrs, higher_better)
-        p1s.append(p1)
+        entries, K = _agg.build_design(groups, label_data[ref_key], label_data[key], unit_scope)
+        p1s.append(macro_perm_design(entries, K, higher_better)[2])
     hp = holm(p1s)
     out = {ref_key: float("nan")}
     out.update(dict(zip(competitors, hp)))
@@ -477,7 +459,8 @@ def main():
     all_contrasts = sorted({c for d in runs_data.values() for c in d.get("dice", {})})
     sig_by_metric = {
         metric: significance_column(runs_ordered, ref_key, all_contrasts, metric, modalities,
-                                    contrast_groups=contrast_groups)
+                                    contrast_groups=contrast_groups,
+                                    unit_scope=cfg.get("unit_scope", _agg.DEFAULT_UNIT_SCOPE))
         for metric in ("dice", "hd95")
     }
 
