@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
-Self-checks for the unit-level (patient) sign-flip design used by every macroΔ
-significance test — stat_tests.py's design primitives + aggregate_from_config.build_design.
-Synthetic data only, no dataset needed:
+Self-checks for the macroΔ significance machinery in stat_tests.py (design/tail
+primitives) and aggregate_from_config.py (build_design, and the per-case flat-pool
+that feeds it). Synthetic data only, no dataset needed:
 
     .venv/bin/python datasets/00_commun_scripts/00_03_evaluate/test_significance_units.py
 
-What each test proves (the third is the one that distinguishes a working fix from a
-plausible-looking one — before 2026-09-21 a nested organ group collapsed to one element
-per ORGAN, so no amount of extra cases could shrink its variance):
+What each test proves (3 and 6 are the ones that distinguish a working fix from a
+plausible-looking one):
   1. flat, all-unique-unit data  -> same macroΔ and same null variance as the legacy `macro_perm`
   2. nested organ group          -> analytic sign-flip variance == Monte-Carlo sign-flip null
   2b. p-value TAIL               -> exact when few units; matches Monte-Carlo when 3 heavy units
@@ -16,6 +15,10 @@ per ORGAN, so no amount of extra cases could shrink its variance):
   3. more cases in a nested group-> its sign-flip SD SHRINKS (~1/sqrt(n)); a per-organ collapse can't
   4. same patient scored by two trained models / in two contrasts -> ONE unit
   5. the point estimate (macroΔ) is untouched by any of this
+  6. a case's per-case value FLAT-POOLS labels+folds (cross_fold_class_mean's own
+     convention), not an equal-weight-per-label average of already-fold-averaged
+     numbers — the 2026-09-21 label-averaging regression: a label with fewer valid
+     folds than another must NOT get the same weight as a fully-covered one.
 """
 import importlib.util
 import sys
@@ -33,19 +36,26 @@ agg = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(agg)
 
 
-def _by_label(col_label_cases: dict) -> dict:
-    """{(col, label): {tag: value}} -> the loaders' col -> label -> {tag: value} shape."""
+def _raw(col_case_labels: dict) -> dict:
+    """{(col, case_tag): {label: {fold: value}}} -> col -> case -> label -> fold -> value
+    (load_run_cases_raw's return shape — what build_design/resolve_group/
+    _case_flat_value consume)."""
     out = {}
-    for (col, lab), cases in col_label_cases.items():
-        out.setdefault(col, {})[lab] = dict(cases)
+    for (col, tag), labs in col_case_labels.items():
+        out.setdefault(col, {})[tag] = labs
     return out
 
 
-def _pair(rng, tags, delta, sd=0.05, col_lab=("c", "x")):
-    """(ref, comp) by-label dicts with ref = comp + delta + noise over `tags`."""
-    comp = {t: rng.uniform(0.5, 0.9) for t in tags}
-    ref = {t: comp[t] + delta + rng.normal(0, sd) for t in tags}
-    return _by_label({col_lab: ref}), _by_label({col_lab: comp})
+def _pair(rng, tags, delta, sd=0.05, col="c", label="x", n_folds=3):
+    """(ref, comp) raw dicts: one column/label, `n_folds` folds per case (all equal —
+    the case where equal-weight-per-label and flat-pooling agree; test 6 covers the
+    unequal-fold-count case that tells them apart)."""
+    comp, ref = {}, {}
+    for t in tags:
+        base = rng.uniform(0.5, 0.9)
+        comp[(col, t)] = {label: {f"fold{f}": base + rng.normal(0, sd) for f in range(n_folds)}}
+        ref[(col, t)] = {label: {f"fold{f}": base + delta + rng.normal(0, sd) for f in range(n_folds)}}
+    return _raw(ref), _raw(comp)
 
 
 def test_flat_matches_legacy():
@@ -53,9 +63,10 @@ def test_flat_matches_legacy():
     arrs, groups, R, C = [], {}, {}, {}
     for j, (n, delta) in enumerate([(8, 0.01), (20, 0.03), (40, -0.005)]):
         tags = [f"ds|p{j}_{i}" for i in range(n)]
-        r, c = _pair(rng, tags, delta, col_lab=(f"col{j}", "x"))
+        r, c = _pair(rng, tags, delta, col=f"col{j}")
         R.update(r); C.update(c); groups[f"g{j}"] = f"col{j}"
-        arrs.append(np.array([r[f"col{j}"]["x"][t] - c[f"col{j}"]["x"][t] for t in tags]))
+        arrs.append(np.array([agg._case_flat_value(r[f"col{j}"][t]) - agg._case_flat_value(c[f"col{j}"][t])
+                              for t in tags]))
     entries, K = agg.build_design(groups, R, C, "patient")
     new, old = macro_perm_design(entries, K, True), macro_perm(arrs, True)
     assert np.isclose(new[0], old[0], rtol=1e-12), (new, old)                       # macroΔ identical
@@ -68,14 +79,25 @@ def test_flat_matches_legacy():
     print("ok 1  flat design: same macroΔ + null variance as legacy macro_perm; p", round(new[2], 5), "vs normal", round(old[2], 5))
 
 
+def _merge_raw(dst: dict, src: dict) -> None:
+    """dst[col][case] gets src[col][case]'s labels MERGED in (not overwritten) — a raw
+    dict's per-case value is itself a dict keyed by label, so a plain .update() at the
+    case level would drop whichever organ was already there for that case."""
+    for col, cases in src.items():
+        d = dst.setdefault(col, {})
+        for case, labs in cases.items():
+            d.setdefault(case, {}).update(labs)
+
+
 def _ct_like(rng, n_amos, n_chaos, delta=(0.04, 0.02, 0.03)):
     """Nested group: liver pools two sources, spleen/kidney from one; AMOS patients carry all 3 organs."""
     R, C = {}, {}
     for organ, d in zip(("liver", "spleen", "kidney"), delta):
         tags = [f"amos|a{i}" for i in range(n_amos)]
-        r, c = _pair(rng, tags, d, col_lab=("amos_ct", organ)); R.setdefault("amos_ct", {}).update(r["amos_ct"]); C.setdefault("amos_ct", {}).update(c["amos_ct"])
-    r, c = _pair(rng, [f"chaos|c{i}" for i in range(n_chaos)], delta[0], col_lab=("chaos_ct", "liver"))
-    R.update(r); C.update(c)
+        r, c = _pair(rng, tags, d, col="amos_ct", label=organ)
+        _merge_raw(R, r); _merge_raw(C, c)
+    r, c = _pair(rng, [f"chaos|c{i}" for i in range(n_chaos)], delta[0], col="chaos_ct", label="liver")
+    _merge_raw(R, r); _merge_raw(C, c)
     group = {"liver": [{"column": "amos_ct", "label": "liver"}, {"column": "chaos_ct", "label": "liver"}],
              "spleen": {"column": "amos_ct", "label": "spleen"},
              "kidney": {"column": "amos_ct", "label": "kidney"}}
@@ -156,8 +178,8 @@ def test_patient_units_merge():
     R, C = {}, {}
     for col in ("t1in", "t1out"):                        # same 4 patients, two test contrasts
         for mod, d in (("m1", 0.02), ("m2", -0.01)):     # scored by two trained models
-            r, c = _pair(rng, [f"{mod}::{p}" for p in pats], d, col_lab=(col, "x"))
-            R.setdefault(col, {}).setdefault("x", {}).update(r[col]["x"]); C.setdefault(col, {}).setdefault("x", {}).update(c[col]["x"])
+            r, c = _pair(rng, [f"{mod}::{p}" for p in pats], d, col=col)
+            R.setdefault(col, {}).update(r[col]); C.setdefault(col, {}).update(c[col])
     groups = {"t1in": "t1in", "t1out": "t1out"}
     e_pat, K = agg.build_design(groups, R, C, "patient")
     e_str, _ = agg.build_design(groups, R, C, "stratum")
@@ -165,8 +187,8 @@ def test_patient_units_merge():
     assert len({e[2] for e in e_str}) == 8, "stratum scope: 4 patients x 2 strata must be 8 units"
     # merging the two trained models: 2 arrays (one per contrast) of 4 elements, not 8
     assert [a.size for a in stratum_arrays(e_pat)] == [4, 4]
-    assert np.isclose(agg.resolve_group("t1in", R, C).mean(),
-                      np.mean([R["t1in"]["x"][t] - C["t1in"]["x"][t] for t in R["t1in"]["x"]]))
+    expect = np.mean([agg._case_flat_value(R["t1in"][t]) - agg._case_flat_value(C["t1in"][t]) for t in R["t1in"]])
+    assert np.isclose(agg.resolve_group("t1in", R, C).mean(), expect)
     print("ok 4  8 model-tagged cases -> 4 patient units; 4 patients x 2 contrasts -> 4 (patient) / 8 (stratum) units")
 
 
@@ -174,7 +196,8 @@ def test_point_estimate_untouched():
     rng = np.random.default_rng(5)
     R, C, group = _ct_like(rng, 50, 20)
     entries, K = agg.build_design({"CT": group}, R, C, "patient")
-    d = lambda col, lab, pool=None: np.array([R[col][lab][t] - C[col][lab][t] for t in R[col][lab]])
+    d = lambda col, lab: np.array([agg._case_flat_value(R[col][t], lab) - agg._case_flat_value(C[col][t], lab)
+                                   for t in R[col]])
     liver = np.concatenate([d("amos_ct", "liver"), d("chaos_ct", "liver")])   # a list POOLS cases
     expect = np.mean([liver.mean(), d("amos_ct", "spleen").mean(), d("amos_ct", "kidney").mean()])
     got = macro_perm_design(entries, K, True)[0]
@@ -182,9 +205,38 @@ def test_point_estimate_untouched():
     print("ok 5  macroΔ = per-organ-then-cross-organ mean, unchanged:", round(got, 6))
 
 
+def test_label_flat_pool_not_equal_weight():
+    """The 2026-09-21 regression this closed: a label=None leaf (e.g. a plain contrast
+    column, or brats2024-glioma's flat non-grouped configs) must FLAT-POOL every
+    applicable label's raw fold-level values — same convention as
+    cross_fold_class_mean/resolve_group_value for the displayed table cell — not average
+    each label's own already-fold-averaged mean with equal weight regardless of how many
+    folds backed it. Construct a case where label A has 3 valid folds and label B has
+    only 1 (a tumor sub-region absent — Dice undefined/dropped — in 2 of 3 folds'
+    predictions): flat-pool weights A's 3 samples over B's 1 (4:1); equal-weight-per-
+    label would give A and B equal say (1:1) regardless."""
+    case = {"A": {"fold0": 0.10, "fold1": 0.20, "fold2": 0.30}, "B": {"fold0": 0.90}}
+    flat = agg._case_flat_value(case)                    # label=None -> pool all labels
+    # cross_fold_class_mean's convention: mean of PER-FOLD means (each fold's mean pools
+    # whichever labels have a value in that fold) — fold0 mixes A and B (mean 0.5), fold1/2
+    # are A-only (0.2, 0.3); NOT a naive flat mean of the 4 raw numbers (0.375).
+    flat_pool_expected = np.mean([np.mean([0.10, 0.90]), 0.20, 0.30])
+    equal_weight_wrong = np.mean([np.mean([0.10, 0.20, 0.30]), 0.90])  # the regression's answer
+    assert np.isclose(flat, flat_pool_expected), (flat, flat_pool_expected)
+    assert not np.isclose(flat, equal_weight_wrong), "still averaging per-label instead of flat-pooling"
+    # explicit label is untouched either way (one value per fold, degenerates to a plain mean)
+    assert np.isclose(agg._case_flat_value(case, "A"), np.mean([0.10, 0.20, 0.30]))
+    # end-to-end via _leaf_entries / resolve_group_entries on a label=None leaf
+    R = {"col": {"p1": case}}
+    C = {"col": {"p1": {"A": {"fold0": 0.0, "fold1": 0.0, "fold2": 0.0}, "B": {"fold0": 0.0}}}}
+    ents = agg.resolve_group_entries("col", R, C)
+    assert len(ents) == 1 and np.isclose(ents[0][2], flat_pool_expected), ents
+    print(f"ok 6  label=None leaf flat-pools raw values ({flat:.4f}) not per-label-equal-weight ({equal_weight_wrong:.4f})")
+
+
 if __name__ == "__main__":
     for t in (test_flat_matches_legacy, test_variance_matches_monte_carlo, test_tail_exact_and_monte_carlo,
-              test_more_cases_shrink_variance,
-              test_patient_units_merge, test_point_estimate_untouched):
+              test_more_cases_shrink_variance, test_patient_units_merge, test_point_estimate_untouched,
+              test_label_flat_pool_not_equal_weight):
         t()
     print("all significance-unit checks passed")

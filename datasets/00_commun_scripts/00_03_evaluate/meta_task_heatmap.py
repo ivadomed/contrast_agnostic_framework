@@ -134,16 +134,16 @@ def task_pooled_diffs(modalities: list, ref_key: str, comp_key: str, metric: str
     then concatenate every group's array into one task stratum — preserves
     "one stratum per TASK" (this function's whole point) while fixing the same
     vote-imbalance the per-dataset headline tests already got fixed for."""
-    ref_by_label = _cms.load_combined_cases_by_label(modalities, ref_key, metric)
-    comp_by_label = _cms.load_combined_cases_by_label(modalities, comp_key, metric)
+    ref_raw = _cms.load_combined_cases_raw(modalities, ref_key, metric)
+    comp_raw = _cms.load_combined_cases_raw(modalities, comp_key, metric)
     if not contrast_groups:      # flat task: each raw contrast column is its own (trivial) group
-        contrast_groups = {c: c for c in sorted(set(ref_by_label) | set(comp_by_label))}
+        contrast_groups = {c: c for c in sorted(set(ref_raw) | set(comp_raw))}
     # resolve_group yields one element PER PATIENT within a group (the two training
     # modalities' scores of the same test patient merged, hierarchical groups no longer
     # collapsed to organ means) — 2026-09-21 fix, see stat_tests.py's design primitives.
     # NOT covered here: the same patient recurring in several contrasts of a task is still
     # several elements of this pooled stratum (the per-dataset tables do join those).
-    pooled = [_agg.resolve_group(g, ref_by_label, comp_by_label) for g in contrast_groups.values()]
+    pooled = [_agg.resolve_group(g, ref_raw, comp_raw) for g in contrast_groups.values()]
     pooled = [p for p in pooled if len(p)]
     return np.concatenate(pooled) if pooled else np.array([])
 

@@ -92,7 +92,7 @@ _agg = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_agg)
 resolve_run_dir = _agg.resolve_run_dir
 load_run_cases = _agg.load_run_cases
-load_run_cases_by_label = _agg.load_run_cases_by_label
+load_run_cases_raw = _agg.load_run_cases_raw
 paired = _agg.paired
 # contrast_groups hierarchical pooling: implementation lives in
 # aggregate_from_config.py (shared with its own inline sig column + "all"
@@ -185,7 +185,7 @@ def main():
     group_note_lines = []
 
     if contrast_groups:
-        label_data = {r: load_run_cases_by_label(sources, r, args.metric) for r in runs}
+        raw_data = {r: load_run_cases_raw(sources, r, args.metric) for r in runs}
         group_names = list(contrast_groups.keys())
         # in_domain_contrast usually names a raw column (e.g. "open-ms_flair"), but a
         # group pooling that same modality across sources is typically named without
@@ -225,11 +225,11 @@ def main():
     unit_scope = cfg.get("unit_scope", _agg.DEFAULT_UNIT_SCOPE)
     groups_eff = contrast_groups if contrast_groups else {c: c for c in cols}
     if not contrast_groups:
-        label_data = {r: load_run_cases_by_label(sources, r, args.metric) for r in runs}
+        raw_data = {r: load_run_cases_raw(sources, r, args.metric) for r in runs}
 
     def design(comp, subset):
         return _agg.build_design({g: groups_eff[g] for g in subset},
-                                 label_data[ref], label_data[comp], unit_scope)
+                                 raw_data[ref], raw_data[comp], unit_scope)
 
     def block_table(subset, heading, note):
         # HEADLINE = one-sided directional ("ours better") p, Holm-corrected across

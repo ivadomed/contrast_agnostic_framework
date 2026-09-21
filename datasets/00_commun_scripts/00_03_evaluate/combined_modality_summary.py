@@ -150,25 +150,23 @@ def load_combined_cases(modalities: list, method_key: str, metric: str) -> dict:
             for col, cases in per.items()}
 
 
-def load_combined_cases_by_label(modalities: list, method_key: str, metric: str) -> dict:
-    """col -> label -> {case_tag: value} — the label-preserving sibling of
-    load_combined_cases, needed by contrast_groups (see resolve_group's block
-    comment in aggregate_from_config.py) to pool/organ-split BEFORE collapsing
-    across labels. case_tag = "<modality>::<case>", same tagging as
+def load_combined_cases_raw(modalities: list, method_key: str, metric: str) -> dict:
+    """col -> case_tag -> label -> fold_name -> value — the fold-level sibling of
+    load_combined_cases, needed by contrast_groups (see resolve_group's block comment
+    in aggregate_from_config.py, and _case_flat_value there for why fold-level
+    granularity — not a pre-averaged per-label mean — is what a label=None leaf needs
+    to flat-pool correctly). case_tag = "<modality>::<case>", same tagging as
     load_combined_cases so the ref/competitor pairing stays modality-correct."""
-    per = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    per = defaultdict(dict)
     for mod in modalities:
         run_id = mod["runs"].get(method_key)
         if not run_id:
             continue
-        per_col_label = _agg.load_run_cases_by_label(mod["sources"], run_id, metric)
-        for col, labs in per_col_label.items():
-            for lab, cases in labs.items():
-                for case_id, v in cases.items():
-                    per[col][lab][f'{mod["name"]}::{case_id}'].append(v)
-    return {col: {lab: {c: float(np.mean(vs)) for c, vs in cases.items() if vs}
-                  for lab, cases in labs.items()}
-            for col, labs in per.items()}
+        per_col = _agg.load_run_cases_raw(mod["sources"], run_id, metric)
+        for col, cases in per_col.items():
+            for case_id, labs in cases.items():
+                per[col][f'{mod["name"]}::{case_id}'] = labs
+    return dict(per)
 
 
 def paired(ref_cases: dict, comp_cases: dict, col: str) -> tuple:
@@ -190,17 +188,17 @@ def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, m
     contrast_groups (optional): same hierarchical pooling tree as
     aggregate_from_config.py/significance_from_config.py — see resolve_group's
     block comment; without it every raw column is its own stratum. Data comes from
-    load_combined_cases_by_label (case tags "<training_modality>::<dataset>|<case>"),
+    load_combined_cases_raw (case tags "<training_modality>::<dataset>|<case>"),
     and the test runs on patient-level sign-flip units: the same test patient scored by
     each training modality's model — and, at unit_scope="patient", appearing in several
     test contrasts — flips as ONE unit (see aggregate_from_config.build_design)."""
     higher_better = metric == "dice"
     groups = contrast_groups if contrast_groups else {c: c for c in all_contrasts}
-    label_data = {k: load_combined_cases_by_label(modalities, k, metric) for k in runs_ordered}
+    raw_data = {k: load_combined_cases_raw(modalities, k, metric) for k in runs_ordered}
     competitors = [k for k in runs_ordered if k != ref_key]
     p1s = []
     for key in competitors:
-        entries, K = _agg.build_design(groups, label_data[ref_key], label_data[key], unit_scope)
+        entries, K = _agg.build_design(groups, raw_data[ref_key], raw_data[key], unit_scope)
         p1s.append(macro_perm_design(entries, K, higher_better)[2])
     hp = holm(p1s)
     out = {ref_key: float("nan")}

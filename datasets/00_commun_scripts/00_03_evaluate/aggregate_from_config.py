@@ -231,22 +231,18 @@ def _dataset_ns(metrics_dir, idx: int) -> str:
     return m.group(1) if m else f"src{idx}"
 
 
-def load_run_cases_by_label(sources: list, key: str, metric: str) -> dict:
-    """col -> label -> {case_key: mean metric over folds in EVAL_FOLD_INDICES}, where
-    case_key = "<dataset>|<case_id>" (see _dataset_ns: a namespaced patient identity, so
-    the significance code can tell "same patient" from "same bare id in another dataset").
-
-    Same fold-capping and case-unit-of-analysis rules as load_run_cases, but
-    WITHOUT collapsing across labels within a column — the label dimension
-    (e.g. amos's "ct" column carries liver/right_kidney/left_kidney/spleen
-    rows) is kept intact. Used only by significance_from_config.py's
-    `contrast_groups` hierarchical pooling (e.g. "average CT-liver across
-    every source that has a liver label, then average across organs, then
-    across modalities") — load_run_cases's flat per-column collapse is what
-    that feature needs to see PAST. See significance_from_config.py's
-    `resolve_group`/`_leaf_diff` for how this is consumed.
-    """
-    per = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+def load_run_cases_raw(sources: list, key: str, metric: str) -> dict:
+    """col -> case_key -> label -> fold_name -> value. case_key = "<dataset>|<case_id>"
+    (see _dataset_ns). Fold-level granularity is kept (nothing averaged yet) — the one
+    place values survive long enough to flat-pool across labels EXACTLY the way
+    cross_fold_class_mean/resolve_group_value do for the displayed table cell: mean of
+    fold-means, each fold-mean itself pooling every applicable label's value in that
+    fold. A structure that averages folds per (label, case) first (as this used to)
+    can't reproduce that when a case has an unequal number of valid folds per label
+    (e.g. a tumor sub-region absent — Dice undefined/dropped — in one fold's prediction
+    but present in another's) — see `_case_flat_value` for where this is consumed, and
+    `project_significance_labelflat_fix_20260921` for the regression this closed."""
+    per = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
     for si, src in enumerate(sources):
         run_dir = resolve_run_dir(src["metrics_dir"], key)
         if run_dir is None:
@@ -272,10 +268,44 @@ def load_run_cases_by_label(sources: list, key: str, metric: str) -> dict:
                     except (KeyError, ValueError):
                         continue
                     if np.isfinite(v):
-                        per[col][row["label"]][f"{ns}|{row['case']}"].append(v)
-    return {col: {lab: {c: float(np.mean(vs)) for c, vs in cases.items() if vs}
-                  for lab, cases in labs.items()}
-            for col, labs in per.items()}
+                        per[col][f"{ns}|{row['case']}"][row["label"]][fold_dir.name] = v
+    return {col: {c: {lab: dict(folds) for lab, folds in labs.items()} for c, labs in cases.items()}
+            for col, cases in per.items()}
+
+
+def _case_flat_value(case_data: dict, label: str = None) -> float:
+    """One case's cross_fold_class_mean-style descriptive value, from load_run_cases_raw's
+    per-(label, fold) data: mean of fold-means, each fold-mean pooling every applicable
+    label's value in that fold (label=None — the "all labels" convention every plain-
+    string contrast_groups leaf and every flat/ungrouped column uses) or just the one
+    named label's value (an explicit `{column, label}` leaf — unaffected by this, one
+    value per fold either way). NaN if nothing applies."""
+    labels = [label] if label is not None else list(case_data)
+    per_fold = defaultdict(list)
+    for lab in labels:
+        for fold, v in case_data.get(lab, {}).items():
+            per_fold[fold].append(v)
+    if not per_fold:
+        return float("nan")
+    return float(np.mean([np.mean(vs) for vs in per_fold.values()]))
+
+
+def load_run_cases_by_label(sources: list, key: str, metric: str) -> dict:
+    """col -> label -> {case_key: mean metric over folds in EVAL_FOLD_INDICES}, where
+    case_key = "<dataset>|<case_id>" (see _dataset_ns). Thin per-label-mean view of
+    load_run_cases_raw, kept for callers that want one label's own descriptive value
+    (e.g. printing a group tree's per-source detail) — NOT used any more to resolve a
+    label=None contrast_groups leaf (see _case_flat_value: that needs fold-level
+    granularity, which averaging away here would lose)."""
+    raw = load_run_cases_raw(sources, key, metric)
+    out = {}
+    for col, cases in raw.items():
+        by_label = defaultdict(dict)
+        for case, labs in cases.items():
+            for lab, folds in labs.items():
+                by_label[lab][case] = float(np.mean(list(folds.values())))
+        out[col] = dict(by_label)
+    return out
 
 
 def paired(ref_cases: dict, comp_cases: dict, col: str) -> tuple:
@@ -309,11 +339,11 @@ def significance_column(sources: list, runs_ordered: list, ref_key: str,
     units (`unit_scope`, see build_design / stat_tests.py's design-primitives block)."""
     higher_better = metric == "dice"
     groups = contrast_groups if contrast_groups else {c: c for c in all_contrasts}
-    label_data = {k: load_run_cases_by_label(sources, k, metric) for k in runs_ordered}
+    raw_data = {k: load_run_cases_raw(sources, k, metric) for k in runs_ordered}
     competitors = [k for k in runs_ordered if k != ref_key]
     p1s = []
     for key in competitors:
-        entries, K = build_design(groups, label_data[ref_key], label_data[key], unit_scope)
+        entries, K = build_design(groups, raw_data[ref_key], raw_data[key], unit_scope)
         p1s.append(macro_perm_design(entries, K, higher_better)[2])
     hp = holm(p1s)
     out = {ref_key: float("nan")}
@@ -426,33 +456,6 @@ def resolve_group_value(node, run_data: dict, metric: str) -> float:
     return m
 
 
-def _leaf_diff(ref_by_label: dict, comp_by_label: dict, leaf) -> np.ndarray:
-    col, label = leaf if isinstance(leaf, tuple) else (leaf, None)
-    if isinstance(leaf, dict):
-        col, label = leaf["column"], leaf.get("label")
-    elif isinstance(leaf, str):
-        col, label = leaf, None
-    r_labs, c_labs = ref_by_label.get(col, {}), comp_by_label.get(col, {})
-    if label is not None:
-        r_cases, c_cases = r_labs.get(label, {}), c_labs.get(label, {})
-    else:
-        r_cases, c_cases = _collapse_labels(r_labs), _collapse_labels(c_labs)
-    common = sorted(set(r_cases) & set(c_cases))
-    if not common:
-        return np.array([])
-    x = np.array([r_cases[c] for c in common])
-    y = np.array([c_cases[c] for c in common])
-    return x - y
-
-
-def _collapse_labels(labs: dict) -> dict:
-    per_case = defaultdict(list)
-    for cases in labs.values():
-        for c, v in cases.items():
-            per_case[c].append(v)
-    return {c: float(np.mean(vs)) for c, vs in per_case.items()}
-
-
 def unit_of(case_tag: str) -> str:
     """Physical-patient identity of a case tag. Tags look like "<dataset>|<case>"
     (single-modality) or "<training_modality>::<dataset>|<case>" (combined tables —
@@ -461,19 +464,28 @@ def unit_of(case_tag: str) -> str:
     return case_tag.split("::", 1)[-1]
 
 
-def _leaf_entries(ref_by_label: dict, comp_by_label: dict, leaf) -> list:
-    """[(leaf_id, case_tag, diff)] for one leaf (column, optional label) — the
-    tag-preserving twin of `_leaf_diff` (same case matching, same label collapse)."""
+def _leaf_entries(ref_raw: dict, comp_raw: dict, leaf) -> list:
+    """[(leaf_id, case_tag, diff)] for one leaf (column, optional label), from
+    load_run_cases_raw's fold-level data. label=None flat-pools every applicable label
+    into each fold's mean first (via `_case_flat_value` — matches
+    cross_fold_class_mean/resolve_group_value's convention for the displayed table
+    cell); an explicit `label:` uses only that label. Fixes a 2026-09-21 regression:
+    an earlier version of this function averaged each label's own per-case mean
+    equally regardless of how many folds backed it (`_collapse_labels` on
+    already-fold-averaged data), which silently diverged from the table whenever a
+    case had an unequal number of valid folds per label — see
+    `project_significance_labelflat_fix_20260921`."""
     col, label = (leaf, None) if isinstance(leaf, str) else (leaf["column"], leaf.get("label"))
-    r_labs, c_labs = ref_by_label.get(col, {}), comp_by_label.get(col, {})
-    if label is not None:
-        r_cases, c_cases = r_labs.get(label, {}), c_labs.get(label, {})
-    else:
-        r_cases, c_cases = _collapse_labels(r_labs), _collapse_labels(c_labs)
-    return [((col, label), t, r_cases[t] - c_cases[t]) for t in sorted(set(r_cases) & set(c_cases))]
+    r_col, c_col = ref_raw.get(col, {}), comp_raw.get(col, {})
+    out = []
+    for t in sorted(set(r_col) & set(c_col)):
+        rv, cv = _case_flat_value(r_col[t], label), _case_flat_value(c_col[t], label)
+        if np.isfinite(rv) and np.isfinite(cv):
+            out.append(((col, label), t, rv - cv))
+    return out
 
 
-def resolve_group_entries(node, ref_by_label: dict, comp_by_label: dict) -> list:
+def resolve_group_entries(node, ref_raw: dict, comp_raw: dict) -> list:
     """Recursively resolve a contrast_groups node to [(leaf_id, case_tag, weight*diff)],
     the weights summing to 1 — so Σ of the third column IS the group's paired mean diff
     (ref − comp), with exactly the pool-cases-in-a-list / equal-weight-per-child-in-a-dict
@@ -481,40 +493,41 @@ def resolve_group_entries(node, ref_by_label: dict, comp_by_label: dict) -> list
     collapsing a nested group to one number per organ, as this used to) is what lets the
     significance tests see patients — see stat_tests.py's design-primitives block."""
     if isinstance(node, str) or (isinstance(node, dict) and "column" in node):
-        ents = _leaf_entries(ref_by_label, comp_by_label, node)
+        ents = _leaf_entries(ref_raw, comp_raw, node)
         return [(lid, t, d / len(ents)) for lid, t, d in ents]
     if isinstance(node, list):
         # A list POOLS cases across its leaves (concatenate, then mean) — lists only ever
         # hold leaves / lists of leaves (see _leaf_refs), so weight = 1 / total cases.
-        raw = _raw_leaf_entries(node, ref_by_label, comp_by_label)
+        raw = _raw_leaf_entries(node, ref_raw, comp_raw)
         return [(lid, t, d / len(raw)) for lid, t, d in raw]
     if isinstance(node, dict):
-        kids = [resolve_group_entries(v, ref_by_label, comp_by_label) for v in node.values()]
+        kids = [resolve_group_entries(v, ref_raw, comp_raw) for v in node.values()]
         kids = [k for k in kids if k]
         return [(lid, t, c / len(kids)) for k in kids for lid, t, c in k]
     raise ValueError(f"bad contrast_groups node: {node!r}")
 
 
-def _raw_leaf_entries(node, ref_by_label: dict, comp_by_label: dict) -> list:
+def _raw_leaf_entries(node, ref_raw: dict, comp_raw: dict) -> list:
     """Unweighted [(leaf_id, tag, diff)] of every leaf under a leaf/list node."""
     if isinstance(node, list):
-        return [e for n in node for e in _raw_leaf_entries(n, ref_by_label, comp_by_label)]
+        return [e for n in node for e in _raw_leaf_entries(n, ref_raw, comp_raw)]
     if isinstance(node, str) or (isinstance(node, dict) and "column" in node):
-        return _leaf_entries(ref_by_label, comp_by_label, node)
+        return _leaf_entries(ref_raw, comp_raw, node)
     raise ValueError(f"contrast_groups: dict not supported nested inside a list: {node!r}")
 
 
-def build_design(groups: dict, ref_by_label: dict, comp_by_label: dict,
+def build_design(groups: dict, ref_raw: dict, comp_raw: dict,
                  unit_scope: str = DEFAULT_UNIT_SCOPE) -> tuple:
     """(entries, K) for the design-based tests in stat_tests.py. One stratum per
     non-empty group in `groups` (name -> contrast_groups node); an entry's unit is the
     physical patient (`unit_scope="patient"`) or the patient within its stratum
-    (`"stratum"`). Groups with no paired cases are dropped, as before."""
+    (`"stratum"`). Groups with no paired cases are dropped, as before. `ref_raw`/
+    `comp_raw` come from load_run_cases_raw (fold-level, NOT load_run_cases_by_label)."""
     if unit_scope not in ("patient", "stratum"):
         raise ValueError(f"unit_scope must be 'patient' or 'stratum', got {unit_scope!r}")
     entries, K = [], 0
     for node in groups.values():
-        ents = resolve_group_entries(node, ref_by_label, comp_by_label)
+        ents = resolve_group_entries(node, ref_raw, comp_raw)
         if not ents:
             continue
         for lid, tag, c in ents:
@@ -524,13 +537,13 @@ def build_design(groups: dict, ref_by_label: dict, comp_by_label: dict,
     return entries, K
 
 
-def resolve_group(node, ref_by_label: dict, comp_by_label: dict) -> np.ndarray:
+def resolve_group(node, ref_raw: dict, comp_raw: dict) -> np.ndarray:
     """One stratum's paired diff array (ref − comp), ONE ELEMENT PER PATIENT, scaled so
     `arr.mean()` is the group's weighted mean diff and `(arr**2).sum()/arr.size**2` its
     sign-flip variance (see stat_tests.stratum_arrays). Kept for the flat-array callers
     (`macro_perm`/`macro_ci`, meta_task_heatmap, paper scripts); those get patient units
     WITHIN a group but no cross-group patient joining — use `build_design` for that."""
-    ents = resolve_group_entries(node, ref_by_label, comp_by_label)
+    ents = resolve_group_entries(node, ref_raw, comp_raw)
     arrs = stratum_arrays([(0, lid, unit_of(t), c) for lid, t, c in ents])
     return arrs[0] if arrs else np.array([])
 
