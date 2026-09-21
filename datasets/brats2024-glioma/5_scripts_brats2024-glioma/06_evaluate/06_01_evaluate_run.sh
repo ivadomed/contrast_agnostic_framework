@@ -22,6 +22,9 @@
 #     <contrast>/, a non-headline result set gets its own dedicated subdir" convention),
 #     so ad-hoc/ablation runs never mix into the flat headline layout. Predictions are
 #     read from the normal (non-subdir) path either way — only the metrics OUTPUT moves.
+#   EVAL_INLINE   unset (default) sbatch-es one CPU job per (fold, contrast) via run_job. Set
+#     to 1 when this script is itself already running inside a Slurm job (a dependent eval
+#     job queued behind a predict job) to run the per-contrast evaluations in-process.
 #
 # Examples:
 #   bash 06_01_evaluate_run.sh brats2024-glioma_t1n_v26_6_2_train090_val000_20260608_003445              # nnUNet, all folds
@@ -93,13 +96,18 @@ eval_fold() {
         [ -n "$(ls -A "$d"/*.nii.gz 2>/dev/null)" ] || continue
         [ -f "${EVAL_DIR}/${c}_metrics.csv" ] && { contrasts+=("$c"); continue; }
         contrasts+=("$c")
-        run_job --name "brats_eval_${RUN_ID}_fold${F}_${c}" \
-            --gpus 0 --slot "${SLOT}" --time "3:00:00" --mem 64G \
-            --log "${EVAL_DIR}/${c}_eval.log" --wait -- \
-            "${PROJECT_ROOT}/.venv/bin/python" "${HERE}/06_00_evaluate.py" \
-            --pred_dir "$d" --gt_dir "$GT_DIR" --dataset_json "$DJ" \
-            --name "$c" --out_csv "${EVAL_DIR}/${c}_metrics.csv" \
-            --workers 8 &
+        local _eval_cmd=("${PROJECT_ROOT}/.venv/bin/python" "${HERE}/06_00_evaluate.py"
+            --pred_dir "$d" --gt_dir "$GT_DIR" --dataset_json "$DJ"
+            --name "$c" --out_csv "${EVAL_DIR}/${c}_metrics.csv" --workers 8)
+        if [ -n "${EVAL_INLINE:-}" ]; then
+            # Already inside a dependent Slurm job (e.g. 06_20_tamia_eval_t2f.sh): run the
+            # per-contrast evaluation in-process instead of sbatch-ing a job per contrast.
+            "${_eval_cmd[@]}" > "${EVAL_DIR}/${c}_eval.log" 2>&1 &
+        else
+            run_job --name "brats_eval_${RUN_ID}_fold${F}_${c}" \
+                --gpus 0 --slot "${SLOT}" --time "3:00:00" --mem 64G \
+                --log "${EVAL_DIR}/${c}_eval.log" --wait -- "${_eval_cmd[@]}" &
+        fi
         pids+=($!)
     done
     local any_failed=0
