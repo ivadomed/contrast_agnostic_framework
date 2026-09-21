@@ -141,9 +141,17 @@ def main():
 
     # Pick reference run. --ref matches EXACTLY (not a substring): ablation variants
     # of the reference (e.g. "..._noisefill_...") share the "auglabAug"+"v26_6_2"
-    # substring, so a fuzzy match here could silently pick the wrong run.
+    # substring, so a fuzzy match here could silently pick the wrong run. `sig_ref:`
+    # in the config is checked next, same key aggregate_from_config.py already reads
+    # for its inline "sig. vs ref" column — datasets with short RUN_IDs (they don't
+    # literally embed "auglabAug"+"v26_6_2", e.g. totalseg-pelvic's "ct_ours_...")
+    # fall through the substring auto-pick to whatever OTHER run happens to contain
+    # "v26_6_2" (e.g. a val100 checkpoint-mirror run), silently picking the wrong
+    # reference with no error. Bug found + fixed 2026-09-21.
     if args.ref:
         ref = args.ref if args.ref in runs else None
+    elif cfg.get("sig_ref"):
+        ref = cfg["sig_ref"] if cfg["sig_ref"] in runs else None
     else:
         ref = next((r for r in runs if "auglabAug" in r and "v26_6_2" in r), None) \
             or next((r for r in runs if "v26_6_2" in r), None)
