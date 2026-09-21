@@ -5,14 +5,15 @@
 # x folds 0-2) so truncated predictions fail loudly instead of yielding silently partial metrics.
 #
 # Usage:
-#   bash 06_20_tamia_eval_t2f.sh <main|srcsm> afterany:<predict JOBID>
+#   bash 06_20_tamia_eval_t2f.sh <main|srcsm> afterany:<predict JOBID>     # or "none" if predictions already exist
 # `afterany` (not afterok) on purpose: the eval audit is the correctness gate, and afterok would
 # leave the jobs stuck in DependencyNeverSatisfied if a single predict fold-command failed.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 HERE_DIR="$(cd "${HERE}/.." && pwd)"
 GROUP="${1:?usage: 06_20_tamia_eval_t2f.sh <main|srcsm> afterany:<jobid>}"
-DEPENDENCY="${2:?dependency required, e.g. afterany:12345}"
+DEPENDENCY="${2:?dependency required, e.g. afterany:12345, or none}"
+DEP_ARGS=(); [ "${DEPENDENCY}" = "none" ] || DEP_ARGS=(--dependency="${DEPENDENCY}")
 source "${HERE_DIR}/00_utils/t2f_runs.sh"
 LOGDIR="/scratch/p/paulh/brats2024-glioma/_packruns/t2f_eval_${GROUP}_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "${LOGDIR}"
@@ -26,8 +27,8 @@ submit() {   # CPU-only sbatch on TamIA is inconsistent about --partition (see C
 
 for row in "${T2F_RUNS[@]}"; do IFS='|' read -r g name wrapper run cat msub <<<"${row}"
   [ "${g}" = "${GROUP}" ] || continue
-  jid="$(submit --dependency="${DEPENDENCY}" --job-name="brats_t2f_eval_${name}" --time=03:00:00 \
-        --cpus-per-task=16 --mem=64G --output="${LOGDIR}/eval_${name}_%j.out" \
+  jid="$(submit "${DEP_ARGS[@]}" --job-name="brats_t2f_eval_${name}" --time=03:00:00 \
+        --cpus-per-task=16 --mem=96G --output="${LOGDIR}/eval_${name}_%j.out" \
         --export="ALL,RUN_ID=${run},CATEGORY=${cat},METRICS_SUBDIR=${msub},HERE_DIR=${HERE_DIR}" \
         "${HERE}/06_21_t2f_eval_job.sh")"
   echo "[t2f-eval] ${name}: job ${jid} (dep ${DEPENDENCY}) -> ${cat}_${run} ${msub:+[${msub}]}"
