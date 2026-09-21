@@ -42,9 +42,11 @@ n_rec=$(wc -l < "${PACK_DIR}/index.tsv"); n_exp=$(( ${#runs[@]} * 3 ))
 echo "[predict-job] recorded ${n_rec} fold-commands (expected ${n_exp})"
 [ "${n_rec}" = "${n_exp}" ] || { echo "[predict-job] ERROR: recorded row count mismatch" >&2; exit 1; }
 # every recorded command must target the T2f dataset (053) + t2f results tree — a stale/collided cmd would silently mis-predict
-for f in "${PACK_DIR}"/fold*.sh; do
-  grep -q -- "-d 053 " "$f" && grep -q "/t2f/" "$f" || { echo "[predict-job] ERROR: ${f} does not target dataset 053 / t2f" >&2; exit 1; }
-done
+while IFS=$'\t' read -r cmdfile _rest; do
+  [ -n "${cmdfile}" ] || continue
+  grep -q -- "-d 053 " "${cmdfile}" && grep -q "/t2f/" "${cmdfile}" || { echo "[predict-job] ERROR: ${cmdfile} does not target dataset 053 / t2f" >&2; exit 1; }
+done < "${PACK_DIR}/index.tsv"
+echo "[predict-job] all ${n_rec} recorded commands target dataset 053 / t2f"
 
 nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader || true
 declare -a PIDS NAMES; i=0
