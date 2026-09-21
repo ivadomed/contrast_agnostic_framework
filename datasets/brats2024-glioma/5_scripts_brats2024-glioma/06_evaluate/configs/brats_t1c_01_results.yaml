@@ -1,0 +1,19 @@
+title: "BraTS 2024 Glioma T1c (contrast-enhanced T1) — results (incl. srcsm 7th arm)"
+metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t1c"
+output_prefix: "03_01_results"
+in_domain_contrast: t1c
+
+# T1c as a TRAINING modality — added 2026-09-21 (the last of the four BraTS contrasts; t1n/t2w/t2f were already
+# training modalities). Same fixed 7-method order as brats_{t1n,t2w,t2f}_01_results.yaml: baseline, synthseg_noEM,
+# synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2 train050_val000, then train050_val100 (= the DualVal val100
+# mirror). All RUN_IDs share one timestamp (00_utils/t1c_runs.sh: T1C_TS). srcsm is ~5 days behind the rest: its row is
+# blank (not dropped) until its predict+eval land — then just re-run 06_32_aggregate_t1c.sh.
+# The causal-ablation ladder rungs live in t1c/ablations/ (06_33_ladder_summary_t1c.py), not here.
+runs:
+  - brats2024-glioma_t1c_baseline_20260921_140000
+  - brats2024-glioma_t1c_synthseg_noEM_20260921_140000
+  - brats2024-glioma_t1c_synthseg_EM_20260921_140000
+  - brats2024-glioma_t1c_auglab_default_20260921_140000
+  - brats2024-glioma_t1c_srcsm_20260921_140000
+  - brats2024-glioma_t1c_auglabAug_v26_6_2_train050_val000_20260921_140000
+  - brats2024-glioma_t1c_auglabAug_v26_6_2_train050_val100_20260921_140000

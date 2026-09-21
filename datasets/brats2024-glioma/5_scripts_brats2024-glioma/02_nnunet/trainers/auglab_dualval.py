@@ -237,3 +237,11 @@ class nnUNetTrainerBraTS2024GliomaT2fAugLabDualVal(nnUNetTrainerBraTS2024GliomaA
     auglab_valsynth_t2f.py). Same DualVal contract: RUN_ID must be named
     "_val000_"; materializes the "_val100_" mirror at on_train_end."""
     pass
+
+
+class nnUNetTrainerBraTS2024GliomaT1cAugLabDualVal(nnUNetTrainerBraTS2024GliomaAugLabDualVal):
+    """T1c (contrast-enhanced T1) naming binding of the DualVal trainer — identical DualVal logic, a
+    distinct class name so the results path's trainer directory correctly identifies T1c
+    (Dataset054_BraTS2024GliomaT1c), matching the T2w/T2f bindings above. Same DualVal contract: RUN_ID must
+    be named "_val000_"; materializes the "_val100_" mirror at on_train_end."""
+    pass

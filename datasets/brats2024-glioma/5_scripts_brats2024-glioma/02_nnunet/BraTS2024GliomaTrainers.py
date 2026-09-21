@@ -52,6 +52,13 @@ try:
     from brats2024_glioma.trainers.auglab_default_t2f import nnUNetTrainerBraTS2024GliomaT2fAugLabDefault  # noqa: F401
     from brats2024_glioma.trainers.auglab_valsynth_t2f import nnUNetTrainerBraTS2024GliomaT2fAugLabValSynth  # noqa: F401
     from brats2024_glioma.trainers.auglab_dualval import nnUNetTrainerBraTS2024GliomaT2fAugLabDualVal  # noqa: F401
+    # T1c (contrast-enhanced T1) trainers (Dataset054_BraTS2024GliomaT1c)
+    from brats2024_glioma.trainers.baseline_t1c import nnUNetTrainerBraTS2024GliomaT1cBaseline  # noqa: F401
+    from brats2024_glioma.trainers.v26_6_2_t1c import nnUNetTrainerBraTS2024GliomaT1cV26_6_2  # noqa: F401
+    from brats2024_glioma.trainers.v26_6_2_t1c_train050_val100 import nnUNetTrainerBraTS2024GliomaT1cV26_6_2_train050_val100  # noqa: F401
+    from brats2024_glioma.trainers.auglab_default_t1c import nnUNetTrainerBraTS2024GliomaT1cAugLabDefault  # noqa: F401
+    from brats2024_glioma.trainers.auglab_valsynth_t1c import nnUNetTrainerBraTS2024GliomaT1cAugLabValSynth  # noqa: F401
+    from brats2024_glioma.trainers.auglab_dualval import nnUNetTrainerBraTS2024GliomaT1cAugLabDualVal  # noqa: F401
 except ImportError as e:
     import warnings
     warnings.warn(
