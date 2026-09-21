@@ -19,6 +19,7 @@ CONFIGS=(
   "datasets/chaos/5_scripts_chaos/06_evaluate/configs/cross_dataset_t2spir_01_results.yaml"
   "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_t1n_01_results.yaml"
   "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_t2w_01_results.yaml"
+  "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_t2f_01_results.yaml"
   "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_T1w.yaml"
   "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_T2w.yaml"
 )

@@ -1,0 +1,22 @@
+title: "BraTS 2024 Glioma T2f (FLAIR) — results (incl. srcsm 7th arm)"
+metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t2f"
+output_prefix: "03_01_results"
+in_domain_contrast: t2f
+
+# FLAIR (t2f) as a TRAINING modality — added 2026-09-17 (previously held-out only). Same fixed
+# 7-method order as brats_t1n/t2w_01_results.yaml: baseline, synthseg_noEM, synthseg_EM,
+# auglab_default, srcsm, auglabAug_v26_6_2 train050_val000, then train050_val100 (= the DualVal
+# val100 mirror). Run ids: Packs A/B = 20260917_113412 (relaunched after the nnUNet_results
+# path fix), Pack C (srcsm) = 20260917_094019 — mixed on purpose, see 00_utils/t2f_runs.sh.
+# srcsm was still training when this config was written (2026-09-21): it renders as a blank row
+# (not dropped) until its predict+eval jobs finish, then just re-run the aggregation.
+# The causal-ablation ladder rungs (kmeans / label_remap / voronoi / v26_6_2-alone) live in
+# t2f/ablations/ and are summarised by 06_16_ladder_summary_t2f.py, not here.
+runs:
+  - brats2024-glioma_t2f_baseline_20260917_113412
+  - brats2024-glioma_t2f_synthseg_noEM_20260917_113412
+  - brats2024-glioma_t2f_synthseg_EM_20260917_113412
+  - brats2024-glioma_t2f_auglab_default_20260917_113412
+  - brats2024-glioma_t2f_srcsm_20260917_094019
+  - brats2024-glioma_t2f_auglabAug_v26_6_2_train050_val000_20260917_113412
+  - brats2024-glioma_t2f_auglabAug_v26_6_2_train050_val100_20260917_113412
