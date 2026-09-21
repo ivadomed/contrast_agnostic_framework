@@ -1,0 +1,19 @@
+# totalseg-pelvic MRI-trained — causal-ablation-ladder rungs. See
+# totalseg-pelvic_ct_ablations.yaml's header for the shared notes (same PARTIAL-LADDER
+# caveat applies — no real-fill/non-AugLab rung, no dedicated ladder script for this
+# dataset).
+title: "totalseg-pelvic MRI-trained — ablation-ladder rungs (partial, no real-fill rung)"
+output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri/ablations"
+output_prefix: "02_ablations"
+sig_ref: mri_ours_20260916_072453
+column_order: [ct, mri]
+
+sources:
+  - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
+
+runs:
+  - mri_baseline_20260916_072453
+  - mri_baseline_kmeans_20260916_072453
+  - mri_baseline_kmeans_label_remap_20260916_072453
+  - mri_baseline_kmeans_label_remap_voronoi_20260916_072453
+  - mri_ours_20260916_072453

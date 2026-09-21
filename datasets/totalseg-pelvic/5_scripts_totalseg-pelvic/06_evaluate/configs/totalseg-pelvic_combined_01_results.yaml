@@ -13,6 +13,10 @@ output_prefix: "01_results"
 ref: auglabAug_v26_6_2_train050_val000
 column_order: [ct, mri]
 
+# FIXED 2026-09-21: the 3 causal-ablation-ladder rungs (baseline_kmeans / +label_remap /
+# +voronoi) were wrongly mixed into this headline table (same bug as the ct/mri per-
+# modality configs — see their matching notes). Removed here; see
+# configs/totalseg-pelvic_{ct,mri}_ablations.yaml for the ladder rungs on their own.
 modalities:
   - name: ct
     sources:
@@ -24,9 +28,6 @@ modalities:
       synthseg_EM: ct_synthseg_EM_20260916_072434
       srcsm: ct_srcsm_20260916_072434
       auglabAug_v26_6_2_train050_val000: ct_ours_20260916_072434
-      baseline_kmeans: ct_baseline_kmeans_20260916_072434
-      baseline_kmeans_label_remap: ct_baseline_kmeans_label_remap_20260916_072434
-      baseline_kmeans_label_remap_voronoi: ct_baseline_kmeans_label_remap_voronoi_20260916_072434
       v26_6_2_train050_val100: ct_v26_6_2_train050_val100_20260916_072434
   - name: mri
     sources:
@@ -38,7 +39,4 @@ modalities:
       synthseg_EM: mri_synthseg_EM_20260916_072453
       srcsm: mri_srcsm_20260916_072453
       auglabAug_v26_6_2_train050_val000: mri_ours_20260916_072453
-      baseline_kmeans: mri_baseline_kmeans_20260916_072453
-      baseline_kmeans_label_remap: mri_baseline_kmeans_label_remap_20260916_072453
-      baseline_kmeans_label_remap_voronoi: mri_baseline_kmeans_label_remap_voronoi_20260916_072453
       v26_6_2_train050_val100: mri_v26_6_2_train050_val100_20260916_072453

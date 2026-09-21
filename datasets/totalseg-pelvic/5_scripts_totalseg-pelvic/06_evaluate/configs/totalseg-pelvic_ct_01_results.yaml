@@ -23,9 +23,16 @@ sources:
 # NOTE 2026-09-16: `runs:` here is a LIST of real full RUN_ID strings (the schema
 # aggregate_from_config.py/significance_from_config.py actually expect — confirmed against
 # chaos's real configs), NOT the {method: run_id} dict schema combined_modality_summary.py
-# uses. auglabAug_v26_6_2_train050_val100 intentionally omitted for now — the DualVal
-# trainer's val100 checkpoint mirror needs its own dedicated predict pass
-# (05_08_predict_ct_auglabAug_v26_6_2_val100.sh), which hasn't been run yet.
+# uses.
+#
+# FIXED 2026-09-21: the 3 causal-ablation-ladder rungs (baseline_kmeans /
+# +label_remap / +voronoi) were wrongly mixed into this HEADLINE table. Every sibling
+# dataset (chaos/toothfairy2/brats2024-glioma) keeps the headline runs list to exactly
+# the canonical method suite — baseline, auglab_default, synthseg_noEM, synthseg_EM,
+# srcsm, OURS val000, OURS val100 — and puts ladder rungs in a dedicated ablations/
+# subdir instead (see CLAUDE.md's "Standardized output layout" note on 02_metrics/
+# <model>/<contrast>/ablations/). This wrong method set + order is what broke the
+# combined heatmap. See configs/totalseg-pelvic_ct_ablations.yaml for the ladder rungs.
 runs:
   - ct_baseline_20260916_072434
   - ct_auglab_default_20260916_072434
@@ -33,7 +40,4 @@ runs:
   - ct_synthseg_EM_20260916_072434
   - ct_srcsm_20260916_072434
   - ct_ours_20260916_072434
-  - ct_baseline_kmeans_20260916_072434
-  - ct_baseline_kmeans_label_remap_20260916_072434
-  - ct_baseline_kmeans_label_remap_voronoi_20260916_072434
   - ct_v26_6_2_train050_val100_20260916_072434
