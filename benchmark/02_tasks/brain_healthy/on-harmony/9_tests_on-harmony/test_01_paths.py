@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))  # benchmark/
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent))  # benchmark/
 from conftest import source_env, env_vars  # noqa: E402
 
 DATASET_ROOT = Path(__file__).parent.parent
