@@ -40,7 +40,7 @@ TEST_CASES="${PROJECT_ROOT}/datasets/on-harmony/4_splits_on-harmony/test_cases.j
 #   01_predictions/<model>/<train_contrast>/<nnUNet|auglab>/<RUN_ID>/DatasetXXX.../
 # Training contrast comes from the RUN_ID; discover which category dir actually holds this run
 # (nnUNet vs auglab) by looking for the trainer dir under each — same RUN_ID is unique.
-TRAIN_CONTRAST="$(echo "$RUN_ID" | grep -oE 'T[12]w' | head -1)"; TRAIN_CONTRAST="${TRAIN_CONTRAST:-T1w}"
+TRAIN_CONTRAST="$(echo "$RUN_ID" | grep -oE 'on-harmony_(T[12]w|dwi_ap)_' | head -1 | sed -E 's/^on-harmony_//; s/_$//')"; TRAIN_CONTRAST="${TRAIN_CONTRAST:-T1w}"
 RUN_BASE=""; CATEGORY=""
 for CAT in nnUNet auglab; do
     cand="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAIN_CONTRAST}/${CAT}/${RUN_ID}"
@@ -148,8 +148,9 @@ for contrast,fn in CONTRASTS.items():
             nib.save(remap(nib.load(str(m))), str(gout))
 print(f"shared test set ready ({found} image refs).")
 PYEOF
-    echo "[$(date '+%H:%M:%S')] fanning out 4 per-fold GPU jobs"
-    for F in 0 1 2 3; do
+    echo "[$(date '+%H:%M:%S')] fanning out per-fold GPU jobs (folds: ${EVAL_FOLDS:-0 1 2})"
+    # Project fold policy: 3 folds (0 1 2) only; override with EVAL_FOLDS for a legacy 4-fold model.
+    for F in ${EVAL_FOLDS:-0 1 2}; do
         run_job --name "onheval_${RUN_ID:0:26}_f${F}" --gpus 1 --slot "${F}" --time "${ONHEVAL_TIME:-01:00:00}" \
             --log "${SCRATCH:-/tmp}/onheval_${RUN_ID}_fold${F}.log" -- \
             bash "${HERE}/06_01_evaluate_testset.sh" "${RUN_ID}" "${F}"
