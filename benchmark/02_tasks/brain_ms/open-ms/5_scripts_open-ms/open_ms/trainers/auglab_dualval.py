@@ -1,4 +1,11 @@
 """
+STATUS (2026-09-27): the headline OURS method for open-ms currently does NOT use this
+trainer — 04_22/04_23 (train050_val000) and 04_06/04_17/04_26/04_34 (train050_val100)
+are two fully independent training runs (2x GPU cost vs. every other headline task,
+which gets both checkpoints from one DualVal run). This class is wired to only one
+non-headline ablation wrapper. Backfilling DualVal for the headline path is a
+deliberate future decision requiring a retrain — not done in this pass.
+
 nnUNetTrainerOpenMSAugLabDualVal — ONE training run, TWO independent "best"
 checkpoints (clean/val000 and synth-only/val100), with NO third/intermediate
 RUN_ID ever appearing anywhere.

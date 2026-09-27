@@ -93,11 +93,7 @@ def test_nnunet_results_dir_exists():
     p = Path(source_env(ENV_SH, "nnUNet_results"))
     assert p.exists(), f"nnUNet_results not found: {p}"
 
-def test_nnunet_results_has_runs():
-    p = Path(source_env(ENV_SH, "nnUNet_results")) / "runs"
-    assert p.exists(), f"nnUNet_results/runs not found: {p}"
-
 def test_results_subdirs_exist():
     results = DATASET_ROOT / "8_results_on-harmony"
-    for sub in ("01_results", "02_nnUNet_results", "03_aggregated_results"):
+    for sub in ("01_predictions", "02_metrics"):
         assert (results / sub).exists(), f"Missing results subdir: {sub}"

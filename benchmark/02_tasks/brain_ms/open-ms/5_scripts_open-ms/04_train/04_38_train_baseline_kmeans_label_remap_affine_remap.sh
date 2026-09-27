@@ -19,8 +19,8 @@
 # 3 folds (0,1,2), 1 GPU/fold, 2000 epochs. nnUNet-category (matches 04_26's placement).
 #
 # Usage:
-#   bash 04_33_train_baseline_kmeans_label_remap_affine_remap.sh                                        # auto RUN_ID
-#   bash 04_33_train_baseline_kmeans_label_remap_affine_remap.sh open-ms_flair_baseline_kmeans_label_remap_affine_remap_train050_val000_<TS>  # resume
+#   bash 04_38_train_baseline_kmeans_label_remap_affine_remap.sh                                        # auto RUN_ID
+#   bash 04_38_train_baseline_kmeans_label_remap_affine_remap.sh open-ms_flair_baseline_kmeans_label_remap_affine_remap_train050_val000_<TS>  # resume
 source "$(dirname "$0")/../00_utils/env.sh"
 
 METHOD="baseline_kmeans_label_remap_affine_remap_train050_val000"

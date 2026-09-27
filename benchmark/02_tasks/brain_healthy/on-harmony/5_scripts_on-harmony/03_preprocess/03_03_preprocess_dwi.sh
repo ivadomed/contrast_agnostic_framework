@@ -2,7 +2,7 @@
 # Preprocess Dataset033_OnHarmonyDWI31 for nnUNet.
 #
 # Uses a single CPU slot for nnUNetv2_plan_and_preprocess.
-# Must be run AFTER 02_convert_to_nnunet/02_05_convert_dataset_dwi.py.
+# Must be run AFTER 02_nnunet/02_06_convert_dataset_dwi.py.
 # splits_final.json is already written by that script — nnUNet will not
 # regenerate it because it already exists.
 set -euo pipefail

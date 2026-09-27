@@ -11,7 +11,7 @@ which this script does not replace. Thin wrapper over the shared engine in
 00_commun_scripts/00_03_evaluate/ladder_ood_common.py.
 
 Usage:
-  .venv/bin/python 06_14_ladder_summary_ood.py
+  .venv/bin/python 06_19_ladder_summary_ood.py
 """
 import sys
 from pathlib import Path

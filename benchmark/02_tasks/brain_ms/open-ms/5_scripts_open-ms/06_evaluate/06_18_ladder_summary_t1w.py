@@ -2,9 +2,11 @@
 """
 open-ms T1w causal-ablation ladder. Thin wrapper over the shared engine in
 00_commun_scripts/00_03_evaluate/ladder_ood_common.py (same pattern as
-BraTS/CHAOS/on-harmony's ladder scripts). NOTE: the historical 06_12_ladder_summary.py
-(FLAIR-only) predates this shared engine and is intentionally left as-is; this is a
-fresh sibling for the T1w training modality, not a retrofit of that file.
+BraTS/CHAOS/on-harmony's ladder scripts). NOTE: the historical FLAIR-only
+06_12_ladder_summary.py predated this shared engine and was archived to
+benchmark/03_archive/open-ms_legacy_ladder_20260927/ (2026-09-27) since it was never the
+source of the paper's numbers -- 06_19_ladder_summary_ood.py (renumbered from 06_14 to
+fix a filename collision) is the real FLAIR sibling of this file.
 
 OOD = mean over held-out contrasts (flair, t2w), excluding the training contrast (t1w).
 

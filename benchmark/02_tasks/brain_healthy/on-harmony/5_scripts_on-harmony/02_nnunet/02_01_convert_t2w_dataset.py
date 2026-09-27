@@ -50,7 +50,7 @@ NNUNET_RAW = Path(os.environ.get("nnUNet_raw", DATASET_ROOT / "2_nnUNet_on-harmo
 DATASET_DIR = NNUNET_RAW / "Dataset032_OnHarmonyT2w31"
 
 # FreeSurfer ID → 31-class (fine-grained, bilateral kept separate) — identical mapping
-# to 02_convert_to_nnunet/02_01_convert_dataset.py's 31class config.
+# to 02_nnunet/02_02_convert_t1w_dataset.py's 31class config.
 _FS_IDS_31 = [2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 26, 28,
               41, 42, 43, 44, 46, 47, 49, 50, 51, 52, 53, 54, 58, 60]
 FREESURFER_TO_31CLASS: dict[int, int] = {0: 0, **{fs_id: i + 1 for i, fs_id in enumerate(_FS_IDS_31)}}
