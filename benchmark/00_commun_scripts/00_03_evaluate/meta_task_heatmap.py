@@ -77,12 +77,20 @@ def load_task_modalities(task: dict, project_root: str) -> tuple:
     opt-in hierarchical-pooling tree (None if not configured / disabled), read
     straight from the same combined config so this task-level rollup can never
     silently disagree with what that dataset's own combined table shows."""
-    os.environ["METRICS_ROOT"] = (
-        f"{project_root}/benchmark/{task['dataset']}/8_results_{task['dataset']}/02_metrics")
     cfg_path = Path(os.path.expandvars(task["config"]))
     if not cfg_path.exists():
         print(f"  skip task {task['name']}: config not found {cfg_path}", file=sys.stderr)
         return [], None
+    # Derive METRICS_ROOT from the config's own path rather than a hardcoded
+    # "benchmark/<dataset>/..." template: active datasets live at
+    # benchmark/02_tasks/<task>/<dataset>/ (4 levels below repo root) while
+    # archived ones live at benchmark/03_archive/<dataset>/ (3 levels) -- a
+    # fixed hop-count can't be right for both (same reasoning as
+    # common_env.sh's PROJECT_ROOT fix). Every config here sits at
+    # <dataset_root>/5_scripts_<dataset>/06_evaluate/configs/<file>.yaml, so
+    # its 5_scripts_<dataset> dir's parent IS <dataset_root>, regardless of depth.
+    dataset_root = cfg_path.parents[2].parent
+    os.environ["METRICS_ROOT"] = str(dataset_root / f"8_results_{task['dataset']}" / "02_metrics")
     cfg = yaml.safe_load(cfg_path.read_text())
     modalities = []
     for m in cfg["modalities"]:

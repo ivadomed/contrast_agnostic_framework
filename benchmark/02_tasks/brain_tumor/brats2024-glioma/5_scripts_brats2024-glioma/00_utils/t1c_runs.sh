@@ -5,7 +5,7 @@
 # Row: group|name|predict_wrapper|RUN_ID|category|metrics_subdir      (kept at 6 fields: consumers `read` them positionally)
 #   group           main = Packs A+B (9 runs); rung4 = ladder rung 4 (Pack C, finishes early); srcsm = ~5 days
 #   metrics_subdir  "" = headline (flat under 02_metrics/.../t1c/); "ablations" = ladder-exclusive
-# ⚠ This literal timestamp is ALSO copied into configs/brats_t1c_01_results.yaml, configs/brats_combined_4mod_01_results.yaml and
+# ⚠ This literal timestamp is ALSO copied into configs/brats_t1c_01_results.yaml, configs/brats_combined_01_results.yaml (the canonical 4-modality combined config, promoted 2026-09-27) and
 # 06_evaluate/06_33_ladder_summary_t1c.py (YAML/Python can't source this file). 04_80 refuses to re-record an existing pack dir, so a
 # relaunch means bumping this — then update those three files too (`grep -rn 20260921_140000` finds them all).
 T1C_TS="20260921_140000"
