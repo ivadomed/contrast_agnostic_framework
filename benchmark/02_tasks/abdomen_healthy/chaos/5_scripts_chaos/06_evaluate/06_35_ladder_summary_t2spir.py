@@ -6,7 +6,7 @@ see that module's docstring). OOD = mean over held-out contrasts (t1in, t1out,
 ct), excluding the training contrast (t2spir).
 
 Usage:
-  .venv/bin/python 06_33_ladder_summary_t2spir.py
+  .venv/bin/python 06_35_ladder_summary_t2spir.py
 """
 import sys
 from pathlib import Path

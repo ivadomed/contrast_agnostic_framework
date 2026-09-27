@@ -18,7 +18,7 @@ Reads predictions + nnUNet GT directly (the per-fold eval_all.csv cannot disting
 the two kinds of 0.0). Writes a Markdown table to the experiment metrics dir.
 
 Usage:
-  python 06_11_translation_compare.py [--exp 050]
+  python 06_12_translation_compare.py [--exp 050]
 """
 import argparse
 import numpy as np
@@ -72,7 +72,7 @@ def main():
              "",
              "In-domain mean Dice, **matched on (case,label) pairs present in the translated GT** "
              "(organs cropped off-frame are excluded from BOTH original and translated — see header of "
-             "06_11_translation_compare.py for why a naive average massively overstates the drop).", ""]
+             "06_12_translation_compare.py for why a naive average massively overstates the drop).", ""]
     for contrast, (ds, methlist) in RUNS.items():
         gO = load(ds, f"labelsTs_{contrast}")
         gT = load(ds, f"labelsTs_{contrast}_{exp}")
