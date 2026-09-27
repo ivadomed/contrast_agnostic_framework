@@ -8,6 +8,7 @@ output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
 output_prefix: "01_results"
 # See totalseg-pelvic_ct_01_results.yaml's note — explicit sig_ref needed since our
 # short RUN_IDs don't embed the full descriptive method name REF_SUBSTR looks for.
+# Do NOT remove sig_ref — the "sig. vs ref" column silently disappears without it.
 sig_ref: mri_ours_20260916_072453
 column_order: [ct, mri]
 

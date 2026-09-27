@@ -13,7 +13,9 @@ output_prefix: "01_results"
 # Our RUN_IDs are short (e.g. "ct_ours_...") and don't embed the full descriptive method
 # name the way chaos's do (e.g. "chaos_t1in_auglabAug_v26_6_2_train050_val000_...") — the
 # REF_SUBSTR auto-detection can't match, so sig_ref is set explicitly (per CLAUDE.md's own
-# override instructions for exactly this case).
+# override instructions for exactly this case). Do NOT remove sig_ref to "clean up" this
+# config — without it, REF_SUBSTR can never match these short RUN_IDs and the "sig. vs
+# ref" column silently disappears.
 sig_ref: ct_ours_20260916_072434
 column_order: [ct, mri]
 

@@ -12,6 +12,9 @@
 # baseline → +K-means intensity clustering → +label-remap → +Voronoi sub-parcellation
 # (noise fill) — plus OURS as the headline endpoint for reference. Do not cite this as
 # the rung-4→5 texture-preservation result; that rung is missing here.
+#
+# sig_ref below is required for the same short-RUN_ID reason as the headline config —
+# do NOT remove it.
 title: "totalseg-pelvic CT-trained — ablation-ladder rungs (partial, no real-fill rung)"
 output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct/ablations"
 output_prefix: "02_ablations"
