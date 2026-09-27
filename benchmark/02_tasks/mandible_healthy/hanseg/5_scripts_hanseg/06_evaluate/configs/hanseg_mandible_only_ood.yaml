@@ -1,5 +1,11 @@
 # HaN-Seg's OWN results table: toothfairy2 CBCT models evaluated on hanseg, MANDIBLE-ONLY.
 #
+# NAMING NOTE: this file uses an `_ood` suffix (describes what the table IS: OOD-only) rather
+# than toothfairy2's `_01_results`/`_ladder` convention (describes the table's SEQUENCE/role
+# within that dataset's own numbered config set). Both are valid, dataset-local conventions;
+# no repo-wide config-suffix standard exists yet — don't assume the two naming schemes map to
+# the same thing across datasets.
+#
 # WHY THIS EXISTS (2026-09-17)
 # ----------------------------
 # 1. hanseg is an EVAL-ONLY dataset and therefore holds NO aggregation tables — same as amos

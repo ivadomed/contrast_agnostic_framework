@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Rebuild every hanseg fold's eval_all.csv from ALL per-item *_metrics.csv present.
+# One-off recovery script (not part of the standard numbered pipeline) — delegates to the
+# shared summarize_fold.py, no hand-rolled aggregation logic. Rebuild every hanseg fold's
+# eval_all.csv from ALL per-item *_metrics.csv present.
 #
 # WHY THIS EXISTS: summarize_fold.py regenerates eval_all.csv from the items named in
 # --groups. Evaluating a single item (e.g. adding the mrt1 arm on its own) and passing
