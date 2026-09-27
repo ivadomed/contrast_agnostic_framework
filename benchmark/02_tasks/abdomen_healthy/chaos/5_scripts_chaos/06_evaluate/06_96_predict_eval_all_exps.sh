@@ -2,11 +2,11 @@
 # Predict, evaluate, and aggregate all 4 experiment runs (fold 0 each).
 #
 # Usage:
-#   bash 06_03_predict_eval_all_exps.sh \
+#   bash 06_96_predict_eval_all_exps.sh \
 #       <RUN_v26_6_2> <RUN_v26_6_2_50_100> <RUN_auglabAug_synthseg_EM> <RUN_auglabAug_v26_6_2_train050_val000>
 #
 # Example:
-#   bash 06_03_predict_eval_all_exps.sh \
+#   bash 06_96_predict_eval_all_exps.sh \
 #       chaos_t1in_v26_6_2_train090_val100_20260615_213615 \
 #       chaos_t1in_v26_6_2_train050_val100_20260615_213615 \
 #       chaos_auglabAug_synthseg_EM_train100_val000_20260615_213615 \

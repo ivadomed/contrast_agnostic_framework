@@ -9,8 +9,10 @@ mean±std Dice and HD95 per contrast per label, and writes:
   {metrics_dir}/02_01_heatmap_{dice,hd95}.png    heatmaps for the grid
   {metrics_dir}/02_02_heatmap_fold0_*.png         (only with --fold0-heatmap)
 
-This replaces the per-dataset copies of `06_02_aggregate_results.py`; those files
-now delegate here and supply only their --title (and --fold0-heatmap for chaos).
+This replaces the per-dataset copies of the legacy hand-rolled aggregate script
+(e.g. brats2024-glioma's `06_02_aggregate_results.py`, chaos's
+`06_95_aggregate_results_legacy.py`); those files now delegate here and supply
+only their --title (and --fold0-heatmap for chaos).
 All logic lives in 00_00_utils/eval_aggregate.py.
 
 Usage:

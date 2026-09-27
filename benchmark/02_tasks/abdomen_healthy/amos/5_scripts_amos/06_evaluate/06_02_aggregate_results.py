@@ -11,8 +11,8 @@ from the modality-grid aggregator brats/chaos use — but the cross-fold primiti
 (load_run, cross_fold_stats) come from the shared commun aggregation core.
 
 Usage:
-  python 06_03_aggregate_results.py
-  python 06_03_aggregate_results.py --metrics_root <path>
+  python 06_02_aggregate_results.py
+  python 06_02_aggregate_results.py --metrics_root <path>
 """
 import argparse
 import sys
@@ -58,7 +58,7 @@ def main() -> None:
             print(f"  skip {run_dir.name}: no eval_all.csv found")
 
     if not runs:
-        raise SystemExit("No evaluation data. Run 06_02_evaluate_all_chaos.sh first.")
+        raise SystemExit("No evaluation data. Run 06_03_evaluate_all_chaos.sh first.")
 
     all_mods = sorted({m for d in runs.values() for m in d.get("dice", {})})
     now = datetime.now().strftime("%Y-%m-%d %H:%M")

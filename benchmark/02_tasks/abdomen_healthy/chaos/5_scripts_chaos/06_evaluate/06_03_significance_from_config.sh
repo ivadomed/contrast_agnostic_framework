@@ -2,8 +2,8 @@
 # Paired significance testing from a YAML config (same config as 06_10).
 #
 # Usage:
-#   bash 06_11_significance_from_config.sh <config.yaml> [--ref <exact run id>] [--metric dice]
-#   bash 06_11_significance_from_config.sh configs/chaos_t1in_02_ablation_auglab_val100.yaml \
+#   bash 06_03_significance_from_config.sh <config.yaml> [--ref <exact run id>] [--metric dice]
+#   bash 06_03_significance_from_config.sh configs/chaos_t1in_02_ablation_auglab_val100.yaml \
 #       --ref chaos_t1in_auglabAug_v26_6_2_train025_val100_20260616_200514
 #
 # --ref: pass the EXACT reference run id explicitly whenever the run list also
@@ -19,7 +19,7 @@ set -euo pipefail
 # name (exactly this file's own documented usage, e.g. `bash 06_11_....sh configs/x`
 # from inside 06_evaluate/) collapses to "." relative to the NEW cwd, silently
 # resolving HERE to PROJECT_ROOT instead of this script's directory and breaking
-# every relative CONFIG path. Same bug class as 06_10_aggregate_from_config.sh
+# every relative CONFIG path. Same bug class as 06_02_aggregate_from_config.sh
 # (see that script's comment) -- hit here directly 2026-08-29 while regenerating
 # the chaos cross-dataset configs after removing msd-spleen.
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

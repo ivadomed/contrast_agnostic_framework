@@ -2,18 +2,18 @@
 # Aggregate evaluation results from a YAML config file.
 #
 # Usage:
-#   bash 06_10_aggregate_from_config.sh <config.yaml>
-#   bash 06_10_aggregate_from_config.sh configs/chaos_t1in_03_results.yaml
+#   bash 06_02_aggregate_from_config.sh <config.yaml>
+#   bash 06_02_aggregate_from_config.sh configs/chaos_t1in_03_results.yaml
 #
 # The config specifies which runs to include, the metrics_dir, and the output
 # prefix. See configs/ for available configs and benchmark/00_commun_scripts/00_03_evaluate/aggregate_from_config.py
 # for the full config format.
 #
 # To run all T1in configs in one shot:
-#   for cfg in configs/chaos_t1in_*.yaml; do bash 06_10_aggregate_from_config.sh "$cfg"; done
+#   for cfg in configs/chaos_t1in_*.yaml; do bash 06_02_aggregate_from_config.sh "$cfg"; done
 # For T2spir configs, source env_t2spir.sh first (sets TRAINING_CONTRAST; METRICS_ROOT is identical):
 #   source "$(dirname "$0")/../00_utils/env_t2spir.sh"
-#   bash 06_10_aggregate_from_config.sh configs/chaos_t2spir_01_results.yaml
+#   bash 06_02_aggregate_from_config.sh configs/chaos_t2spir_01_results.yaml
 
 set -euo pipefail
 # HERE must be resolved BEFORE the cd below and via BASH_SOURCE (not $0): once cwd

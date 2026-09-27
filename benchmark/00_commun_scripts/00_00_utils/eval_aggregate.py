@@ -3,8 +3,10 @@
 Shared cross-experiment / cross-fold aggregation core for evaluation results.
 
 Single source of truth for the aggregation primitives and report/heatmap builders
-that were copy-pasted into brats2024-glioma and chaos `06_02_aggregate_results.py`
-(and, in part, into amos/sliver07 `06_03_aggregate_results.py`). The per-dataset
+that were copy-pasted into brats2024-glioma's `06_02_aggregate_results.py` and
+chaos's `06_95_aggregate_results_legacy.py` (renamed off the canonical 06_02 slot
+once chaos gained a config-driven aggregate; still live, see that file's own
+header), and, in part, into amos/sliver07 `06_02_aggregate_results.py`. The per-dataset
 scripts now import from here and supply only their title + which outputs to build.
 
 Data shape produced by load_run():

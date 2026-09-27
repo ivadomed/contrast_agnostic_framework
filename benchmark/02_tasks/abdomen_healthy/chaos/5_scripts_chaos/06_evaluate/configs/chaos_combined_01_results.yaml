@@ -1,7 +1,7 @@
 # CHAOS — combined training modalities (T1in + T2spir pooled), cross-contrast
 # AND cross-dataset. Consumed by
 # benchmark/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
-# 06_33_combined_modality_summary.sh. Companion to chaos_t1in_03_results.yaml /
+# 06_04_combined_modality_summary.sh. Companion to chaos_t1in_03_results.yaml /
 # chaos_t2spir_01_results.yaml (each ONE training modality) — this pools BOTH
 # into one row per method, with an inline significance column (ref = OURS
 # train050_val000) after the usual "all" column.

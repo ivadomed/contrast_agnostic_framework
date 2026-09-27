@@ -13,7 +13,7 @@
 # then a single global aggregate.
 #
 # Usage:
-#   bash 06_04_predict_eval_batch2.sh <RUN_train050> <RUN_train025> <RUN_auglab_v26_train025> \
+#   bash 06_97_predict_eval_batch2.sh <RUN_train050> <RUN_train025> <RUN_auglab_v26_train025> \
 #        [EXISTING_auglabAug_synthseg_EM_train100_val000] [EXISTING_v26_6_2_train050_val100]
 
 set -euo pipefail

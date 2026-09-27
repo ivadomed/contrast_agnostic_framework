@@ -12,8 +12,8 @@ from the shared commun aggregation core. The fold loader here is the liver-only
 variant (SLIVER07 GT annotates the liver alone), so it stays local.
 
 Usage:
-  python 06_03_aggregate_results.py
-  python 06_03_aggregate_results.py --metrics_root <path>
+  python 06_02_aggregate_results.py
+  python 06_02_aggregate_results.py --metrics_root <path>
 """
 import argparse
 import csv
@@ -71,7 +71,7 @@ def main() -> None:
             print(f"  skip {run_dir.name}: no eval_all.csv with liver rows found")
 
     if not runs:
-        raise SystemExit("No evaluation data found. Run 06_02_evaluate_all_chaos.sh first.")
+        raise SystemExit("No evaluation data found. Run 06_03_evaluate_all_chaos.sh first.")
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     lines = [
