@@ -3,16 +3,18 @@
 #   source "$(dirname "$0")/../00_utils/env.sh"   (from a step subdir)
 #   source "$(dirname "$0")/00_utils/env.sh"       (from 5_scripts_ispy2 root)
 #
-# I-SPY2 is a cross-evaluation-only dataset for this project's breast-tumor
-# segmentation task (see benchmark/02_tasks/breast_cancer/ispy2/1_BIDS_ispy2/breast-ispy2/README):
-# it is meant to be evaluated with a model trained on `ambl`
-# (Advanced-MRI-Breast-Lesions), the same way MSLesSeg/ms3seg evaluate
-# open-ms-trained models. We never train here.
+# I-SPY2 is this project's PRIMARY breast-cancer TRAINING dataset (see the
+# "TRAINING ROLE" block below for the training-side config) AND ALSO the target
+# of a legacy cross-dataset predict/evaluate pathway from `ambl`
+# (Advanced-MRI-Breast-Lesions, now archived at benchmark/03_archive/ambl) —
+# ambl was ispy2's original training-set candidate before the 2026-09-04 pivot
+# (see CLAUDE.md's "Breast task" section for the full pivot history). Both
+# roles coexist in this file: DATASET_ROLE="both" below.
 #
-# WIRED 2026-09-04: cross-dataset predict/evaluate against ambl now landed (see
-# 05_predict/05_01_predict_common.sh, SOURCE_PREFIX="AMBL"). Same pattern
-# mslesseg -> open-ms uses (OPENMS_*-style vars). ONLY the 122 usable BILATERAL
-# cases (of 560 with BIDS data) are ever fed to prediction — see
+# Legacy ambl -> ispy2 predict/evaluate pathway (kept working, not the primary
+# path anymore): 05_predict/05_01_predict_common.sh, SOURCE_PREFIX="AMBL". Same
+# pattern mslesseg -> open-ms uses (OPENMS_*-style vars). ONLY the 122 usable
+# BILATERAL cases (of 560 with BIDS data) are ever fed to prediction — see
 # 4_splits_ispy2/unilateral_fov_exclusions.json and 05_predict/05_00_build_test_
 # inputs.py, which is the single place this filter is applied; nothing downstream
 # re-derives the case list.
