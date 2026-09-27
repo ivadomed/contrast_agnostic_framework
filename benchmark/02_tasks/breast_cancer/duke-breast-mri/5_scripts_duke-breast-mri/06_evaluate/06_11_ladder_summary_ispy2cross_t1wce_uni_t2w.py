@@ -10,7 +10,7 @@ Layout: rungs 1 and 6 (baseline, +AugLab val000) live at <root>/t1wce_uni/<run_i
 rungs 2-5 at <root>/ablations/t1wce_uni/<run_id>.
 
 Usage:
-  .venv/bin/python 06_26_ladder_summary_ispy2cross_t1wce_uni_t2w.py
+  .venv/bin/python 06_11_ladder_summary_ispy2cross_t1wce_uni_t2w.py
 """
 import sys
 from pathlib import Path

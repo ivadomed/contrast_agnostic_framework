@@ -3,7 +3,7 @@
 # companion (t2w + precontrast arms). Same sources shape as
 # ispy2_combined_01_results.yaml's t2w modality block, adapted for
 # 2026-09-17: duke sources are the UNILATERAL-CROP items (t1wce_uni/precontrast_uni), the standard duke eval.
-# significance_from_config.py. Consumed by 06_06_significance_from_config.sh.
+# significance_from_config.py. Consumed by 06_03_significance_from_config.sh.
 title: "I-SPY2 T2W-TRAINED -- significance (own + duke-breast-mri cross-dataset)"
 in_domain_contrast: t2w
 output_prefix: "01_results"

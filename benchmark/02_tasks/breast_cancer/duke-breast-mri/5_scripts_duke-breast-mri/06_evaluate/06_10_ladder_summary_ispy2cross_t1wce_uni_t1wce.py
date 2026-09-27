@@ -4,14 +4,14 @@ duke-breast-mri cross-dataset (ISPY2 T1WCE-trained) causal-ablation ladder on th
 UNILATERAL-CROP `t1wce_uni` test item -- the standard and only reported duke evaluation
 since 2026-09-17 (bilateral ladders archived at
 benchmark/03_archive/duke-breast-mri_bilateral_eval_20260917/). Sibling of
-06_26/06_27/06_28_ladder_summary_ispy2cross_*.py (other train-contrast/test-item
+06_11/06_12/06_13_ladder_summary_ispy2cross_*.py (other train-contrast/test-item
 combinations); see 02_nnunet/02_03_derive_unilateral_crop.py for the crop method.
 Same-contrast/cross-DATASET arm for this direction -- NOT held-out-contrast evidence; supplementary only, never pooled into an OOD bucket (see CLAUDE.md ladder gotcha).
 Layout: rungs 1 and 6 (baseline, +AugLab val000) live at <root>/t1wce_uni/<run_id>;
 rungs 2-5 at <root>/ablations/t1wce_uni/<run_id>.
 
 Usage:
-  .venv/bin/python 06_25_ladder_summary_ispy2cross_t1wce_uni_t1wce.py
+  .venv/bin/python 06_10_ladder_summary_ispy2cross_t1wce_uni_t1wce.py
 """
 import sys
 from pathlib import Path

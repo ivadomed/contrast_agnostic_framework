@@ -38,7 +38,7 @@ DUKE_PRECONTRAST_T2W="$REPO_ROOT/benchmark/02_tasks/breast_cancer/duke-breast-mr
 # DUKE_T1WCE_TRAINED (duke's t1wce test scored against the t1wce-trained
 # model) is deliberately unused here -- same-contrast, cross-dataset only,
 # not an OOD contrast for this direction. Kept as its own ladder
-# (06_25_ladder_summary_ispy2cross_t1wce_uni_t1wce.py) elsewhere, just not pooled in.
+# (06_10_ladder_summary_ispy2cross_t1wce_uni_t1wce.py) elsewhere, just not pooled in.
 
 echo "=== T1WCE-trained ==="
 "$PY" "$PLOTTER" \

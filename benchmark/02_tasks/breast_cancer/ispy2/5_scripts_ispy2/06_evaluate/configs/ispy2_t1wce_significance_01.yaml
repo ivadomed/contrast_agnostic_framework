@@ -4,7 +4,7 @@
 # ispy2_combined_01_results.yaml's t1wce modality block, adapted for
 # 2026-09-17: duke sources are the UNILATERAL-CROP items (t1wce_uni/precontrast_uni), the standard duke eval.
 # significance_from_config.py (paired sign-flip macroΔ test, OOD/IND split via
-# in_domain_contrast). Consumed by 06_06_significance_from_config.sh.
+# in_domain_contrast). Consumed by 06_03_significance_from_config.sh.
 title: "I-SPY2 T1WCE-TRAINED -- significance (own + duke-breast-mri cross-dataset)"
 in_domain_contrast: t1wce
 output_prefix: "01_results"

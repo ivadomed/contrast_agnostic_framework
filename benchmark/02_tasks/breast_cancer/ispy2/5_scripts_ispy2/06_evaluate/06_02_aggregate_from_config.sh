@@ -3,7 +3,7 @@
 #
 # Usage:
 #   bash 06_02_aggregate_from_config.sh <config.yaml>
-#   bash 06_02_aggregate_from_config.sh configs/duke_t1wce_uni_t1wce_01_results.yaml
+#   bash 06_02_aggregate_from_config.sh configs/ispy2_t1wce_01_results.yaml
 #
 # The config specifies which runs to include, the metrics_dir, and the output
 # prefix. See configs/ for available configs and
@@ -12,7 +12,7 @@
 
 set -euo pipefail
 # HERE must be resolved BEFORE the cd below and via BASH_SOURCE (not $0) -- see
-# chaos's 06_02_aggregate_from_config.sh header for why (bit msd-spleen onboarding).
+# chaos's 06_10_aggregate_from_config.sh header for why (bit msd-spleen onboarding).
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${HERE}/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"

@@ -5,7 +5,7 @@
 # scoring the `tumour` label against duke's own held-out GT
 # (2_nnUNet_duke-breast-mri/raw/labelsTs_t1wce -- flat layout, see
 # 02_nnunet/02_01_convert_test_t1wce.py). Modeled on
-# ambl/5_scripts_ambl/06_evaluate/06_20_evaluate_ispy2_run.sh, collapsed to one
+# ambl/5_scripts_ambl/06_evaluate/06_01_evaluate_ispy2_run.sh, collapsed to one
 # item since Duke only has t1wce-family imaging.
 #
 # Both the ispy2 t1wce-trained model (same-modality-family) AND the t2w-trained
@@ -16,7 +16,7 @@
 # Writes <item>_metrics.csv + eval_all.csv + eval_summary.md per fold under
 #   8_results_duke-breast-mri/02_metrics/ispy2_model/<TRAINING_CONTRAST>/<CATEGORY>_<RUN_ID>/fold{F}/
 #
-# Usage: bash 06_20_evaluate_ispy2_run.sh <RUN_ID> <CATEGORY:nnUNet|auglab> <TRAINING_CONTRAST:t1wce|t2w> [FOLD(default all)]
+# Usage: bash 06_01_evaluate_ispy2_run.sh <RUN_ID> <CATEGORY:nnUNet|auglab> <TRAINING_CONTRAST:t1wce|t2w> [FOLD(default all)]
 # Optional env: CKPT_TAG (default "best").
 set -euo pipefail
 source "$(dirname "$0")/../00_utils/env.sh"

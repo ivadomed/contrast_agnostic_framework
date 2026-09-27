@@ -10,7 +10,7 @@ Layout: rungs 1 and 6 (baseline, +AugLab val000) live at <root>/precontrast_uni/
 rungs 2-5 at <root>/ablations/precontrast_uni/<run_id>.
 
 Usage:
-  .venv/bin/python 06_27_ladder_summary_ispy2cross_precontrast_uni_t1wce.py
+  .venv/bin/python 06_12_ladder_summary_ispy2cross_precontrast_uni_t1wce.py
 """
 import sys
 from pathlib import Path
