@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
-# Backfill checkpoint_best predict+eval for the T1w 6-method suite (on-harmony's
-# predict step never passed -chk, so its existing untagged results are already
-# checkpoint_final -- this backfills the missing checkpoint_best side; see
-# 06_evaluate/configs/on-harmony_T1w_*_ckpt.yaml). 06_01_evaluate_testset.sh combines
-# predict+eval in one step and reads CHECKPOINT directly (predates CKPT_TAG), so
-# this launcher translates CKPT_TAG -> CHECKPOINT itself before sourcing the shared
-# driver, rather than the driver guessing dataset-specific filename conventions.
+# Backfill checkpoint_best eval for the T1w 6-method suite (on-harmony's predict step
+# never passed -chk, so its existing untagged results are already checkpoint_final --
+# this backfills the missing checkpoint_best side; see
+# 06_evaluate/configs/on-harmony_T1w_*_ckpt.yaml). 06_01_evaluate_testset.sh reads
+# CHECKPOINT directly (predates CKPT_TAG), so this launcher translates
+# CKPT_TAG -> CHECKPOINT itself before sourcing the shared driver, rather than the
+# driver guessing dataset-specific filename conventions.
+#
+# ⚠️ 2026-09-27: 06_01_evaluate_testset.sh no longer predicts (see its own header) --
+# it only scores predictions that already exist. Before running this backfill, predict
+# each RUN_ID's checkpoint_best arm first via the matching 05_predict/05_0X_predict_*.sh
+# wrapper with CHECKPOINT=checkpoint_best.pth (e.g.
+# `CHECKPOINT=checkpoint_best.pth bash ../05_predict/05_03_predict_t1w_baseline.sh <RUN_ID> all`),
+# otherwise this script will find no predictions and produce empty metrics.
 # NOTE: on tamia, run each RUN_ID's folds SEQUENTIALLY on ONE GPU (export
 # CUDA_VISIBLE_DEVICES=0 first) if invoking this outside the normal per-fold
 # run_job dispatch -- a manually node-packed concurrent invocation hit a CUDA
