@@ -47,7 +47,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
 from aggregate_from_config import (  # noqa: E402
-    load_run_cases, load_run_cases_by_label, paired, resolve_group,
+    load_run_cases, load_run_cases_raw, paired, resolve_group,
     find_ref_key, load_run_from_sources,
 )
 import combined_modality_summary as _comb  # noqa: E402
@@ -89,11 +89,14 @@ def _diff_arrays(sources, ref_key, comp_key, metric, all_contrasts, contrast_gro
     """Per-contrast paired (ref - competitor) arrays -- exactly the `arrs` that
     significance_column feeds to macro_perm."""
     if contrast_groups:
-        ref_by_label = load_run_cases_by_label(sources, ref_key, metric)
-        comp_by_label = load_run_cases_by_label(sources, comp_key, metric)
+        # resolve_group takes fold-level raw data (load_run_cases_raw), not the
+        # per-label-mean shape load_run_cases_by_label returns — see
+        # aggregate_from_config._case_flat_value / project_significance_labelflat_fix_20260921.
+        ref_raw = load_run_cases_raw(sources, ref_key, metric)
+        comp_raw = load_run_cases_raw(sources, comp_key, metric)
         arrs = []
         for g in contrast_groups.values():
-            arr = resolve_group(g, ref_by_label, comp_by_label)
+            arr = resolve_group(g, ref_raw, comp_raw)
             if len(arr):
                 arrs.append(arr)
         return arrs

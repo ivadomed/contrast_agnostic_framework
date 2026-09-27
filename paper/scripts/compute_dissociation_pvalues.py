@@ -87,7 +87,7 @@ ROWS = [
 # silent -- it is by far the largest fill-swap effect anywhere in the study.
 SUPPLEMENTARY = [
     ("Duke T1WCE-trained $\\to$ t1wce (cross-dataset, SAME contrast)",
-     M.format(ds="duke-breast-mri", model="ispy2_model", contrast="t1wce")),
+     "datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/t1wce_uni/ladder_series.json"),  # unilateral-crop (2026-09-17)
 ]
 
 FILL = 4  # index of the "v26_6_2 (real fill)" rung; delta is FILL-1 -> FILL
