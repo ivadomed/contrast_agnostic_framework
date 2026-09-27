@@ -5,7 +5,7 @@
 # inline significance vs ref. Consumed by
 # datasets/00_commun_scripts/00_03_evaluate/meta_task_heatmap.py (see its header for
 # the full statistical model) via run_meta_task_heatmap.sh.
-title: "Cross-dataset — task-level heatmap (7-method suite, all 7 datasets)"
+title: "Cross-dataset — task-level heatmap (7-method suite, all 8 datasets)"
 output_dir: "${PROJECT_ROOT}/datasets/01_commun_results"
 output_prefix: "meta_task_heatmap"
 ref: auglabAug_v26_6_2_train050_val000
@@ -32,6 +32,9 @@ tasks:
   - name: healthy-spine-tum
     dataset: healthy-spine-tum
     config: "${PROJECT_ROOT}/datasets/healthy-spine-tum/5_scripts_healthy-spine-tum/06_evaluate/configs/healthy-spine-tum_combined_01_results.yaml"
+  - name: totalseg-pelvic
+    dataset: totalseg-pelvic
+    config: "${PROJECT_ROOT}/datasets/totalseg-pelvic/5_scripts_totalseg-pelvic/06_evaluate/configs/totalseg-pelvic_combined_01_results.yaml"
   # atlas-liver-hcc REMOVED 2026-09-02 -- excluded from the paper and all
   # meta-evaluation/aggregation. See CLAUDE.md "Atlas-Liver-HCC exclusion
   # (2026-09-02)" for the full rationale (LLD-MMRI redistribution/git-annex
