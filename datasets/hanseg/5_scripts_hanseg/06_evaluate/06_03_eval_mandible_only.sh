@@ -47,8 +47,14 @@ SUMMARIZE="${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/summarize_f
 
 HS_PRED=/scratch/p/paulh/hanseg/8_results/01_predictions/toothfairy2_model/cbct
 HS_METRICS=/scratch/p/paulh/hanseg/8_results/02_metrics/toothfairy2_model/cbct
-HS_GT=/scratch/p/paulh/hanseg/2_nnUNet/raw/labelsTs_ct
+# GT_OVERRIDE / MO_DIR / ITEMS_OVERRIDE let the S-I-flipped rerun reuse this script unchanged
+# (2026-09-17): the eval arms are flipped into ToothFairy2's inverted training convention, so
+# that run passes GT_OVERRIDE=...labelsTs_ct_sif, ITEMS_OVERRIDE="ct_sif mrt1_sif",
+# MO_DIR=mandible_only_sif. Defaults reproduce the original upright run exactly.
+HS_GT="${GT_OVERRIDE:-/scratch/p/paulh/hanseg/2_nnUNet/raw/labelsTs_ct}"
+MO_DIR="${MO_DIR:-mandible_only}"
 
+PRED_SUBDIR="${PRED_SUBDIR:-}"   # e.g. "sif" -> read fold{F}/sif/<item>
 ITEMS="${ITEMS_OVERRIDE:-ct mrt1}"
 fail=0; n_ok=0
 
@@ -70,12 +76,12 @@ for CAT in nnUNet auglab; do
 
     for F in 0 1 2; do
       for IT in ${ITEMS}; do
-        D="${RUNDIR}fold${F}/${IT}"
+        D="${RUNDIR}fold${F}/${PRED_SUBDIR:+${PRED_SUBDIR}/}${IT}"
         [ -d "$D" ] || { echo "[mo] MISSING ${D}" >&2; fail=1; continue; }
         n=$(find "$D" -name '*.nii.gz' 2>/dev/null | wc -l)
         [ "$n" -gt 0 ] || { echo "[mo] EMPTY ${D}" >&2; fail=1; continue; }
 
-        OUT="${HS_METRICS}/mandible_only${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"
+        OUT="${HS_METRICS}/${MO_DIR}${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"
         mkdir -p "$OUT"
         "$PY" "${HS_DIR}/06_evaluate/06_00_evaluate.py" \
             --pred_dir "$D" --gt_dir "${HS_GT}" \
@@ -88,7 +94,7 @@ for CAT in nnUNet auglab; do
         echo "[mo] ${CAT}_${RID} fold${F} ${IT}: ${rows} rows (of ${n} preds)"
         n_ok=$((n_ok+1))
       done
-      OUT="${HS_METRICS}/mandible_only${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"
+      OUT="${HS_METRICS}/${MO_DIR}${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"
       if ls "${OUT}"/*_metrics.csv >/dev/null 2>&1; then
         "$PY" "$SUMMARIZE" "$OUT" "$RID" "$F" --groups ${ITEMS} --group-col contrast \
             --groups-word Contrasts >> "${OUT}/summarize.log" 2>&1 \

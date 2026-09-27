@@ -25,8 +25,13 @@ SUMMARIZE="${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/summarize_f
 
 PD_PRED=/scratch/p/paulh/pddca/8_results/01_predictions/toothfairy2_model/cbct
 PD_METRICS=/scratch/p/paulh/pddca/8_results/02_metrics/toothfairy2_model/cbct
-PD_GT=/scratch/p/paulh/pddca/2_nnUNet/raw/labelsTs_ct
+# GT_OVERRIDE / MO_DIR / ITEMS_OVERRIDE: see the hanseg twin — the S-I-flipped rerun
+# (2026-09-17) reuses this script with GT_OVERRIDE=...labelsTs_ct_sif, ITEMS_OVERRIDE=ct_sif,
+# MO_DIR=mandible_only_sif. Defaults reproduce the original upright run exactly.
+PD_GT="${GT_OVERRIDE:-/scratch/p/paulh/pddca/2_nnUNet/raw/labelsTs_ct}"
+MO_DIR="${MO_DIR:-}"
 
+PRED_SUBDIR="${PRED_SUBDIR:-}"   # e.g. "sif" -> read fold{F}/sif/<item>
 ITEMS="${ITEMS_OVERRIDE:-ct}"
 EXPECT_N="${EXPECT_N:-40}"
 fail=0; n_ok=0
@@ -52,12 +57,12 @@ for CAT in nnUNet auglab; do
 
     for F in 0 1 2; do
       for IT in ${ITEMS}; do
-        D="${RUNDIR}fold${F}/${IT}"
+        D="${RUNDIR}fold${F}/${PRED_SUBDIR:+${PRED_SUBDIR}/}${IT}"
         [ -d "$D" ] || { echo "[mo-pddca] MISSING ${D}" >&2; fail=1; continue; }
         n=$(find "$D" -name '*.nii.gz' 2>/dev/null | wc -l)
         [ "$n" = "${EXPECT_N}" ] || { echo "[mo-pddca] BAD COUNT ${n}/${EXPECT_N}: $D" >&2; fail=1; continue; }
 
-        OUT="${PD_METRICS}${SUB}/${CAT}_${RID}/fold${F}"
+        OUT="${PD_METRICS}${MO_DIR:+/${MO_DIR}}${SUB}/${CAT}_${RID}/fold${F}"
         mkdir -p "$OUT"
         "$PY" "${PD_DIR}/06_evaluate/06_00_evaluate.py" \
             --pred_dir "$D" --gt_dir "${PD_GT}" \
@@ -70,7 +75,7 @@ for CAT in nnUNet auglab; do
         echo "[mo-pddca] ${CAT}_${RID}${SUB} fold${F} ${IT}: ${rows} rows"
         n_ok=$((n_ok+1))
       done
-      OUT="${PD_METRICS}${SUB}/${CAT}_${RID}/fold${F}"
+      OUT="${PD_METRICS}${MO_DIR:+/${MO_DIR}}${SUB}/${CAT}_${RID}/fold${F}"
       if ls "${OUT}"/*_metrics.csv >/dev/null 2>&1; then
         "$PY" "$SUMMARIZE" "$OUT" "$RID" "$F" --groups ${ITEMS} --group-col contrast \
             --groups-word Contrasts >> "${OUT}/summarize.log" 2>&1 \
