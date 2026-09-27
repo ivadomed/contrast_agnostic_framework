@@ -6,7 +6,7 @@ at benchmark/00_commun_scripts/00_03_evaluate/aggregate_results.py.
 The aggregation logic (load_run, cross_fold_stats, report + heatmap builders) was
 near-identical across datasets and now lives in the commun scripts. This file is
 kept (same path, same CLI: --metrics_dir [--run_keys ...]) so
-06_02_aggregate_results.sh is unchanged.
+06_95_aggregate_results_legacy.sh is unchanged.
 """
 import sys
 from pathlib import Path

@@ -7,26 +7,25 @@
 #   METRICS_ROOT/02_00_aggregated_metrics.md
 #
 # Usage:
-#   bash 06_aggregate_results.sh                              # all with eval data
-#   bash 06_aggregate_results.sh <KEY> [KEY ...]             # specific {cat}_{run_id} keys
+#   bash 06_95_aggregate_results_legacy.sh                              # all with eval data
+#   bash 06_95_aggregate_results_legacy.sh <KEY> [KEY ...]             # specific {cat}_{run_id} keys
 #
 # Prerequisites: run 06_01_evaluate_run.sh for each experiment first.
 
 set -euo pipefail
-cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
-source "$(dirname "$0")/../00_utils/env.sh"
-
 HERE="$(cd "$(dirname "$0")" && pwd)"
+source "${HERE}/../00_utils/env.sh"
+cd "${PROJECT_ROOT}"
 
 _AGG_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}"
 echo "[$(date '+%H:%M:%S')] aggregating metrics from ${_AGG_DIR}/"
 
 if [ $# -gt 0 ]; then
-    .venv/bin/python "${HERE}/06_02_aggregate_results.py" \
+    .venv/bin/python "${HERE}/06_95_aggregate_results_legacy.py" \
         --metrics_dir "${_AGG_DIR}" \
         --run_keys "$@"
 else
-    .venv/bin/python "${HERE}/06_02_aggregate_results.py" \
+    .venv/bin/python "${HERE}/06_95_aggregate_results_legacy.py" \
         --metrics_dir "${_AGG_DIR}"
 fi
 

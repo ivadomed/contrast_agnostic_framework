@@ -38,4 +38,4 @@ done
 [ "$any_failed" = "1" ] && echo "WARNING: some eval jobs failed — check *_eval.log files" >&2
 
 echo "[$(date '+%H:%M:%S')] All T1n evaluations done — aggregating"
-bash "${HERE}/06_10_aggregate_from_config.sh" "$CONFIG"
+bash "${HERE}/06_02_aggregate_from_config.sh" "$CONFIG"
