@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
 """
+LEGACY -- renamed off the canonical 06_02 slot (2026-09-27) now that a
+config-driven equivalent exists: 06_02_aggregate_per_organ_from_config.sh ->
+00_commun_scripts/00_03_evaluate/aggregate_per_organ_from_config.py, driven by
+configs/sliver07_{t1in,t2spir}_00_comparison.yaml. Kept only for an ad-hoc
+"show me everything under metrics_root" check; use the config-driven wrapper
+for the real headline report.
+
+LATENT BUG found and NOT carried into the replacement: this file's own hand-rolled
+`load_run` below never imported eval_folds' EVAL_FOLDS/filter_fold_dirs cap, so it
+silently included leftover fold3 data from before the 2026-07-09 3-fold policy
+(4 folds' worth of data instead of the correct 3) -- confirmed via direct
+side-by-side comparison during the 2026-09-27 migration (same fold0-2 values,
+this script's mean shifted slightly by including a 4th, off-policy fold). The
+config-driven replacement uses the shared eval_aggregate.load_run, which is
+correctly fold-capped like every other aggregator in this project.
+
 Aggregate SLIVER07 evaluation results across all chaos-trained methods.
 
 Reads METRICS_ROOT/chaos_model/<contrast>/{CATEGORY}_{RUN_ID}/fold{k}/eval_all.csv
@@ -12,8 +28,8 @@ from the shared commun aggregation core. The fold loader here is the liver-only
 variant (SLIVER07 GT annotates the liver alone), so it stays local.
 
 Usage:
-  python 06_02_aggregate_results.py
-  python 06_02_aggregate_results.py --metrics_root <path>
+  python 06_96_aggregate_results_legacy.py
+  python 06_96_aggregate_results_legacy.py --metrics_root <path>
 """
 import argparse
 import csv

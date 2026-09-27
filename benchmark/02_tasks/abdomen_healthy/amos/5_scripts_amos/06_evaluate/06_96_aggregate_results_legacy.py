@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 """
+LEGACY -- renamed off the canonical 06_02 slot (2026-09-27) now that a
+config-driven equivalent exists: 06_02_aggregate_per_organ_from_config.sh ->
+00_commun_scripts/00_03_evaluate/aggregate_per_organ_from_config.py, driven by
+configs/amos_{t1in,t2spir}_00_comparison.yaml. Verified to reproduce identical
+numbers (mod display precision) before being superseded. Kept only because it
+auto-discovers every run directory under metrics_root rather than requiring a
+declared run list -- harmless to keep around for an ad-hoc "show me everything
+that's ever been run here" check, but the canonical config-driven wrapper is
+now the one to use for the real headline report.
+
 Aggregate AMOS evaluation results across all chaos-trained methods.
 
 Reads METRICS_ROOT/chaos_model/<contrast>/{CATEGORY}_{RUN_ID}/fold{k}/eval_all.csv,
@@ -11,8 +21,8 @@ from the modality-grid aggregator brats/chaos use — but the cross-fold primiti
 (load_run, cross_fold_stats) come from the shared commun aggregation core.
 
 Usage:
-  python 06_02_aggregate_results.py
-  python 06_02_aggregate_results.py --metrics_root <path>
+  python 06_96_aggregate_results_legacy.py
+  python 06_96_aggregate_results_legacy.py --metrics_root <path>
 """
 import argparse
 import sys
