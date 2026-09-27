@@ -487,6 +487,33 @@ patient rather than dropping one, which is why the two training contrasts' held-
 differ (102 vs. 168 cases) despite sharing the same 84 held-out patients — this has not been
 independently checked for double-counting/bias, flag if it becomes load-bearing for a paper claim.
 
+**Unilateral-crop is the standard duke-breast-mri evaluation strategy (Paul's decision, 2026-09-17)
+— the ONLY reported one, bilateral is retired.** duke-breast-mri's test images are ~100%
+bilateral-width; I-SPY2's own t1wce training pool is only 18% bilateral (82% unilateral-cropped —
+a hard acquisition ceiling, not a processing choice, see below). Evaluating on full bilateral
+images was a real, substantial confound: every arm's absolute Dice rose once tested on FOV-matched
+unilateral crops (`datasets/duke-breast-mri/5_scripts_duke-breast-mri/02_nnunet/
+02_03_derive_unilateral_crop.py` — axis-0-only lesion-side half crop, deliberately NOT reusing
+I-SPY2's own empirically-fit anterior-posterior window since that's calibrated to I-SPY2's own
+site-specific VOLSER protocol), and the Ours-vs-auglab_default headline gap that originally
+motivated this investigation shrank substantially on two arms and flipped to a near-tie on the
+other two. New eval items: `t1wce_uni`/`precontrast_uni` (metrics land under
+`8_results_duke-breast-mri/02_metrics/ispy2_model/<contrast>/{t1wce_uni,precontrast_uni}/`, same
+`DUKE_ITEM`/`METRICS_SUBDIR` routing convention as `precontrast`). `ispy2_combined_01_results.yaml`'s
+`duke_t1wce`/`duke_precontrast` source columns now point at the `_uni` dirs. **The original
+bilateral tables/ladders are archived at `datasets/03_archive/{duke-breast-mri,ispy2}
+_bilateral_eval_20260917/`** — fully out of the active `datasets/ispy2/`/`datasets/duke-breast-mri/`
+trees (same spirit as the AMBL/atlas-liver-hcc archival precedent, so nobody cites the stale
+bilateral numbers by accident), not deleted — see each archive's own README for exactly what
+moved and why. The underlying raw per-fold `eval_all.csv`/predictions were left in place (not
+archived), only the aggregate/summary/ladder outputs moved.
+
+**Standing policy (Paul, 2026-09-17): every task's `combined_contrasts` table should be
+cross-dataset, not just cross-modality** — i.e. it should always pool in that task's external
+cross-dataset eval companion (the way ispy2's already pools in duke-breast-mri), not only the
+task's own training-modality pair. Worth checking other tasks' `*_combined_01_results.yaml`
+configs against this standard if revisiting them.
+
 ---
 
 ## Cleanup notes (read before deleting anything in the repo root)
