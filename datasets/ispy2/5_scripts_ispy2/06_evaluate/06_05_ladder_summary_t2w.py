@@ -30,10 +30,12 @@ OOD_CONTRASTS = ["t1wce"]
 
 DUKE_ROOT = (DATASET_ROOT.parent / "duke-breast-mri"
              / "8_results_duke-breast-mri/02_metrics/ispy2_model/t2w")
-# The bare root contributes duke's t1wce arm; the run_subdir entry contributes
-# its pre-contrast arm, which lives in a parallel `precontrast/` subdir.
-EXTRA_OOD_SOURCES = [DUKE_ROOT,
-                     {"metrics_root": DUKE_ROOT, "run_subdir": "precontrast"}]
+# 2026-09-17: duke arms are the UNILATERAL-CROP items (t1wce_uni / precontrast_uni),
+# the standard and only reported duke evaluation -- the bilateral ladders are
+# archived at datasets/03_archive/{duke-breast-mri,ispy2}_bilateral_eval_20260917/.
+# Each item lives in a parallel `<item>/` subdir (ablations/<item>/<run_id>).
+EXTRA_OOD_SOURCES = [{"metrics_root": DUKE_ROOT, "run_subdir": "t1wce_uni"},
+                     {"metrics_root": DUKE_ROOT, "run_subdir": "precontrast_uni"}]
 
 TS = "20260905_163655"
 RUNGS = [

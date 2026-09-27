@@ -1,3 +1,4 @@
+# 2026-09-17: reads the UNILATERAL-CROP t1wce_uni metrics (standard duke eval; bilateral archived).
 # duke-breast-mri (291 MAMA-MIA-expert-masked cases) -- combined ISPY2-trained
 # training modalities (t1wce-trained + t2w-trained pooled), cross-dataset.
 # Mirrors ambl_cross_dataset_ispy2trained_combined_01_results.yaml's pattern
@@ -11,11 +12,11 @@ title: "duke-breast-mri (291 cases) -- combined ISPY2-trained modalities (t1wce 
 output_dir: "${METRICS_ROOT}/ispy2_model/combined_contrasts"
 output_prefix: "01_results"
 ref: auglabAug_v26_6_2_train050_val000
-column_order: [t1wce]
+column_order: [t1wce_uni]
 
 modalities:
   - name: t1wce
-    metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce"
+    metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce/t1wce_uni"
     runs:
       baseline: ispy2_t1wce_baseline_20260905_163655
       auglab_default: ispy2_t1wce_auglab_default_20260905_163655
@@ -24,7 +25,7 @@ modalities:
       srcsm: ispy2_t1wce_srcsm_20260905_163655
       auglabAug_v26_6_2_train050_val000: ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
   - name: t2w
-    metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w"
+    metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w/t1wce_uni"
     runs:
       baseline: ispy2_t2w_baseline_20260905_163655
       auglab_default: ispy2_t2w_auglab_default_20260905_163655

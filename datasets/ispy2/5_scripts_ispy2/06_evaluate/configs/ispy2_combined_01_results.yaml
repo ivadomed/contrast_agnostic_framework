@@ -13,19 +13,26 @@
 # hanseg -- an external cohort is a test column here, not a separate task.
 # Prefixed `duke_` so duke's t1wce arm cannot collide with I-SPY2's own t1wce
 # column (they are different cohorts scored on the same contrast name).
+#
+# 2026-09-17: duke's columns point at the UNILATERAL-CROP metrics dirs
+# (t1wce_uni / precontrast_uni), not the original bilateral ones -- unilateral
+# crop is now the standard and only reported duke evaluation (see
+# datasets/duke-breast-mri/.../02_03_derive_unilateral_crop.py and CLAUDE.md's
+# "Breast task" section). The original bilateral tables are archived at
+# datasets/03_archive/{duke-breast-mri,ispy2}_bilateral_eval_20260917/, not deleted.
 title: "I-SPY2 own-model -- combined training modalities (t1wce + t2w), cross-contrast"
 output_dir: "${METRICS_ROOT}/ispy2_model/combined_contrasts"
 output_prefix: "01_results"
 ref: auglabAug_v26_6_2_train050_val000
-column_order: [t1wce, t2w, duke_t1wce, duke_precontrast]
+column_order: [t1wce, t2w, duke_t1wce_uni, duke_precontrast_uni]
 
 modalities:
   - name: t1wce
     sources:
       - metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce"
-      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/t1wce_uni"
         column_prefix: "duke_"
-      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/precontrast"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/precontrast_uni"
         column_prefix: "duke_"
     runs:
       baseline: ispy2_t1wce_baseline_20260905_163655
@@ -37,9 +44,9 @@ modalities:
   - name: t2w
     sources:
       - metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w"
-      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/t1wce_uni"
         column_prefix: "duke_"
-      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/precontrast"
+      - metrics_dir: "${PROJECT_ROOT}/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/precontrast_uni"
         column_prefix: "duke_"
     runs:
       baseline: ispy2_t2w_baseline_20260905_163655
