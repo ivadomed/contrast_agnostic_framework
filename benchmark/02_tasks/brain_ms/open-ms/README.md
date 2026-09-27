@@ -51,7 +51,7 @@ bash $S/05_predict/05_02_predict_synthseg_EM.sh        open-ms_flair_synthseg_EM
 bash $S/06_evaluate/06_01_evaluate_run.sh  open-ms_flair_auglabAug_v26_6_2_train025_val100_20260630_064702 auglab all
 bash $S/06_evaluate/06_01_evaluate_run.sh  open-ms_flair_synthseg_EM_train100_val000_20260630_064759 auglab all
 # the key texture-sensitive metric (lesion-wise detection, size-stratified, per contrast):
-.venv/bin/python $S/06_evaluate/06_02_lesionwise_analysis.py \
+.venv/bin/python $S/06_evaluate/06_05_lesionwise_analysis.py \
     open-ms_flair_auglabAug_v26_6_2_train025_val100_20260630_064702 \
     open-ms_flair_synthseg_EM_train100_val000_20260630_064759 \
     --out benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/02_metrics/open_ms_model/flair/exp_texture_advantage/lesionwise.csv

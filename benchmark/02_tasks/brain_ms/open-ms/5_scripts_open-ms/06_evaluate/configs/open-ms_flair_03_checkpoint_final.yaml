@@ -9,7 +9,7 @@
 # metrics_dir/{category}_{run_id}_final/ dir — hence every run id below carries the
 # "_final" suffix; strip it to get the underlying training RUN_ID.
 #
-# Consumed by the shared aggregator (06_10_aggregate_from_config.sh) and the
+# Consumed by the shared aggregator (06_02_aggregate_from_config.sh) and the
 # companion significance_from_config.py (06_11, same config, run separately — pass
 # --ref explicitly, since this config's only auglabAug/v26_6_2 entry is itself an
 # ablation-named run and the "auglabAug"+"v26_6_2" auto-pick could still be fooled by

@@ -9,8 +9,8 @@
 # external source, this file is currently equivalent to open-ms_flair_01_results.yaml
 # (own-dataset-only) -- kept as its own file rather than deleted in case a future
 # external cross-dataset source is added back, but there is nothing "cross-dataset"
-# about its current content. Consumed by 06_10_aggregate_from_config.sh AND
-# 06_11_significance_from_config.sh (same config, run separately).
+# about its current content. Consumed by 06_02_aggregate_from_config.sh AND
+# 06_03_significance_from_config.sh (same config, run separately).
 title: "open-ms FLAIR models — own test set (no external cross-dataset source currently)"
 in_domain_contrast: open-ms_flair
 output_prefix: "04_01_cross_dataset_flair"

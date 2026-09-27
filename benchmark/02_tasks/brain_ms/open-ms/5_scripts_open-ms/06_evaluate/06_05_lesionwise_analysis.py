@@ -17,7 +17,7 @@ Read-only over predictions in 8_results_open-ms/01_predictions/... and GT in
 2_nnUNet_open-ms/raw/Dataset070_OpenMS_FLAIR/labelsTs_<contrast>/.
 
 Usage:
-  python 06_02_lesionwise_analysis.py <OURS_RUN_ID> <SYNTHSEG_RUN_ID> [--out CSV]
+  python 06_05_lesionwise_analysis.py <OURS_RUN_ID> <SYNTHSEG_RUN_ID> [--out CSV]
   (run IDs are the auglab/<RUN_ID> dir names; both live under .../flair/auglab/)
 """
 from __future__ import annotations

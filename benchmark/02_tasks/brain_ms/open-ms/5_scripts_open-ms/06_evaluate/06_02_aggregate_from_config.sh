@@ -2,8 +2,8 @@
 # Aggregate evaluation results from a YAML config file.
 #
 # Usage:
-#   bash 06_10_aggregate_from_config.sh <config.yaml>
-#   bash 06_10_aggregate_from_config.sh configs/open-ms_flair_01_results.yaml
+#   bash 06_02_aggregate_from_config.sh <config.yaml>
+#   bash 06_02_aggregate_from_config.sh configs/open-ms_flair_01_results.yaml
 #
 # The config specifies which runs to include, the metrics_dir, and the output
 # prefix. See configs/ for available configs and benchmark/00_commun_scripts/00_03_evaluate/aggregate_from_config.py

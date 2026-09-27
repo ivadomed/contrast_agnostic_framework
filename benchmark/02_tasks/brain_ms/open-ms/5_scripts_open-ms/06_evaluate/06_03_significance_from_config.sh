@@ -2,8 +2,8 @@
 # Paired significance testing from a YAML config (same config as 06_10).
 #
 # Usage:
-#   bash 06_11_significance_from_config.sh <config.yaml> [--ref <exact run id>] [--metric dice]
-#   bash 06_11_significance_from_config.sh configs/open-ms_flair_01_results.yaml \
+#   bash 06_03_significance_from_config.sh <config.yaml> [--ref <exact run id>] [--metric dice]
+#   bash 06_03_significance_from_config.sh configs/open-ms_flair_01_results.yaml \
 #       --ref open-ms_flair_auglabAug_v26_6_2_train025_val100_20260706_061243
 #
 # --ref: pass the EXACT reference run id explicitly whenever the run list also

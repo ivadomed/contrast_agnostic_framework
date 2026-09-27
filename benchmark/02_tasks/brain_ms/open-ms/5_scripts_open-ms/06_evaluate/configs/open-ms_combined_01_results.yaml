@@ -1,6 +1,6 @@
 # open-ms — combined training modalities (flair + t1w pooled), cross-contrast.
 # Consumed by benchmark/00_commun_scripts/00_03_evaluate/combined_modality_summary.py
-# via 06_17_combined_modality_summary.sh. Companion to open-ms_flair_01_results.yaml /
+# via 06_04_combined_modality_summary.sh. Companion to open-ms_flair_01_results.yaml /
 # open-ms_t1w_01_results.yaml (each ONE training modality) — this pools BOTH into one
 # row per method, with an inline significance column (ref = OURS train050_val000)
 # after the usual "all" column.
