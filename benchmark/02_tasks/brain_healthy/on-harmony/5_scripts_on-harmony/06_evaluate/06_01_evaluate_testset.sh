@@ -4,7 +4,7 @@
 #   predictions → PREDICTIONS_ROOT/<model>/<train_contrast>/<category>/<RUN_ID>/fold{k}/<test_contrast>/
 #   metrics     → METRICS_ROOT/<model>/<train_contrast>/<category>_<RUN_ID>/fold{k}/eval_all.csv
 # Aggregate across runs with the SHARED benchmark/00_commun_scripts/00_03_evaluate/aggregate_from_config.py via
-# 06_06_aggregate_from_config.sh — exactly the same as chaos.
+# 06_02_aggregate_from_config.sh — exactly the same as chaos.
 #
 # PREREQUISITE (2026-09-27 refactor): predictions must already exist, produced by
 # 05_predict/05_00_build_test_inputs.sh (once) + the relevant 05_XX_predict_*.sh wrapper

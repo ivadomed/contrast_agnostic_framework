@@ -7,8 +7,8 @@
 # script's module docstring for the full config format and statistical model.
 #
 # Usage:
-#   bash 06_09_combined_modality_summary.sh <config.yaml>
-#   bash 06_09_combined_modality_summary.sh configs/on-harmony_combined_01_results.yaml
+#   bash 06_04_combined_modality_summary.sh <config.yaml>
+#   bash 06_04_combined_modality_summary.sh configs/on-harmony_combined_01_results.yaml
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${HERE}/../00_utils/env.sh"

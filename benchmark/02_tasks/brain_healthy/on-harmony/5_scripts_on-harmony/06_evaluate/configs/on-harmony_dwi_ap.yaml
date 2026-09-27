@@ -1,8 +1,8 @@
 # ON-Harmony — models TRAINED on dwi_ap (b~0 EPI, 3rd training modality, added
 # 2026-09-21), cross-contrast. STANDARD layout (same as T1w/T2w): consumed by the
-# shared aggregator via 06_06_aggregate_from_config.sh.
+# shared aggregator via 06_02_aggregate_from_config.sh.
 #
-#   bash 06_06_aggregate_from_config.sh configs/on-harmony_dwi_ap.yaml
+#   bash 06_02_aggregate_from_config.sh configs/on-harmony_dwi_ap.yaml
 #
 # ⚠️ dwi_ap is NOT diffusion-weighted — it is a b≈0 T2*-weighted single-shot-EPI
 # readout (see 02_convert_to_nnunet/02_05_convert_dataset_dwi.py's docstring).

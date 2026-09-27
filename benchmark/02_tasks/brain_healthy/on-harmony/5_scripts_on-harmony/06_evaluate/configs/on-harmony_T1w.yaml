@@ -1,6 +1,6 @@
 # ON-Harmony cross-contrast benchmark — models TRAINED on T1w, tested on every contrast.
 # STANDARD layout (same as chaos): consumed by the shared aggregator
-# scripts/evaluate/aggregate_from_config.py via 06_06_aggregate_from_config.sh.
+# scripts/evaluate/aggregate_from_config.py via 06_02_aggregate_from_config.sh.
 # Eval (06_01) writes fold*/eval_all.csv under metrics_dir/{category}_{run_id}/.
 title: "ON-Harmony — T1w-trained models, cross-contrast (incl. srcsm)"
 metrics_dir: "${METRICS_ROOT}/on_harmony_model/T1w"

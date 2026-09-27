@@ -42,7 +42,7 @@ if [ "${SYNC_CHECKPOINTS:-0}" = "1" ]; then
 fi
 
 echo "[$(date '+%H:%M:%S')] done. Next steps once ${N_EXPECT}/${N_EXPECT} confirmed:"
-echo "  bash 06_06_aggregate_from_config.sh configs/on-harmony_dwi_ap.yaml"
-echo "  bash 06_09_combined_modality_summary.sh configs/on-harmony_combined_01_results.yaml"
+echo "  bash 06_02_aggregate_from_config.sh configs/on-harmony_dwi_ap.yaml"
+echo "  bash 06_04_combined_modality_summary.sh configs/on-harmony_combined_01_results.yaml"
 echo "  .venv/bin/python 06_12_ladder_summary_dwi_ap.py"
 echo "  .venv/bin/python 06_12_ladder_summary_dwi_ap.py --restricted"

@@ -6,8 +6,8 @@
 # + _heatmap_{dice,hd95}.png. Run 06_01_evaluate_testset.sh first to produce the eval_all.csv.
 #
 # Usage:
-#   bash 06_06_aggregate_from_config.sh configs/on-harmony_T1w.yaml
-#   bash 06_06_aggregate_from_config.sh configs/on-harmony_T2w.yaml
+#   bash 06_02_aggregate_from_config.sh configs/on-harmony_T1w.yaml
+#   bash 06_02_aggregate_from_config.sh configs/on-harmony_T2w.yaml
 set -euo pipefail
 source "$(dirname "$0")/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"

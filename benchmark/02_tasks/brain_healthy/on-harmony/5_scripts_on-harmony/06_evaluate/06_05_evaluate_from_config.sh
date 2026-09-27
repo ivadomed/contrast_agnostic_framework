@@ -24,4 +24,4 @@ for r in "${RUNS[@]}"; do
     echo "──────── $r ────────"
     bash "${HERE}/06_01_evaluate_testset.sh" "$r" || echo "  ! eval failed/incomplete for $r (continuing)"
 done
-echo "[$(date '+%H:%M:%S')] done. Aggregate with: bash 06_06_aggregate_from_config.sh $(basename "$CFG")"
+echo "[$(date '+%H:%M:%S')] done. Aggregate with: bash 06_02_aggregate_from_config.sh $(basename "$CFG")"
