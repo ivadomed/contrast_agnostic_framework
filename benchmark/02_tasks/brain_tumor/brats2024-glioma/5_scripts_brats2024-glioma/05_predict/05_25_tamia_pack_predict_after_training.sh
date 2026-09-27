@@ -18,7 +18,7 @@
 #   bash 05_25_tamia_pack_predict_after_training.sh <dependency, e.g. afterany:383046>
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 DEPENDENCY="${1:?usage: 05_25_tamia_pack_predict_after_training.sh <afterany:jobid>}"
 

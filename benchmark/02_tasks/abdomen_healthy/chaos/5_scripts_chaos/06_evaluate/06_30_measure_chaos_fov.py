@@ -34,7 +34,7 @@ import numpy as np
 import SimpleITK as sitk
 
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]
                        / "00_commun_scripts" / "00_00_utils"))
 import fov  # noqa: E402
 

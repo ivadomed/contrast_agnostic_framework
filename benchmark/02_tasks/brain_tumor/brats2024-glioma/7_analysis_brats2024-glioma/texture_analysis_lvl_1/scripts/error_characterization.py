@@ -28,8 +28,8 @@ import pandas as pd
 from scipy.ndimage import distance_transform_edt
 
 THIS_DIR = Path(__file__).resolve().parent
-PROJECT = THIS_DIR.parents[4]
-sys.path.insert(0, str(PROJECT / "datasets" / "00_commun_scripts" / "00_00_utils"))
+PROJECT = THIS_DIR.parents[6]
+sys.path.insert(0, str(PROJECT / "benchmark" / "00_commun_scripts" / "00_00_utils"))
 sys.path.insert(0, str(THIS_DIR))
 from stat_tests import wilcoxon_p  # noqa: E402
 from compute_cross_contrast_ngf import FOLDS, LABELS_DIR  # noqa: E402

@@ -69,7 +69,7 @@ sys.path.insert(0, str(THIS_DIR))
 from compute_region_surround_texture import highpass  # noqa: E402  (HP_SIGMA=2.0 baked in)
 
 PROJECT = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
-DS = PROJECT / "datasets" / "brats2024-glioma"
+DS = PROJECT / "benchmark" / "02_tasks" / "brain_tumor" / "brats2024-glioma"
 RAW051 = DS / "2_nnUNet_brats2024-glioma" / "raw" / "Dataset051_BraTS2024GliomaT1n"
 RAW052 = DS / "2_nnUNet_brats2024-glioma" / "raw" / "Dataset052_BraTS2024GliomaT2w"
 LABELS_DIR = RAW051 / "labelsTr"  # content-identical to RAW052's labelsTr (verified)

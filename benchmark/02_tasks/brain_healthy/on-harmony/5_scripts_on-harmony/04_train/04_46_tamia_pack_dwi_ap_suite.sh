@@ -34,7 +34,7 @@
 #   BASE=<existing> bash 04_46_...                      # re-use RUN_IDs / recording, extend chains
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 S5="${ROOT}/benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony"
 
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"

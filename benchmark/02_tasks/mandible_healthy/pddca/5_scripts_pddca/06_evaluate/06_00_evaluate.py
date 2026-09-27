@@ -12,7 +12,7 @@ bone is segmented, while the teeth are excluded") and confirmed empirically.
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]
                        / "00_commun_scripts" / "00_03_evaluate"))
 from evaluate import main  # noqa: E402
 

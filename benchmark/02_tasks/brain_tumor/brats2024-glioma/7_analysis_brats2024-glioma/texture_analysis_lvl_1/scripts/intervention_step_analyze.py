@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 PROJECT = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
-DS = PROJECT / "datasets" / "brats2024-glioma"
+DS = PROJECT / "benchmark" / "02_tasks" / "brain_tumor" / "brats2024-glioma"
 LABELS_DIR = DS / "2_nnUNet_brats2024-glioma" / "raw" / "Dataset051_BraTS2024GliomaT1n" / "labelsTr"
 
 ANALYSIS_DIR = DS / "7_analysis_brats2024-glioma" / "texture_analysis_lvl_1"

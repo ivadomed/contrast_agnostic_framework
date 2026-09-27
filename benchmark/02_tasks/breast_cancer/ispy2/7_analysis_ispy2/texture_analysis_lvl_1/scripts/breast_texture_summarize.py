@@ -16,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[7]
-sys.path.insert(0, str(PROJECT_ROOT / "datasets" / "00_commun_scripts" / "00_00_utils"))
+sys.path.insert(0, str(PROJECT_ROOT / "benchmark" / "00_commun_scripts" / "00_00_utils"))
 from stat_tests import wilcoxon_p  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"

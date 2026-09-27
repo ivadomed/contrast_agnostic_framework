@@ -19,7 +19,7 @@
 #   PACK_CHAIN=4 PACK_USE_MPS=1 bash 04_33_...                      # tune chain length / MPS
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 PACK_DIR="${PACK_DIR:-/scratch/p/paulh/brats2024-glioma/_packruns/pack_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "${PACK_DIR}"

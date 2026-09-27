@@ -22,7 +22,7 @@
 # Read the result with 04_13_probe_report.sh.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 source "${HERE}/../00_utils/env.sh"
 
 PROBE_EPOCHS="${PROBE_EPOCHS:-6}"

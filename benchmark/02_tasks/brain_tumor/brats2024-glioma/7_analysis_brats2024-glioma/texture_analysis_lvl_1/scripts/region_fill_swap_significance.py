@@ -36,7 +36,7 @@ import pandas as pd
 
 THIS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = THIS_DIR.parents[6]
-sys.path.insert(0, str(PROJECT_ROOT / "datasets" / "00_commun_scripts" / "00_00_utils"))
+sys.path.insert(0, str(PROJECT_ROOT / "benchmark" / "00_commun_scripts" / "00_00_utils"))
 sys.path.insert(0, str(THIS_DIR))
 from stat_tests import holm, wilcoxon_p  # noqa: E402
 from compute_cross_contrast_ngf import (  # noqa: E402

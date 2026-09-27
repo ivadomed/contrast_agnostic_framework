@@ -23,7 +23,7 @@
 #   PACK_CHAIN=5 bash 04_15_...                   # tune chain length
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 PACK_DIR="${PACK_DIR:-/scratch/p/paulh/ispy2/_packruns/all12_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "${PACK_DIR}"

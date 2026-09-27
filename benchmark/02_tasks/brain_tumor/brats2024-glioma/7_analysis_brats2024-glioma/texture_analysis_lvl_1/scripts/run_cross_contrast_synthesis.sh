@@ -8,7 +8,7 @@
 set -euo pipefail
 
 LVL1="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REPO="$(cd "${LVL1}/../../../.." && pwd)"
+REPO="$(cd "${LVL1}/../../../../../.." && pwd)"
 PY="${REPO}/.venv/bin/python"
 S="${LVL1}/scripts"
 LOGDIR="${LVL1}/outputs/logs"

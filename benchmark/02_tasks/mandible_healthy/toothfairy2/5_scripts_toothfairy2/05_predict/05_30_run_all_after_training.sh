@@ -21,7 +21,7 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DS="$(cd "${HERE}/.." && pwd)"
-ROOT="$(cd "${DS}/../../.." && pwd)"
+ROOT="$(cd "${DS}/../../../../.." && pwd)"
 A="${1:?need suiteA pack dir}"; B="${2:?need suiteB pack dir}"; L="${3:?need ladder pack dir}"
 
 get() { grep -E "^$2=" "$1/RUN_IDS.env" | head -1 | cut -d= -f2-; }

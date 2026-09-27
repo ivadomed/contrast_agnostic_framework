@@ -12,7 +12,7 @@
 # Usage:  bash run_coverage_openms.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO="$(cd "${HERE}/../../../../.." && pwd)"
+REPO="$(cd "${HERE}/../../../../../../.." && pwd)"
 source "${REPO}/scripts/job_runner/run_job.sh"
 PY="${REPO}/.venv/bin/python"
 ONH="${REPO}/benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/histogram_coverage_lvl_1/scripts"   # reuse compute/plot

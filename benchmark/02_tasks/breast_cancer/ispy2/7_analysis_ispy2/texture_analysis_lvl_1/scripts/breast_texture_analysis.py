@@ -39,8 +39,8 @@ from scipy.ndimage import distance_transform_edt, find_objects
 from scipy.stats import mannwhitneyu
 
 PROJECT_ROOT = Path(__file__).resolve().parents[7]
-ISPY2_ROOT = PROJECT_ROOT / "datasets" / "ispy2"
-DUKE_ROOT = PROJECT_ROOT / "datasets" / "duke-breast-mri"
+ISPY2_ROOT = PROJECT_ROOT / "benchmark" / "02_tasks" / "breast_cancer" / "ispy2"
+DUKE_ROOT = PROJECT_ROOT / "benchmark" / "02_tasks" / "breast_cancer" / "duke-breast-mri"
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 DATA_DIR = OUT / "data"
 FOLDS = ("fold0", "fold1", "fold2")

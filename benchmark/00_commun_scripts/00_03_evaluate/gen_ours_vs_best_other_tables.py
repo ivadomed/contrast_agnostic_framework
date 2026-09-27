@@ -46,7 +46,7 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SIG_SCRIPT = Path(__file__).resolve().parent / "significance_from_config.py"
-OUT_DIR = PROJECT_ROOT / "datasets" / "01_commun_results"
+OUT_DIR = PROJECT_ROOT / "benchmark" / "01_commun_results"
 
 FIVE_METHODS = ["baseline", "synthseg_noEM", "synthseg_EM", "auglab_default", "srcsm"]
 

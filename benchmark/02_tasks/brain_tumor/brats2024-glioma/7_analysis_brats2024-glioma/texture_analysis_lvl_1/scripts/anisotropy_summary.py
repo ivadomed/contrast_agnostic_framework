@@ -37,7 +37,7 @@ PROJECT_ROOT = THIS_DIR.resolve().parents[6]
 OUT = THIS_DIR.parent / "outputs"
 DATA, TABLES, PLOTS = OUT / "data", OUT / "tables", OUT / "plots"
 
-sys.path.insert(0, str(PROJECT_ROOT / "datasets" / "00_commun_scripts" / "00_00_utils"))
+sys.path.insert(0, str(PROJECT_ROOT / "benchmark" / "00_commun_scripts" / "00_00_utils"))
 from stat_tests import holm  # noqa: E402
 
 CONTRASTS = ("t1n", "t1c", "t2w", "t2f")

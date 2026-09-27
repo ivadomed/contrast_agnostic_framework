@@ -5,7 +5,7 @@
 #   bash 02_03_verify_raw.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${HERE}/../../../.." && pwd)"
+REPO_ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 LOG_DIR="${HERE}/logs"; mkdir -p "${LOG_DIR}"
 source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
 run_job --name ispy2_verify_raw --gpus 0 --cpus 4 --mem 16G --time 02:00:00 \

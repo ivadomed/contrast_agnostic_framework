@@ -96,7 +96,7 @@ AUGLAB = PROJECT / "sub-workspaces/auglab_workspace/AugLab"
 sys.path.insert(0, str(AUGLAB))
 from auglab.transforms.gpu.fromSeg import _kmeans_1d, _voronoi_region_ids  # noqa: E402
 
-DS = PROJECT / "datasets" / "brats2024-glioma"
+DS = PROJECT / "benchmark" / "02_tasks" / "brain_tumor" / "brats2024-glioma"
 RAW052 = DS / "2_nnUNet_brats2024-glioma" / "raw" / "Dataset052_BraTS2024GliomaT2w"
 TEST_CASES = DS / "4_splits_brats2024-glioma" / "test_cases.json"
 

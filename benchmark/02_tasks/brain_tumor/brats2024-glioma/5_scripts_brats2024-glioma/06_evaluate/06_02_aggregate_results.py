@@ -11,7 +11,7 @@ kept (same path, same CLI: --metrics_dir [--run_keys ...]) so
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]
                        / "00_commun_scripts" / "00_03_evaluate"))
 import aggregate_results  # noqa: E402
 

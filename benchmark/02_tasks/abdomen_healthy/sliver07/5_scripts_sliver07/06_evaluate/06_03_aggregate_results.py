@@ -24,7 +24,7 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]
                        / "00_commun_scripts" / "00_00_utils"))
 from eval_aggregate import cross_fold_stats  # noqa: E402
 

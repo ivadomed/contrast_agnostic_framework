@@ -55,7 +55,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[7]
-DS_ROOT = PROJECT_ROOT / "datasets" / "brats2024-glioma"
+DS_ROOT = PROJECT_ROOT / "benchmark" / "02_tasks" / "brain_tumor" / "brats2024-glioma"
 BIDS_ROOT = DS_ROOT / "1_BIDS_brats2024-glioma" / "glioma-brain-brats2024"
 LABELS_DIR = (DS_ROOT / "2_nnUNet_brats2024-glioma" / "raw"
               / "Dataset051_BraTS2024GliomaT1n" / "labelsTr")

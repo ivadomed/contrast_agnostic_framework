@@ -52,8 +52,8 @@ import numpy as np
 import nibabel as nib
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]           # benchmark/02_tasks/breast_cancer/duke-breast-mri
-REPO_ROOT = DATASET_ROOT.parents[1]
-sys.path.insert(0, str(REPO_ROOT / "datasets" / "00_commun_scripts" / "00_00_utils"))
+REPO_ROOT = DATASET_ROOT.parents[3]
+sys.path.insert(0, str(REPO_ROOT / "benchmark" / "00_commun_scripts" / "00_00_utils"))
 from orient import TARGET_AXCODES, reorient_file  # noqa: E402
 
 RAW_STAGE = Path("/scratch/paulh/duke_download/raw")   # login-node download staging area

@@ -22,7 +22,7 @@
 #                    PACKROOT=/scratch/p/paulh/brats2024-glioma/_packruns/_dryrun_t1c T1C_DRYRUN=1 bash 04_80_...
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 source "${HERE}/../00_utils/env_t1c.sh"
 source "${ROOT}/scripts/cluster/tamia_env.sh"
 source "${HERE}/../00_utils/t1c_runs.sh"

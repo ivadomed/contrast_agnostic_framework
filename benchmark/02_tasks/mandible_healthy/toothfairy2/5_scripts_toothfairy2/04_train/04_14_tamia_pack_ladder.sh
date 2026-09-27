@@ -22,7 +22,7 @@
 #   PACK_DIR=<existing> bash 04_14_...            # extend chain / resume
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 PACK_DIR="${PACK_DIR:-/scratch/p/paulh/toothfairy2/_packruns/ladder_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "${PACK_DIR}"

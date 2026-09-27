@@ -6,7 +6,7 @@
 #   bash 02_02_convert_t2w.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${HERE}/../../../.." && pwd)"
+REPO_ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 LOG_DIR="${REPO_ROOT}/benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2/02_nnunet/logs"
 mkdir -p "${LOG_DIR}"
 

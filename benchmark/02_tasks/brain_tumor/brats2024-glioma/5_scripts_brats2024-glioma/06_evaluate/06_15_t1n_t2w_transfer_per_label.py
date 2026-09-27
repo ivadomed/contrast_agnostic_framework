@@ -33,7 +33,7 @@ from pathlib import Path
 import numpy as np
 
 DATASET_ROOT = Path(__file__).resolve().parents[2]   # benchmark/02_tasks/brain_tumor/brats2024-glioma
-REPO_ROOT = DATASET_ROOT.parent.parent
+REPO_ROOT = DATASET_ROOT.parent.parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "benchmark/00_commun_scripts/00_00_utils"))
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
 

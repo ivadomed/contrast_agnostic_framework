@@ -7,7 +7,7 @@
 #   bash 04_25_tamia_pack_t2w_ladder.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 PACK_DIR="${PACK_DIR:-/scratch/p/paulh/ispy2/_packruns/ladder_t2w_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "${PACK_DIR}"

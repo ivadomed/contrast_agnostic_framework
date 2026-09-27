@@ -24,7 +24,7 @@ set -euo pipefail
 LVL1="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # 4 levels: texture_analysis_lvl_1 -> 7_analysis_open-ms -> open-ms -> datasets -> REPO.
 # (run_texture_lvl1_openms.sh uses 5, which overshoots to $PROJECT/paulh -- don't copy it.)
-REPO="$(cd "${LVL1}/../../../.." && pwd)"
+REPO="$(cd "${LVL1}/../../../../../.." && pwd)"
 S="${LVL1}/scripts"
 GENERATED="${LVL1}/../data/generated_noblur"   # noblur set: metric reflects the FILL, not resolution sim
 DATA="${LVL1}/outputs/data"

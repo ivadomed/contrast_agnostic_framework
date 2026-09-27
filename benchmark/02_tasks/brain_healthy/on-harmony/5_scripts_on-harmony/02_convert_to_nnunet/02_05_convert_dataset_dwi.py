@@ -53,7 +53,7 @@ import numpy as np
 N_WORKERS = 32
 
 PROJECT_ROOT = Path(os.environ["PROJECT_ROOT"])
-DATASET_ROOT = PROJECT_ROOT / "datasets" / "on-harmony"
+DATASET_ROOT = PROJECT_ROOT / "benchmark" / "02_tasks" / "brain_healthy" / "on-harmony"
 SPLITS_DIR   = Path(os.environ.get("SPLITS_DIR", DATASET_ROOT / "4_splits_on-harmony"))
 SPLITS_JSON  = SPLITS_DIR / "onharmony_dwi_splits.json"
 CASES_JSON   = SPLITS_DIR / "dwi_trainval_cases.json"

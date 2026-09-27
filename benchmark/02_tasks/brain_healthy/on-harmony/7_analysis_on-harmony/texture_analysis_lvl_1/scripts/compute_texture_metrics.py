@@ -52,7 +52,7 @@ ANALYSIS_ROOT = THIS_DIR.parent                                  # texture_analy
 PROJECT_ROOT  = THIS_DIR.parents[6]
 
 DEFAULT_GENERATED = ANALYSIS_ROOT / "data" / "generated"
-DEFAULT_DS        = PROJECT_ROOT / "datasets" / "on-harmony" / "2_nnUNet_on-harmony" / "raw" / "Dataset031_OnHarmonyT1w31"
+DEFAULT_DS        = PROJECT_ROOT / "benchmark" / "02_tasks" / "brain_healthy" / "on-harmony" / "2_nnUNet_on-harmony" / "raw" / "Dataset031_OnHarmonyT1w31"
 DEFAULT_IMAGES    = DEFAULT_DS / "imagesTr"
 DEFAULT_LABELS    = DEFAULT_DS / "labelsTr"
 DEFAULT_OUT       = ANALYSIS_ROOT / "outputs" / "data" / "texture_metrics.csv"

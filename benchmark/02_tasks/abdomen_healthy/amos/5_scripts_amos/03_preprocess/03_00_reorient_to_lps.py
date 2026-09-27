@@ -48,7 +48,7 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]
                        / "00_commun_scripts" / "00_00_utils"))
 import orient  # noqa: E402
 

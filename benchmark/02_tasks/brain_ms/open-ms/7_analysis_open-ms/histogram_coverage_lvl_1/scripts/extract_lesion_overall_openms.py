@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 
 THIS = Path(__file__).resolve()
 ANALYSIS = THIS.parents[1]
-REPO = THIS.parents[5]
+REPO = THIS.parents[7]
 BIDS = REPO / "benchmark/02_tasks/brain_ms/open-ms/1_BIDS_open-ms/ms-brain-openms"
 LESION_DIR = BIDS / "derivatives" / "labels"
 GENERATED = ANALYSIS.parent / "data" / "generated"    # shared with Pillar-1 texture_analysis_lvl_1

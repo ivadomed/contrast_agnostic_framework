@@ -53,7 +53,7 @@ log = logging.getLogger(__name__)
 
 THIS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = THIS_DIR.resolve().parents[6]
-DS_ROOT = PROJECT_ROOT / "datasets" / "brats2024-glioma"
+DS_ROOT = PROJECT_ROOT / "benchmark" / "02_tasks" / "brain_tumor" / "brats2024-glioma"
 BIDS_ROOT = DS_ROOT / "1_BIDS_brats2024-glioma" / "glioma-brain-brats2024"
 OUT_DIR_DEFAULT = DS_ROOT / "7_analysis_brats2024-glioma" / "texture_analysis_lvl_1" / "outputs"
 

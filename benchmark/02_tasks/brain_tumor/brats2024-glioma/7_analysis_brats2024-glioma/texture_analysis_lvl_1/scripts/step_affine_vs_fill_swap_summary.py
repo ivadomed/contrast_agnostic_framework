@@ -47,7 +47,7 @@ from scipy.stats import spearmanr, wilcoxon
 THIS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = THIS_DIR.parents[6]  # THIS_DIR=scripts; parents: lvl1, 7_analysis, dataset, datasets, repo root
 sys.path.insert(0, str(THIS_DIR))
-sys.path.insert(0, str(PROJECT_ROOT / "datasets" / "00_commun_scripts" / "00_00_utils"))
+sys.path.insert(0, str(PROJECT_ROOT / "benchmark" / "00_commun_scripts" / "00_00_utils"))
 from ranking_within_train import kendall_S, pooled_p, dice_table, REGIONS, TRAINS  # noqa: E402
 from compute_cross_contrast_ngf import load_rung_eval  # noqa: E402
 from stat_tests import holm  # noqa: E402

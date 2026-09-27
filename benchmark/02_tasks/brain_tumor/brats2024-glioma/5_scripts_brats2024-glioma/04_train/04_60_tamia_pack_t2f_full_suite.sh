@@ -39,7 +39,7 @@
 #   PACK_CHAIN=8 bash 04_60_...                              # tune chain length (all 3 packs)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 TS="$(date +%Y%m%d_%H%M%S)"
 PACK_DIR_A="${PACK_DIR_A:-/scratch/p/paulh/brats2024-glioma/_packruns/t2f_suiteA_${TS}}"

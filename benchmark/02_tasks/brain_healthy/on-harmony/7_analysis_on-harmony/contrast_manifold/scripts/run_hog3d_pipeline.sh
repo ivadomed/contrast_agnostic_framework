@@ -5,7 +5,7 @@
 set -euo pipefail
 
 CM_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REPO_ROOT="$(cd "${CM_ROOT}/../../../.." && pwd)"
+REPO_ROOT="$(cd "${CM_ROOT}/../../../../../.." && pwd)"
 source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
 
 PY="${REPO_ROOT}/.venv/bin/python"

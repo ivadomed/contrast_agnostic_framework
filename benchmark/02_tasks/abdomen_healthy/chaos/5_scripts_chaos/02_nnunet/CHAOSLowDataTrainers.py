@@ -25,8 +25,8 @@ import sys
 
 _root = os.environ.get("NNUNET_PROJECT_ROOT", "")
 if _root:
-    _scripts = os.path.join(_root, "datasets", "chaos", "5_scripts_chaos")
-    _commun = os.path.join(_root, "datasets", "00_commun_scripts", "00_01_train")
+    _scripts = os.path.join(_root, "benchmark", "02_tasks", "abdomen_healthy", "chaos", "5_scripts_chaos")
+    _commun = os.path.join(_root, "benchmark", "00_commun_scripts", "00_01_train")
     for _p in (_root, _scripts, _commun):
         if _p and _p not in sys.path:
             sys.path.insert(0, _p)

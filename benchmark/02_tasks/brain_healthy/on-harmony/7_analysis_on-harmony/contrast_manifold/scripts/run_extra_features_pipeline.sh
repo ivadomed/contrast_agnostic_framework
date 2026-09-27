@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CM_ROOT="$(cd "${SCRIPTS_DIR}/.." && pwd)"
-REPO_ROOT="$(cd "${CM_ROOT}/../../../.." && pwd)"
+REPO_ROOT="$(cd "${CM_ROOT}/../../../../../.." && pwd)"
 source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
 
 PY="${REPO_ROOT}/.venv/bin/python"

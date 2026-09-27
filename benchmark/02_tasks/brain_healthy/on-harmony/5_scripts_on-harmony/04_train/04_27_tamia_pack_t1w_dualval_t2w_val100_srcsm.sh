@@ -37,7 +37,7 @@
 #   PACK_CHAIN=4 bash 04_27_...                                           # tune chain length
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 PACK_DIR="${PACK_DIR:-/scratch/p/paulh/on-harmony/_packruns/pack_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "${PACK_DIR}"

@@ -57,7 +57,7 @@ log = logging.getLogger(__name__)
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = Path(__file__).resolve().parents[7]
-DS_ROOT = PROJECT_ROOT / "datasets" / "brats2024-glioma"
+DS_ROOT = PROJECT_ROOT / "benchmark" / "02_tasks" / "brain_tumor" / "brats2024-glioma"
 DELTAS_CSV = (
     DS_ROOT
     / "7_analysis_brats2024-glioma"

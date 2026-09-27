@@ -61,7 +61,7 @@ def main() -> None:
     cfg = yaml.safe_load(CONFIG.read_text())
     groups = cfg["contrast_groups"]
 
-    proj = DATASET_ROOT.parent.parent
+    proj = DATASET_ROOT.parent.parent.parent.parent
     def sub(p: str) -> Path:
         return Path(p.replace("${PROJECT_ROOT}", str(proj)))
 

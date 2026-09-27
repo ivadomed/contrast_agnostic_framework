@@ -8,7 +8,7 @@ Same CLI; see the commun evaluate.py header. open-ms scores the single `lesion` 
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]
                        / "00_commun_scripts" / "00_03_evaluate"))
 from evaluate import main  # noqa: E402
 

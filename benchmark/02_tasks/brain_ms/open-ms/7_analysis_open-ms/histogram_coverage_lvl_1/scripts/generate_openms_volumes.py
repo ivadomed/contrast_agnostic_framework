@@ -29,7 +29,7 @@ import numpy as np
 import nibabel as nib
 from nibabel.processing import resample_from_to
 
-REPO = Path(__file__).resolve().parents[5]
+REPO = Path(__file__).resolve().parents[7]
 ANALYSIS = Path(__file__).resolve().parents[1]
 AUGLAB = REPO / "sub-workspaces/auglab_workspace/AugLab"
 BIDS = REPO / "benchmark/02_tasks/brain_ms/open-ms/1_BIDS_open-ms/ms-brain-openms"

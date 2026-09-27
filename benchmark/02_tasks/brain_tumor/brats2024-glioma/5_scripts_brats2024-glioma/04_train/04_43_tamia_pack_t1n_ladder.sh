@@ -25,7 +25,7 @@
 #   PACK_CHAIN=8 bash 04_43_...                         # tune chain length
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 PACK_DIR="${PACK_DIR:-/scratch/p/paulh/brats2024-glioma/_packruns/t1n_ladder_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "${PACK_DIR}"

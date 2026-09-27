@@ -26,7 +26,7 @@
 #   PACK_CHAIN=5 bash 04_13_...                   # tune chain length
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "${HERE}/../../../.." && pwd)"
+ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 PACK_METHODS="${PACK_METHODS:-baseline auglab_default synthseg_noEM synthseg_EM srcsm ours}"
 PACK_TAG="${PACK_TAG:-suite}"

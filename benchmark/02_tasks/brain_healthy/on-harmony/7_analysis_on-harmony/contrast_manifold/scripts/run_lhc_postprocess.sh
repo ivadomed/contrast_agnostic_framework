@@ -16,7 +16,7 @@ VERSION="${1:?Usage: $0 <version>  (e.g. v19_c_lhc or v22_1_lhc)}"
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CM_ROOT="$(cd "${SCRIPTS_DIR}/.." && pwd)"
-REPO_ROOT="$(cd "${CM_ROOT}/../../../.." && pwd)"
+REPO_ROOT="$(cd "${CM_ROOT}/../../../../../.." && pwd)"
 source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
 
 PY="${REPO_ROOT}/.venv/bin/python"
