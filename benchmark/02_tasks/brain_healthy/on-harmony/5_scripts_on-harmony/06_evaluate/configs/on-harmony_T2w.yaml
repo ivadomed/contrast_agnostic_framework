@@ -1,7 +1,13 @@
 # ON-Harmony cross-contrast benchmark — models TRAINED on T2w, tested on every contrast.
 # STANDARD layout (same as chaos): consumed by the shared aggregator
-# scripts/evaluate/aggregate_from_config.py via 06_02_aggregate_from_config.sh.
+# scripts/evaluate/aggregate_from_config.py via 06_02_aggregate_from_config.sh, and by
+# significance_from_config.py via 06_03_significance_from_config.sh (same config, both scripts).
 # Eval (06_01) writes fold*/eval_all.csv under metrics_dir/{category}_{run_id}/.
+#
+# ⚠️ On-harmony's significance test is currently anti-conservative for ALL modalities
+# (per-image units from 4 test subjects, not per-patient) — see project memory
+# project_onharmony_significance_rerun_20260921; treat `sig. vs ref` here the same
+# way as the other on-harmony tables, not as newly trustworthy.
 title: "ON-Harmony — T2w-trained models, cross-contrast (incl. srcsm)"
 metrics_dir: "${METRICS_ROOT}/on_harmony_model/T2w"
 output_prefix: "results"
