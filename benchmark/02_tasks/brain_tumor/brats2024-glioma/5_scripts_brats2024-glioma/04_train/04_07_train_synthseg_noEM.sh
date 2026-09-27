@@ -32,6 +32,8 @@ DATASET_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/auglab"
 
 # 4 folds → GPUs 0,1 (2 per GPU). Each fold on its own slot for CPU accounting.
+# NOTE: fold 3's mapping is a no-op under the 3-fold policy (train_common.sh defaults
+# TRAIN_FOLDS to "0 1 2") — kept only so a deliberate 4-fold override still has a slot.
 export FOLD_SLOT_GPU="0,0,0 1,1,0 2,2,1 3,3,1"
 
 source "$(dirname "$0")/04_00_common.sh" "$@"

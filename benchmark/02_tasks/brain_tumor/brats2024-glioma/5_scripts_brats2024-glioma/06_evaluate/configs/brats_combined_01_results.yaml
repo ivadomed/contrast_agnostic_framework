@@ -1,7 +1,7 @@
 # BraTS 2024 Glioma — combined training modalities (t1n + t2w pooled),
 # cross-contrast. Consumed by
 # benchmark/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
-# 06_13_combined_modality_summary.sh. Companion to brats_t1n_01_results.yaml /
+# 06_17_combined_modality_summary.sh. Companion to brats_t1n_01_results.yaml /
 # brats_t2w_01_results.yaml (each ONE training modality) — this pools BOTH into one
 # row per method, with an inline significance column (ref = OURS train050_val000)
 # after the usual "all" column.

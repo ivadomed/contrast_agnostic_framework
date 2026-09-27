@@ -1,6 +1,6 @@
 # BraTS 2024 Glioma — combined training modalities (t1n + t2w + t2f/FLAIR pooled), cross-contrast.
 # Consumed by benchmark/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
-# 06_13_combined_modality_summary.sh. SIBLING of brats_combined_01_results.yaml (t1n + t2w only),
+# 06_17_combined_modality_summary.sh. SIBLING of brats_combined_01_results.yaml (t1n + t2w only),
 # which stays the headline until Paul decides otherwise — this one writes to its OWN output_dir
 # (combined_contrasts_t1n_t2w_t2f/) so it can never overwrite the headline files.
 #

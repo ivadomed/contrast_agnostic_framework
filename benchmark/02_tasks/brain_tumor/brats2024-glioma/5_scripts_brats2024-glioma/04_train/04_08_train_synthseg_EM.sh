@@ -33,6 +33,8 @@ export NNUNET_RESULTS_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAS
 
 # 4 folds → ONLY slots 0 and 1 (GPUs 0,1). 2 folds packed per slot/GPU:
 # folds 0,1 → slot 0 / GPU 0 ; folds 2,3 → slot 1 / GPU 1. Slots 2,3 left free.
+# NOTE: fold 3's mapping is a no-op under the 3-fold policy (train_common.sh defaults
+# TRAIN_FOLDS to "0 1 2") — kept only so a deliberate 4-fold override still has a slot.
 export FOLD_SLOT_GPU="0,0,0 1,0,0 2,1,1 3,1,1"
 
 source "$(dirname "$0")/04_00_common.sh" "$@"
