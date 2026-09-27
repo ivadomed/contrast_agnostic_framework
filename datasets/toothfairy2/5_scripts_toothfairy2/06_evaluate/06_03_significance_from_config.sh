@@ -5,5 +5,6 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "${HERE}/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
-CFG="${1:-${HERE}/configs/toothfairy2_cbct_01_results.yaml}"
+CFG="${1:-configs/toothfairy2_cbct_01_results.yaml}"
+[[ "$CFG" != /* ]] && CFG="${HERE}/${CFG}"
 .venv/bin/python datasets/00_commun_scripts/00_03_evaluate/significance_from_config.py "${CFG}"
