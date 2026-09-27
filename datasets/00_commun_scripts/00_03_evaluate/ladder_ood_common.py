@@ -133,11 +133,51 @@ def _find_fill_swap_idx(rungs):
     return None
 
 
-def _paired_cases(cases_prev: dict, cases_cur: dict):
-    """Case-level paired arrays for one contrast (cases present in both rungs)."""
+def _paired_cases(cases_prev: dict, cases_cur: dict, ns: str = ""):
+    """{case_id: (prev, cur)} for cases present in both rungs. Keeps the case id
+    (unlike a plain array pair) so pooling across CONTRASTS can recognise the same
+    physical PATIENT under two different contrast columns (e.g. CHAOS's T1in/T1out
+    are literally the same 4 patients) and merge them into one unit instead of
+    silently double-counting — see _merge_patient_pairs, added 2026-09-21. `ns`
+    (dataset name, from _dataset_name) prefixes every case id as "<ns>|<case>" so two
+    DIFFERENT datasets that happen to share a bare case-id string (unlikely with
+    today's naming — chaos "CT01", amos "amos_0008", sliver07 "LV01" don't collide —
+    but not guaranteed for a future source) are never merged into one patient."""
     common = sorted(set(cases_prev) & set(cases_cur))
-    return (np.array([cases_prev[k] for k in common], dtype=float),
-            np.array([cases_cur[k] for k in common], dtype=float))
+    pre = f"{ns}|" if ns else ""
+    return {f"{pre}{k}": (float(cases_prev[k]), float(cases_cur[k])) for k in common}
+
+
+def _pairs_to_arrays(pairs: dict) -> tuple:
+    """{case_id: (prev, cur)} -> (prev_array, cur_array), for a per-contrast test
+    where each contrast's own cases are independent (no cross-contrast merging)."""
+    if not pairs:
+        return np.array([]), np.array([])
+    prev, cur = zip(*pairs.values())
+    return np.array(prev), np.array(cur)
+
+
+def _merge_patient_pairs(pairs_by_contrast: dict) -> tuple:
+    """Merge SAME-PATIENT pairs across every contrast in `pairs_by_contrast` into one
+    pair per physical patient before pooling — a case id recurring in two contrasts
+    (CHAOS's T1in/T1out are the same 4 patients; BraTS/on-harmony/open-ms's held-out
+    sequences are likewise the same patients under different contrasts) is counted
+    ONCE here, its (prev, cur) values averaged across however many contrasts it
+    appeared in, instead of once per contrast. A cross-dataset item id ("<dataset>/
+    <item>") is already namespaced so it never collides with another dataset's bare
+    case id. Same unit-of-independence principle as
+    aggregate_from_config.build_design's patient-level entries, applied to this
+    engine's own paired-Wilcoxon statistic instead of the macroΔ sign-flip test."""
+    per_patient: dict = {}
+    for pairs in pairs_by_contrast.values():
+        for pid, (p, c) in pairs.items():
+            xs, ys = per_patient.setdefault(pid, ([], []))
+            xs.append(p); ys.append(c)
+    if not per_patient:
+        return np.array([]), np.array([])
+    x = np.array([np.mean(v[0]) for v in per_patient.values()])
+    y = np.array([np.mean(v[1]) for v in per_patient.values()])
+    return x, y
 
 
 def _fill_swap_pairs(metrics_root, rungs, fill_idx, metric, ood_contrasts,
@@ -145,17 +185,18 @@ def _fill_swap_pairs(metrics_root, rungs, fill_idx, metric, ood_contrasts,
     """{contrast: (x, y)} case-level pairs at the fill-swap step, for a
     within-dataset ladder (plus any extra cross-dataset item columns pooled
     into its OOD set)."""
+    own_ns = _dataset_name(metrics_root)
     prev_key, cur_key = rungs[fill_idx - 1][2], rungs[fill_idx][2]
     prev = load_case_means(resolve_run_dir(metrics_root, prev_key), metric)
     cur = load_case_means(resolve_run_dir(metrics_root, cur_key), metric)
-    pairs = {c: _paired_cases(prev.get(c, {}), cur.get(c, {})) for c in ood_contrasts}
+    pairs = {c: _paired_cases(prev.get(c, {}), cur.get(c, {}), ns=own_ns) for c in ood_contrasts}
     for src in (extra_ood_sources or []):
         root = _src_root(src)
         ds = _dataset_name(root)
         p_src = load_case_means(resolve_run_dir(root, _src_key(src, prev_key)), metric)
         c_src = load_case_means(resolve_run_dir(root, _src_key(src, cur_key)), metric)
         for item in set(p_src) | set(c_src):
-            pairs[f"{ds}/{item}"] = _paired_cases(p_src.get(item, {}), c_src.get(item, {}))
+            pairs[f"{ds}/{item}"] = _paired_cases(p_src.get(item, {}), c_src.get(item, {}), ns=ds)
     return pairs
 
 
@@ -168,7 +209,7 @@ def _fill_swap_pairs_cross_dataset(ood_sources, rungs, fill_idx, metric):
         prev = load_case_means(resolve_run_dir(src, prev_key), metric)
         cur = load_case_means(resolve_run_dir(src, cur_key), metric)
         for item in set(prev) | set(cur):
-            pairs[f"{ds}/{item}"] = _paired_cases(prev.get(item, {}), cur.get(item, {}))
+            pairs[f"{ds}/{item}"] = _paired_cases(prev.get(item, {}), cur.get(item, {}), ns=ds)
     return pairs
 
 
@@ -189,16 +230,21 @@ def _fill_swap_significance(pairs_by_contrast):
     tab:dissociation does over its 8 rows. Expect this figure to read as more
     significant than the paper's for the same task (e.g. CHAOS T1in: 1.7e-4
     here vs 6.9e-4 corrected) -- that is the correction, not a disagreement.
-    paper/scripts/compute_dissociation_pvalues.py owns the corrected numbers."""
+    paper/scripts/compute_dissociation_pvalues.py owns the corrected numbers.
+
+    2026-09-21: the pooled test now merges same-PATIENT pairs across contrasts first
+    (see _merge_patient_pairs) — a case id recurring in two of this ladder's OOD
+    contrasts (e.g. CHAOS T1in/T1out are the same 4 patients) used to be counted once
+    per contrast, inflating the pooled test's apparent sample size. The per-contrast
+    tests below are unaffected (each contrast's own cases are still independent
+    within that one column) — only the pooled `n_cases`/p can change."""
     labels = list(pairs_by_contrast)
-    raw = [wilcoxon_p(*pairs_by_contrast[c]) if len(pairs_by_contrast[c][0]) else float("nan")
+    raw = [wilcoxon_p(*_pairs_to_arrays(pairs_by_contrast[c])) if pairs_by_contrast[c] else float("nan")
            for c in labels]
     per_contrast = dict(zip(labels, holm(raw)))
-    xs = [pairs_by_contrast[c][0] for c in labels if len(pairs_by_contrast[c][0])]
-    ys = [pairs_by_contrast[c][1] for c in labels if len(pairs_by_contrast[c][1])]
-    pooled_p = wilcoxon_p(np.concatenate(xs), np.concatenate(ys)) if xs else float("nan")
-    return {"per_contrast": per_contrast, "pooled_p": pooled_p,
-            "n_cases": int(sum(len(a) for a in xs))}
+    x, y = _merge_patient_pairs(pairs_by_contrast)
+    pooled_p = wilcoxon_p(x, y) if len(x) else float("nan")
+    return {"per_contrast": per_contrast, "pooled_p": pooled_p, "n_cases": int(len(x))}
 
 
 def _rung_step_significance(pairs_fn, rungs):
@@ -219,17 +265,19 @@ def _rung_step_significance(pairs_fn, rungs):
     source (I-SPY2's external cohort) and could not reach a wrapper that builds
     its rungs inside main() at all. The engine already knows the true pool, so
     it is the only place this can be computed without the two diverging.
+
+    2026-09-21: pools via _merge_patient_pairs, same fix and same rationale as
+    _fill_swap_significance's pooled test — a case id recurring in two of this
+    ladder's OOD contrasts is one patient, not two independent units.
     """
     out = []
     for i in range(1, len(rungs)):
         pairs = pairs_fn(i)
-        xs = [x for x, _ in pairs.values() if len(x)]
-        ys = [y for _, y in pairs.values() if len(y)]
-        if not xs:
+        x, y = _merge_patient_pairs(pairs)
+        if not len(x):
             out.append({"from": rungs[i - 1][0], "to": rungs[i][0],
                         "p_raw": float("nan"), "decrease": False, "n_cases": 0})
             continue
-        x, y = np.concatenate(xs), np.concatenate(ys)
         out.append({"from": rungs[i - 1][0], "to": rungs[i][0],
                     "p_raw": wilcoxon_p(x, y),
                     "decrease": bool(np.mean(y) < np.mean(x)),
