@@ -206,7 +206,7 @@ benchmark/02_tasks/<task>/<dataset>/        # or benchmark/03_archive/<dataset>/
     8_results_<dataset>/                        # evaluation outputs
       01_predictions/  02_metrics/              # REQUIRED (enforced by validate_standard_dataset_structure.py)
       03_aggregated_results/                    # optional
-      # on-harmony still uses the legacy 01_results/ + 02_nnUNet_results/ layout (migration pending)
+      # (on-harmony migrated to this modern layout; see 8_results_on-harmony/ on disk)
     9_tests_<dataset>/                          # dataset-specific tests
 ```
 
