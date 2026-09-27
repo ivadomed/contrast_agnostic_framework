@@ -6,8 +6,8 @@ Runs on a single cluster (vulcan or killarney) against its own local
 filesystem + local Slurm queue, and emits one JSON document describing:
   - queue: all jobs currently in squeue for this user on this cluster
   - runs: every training run directory found under EITHER
-    datasets/*/8_results_*/02_metrics/*_model/{contrast}/* (the normal case)
-    OR datasets/*/8_results_*/01_predictions/*_model/{contrast}/{category}/*
+    benchmark/*/8_results_*/02_metrics/*_model/{contrast}/* (the normal case)
+    OR benchmark/*/8_results_*/01_predictions/*_model/{contrast}/{category}/*
     with no metrics-side counterpart at all (a run that finished training
     but never had predict/eval triggered — see discover_run_names() below;
     prior versions of this scanner only walked the metrics side and were

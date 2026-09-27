@@ -1,8 +1,8 @@
-# Source AFTER datasets/toothfairy2/5_scripts_toothfairy2/00_utils/env.sh, to point
+# Source AFTER benchmark/02_tasks/mandible_healthy/toothfairy2/5_scripts_toothfairy2/00_utils/env.sh, to point
 # toothfairy2's data + training at scratch-resident paths on tamia. Same pattern as
 # tamia_env_ispy2.sh / tamia_env_ambl.sh.
 #
-#   source datasets/toothfairy2/5_scripts_toothfairy2/00_utils/env.sh
+#   source benchmark/02_tasks/mandible_healthy/toothfairy2/5_scripts_toothfairy2/00_utils/env.sh
 #   source scripts/cluster/tamia_env_toothfairy2.sh
 #
 # env.sh (via common_env.sh) exports every path with a ${VAR:-default} guard, and by

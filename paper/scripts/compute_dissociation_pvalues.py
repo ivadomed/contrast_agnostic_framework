@@ -33,10 +33,10 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 from stat_tests import holm  # noqa: E402
 
-M = "datasets/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
+M = "benchmark/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
 
 # (paper row label, boundary type, ladder_series.json path)
 #
@@ -87,7 +87,7 @@ ROWS = [
 # silent -- it is by far the largest fill-swap effect anywhere in the study.
 SUPPLEMENTARY = [
     ("Duke T1WCE-trained $\\to$ t1wce (cross-dataset, SAME contrast)",
-     "datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/t1wce_uni/ladder_series.json"),  # unilateral-crop (2026-09-17)
+     "benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/t1wce_uni/ladder_series.json"),  # unilateral-crop (2026-09-17)
 ]
 
 FILL = 4  # index of the "v26_6_2 (real fill)" rung; delta is FILL-1 -> FILL

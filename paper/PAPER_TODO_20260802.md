@@ -43,8 +43,8 @@ partition held fixed) now has two tasks on each side:
 
 Note the dissociation holds on **Dice only** — see §3b. Do not describe HD95 as corroborating it.
 
-Sources: `datasets/brats2024-glioma/.../t1n/ablations/ladder_summary.md`,
-`datasets/chaos/.../t2spir/ablations/ladder_summary.md`.
+Sources: `benchmark/02_tasks/brain_tumor/brats2024-glioma/.../t1n/ablations/ladder_summary.md`,
+`benchmark/02_tasks/abdomen_healthy/chaos/.../t2spir/ablations/ladder_summary.md`.
 
 This is the control arm the paper needed. The effect is +7.2/+7.7 on appearance-defined
 targets and within noise **with inconsistent sign** on interface-defined ones. It is now
@@ -139,7 +139,7 @@ computed one way.
 
 ## 6. Held in reserve (not in the paper)
 
-`datasets/00_commun_scripts/00_04_analysis/label_cue_importance/` — the boundary-cue
+`benchmark/00_commun_scripts/00_04_analysis/label_cue_importance/` — the boundary-cue
 measurement. **Not for the main text.** Its one job is rebutting the reviewer objection
 *"boundary clarity depends on the sequence, not the disease"*: every pathology label sits at
 or below chance **in its own best contrast** (enhancing tumour on T1c 0.463, MS on FLAIR
@@ -169,7 +169,7 @@ split (abstract, intro ×2, discussion, conclusion) has been corrected to
 reflect the 3-pattern reality; none now overclaim.
 
 ### Ladder scripts unified (root cause from §3b finally fixed)
-New shared engine: `datasets/00_commun_scripts/00_03_evaluate/ladder_ood_common.py`.
+New shared engine: `benchmark/00_commun_scripts/00_03_evaluate/ladder_ood_common.py`.
 - Retrofitted BraTS-T1n (06_13), CHAOS-T2spir (06_33), ON-Harmony-T1w (06_10) as
   thin wrappers — **regression-verified**: identical numbers to their previous
   independent implementations.
@@ -229,7 +229,7 @@ split (abstract, intro x2, discussion, conclusion) has been corrected to
 reflect the 3-pattern reality; none now overclaim.
 
 ### Ladder scripts unified (root cause from earlier addendum's section 3b finally fixed)
-New shared engine: datasets/00_commun_scripts/00_03_evaluate/ladder_ood_common.py.
+New shared engine: benchmark/00_commun_scripts/00_03_evaluate/ladder_ood_common.py.
 - Retrofitted BraTS-T1n (06_13), CHAOS-T2spir (06_33), ON-Harmony-T1w (06_10) as
   thin wrappers -- regression-verified: identical numbers to their previous
   independent implementations.

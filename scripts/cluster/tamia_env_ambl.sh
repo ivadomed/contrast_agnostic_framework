@@ -1,10 +1,10 @@
-# Source AFTER datasets/ambl/5_scripts_ambl/00_utils/env.sh (or env_t2w.sh), to point
+# Source AFTER benchmark/03_archive/ambl/5_scripts_ambl/00_utils/env.sh (or env_t2w.sh), to point
 # ambl's OWN training/prediction at scratch-resident data on tamia. Mirrors
 # scripts/cluster/tamia_env_chaos.sh's pattern (own-training override, TWO training
 # contrasts via TRAINING_CONTRAST -- t1wce default, t2w via env_t2w.sh) rather than
 # tamia_env_atlas-liver-hcc.sh's single-contrast pattern, since ambl trains t1wce+t2w
 # like chaos/brats2024-glioma/on-harmony/open-ms.
-#   source datasets/ambl/5_scripts_ambl/00_utils/env.sh            # or env_t2w.sh
+#   source benchmark/03_archive/ambl/5_scripts_ambl/00_utils/env.sh            # or env_t2w.sh
 #   source scripts/cluster/tamia_env_ambl.sh
 #
 # env.sh/env_t2w.sh export nnUNet_results/PREDICTIONS_ROOT/METRICS_ROOT/SPLITS_DIR

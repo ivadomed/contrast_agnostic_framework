@@ -16,24 +16,24 @@
 # Cheap (matplotlib only, reads already-computed ladder_series.json files)
 # -- fine to run on the login node.
 # 2026-09-17: duke inputs are the UNILATERAL-CROP ladders (…/ablations/{t1wce_uni,precontrast_uni}/),
-# the standard duke evaluation; bilateral versions archived under datasets/03_archive/.
+# the standard duke evaluation; bilateral versions archived under benchmark/03_archive/.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PY="$REPO_ROOT/.venv/bin/python"
-PLOTTER="$REPO_ROOT/datasets/00_commun_scripts/00_03_evaluate/ladder_cross_dataset_plot.py"
+PLOTTER="$REPO_ROOT/benchmark/00_commun_scripts/00_03_evaluate/ladder_cross_dataset_plot.py"
 # Training dataset is ispy2 (these are ispy2_model results, just scored on
 # external test data too) -- output lives under ispy2's own results tree,
-# not datasets/01_commun_results/ (which is reserved for cross-TRAINING-SET
+# not benchmark/01_commun_results/ (which is reserved for cross-TRAINING-SET
 # comparisons, not one training set's own cross-dataset eval).
-OUT_ROOT="$REPO_ROOT/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model"
+OUT_ROOT="$REPO_ROOT/benchmark/02_tasks/breast_cancer/ispy2/8_results_ispy2/02_metrics/ispy2_model"
 
-ISPY2_T1WCE="$REPO_ROOT/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations/ladder_series.json"
-ISPY2_T2W="$REPO_ROOT/datasets/ispy2/8_results_ispy2/02_metrics/ispy2_model/t2w/ablations/ladder_series.json"
-DUKE_T1WCE_TRAINED="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/t1wce_uni/ladder_series.json"
-DUKE_T2W_TRAINED="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/t1wce_uni/ladder_series.json"
-DUKE_PRECONTRAST_T1WCE="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/precontrast_uni/ladder_series.json"
-DUKE_PRECONTRAST_T2W="$REPO_ROOT/datasets/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/precontrast_uni/ladder_series.json"
+ISPY2_T1WCE="$REPO_ROOT/benchmark/02_tasks/breast_cancer/ispy2/8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations/ladder_series.json"
+ISPY2_T2W="$REPO_ROOT/benchmark/02_tasks/breast_cancer/ispy2/8_results_ispy2/02_metrics/ispy2_model/t2w/ablations/ladder_series.json"
+DUKE_T1WCE_TRAINED="$REPO_ROOT/benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/t1wce_uni/ladder_series.json"
+DUKE_T2W_TRAINED="$REPO_ROOT/benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/t1wce_uni/ladder_series.json"
+DUKE_PRECONTRAST_T1WCE="$REPO_ROOT/benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/precontrast_uni/ladder_series.json"
+DUKE_PRECONTRAST_T2W="$REPO_ROOT/benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/precontrast_uni/ladder_series.json"
 
 # DUKE_T1WCE_TRAINED (duke's t1wce test scored against the t1wce-trained
 # model) is deliberately unused here -- same-contrast, cross-dataset only,

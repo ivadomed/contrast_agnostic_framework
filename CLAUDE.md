@@ -19,6 +19,19 @@ If a named session ever seems to have vanished, check `tmux -L <name> ls` (each 
 
 **Separately: session transcripts themselves also expire** — Claude Code stores them under `~/.claude/projects/` and deletes anything older than `cleanupPeriodDays` (default 30 days), independent of the tmux/systemd issue above; past that, `claude --resume` fails with "No conversation found." This project's `.claude/settings.json` sets `"cleanupPeriodDays": 36500` to keep long-lived named sessions resumable indefinitely — don't remove that setting.
 
+## ⚠️ Vulcan/Killarney/TamIA repo-layout mismatch (2026-09-27, until migrated)
+
+Vulcan's repo was just restructured: `datasets/` → `benchmark/`, with every dataset moved one
+level deeper into `benchmark/02_tasks/<task>/<dataset>/` (see "Dataset structure" below for the
+full mapping). **Killarney and TamIA have NOT been migrated yet** — their own separate clones and
+scratch-data layouts still use the old `datasets/<name>/` structure, deliberately, so their
+in-flight jobs aren't disrupted. **Do not `git pull` this restructuring commit onto Killarney or
+TamIA until their own data directories are migrated to match** — pulling the new scripts onto
+still-old data would break every path resolution there. Do the physical `mv` on each cluster's own
+`$SCRATCH`/repo checkout first (same task-folder mapping as Vulcan), then pull. Until that
+follow-up happens, treat Killarney/TamIA as still being on the pre-restructuring layout for
+anything you tell either of them to run.
+
 ## Cluster resource management (Vulcan / Slurm)
 
 **Three machines are in active use** (`run_job` auto-detects the backend on each — see below, so pipeline scripts run unchanged everywhere):
@@ -32,7 +45,7 @@ If a named session ever seems to have vanished, check `tmux -L <name> ls` (each 
 
 **SSH hosts + repo path per machine** (for rsync/ssh between them):
 - **Vulcan**: `ssh vulcan.alliancecan.ca` — repo at `/project/aip-jcohen/paulh/mri_synthesis_project` (also reachable via the symlink `/home/paulh/projects/aip-jcohen/paulh/mri_synthesis_project`). `RUN_JOB_ACCOUNT=aip-jcohen` (the `run_job_slurm.sh` default).
-- **Killarney**: `ssh killarney.alliancecan.ca` — repo at `/home/paulh/projects/aip-jcohen/paulh/mri_synthesis_project`. **`RUN_JOB_ACCOUNT=aip-jcohen` — same account name as Vulcan, do NOT override it.** (`datasets/open-ms/KILLARNEY_HANDOFF.md` speculated `def-jcohen` before this was confirmed on real hardware 2026-07-10 via a Slurm "Invalid account" error listing `aip-jcohen` as the only valid AIP account on this cluster — that doc is stale on this point.) See that same file for the still-relevant port notes: venv rebuild, GPU-type parametrisation, trainer shims.
+- **Killarney**: `ssh killarney.alliancecan.ca` — repo at `/home/paulh/projects/aip-jcohen/paulh/mri_synthesis_project`. **`RUN_JOB_ACCOUNT=aip-jcohen` — same account name as Vulcan, do NOT override it.** (`benchmark/02_tasks/brain_ms/open-ms/KILLARNEY_HANDOFF.md` speculated `def-jcohen` before this was confirmed on real hardware 2026-07-10 via a Slurm "Invalid account" error listing `aip-jcohen` as the only valid AIP account on this cluster — that doc is stale on this point.) See that same file for the still-relevant port notes: venv rebuild, GPU-type parametrisation, trainer shims.
 - **TamIA**: not reachable directly by name from outside Canadian research networks — the login-node firewall drops non-Canadian traffic at the TCP level, and even from Canada the daemon that runs these sessions cannot complete Alliance's mandatory Duo two-factor login on every fresh connection. **Reach TamIA only by relaying through Vulcan**: `ssh vulcan.alliancecan.ca` then `ssh tamia.alliancecan.ca` from there (a ControlMaster relay block is already configured in Vulcan's own `~/.ssh/config` for this). Repo at `/project/aip-jcohen/paulh/mri_synthesis_project`, cloned directly from GitHub (not copied from Vulcan — Vulcan's `.git` is bloated to 25 GB from historical churn; a fresh GitHub clone is ~100 MB and lands on the same commit). `RUN_JOB_ACCOUNT=aip-jcohen` (same as the other two).
 
 This repo was originally developed on the `set_slot` workstation (romane) — that's why older scripts called `set_slot` directly; everything is now routed through `run_job` so it works on all three. Source of truth for Alliance cluster policy: `python_usage.html`, `running_jobs.html`, `storage_handling.html` in this directory (mirrored wiki pages) — re-read them if anything below looks stale.
@@ -51,11 +64,11 @@ Only `04_train/04_00_common.sh` (brats2024-glioma) and `00_utils/00_00_download_
 
 nnunetv2 also needs 4 files restored that exist ONLY as plain pip-installed files inside its own site-packages dir — there is no auto-copy step for these (unlike the `auglab_add_nnunettrainer` mechanism below), so a fresh `pip install nnunetv2` will NOT bring them back on its own (the setup script above already does this; listed here for when it needs doing by hand):
 1. `cp src/nnunet/patches/nnunet_logger.py .venv/lib/python3.*/site-packages/nnunetv2/training/logging/nnunet_logger.py` — hand-patched WandB logger (`nnUNet_wandb_run_id` resume + `allow_val_change` for epoch-extension). Without it, WandB resume-by-id and raising `NNUNET_NUM_EPOCHS` on resume both break.
-2. `cp datasets/brats2024-glioma/5_scripts_brats2024-glioma/02_nnunet/BraTS2024GliomaTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
-3. `cp datasets/chaos/5_scripts_chaos/02_nnunet/CHAOSTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
-4. `cp datasets/on-harmony/5_scripts_on-harmony/02_nnunet/OnHarmonyTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
+2. `cp benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/02_nnunet/BraTS2024GliomaTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
+3. `cp benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/02_nnunet/CHAOSTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
+4. `cp benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/02_nnunet/OnHarmonyTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
 
-(2–4 are "registration shims" — nnU-Net's `recursive_find_python_class` only searches inside its own `training/nnUNetTrainer/` dir, so each dataset's real trainer classes, which safely live in git under e.g. `datasets/brats2024-glioma/5_scripts_brats2024-glioma/brats2024_glioma/trainers/` already, need a thin shim there that imports them via `NNUNET_PROJECT_ROOT`. Without its shim, **no custom trainer for that dataset is discoverable at all** — training fails with "trainer not found".)
+(2–4 are "registration shims" — nnU-Net's `recursive_find_python_class` only searches inside its own `training/nnUNetTrainer/` dir, so each dataset's real trainer classes, which safely live in git under e.g. `benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/brats2024_glioma/trainers/` already, need a thin shim there that imports them via `NNUNET_PROJECT_ROOT`. Without its shim, **no custom trainer for that dataset is discoverable at all** — training fails with "trainer not found".)
 
 Also re-run for the AugLab-provided trainers (source of truth: the separate git repo at `sub-workspaces/auglab_workspace/AugLab/`, editable-installed): `pip install -e sub-workspaces/auglab_workspace/AugLab`, then `auglab_add_nnunettrainer -t nnUNetTrainerDAExt` and `-t nnUNetTrainerTest`.
 
@@ -145,11 +158,43 @@ On Vulcan: `module load python/X.Y` (check version with `module spider python`) 
 
 ## Dataset structure
 
-All datasets live under `datasets/`. We work in a dataset-centric manner. Every dataset follows the same 9-subdir standard:
+**Restructured 2026-09-27: `datasets/` → `benchmark/`, and every dataset now sits one level
+deeper, grouped by task, under `benchmark/02_tasks/<task>/<dataset>/`.** `<task>` follows an
+`anatomy_pathology` (or `anatomy_healthy` when the dataset isn't disease-specific) naming
+convention. Current roster:
+
+| Task folder | Datasets |
+|---|---|
+| `breast_cancer` | duke-breast-mri, ispy2 |
+| `brain_tumor` | brats2024-glioma |
+| `brain_ms` | open-ms |
+| `brain_healthy` | on-harmony |
+| `mandible_healthy` | toothfairy2, hanseg, pddca |
+| `abdomen_healthy` | chaos, amos, sliver07 |
+| `pelvis_healthy` | totalseg-pelvic |
+| `spine_healthy` | healthy-spine-tum |
+
+`benchmark/03_archive/<name>` (17 excluded/superseded datasets) stays flat, untouched by the
+task taxonomy — archived datasets don't need it, and archival status is orthogonal to anatomy/
+pathology. Shared infra keeps the same numbered-sibling convention it always had, just under the
+new top-level name: `benchmark/00_commun_scripts/`, `benchmark/01_commun_results/`,
+`benchmark/03_archive/`, plus the loose root tools (`validate_standard_dataset_structure.py`,
+`create_dataset_structure.py`, `seed_skeleton_gitkeep.py`, `STANDARDIZATION_CHECKLIST.md`,
+`conftest.py`).
+
+**Path-depth gotcha for anyone porting an old command/note that predates this move:** a dataset's
+own `5_scripts_*/00_utils/env.sh` still resolves `DATASET_ROOT` purely relatively (unaffected by
+nesting depth), but everything that reaches OUT of the dataset tree — `${DATASET_ROOT}/../
+00_commun_scripts`, `DATASET_ROOT.parent / "00_commun_scripts"`, `Path(__file__).resolve()
+.parents[N]`-style `PROJECT_ROOT` computations, the `../../../../sub-workspaces` hop to AugLab —
+needed exactly 2 more levels added everywhere, since active datasets moved 2 levels deeper
+(`02_tasks/<task>/`) while archived ones (siblings of `00_commun_scripts`, unchanged) did not. If
+you ever hand-write a new script for one of the active datasets, copy the hop-count from another
+already-working file in that SAME dataset rather than an archived one.
+
+We work in a dataset-centric manner. Every dataset follows the same 9-subdir standard:
 ```
-datasets/
-  validate_standard_dataset_structure.py   # run to check compliance
-  <dataset>/
+benchmark/02_tasks/<task>/<dataset>/        # or benchmark/03_archive/<dataset>/ if archived
     0_raw_<dataset>/     # raw data as downloaded (DICOM, non-BIDS NIfTI, etc.)
     1_BIDS_<dataset>/    # BIDSified data (usually derived from 0_raw — both can coexist)
     2_nnUNet_<dataset>/raw/ + preprocessed/     # nnUNet converted data
@@ -176,7 +221,7 @@ Scripts inside `5_scripts_*/` follow a strict numbered convention:
 06_evaluate/
 ```
 
-`datasets/01_commun_results/` holds **cross-dataset** comparison tables — summaries
+`benchmark/01_commun_results/` holds **cross-dataset** comparison tables — summaries
 that span all 8 training sets at once (e.g. Ours vs. best-other-method significance,
 one row per training set) — distinct from any single dataset's own `8_results_<dataset>/`.
 Also holds the **task-level heatmap** (`meta_task_heatmap_summary.md` +
@@ -200,7 +245,7 @@ Three checks this project has paid for skipping (each cost real engineering time
 the fact — see the AMBL and Atlas-Liver-HCC sections below for the concrete cost of skipping #2/#3):
 
 1. **License, verified independently, not read off one page.** The established method (see
-   `datasets/ispy2/0_raw_ispy2/README.md` / any archived AMBL README for the template): (a) the
+   `benchmark/02_tasks/breast_cancer/ispy2/0_raw_ispy2/README.md` / any archived AMBL README for the template): (a) the
    collection/source page's own license statement, (b) the actual API/metadata license fields on a
    real sample of series/records (not just the page's prose), (c) the LICENSE file bundled inside a
    downloaded file itself, if one exists. All three should agree before you call a license settled.
@@ -229,7 +274,7 @@ the fact — see the AMBL and Atlas-Liver-HCC sections below for the concrete co
 
 Scripts live in exactly three places — put new code in the right one:
 - **`src/`** — PALETTE method source code only (the contrast transform / model). No pipeline glue.
-- **`datasets/00_commun_scripts/`** — the shared **dataset-pipeline** layer: train/predict/evaluate/aggregate/significance that operates on the 9-dir datasets (`00_00_utils` libs, `00_01_train`, `00_02_predict`, `00_03_evaluate` incl. `aggregate_from_config.py` + `significance_from_config.py` + `combined_modality_summary.py` + `meta_task_heatmap.py`, `00_04_analysis`). **All eval/aggregate/significance lives here** (canonical); dataset `5_scripts_*` are thin wrappers over it.
+- **`benchmark/00_commun_scripts/`** — the shared **dataset-pipeline** layer: train/predict/evaluate/aggregate/significance that operates on the 9-dir datasets (`00_00_utils` libs, `00_01_train`, `00_02_predict`, `00_03_evaluate` incl. `aggregate_from_config.py` + `significance_from_config.py` + `combined_modality_summary.py` + `meta_task_heatmap.py`, `00_04_analysis`). **All eval/aggregate/significance lives here** (canonical); dataset `5_scripts_*` are thin wrappers over it.
 - **`scripts/`** — cross-cutting **infra + research tooling** that is *not* dataset-pipeline: `job_runner/` (the `run_job` backbone — sourced by `common_env.sh`, so it sits *below* `00_commun_scripts`; do not move it), venv setup, `wandb_sync`, the generator/segmenter training entry points, `utils/` (SynthSeg runner + BIDS→nnUNet converters), and `experiments/` runners. `scripts/evaluate/run_significance_all.sh` is the one cross-dataset convenience driver that stays here (it calls the canonical `00_03_evaluate/significance_from_config.py`).
 
 ### An "experiment" = a fixed 6-method suite trained on ONE modality
@@ -251,7 +296,7 @@ The `trainXXX_valYYY` suffix (in the METHOD id / RUN_ID) encodes the synth-augme
 
 **EPOCH POLICY — respect each dataset's usual epoch count.** Don't change these without a deliberate reason — they keep the 6-method suite comparable within and across runs of a dataset: **brats2024-glioma = 2500**, **on-harmony = 2000**, **open-ms = 2000**, **chaos = 200**.
 
-**How to launch all 6 (one command):** a per-modality launcher lists the 6 per-method wrapper paths in a `METHOD_SCRIPTS` array and sources the shared runner `datasets/00_commun_scripts/00_01_train/run_all_train_common.sh` — which caps folds at `0 1 2`, runs them in order, and supports `--start-from <method>` to resume a suite. Canonical example: `datasets/open-ms/5_scripts_open-ms/04_train/04_12_run_all_flair.sh` (→ `bash 04_12_run_all_flair.sh`). Each method is still its own thin `04_XX_train_<modality>_<method>.sh` wrapper (on-harmony T1w = `04_07`…`04_12`). For a **new** dataset/modality: create the 6 per-method wrappers (each ~5 lines: set METHOD/TRAINER/config, source `04_00_common.sh`) + one per-modality run-all launcher. *(The old `04_06_run_all_training.sh` is dead — ignore it.)*
+**How to launch all 6 (one command):** a per-modality launcher lists the 6 per-method wrapper paths in a `METHOD_SCRIPTS` array and sources the shared runner `benchmark/00_commun_scripts/00_01_train/run_all_train_common.sh` — which caps folds at `0 1 2`, runs them in order, and supports `--start-from <method>` to resume a suite. Canonical example: `benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/04_train/04_12_run_all_flair.sh` (→ `bash 04_12_run_all_flair.sh`). Each method is still its own thin `04_XX_train_<modality>_<method>.sh` wrapper (on-harmony T1w = `04_07`…`04_12`). For a **new** dataset/modality: create the 6 per-method wrappers (each ~5 lines: set METHOD/TRAINER/config, source `04_00_common.sh`) + one per-modality run-all launcher. *(The old `04_06_run_all_training.sh` is dead — ignore it.)*
 
 ### AugLab is a SEPARATE, config-driven repo (sync it per-machine)
 
@@ -265,7 +310,7 @@ The `trainXXX_valYYY` suffix (in the METHOD id / RUN_ID) encodes the synth-augme
 
 Models are contrast-agnostic, so evaluation is **cross-contrast**: a model trained on one modality is tested on **held-out cases across every modality of the dataset** (on-harmony: T1w/T2w/FLAIR/GRE/dwi/bold/epi; open-ms: FLAIR/T1w/T2w; …). Dice + HD95 are computed **per test-contrast, per fold**, then aggregated and significance-tested across the full 6-method table. **This cross-contrast generalization IS the headline result** — never evaluate only on the training modality.
 
-### The shared layer (canonical — reuse, don't reinvent): `datasets/00_commun_scripts/`
+### The shared layer (canonical — reuse, don't reinvent): `benchmark/00_commun_scripts/`
 
 - `00_00_utils/` — shared libs: `common_env.sh`, `splits_lib.py`, `orient.py`, `fov.py`, `eval_metrics.py`/`eval_folds.py`/`eval_aggregate.py`, `stat_tests.py`, `nnunet_convert_lib.py`.
 - `00_01_train/train_common.sh` — training driver (fold fan-out via `run_job`; honours optional `TRAIN_FOLDS`, default `"0 1 2 3"`).
@@ -301,7 +346,7 @@ Config-driven aggregation + significance consume YAML configs (`06_evaluate/conf
 
 **Cross-training-modality tables (`combined_contrasts/`).** Every dataset trains each method TWICE, once per training modality (chaos: t1in/t2spir; brats2024-glioma: t1n/t2w; on-harmony: T1w/T2w; open-ms: flair/t1w). `combined_modality_summary.py` pools BOTH into one row per method — fold data tagged by modality so a 3+3 fold pool is one equally-weighted 6-fold mean (reuses `aggregate_from_config.py`'s `cross_fold_class_mean` unchanged) — writing `8_results_<ds>/02_metrics/<model>/combined_contrasts/01_results_{summary.md,heatmap_dice.png,heatmap_hd95.png}`, same inline `sig. vs ref` column as above (config field `ref:`, required). Driven by `<dataset>_combined_01_results.yaml` (lists each modality's `metrics_dir` + a `method_key → run_id` map) via each dataset's `06_XX_combined_modality_summary.sh`.
 
-**Cross-DATASET task-level heatmap (`datasets/01_commun_results/meta_task_heatmap_*`).** One level up again: `meta_task_heatmap.py` pools all 4 datasets' `combined_contrasts` tables into ONE table — rows = the 7-method suite, columns = one per dataset ("task", literally that dataset's own `all` value), + `overall` (equal weight per task) + `sig. vs ref` (same macroΔ sign-flip test, but stratified by TASK instead of contrast — each task's stratum = every held-out case's paired diff pooled across that task's contrasts+modalities — so the test matches the equal-weight-per-task `overall` column). Reuses the `*_combined_01_results.yaml` configs directly (no run ids re-specified a third time). Run via `bash scripts/evaluate/run_meta_task_heatmap.sh` (config: `scripts/evaluate/meta_task_heatmap.yaml`) — this is the single "which method wins overall" answer; re-run it after any headline run changes rather than eyeballing the 8 per-dataset tables.
+**Cross-DATASET task-level heatmap (`benchmark/01_commun_results/meta_task_heatmap_*`).** One level up again: `meta_task_heatmap.py` pools all 4 datasets' `combined_contrasts` tables into ONE table — rows = the 7-method suite, columns = one per dataset ("task", literally that dataset's own `all` value), + `overall` (equal weight per task) + `sig. vs ref` (same macroΔ sign-flip test, but stratified by TASK instead of contrast — each task's stratum = every held-out case's paired diff pooled across that task's contrasts+modalities — so the test matches the equal-weight-per-task `overall` column). Reuses the `*_combined_01_results.yaml` configs directly (no run ids re-specified a third time). Run via `bash scripts/evaluate/run_meta_task_heatmap.sh` (config: `scripts/evaluate/meta_task_heatmap.yaml`) — this is the single "which method wins overall" answer; re-run it after any headline run changes rather than eyeballing the 8 per-dataset tables.
 
 Within `02_metrics/<model>/<contrast>/`, a non-headline result set gets its **own dedicated subdir** rather than mixing into the flat headline layout — established conventions so far: `checkpoint_comparison/` (checkpoint_best vs checkpoint_final sweep, all 8 training sets) and `ablations/` (the causal-ablation ladder studies — open-ms FLAIR, chaos T1in, chaos T2spir, brats2024-glioma T1n so far). Headline run dirs stay in the parent and are referenced unprefixed by any config that needs them (cross-dataset tables, `checkpoint_comparison/best_vs_final` configs); run dirs exclusive to the subdir's own study move into it and are referenced as `<subdir>/<run_id>`. `06_01_evaluate_run.sh`'s `METRICS_SUBDIR` env var (e.g. `METRICS_SUBDIR=ablations`, chaos + brats2024-glioma so far) routes evaluation output straight into a subdir like this — set it before evaluating a new ablation run rather than evaluating flat and moving the directory by hand afterward.
 
@@ -331,7 +376,7 @@ ablation ladder / dissociation table (see "The causal-ablation ladder" further d
 a second histogram-coverage analysis. Do not reintroduce "Pillar 2" language without a deliberate
 decision to reopen it; see `paper/NARRATIVE.md` §3 for the same correction on the paper-narrative side.
 
-- **Texture preservation.** `datasets/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/`.
+- **Texture preservation.** `benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/texture_analysis_lvl_1/`.
   Census / rank-transform |correlation| (contrast+inversion-invariant) + NMI, source vs each generated
   volume, per anatomical ROI (on-harmony: 31 SynthSeg classes). Grounding: that dir's `LITERATURE_REVIEW.md`.
   Same input-space method feeds the paper's NGF (Normalized Gradient Field) supplementary table.
@@ -365,7 +410,7 @@ the same work in ~1–2 min. Vulcan remains the filesystem home (repo, datasets,
 pushes) — it is not the compute target.
 
 **Remote commands over the TamIA relay MUST carry an explicit `cd`.** `ssh tamia '...'` starts in
-`$HOME`, so `tar xzf -` extracts into `/home/p/paulh/datasets/...`, not the repo. This bit repeatedly
+`$HOME`, so `tar xzf -` extracts into `/home/p/paulh/benchmark/...`, not the repo. This bit repeatedly
 on 2026-08-02 and **silently dropped a code fix**, so a completed multi-GPU run produced results with
 one label missing and nobody noticed until the output table was read. Always:
 ```bash
@@ -397,7 +442,7 @@ it buffers until exit, so a working job looks hung.
   infer texture-dependence from rater disagreement; **never claim MS lesions lack clear boundaries**,
   which the clinical literature contradicts).
 - **Status + remaining work:** `paper/PAPER_TODO_20260802.md`.
-- `sec/_suppl_tables.tex` is **generated from `datasets/*/8_results_*`**, not hand-written —
+- `sec/_suppl_tables.tex` is **generated from `benchmark/*/8_results_*`**, not hand-written —
   regenerate, don't edit.
 
 ---
@@ -407,7 +452,7 @@ it buffers until exit, so a working job looks hung.
 **The whole atlas-liver-hcc extension — training set + its cross-dataset eval companions
 (`lld-mmri-hcc`, `lld-mmri-malignant`, `liverhccseg`) — is excluded from the paper and from all
 cross-dataset meta-evaluation/aggregation, permanently, not as a temporary hold.** Moved to
-`datasets/03_archive/{atlas-liver-hcc,lld-mmri-hcc,lld-mmri-malignant,liverhccseg}`. Do not re-add
+`benchmark/03_archive/{atlas-liver-hcc,lld-mmri-hcc,lld-mmri-malignant,liverhccseg}`. Do not re-add
 without a deliberate decision to reopen this — the three reasons below are independent, any one of
 them alone would justify the exclusion:
 
@@ -456,7 +501,7 @@ the 4 archived datasets were left in place (harmless, orphaned).
 ## Breast task: I-SPY2 (training) + duke-breast-mri (eval) — AMBL archived (2026-09-13)
 
 **Current roster for the breast task: `ispy2` trains, `duke-breast-mri` is the cross-dataset eval
-companion. `ambl` is archived at `datasets/03_archive/ambl` — do not re-add without a deliberate
+companion. `ambl` is archived at `benchmark/03_archive/ambl` — do not re-add without a deliberate
 decision to reopen this**, matching the Atlas-Liver-HCC precedent above. AMBL was I-SPY2's original
 training-set candidate and later its planned external test set (see memory
 `project_ambl_breast_onboarding_launch`/`project_ispy2_becomes_training_set` for the full pivot
@@ -492,7 +537,7 @@ independently checked for double-counting/bias, flag if it becomes load-bearing 
 bilateral-width; I-SPY2's own t1wce training pool is only 18% bilateral (82% unilateral-cropped —
 a hard acquisition ceiling, not a processing choice, see below). Evaluating on full bilateral
 images was a real, substantial confound: every arm's absolute Dice rose once tested on FOV-matched
-unilateral crops (`datasets/duke-breast-mri/5_scripts_duke-breast-mri/02_nnunet/
+unilateral crops (`benchmark/02_tasks/breast_cancer/duke-breast-mri/5_scripts_duke-breast-mri/02_nnunet/
 02_03_derive_unilateral_crop.py` — axis-0-only lesion-side half crop, deliberately NOT reusing
 I-SPY2's own empirically-fit anterior-posterior window since that's calibrated to I-SPY2's own
 site-specific VOLSER protocol), and the Ours-vs-auglab_default headline gap that originally
@@ -501,8 +546,8 @@ other two. New eval items: `t1wce_uni`/`precontrast_uni` (metrics land under
 `8_results_duke-breast-mri/02_metrics/ispy2_model/<contrast>/{t1wce_uni,precontrast_uni}/`, same
 `DUKE_ITEM`/`METRICS_SUBDIR` routing convention as `precontrast`). `ispy2_combined_01_results.yaml`'s
 `duke_t1wce`/`duke_precontrast` source columns now point at the `_uni` dirs. **The original
-bilateral tables/ladders are archived at `datasets/03_archive/{duke-breast-mri,ispy2}
-_bilateral_eval_20260917/`** — fully out of the active `datasets/ispy2/`/`datasets/duke-breast-mri/`
+bilateral tables/ladders are archived at `benchmark/03_archive/{duke-breast-mri,ispy2}
+_bilateral_eval_20260917/`** — fully out of the active `benchmark/02_tasks/breast_cancer/ispy2/`/`benchmark/02_tasks/breast_cancer/duke-breast-mri/`
 trees (same spirit as the AMBL/atlas-liver-hcc archival precedent, so nobody cites the stale
 bilateral numbers by accident), not deleted — see each archive's own README for exactly what
 moved and why. The underlying raw per-fold `eval_all.csv`/predictions were left in place (not
@@ -519,12 +564,12 @@ configs against this standard if revisiting them.
 ## Cleanup notes (read before deleting anything in the repo root)
 
 **Untracked but load-bearing — do NOT `git clean`:**
-- `datasets/01_commun_results/meta_task_heatmap_summary.md` — **the source of the paper's main
+- `benchmark/01_commun_results/meta_task_heatmap_summary.md` — **the source of the paper's main
   results table.** Untracked. Losing it loses the headline numbers.
-- `datasets/00_commun_scripts/00_04_analysis/label_cue_importance/` — shared boundary-cue analysis
+- `benchmark/00_commun_scripts/00_04_analysis/label_cue_importance/` — shared boundary-cue analysis
   (its `FINDINGS.md` / `LITERATURE_REVIEW.md` carry the reviewer-rebuttal material; deliberately kept
   out of the paper).
-- `datasets/*/5_scripts_*/05_predict/05_4X_predict_*_kmeans*` — the ablation-ladder rungs that produce
+- `benchmark/*/5_scripts_*/05_predict/05_4X_predict_*_kmeans*` — the ablation-ladder rungs that produce
   the paper's central dissociation.
 - `paper/**/*.bak_20260802` — intentional pre-edit backups from the 2026-08-02 paper session.
 
@@ -533,7 +578,7 @@ configs against this standard if revisiting them.
   real `*_significance.md` files misfiled by a bug. Check the correct `8_results_*/02_metrics/...`
   paths already contain them before deleting; otherwise move them there first. **Fix the script that
   wrote them** — an unquoted/unset `METRICS_ROOT` will do it again.
-- `datasets/01_commun_results/"ours_vs_best_other_train050_val000 copy.md"` — duplicate (note the
+- `benchmark/01_commun_results/"ours_vs_best_other_train050_val000 copy.md"` — duplicate (note the
   space in the filename).
 - `paper/cvpr_format_latex.stale_bak_1783838883/` (2.9 MB), `CLAUDE.md.bak.*`, `.scratch_analysis/`
   (29 MB of one-off probes).

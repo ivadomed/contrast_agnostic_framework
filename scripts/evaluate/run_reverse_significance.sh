@@ -16,7 +16,7 @@
 #
 #   bash scripts/evaluate/run_reverse_significance.sh <dataset> <config.yaml> [<config.yaml> ...]
 #   bash scripts/evaluate/run_reverse_significance.sh ispy2 \
-#        datasets/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml
+#        benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml
 #
 # Read-only: loads existing per-case CSVs and prints. Writes nothing.
 set -euo pipefail
@@ -29,7 +29,7 @@ if [ $# -lt 2 ]; then
 fi
 DATASET="$1"; shift
 
-ENV_SH="${PROJECT_ROOT}/datasets/${DATASET}/5_scripts_${DATASET}/00_utils/env.sh"
+ENV_SH="${PROJECT_ROOT}/benchmark/${DATASET}/5_scripts_${DATASET}/00_utils/env.sh"
 [ -f "${ENV_SH}" ] || { echo "No env.sh for dataset '${DATASET}': ${ENV_SH}" >&2; exit 1; }
 set -a; source "${ENV_SH}"; set +a
 

@@ -18,8 +18,8 @@ REPO="${REPO:-/project/aip-jcohen/paulh/mri_synthesis_project}"
 EXECUTE=0
 [[ "${1:-}" == "--execute" ]] && EXECUTE=1
 
-PRED="${REPO}/datasets/open-ms/8_results_open-ms/01_predictions/open_ms_model/flair"
-MET="${REPO}/datasets/open-ms/8_results_open-ms/02_metrics/open_ms_model/flair"
+PRED="${REPO}/benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/01_predictions/open_ms_model/flair"
+MET="${REPO}/benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/02_metrics/open_ms_model/flair"
 
 # old_path|new_path pairs
 MAPPINGS=(

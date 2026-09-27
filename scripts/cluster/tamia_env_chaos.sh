@@ -1,9 +1,9 @@
-# Source AFTER datasets/chaos/5_scripts_chaos/00_utils/env.sh (or env_t2spir.sh), to
+# Source AFTER benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/00_utils/env.sh (or env_t2spir.sh), to
 # point CHAOS's OWN training/prediction at scratch-resident data on tamia. Mirrors
 # scripts/cluster/tamia_env.sh's pattern for brats2024-glioma (own-training override,
 # distinct from tamia_env_{amos,sliver07}_chaoscross.sh which point the OTHER
 # direction -- amos/sliver07 predicting with CHAOS-trained checkpoints).
-#   source datasets/chaos/5_scripts_chaos/00_utils/env_t2spir.sh
+#   source benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/00_utils/env_t2spir.sh
 #   source scripts/cluster/tamia_env_chaos.sh
 
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells

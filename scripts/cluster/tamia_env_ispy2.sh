@@ -1,4 +1,4 @@
-# Source AFTER datasets/ispy2/5_scripts_ispy2/00_utils/env.sh (or env_t2w.sh), to
+# Source AFTER benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2/00_utils/env.sh (or env_t2w.sh), to
 # point ispy2's OWN training/prediction at scratch-resident data on tamia. Mirrors
 # scripts/cluster/tamia_env_ambl.sh's pattern (own-training override, TWO training
 # contrasts via TRAINING_CONTRAST -- t1wce default, t2w via env_t2w.sh).
@@ -11,7 +11,7 @@
 # models -> ambl test set) will need its own override, symmetric to how ambl's
 # old cross-eval scripts pointed at AMBL_* here.
 #
-#   source datasets/ispy2/5_scripts_ispy2/00_utils/env.sh            # or env_t2w.sh
+#   source benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2/00_utils/env.sh            # or env_t2w.sh
 #   source scripts/cluster/tamia_env_ispy2.sh
 #
 # env.sh/env_t2w.sh export nnUNet_results/PREDICTIONS_ROOT/METRICS_ROOT/SPLITS_DIR

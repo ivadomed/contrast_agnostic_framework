@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPTS_DIR}/../.." && pwd)"
-CM_ROOT="${REPO_ROOT}/datasets/on-harmony/7_analysis_on-harmony/contrast_manifold"
+CM_ROOT="${REPO_ROOT}/benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/contrast_manifold"
 source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
 
 PY="${REPO_ROOT}/.venv/bin/python"

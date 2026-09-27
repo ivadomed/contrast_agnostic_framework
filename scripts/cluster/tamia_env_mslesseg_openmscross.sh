@@ -1,6 +1,6 @@
-# Source AFTER datasets/mslesseg/5_scripts_mslesseg/00_utils/env.sh, to point MSLesSeg's
+# Source AFTER benchmark/03_archive/mslesseg/5_scripts_mslesseg/00_utils/env.sh, to point MSLesSeg's
 # cross-dataset (open-ms-model) prediction at scratch-resident data on tamia.
-#   source datasets/mslesseg/5_scripts_mslesseg/00_utils/env.sh
+#   source benchmark/03_archive/mslesseg/5_scripts_mslesseg/00_utils/env.sh
 #   source scripts/cluster/tamia_env_mslesseg_openmscross.sh
 # Cluster differences are expressed as env overrides only -- run_job.sh / predict_common.sh
 # are never forked. Mirrors tamia_env_{amos,sliver07}_chaoscross.sh's pattern (same

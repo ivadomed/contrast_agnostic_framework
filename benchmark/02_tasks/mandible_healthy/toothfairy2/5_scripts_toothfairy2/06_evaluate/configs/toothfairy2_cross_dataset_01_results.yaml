@@ -1,0 +1,53 @@
+# ToothFairy2 CBCT models evaluated ACROSS DATASETS — in-domain CBCT plus every external
+# eval arm: HaN-Seg CT, HaN-Seg MR-in-CT-frame, and PDDCA CT.
+#
+# Scoring is MANDIBLE throughout (the standard as of 2026-09-18 — no qualifier, there is
+# no alternative view any more). All external arms are ORIENTATION-CORRECTED: ToothFairy2's
+# released volumes are superior-inferior flipped at source, so the external arms are flipped
+# into the training convention before prediction (si_flip_eval_inputs.py). The in-domain
+# cbct column is deliberately NOT flipped — ToothFairy2's own data was always in that
+# convention, so only the external arms were ever mismatched.
+#
+# POOLED BY MODALITY (Paul, 2026-09-18, revised): three buckets, each one modality.
+#   cbct  = ToothFairy2's own held-out CBCT (the in-domain training modality, kept SEPARATE)
+#   CT    = the two independent conventional-CT cohorts, HaN-Seg + PDDCA, pooled as one
+#   t1w   = HaN-Seg's T1-weighted MR arm, named for its contrast per project convention
+#
+# Why CBCT is its own bucket rather than folded into CT: it is the training modality, so
+# pooling it in makes the CT column part in-domain and no longer a generalization number
+# (baseline reads 86.9 pooled vs 76.6 on external CT alone). Keeping it separate also lets
+# `in_domain_contrast` do its job, so the OOD block in the significance report excludes it.
+# Measured support for treating them as distinct modalities, independent of that: CBCT bone
+# p50 1105 HU vs CT 772, air -911 vs -997, CBCT clamping at exactly -1000 where real CT
+# reaches -1284.
+#
+# Why the two CT cohorts pool rather than sitting as two flat columns: they are the same
+# modality, so two columns would weight the CT side 2:1 against MR in `all` and adding a CT
+# cohort would move the task's headline number for a reason unrelated to any method.
+#
+# Raw per-source columns are still produced alongside, as the per-contrast breakdown.
+title: "ToothFairy2 — cross-dataset, pooled by modality (CBCT | CT = HaN-Seg + PDDCA | t1w)"
+in_domain_contrast: cbct
+output_prefix: "02_cross_dataset"
+output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/cbct"
+column_order: [cbct, CT, t1w]
+
+contrast_groups:
+  cbct: cbct
+  CT:
+    - hanseg_ct
+    - pddca_ct
+  t1w: hanseg_mrt1
+sources:
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/cbct"
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/hanseg/8_results_hanseg/02_metrics/toothfairy2_model/cbct"
+    column_prefix: "hanseg_"
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/pddca/8_results_pddca/02_metrics/toothfairy2_model/cbct"
+    column_prefix: "pddca_"
+runs:
+  - toothfairy2_cbct_baseline_20260908_013025
+  - toothfairy2_cbct_auglab_default_20260908_013025
+  - toothfairy2_cbct_synthseg_noEM_20260908_013025
+  - toothfairy2_cbct_synthseg_EM_20260908_013027
+  - toothfairy2_cbct_srcsm_20260908_013027
+  - toothfairy2_cbct_auglabAug_v26_6_2_train050_val000_20260908_013027

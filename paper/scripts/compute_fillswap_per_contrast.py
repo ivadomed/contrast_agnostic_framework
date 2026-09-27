@@ -23,8 +23,8 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
 from ladder_ood_common import load_case_means, resolve_run_dir  # noqa: E402
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
 
@@ -37,14 +37,14 @@ def _load_wrapper(path: Path):
 
 
 WRAPPERS = [
-    ("Open-MS FLAIR", "datasets/open-ms/5_scripts_open-ms/06_evaluate/06_14_ladder_summary_ood.py"),
-    ("Open-MS T1w", "datasets/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
-    ("Brats-GLI T1n", "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
-    ("Brats-GLI T2w", "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
-    ("CHAOS T1in", "datasets/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py"),
-    ("CHAOS T2spir", "datasets/chaos/5_scripts_chaos/06_evaluate/06_33_ladder_summary_t2spir.py"),
-    ("ON-Harmony T1w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"),
-    ("ON-Harmony T2w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
+    ("Open-MS FLAIR", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_14_ladder_summary_ood.py"),
+    ("Open-MS T1w", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
+    ("Brats-GLI T1n", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
+    ("Brats-GLI T2w", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
+    ("CHAOS T1in", "benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py"),
+    ("CHAOS T2spir", "benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_33_ladder_summary_t2spir.py"),
+    ("ON-Harmony T1w", "benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"),
+    ("ON-Harmony T2w", "benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
 ]
 
 for name, rel in WRAPPERS:

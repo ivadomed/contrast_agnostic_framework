@@ -1,0 +1,58 @@
+# ToothFairy2 — combined_contrasts table. CROSS-DATASET and ORIENTATION-CORRECTED.
+#
+# REBUILT 2026-09-18. Supersedes the 2026-09-08 union-based version (kept as
+# *.union_bak_20260918; the union results themselves are archived under
+# benchmark/03_archive/). Two independent corrections landed since:
+#
+# 1. MANDIBLE-ONLY, not the union. HaN-Seg's / PDDCA's `Bone_Mandible` EXCLUDES the teeth
+#    (Brouwer et al. 2015 consensus verbatim "the entire mandible bone, without teeth";
+#    both datasets' own docs agree; confirmed empirically — no enamel population inside
+#    the mask). The old union scoring charged every method a false-positive penalty that
+#    scaled with how much tooth it predicted, i.e. NOT method-uniform.
+# 2. ORIENTATION. ToothFairy2's released .mha files are superior-inferior FLIPPED at
+#    source (pure z inversion; A-P and L-R fine), so models trained on them were being
+#    tested on correctly-oriented external data. The external arms are now flipped into
+#    the training convention (`si_flip_eval_inputs.py`) — hence the `02_metrics_sif`
+#    roots below. The in-domain cbct source is deliberately NOT flipped: ToothFairy2's own
+#    data was always in that convention, so only the external arms were ever mismatched.
+#
+# PDDCA is included per the standing policy that every task's combined_contrasts must be
+# CROSS-DATASET, not merely cross-modality.
+#
+# ⚠️ WHY CT IS POOLED RATHER THAN SHOWN AS A 4th FLAT COLUMN.
+# hanseg_ct and pddca_ct are the SAME modality. Listing them as two flat columns would
+# silently re-weight the `all` estimand from 1/2 CT : 1/2 MR to 2/3 CT : 1/3 MR — i.e.
+# adding a dataset would move this task's headline number for a reason unrelated to any
+# method's performance, and would propagate straight into meta_task_heatmap. Pooling keeps
+# `all` comparable to every previously reported mandible figure while still including
+# PDDCA. Same mechanism chaos uses to stop its 3 CT sources outvoting its MR contrasts.
+# The per-source (unpooled) detail lives in the sibling 2ct table, output_prefix
+# 06_mandible_only_2ct_sif.
+title: "ToothFairy2 — combined, cross-dataset (CBCT + 2 CT cohorts + MR), mandible-only, orientation-corrected"
+output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [cbct, CT, t1w]
+
+contrast_groups:
+  cbct: cbct
+  CT:
+    - hanseg_ct
+    - pddca_ct
+  t1w: hanseg_mrt1
+
+modalities:
+  - name: cbct
+    sources:
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/cbct"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/hanseg/8_results_hanseg/02_metrics/toothfairy2_model/cbct"
+        column_prefix: "hanseg_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/pddca/8_results_pddca/02_metrics/toothfairy2_model/cbct"
+        column_prefix: "pddca_"
+    runs:
+      baseline: toothfairy2_cbct_baseline_20260908_013025
+      auglab_default: toothfairy2_cbct_auglab_default_20260908_013025
+      synthseg_noEM: toothfairy2_cbct_synthseg_noEM_20260908_013025
+      synthseg_EM: toothfairy2_cbct_synthseg_EM_20260908_013027
+      srcsm: toothfairy2_cbct_srcsm_20260908_013027
+      auglabAug_v26_6_2_train050_val000: toothfairy2_cbct_auglabAug_v26_6_2_train050_val000_20260908_013027

@@ -1,8 +1,8 @@
-# Source AFTER datasets/autopet/5_scripts_autopet/00_utils/env.sh (or env_pet.sh), to
+# Source AFTER benchmark/03_archive/autopet/5_scripts_autopet/00_utils/env.sh (or env_pet.sh), to
 # point autopet's data + training at scratch-resident paths on tamia. Same pattern as
 # tamia_env_toothfairy2.sh / tamia_env_ispy2.sh.
 #
-#   source datasets/autopet/5_scripts_autopet/00_utils/env.sh   # or env_pet.sh
+#   source benchmark/03_archive/autopet/5_scripts_autopet/00_utils/env.sh   # or env_pet.sh
 #   source scripts/cluster/tamia_env_autopet.sh
 #
 # env.sh (via common_env.sh) exports every path with a ${VAR:-default} guard, and by the

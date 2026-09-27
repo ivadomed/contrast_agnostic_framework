@@ -11,6 +11,6 @@ set -euo pipefail
 : "${PROJECT_ROOT:=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 export PROJECT_ROOT
 PY="${PROJECT_ROOT}/.venv/bin/python"
-META="${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/meta_significance.py"
+META="${PROJECT_ROOT}/benchmark/00_commun_scripts/00_03_evaluate/meta_significance.py"
 CFG="${1:-${PROJECT_ROOT}/scripts/evaluate/meta_significance_train050.yaml}"
 "$PY" "$META" "$CFG"

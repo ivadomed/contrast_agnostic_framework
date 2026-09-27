@@ -29,10 +29,10 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 from stat_tests import fmt_p  # noqa: E402
 
-M = "datasets/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
+M = "benchmark/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
 
 LADDERS = [
     ("Open-MS FLAIR",    M.format(ds="open-ms", model="open_ms_model", contrast="flair")),

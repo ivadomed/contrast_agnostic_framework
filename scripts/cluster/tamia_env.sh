@@ -1,5 +1,5 @@
 # Source AFTER the dataset's env.sh to point nnUNet at the scratch-resident data.
-#   source datasets/brats2024-glioma/5_scripts_brats2024-glioma/00_utils/env.sh
+#   source benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/00_utils/env.sh
 #   source scripts/cluster/tamia_env.sh
 # Cluster differences are expressed as env overrides only - run_job.sh is never forked.
 

@@ -80,22 +80,22 @@ the same hypothesis, not a guaranteed second confirmation.
 
 ## Everything created tonight (for the record)
 
-- `datasets/open-ms/7_analysis_open-ms/histogram_coverage_lvl_1/scripts/generate_openms_volumes.py`
+- `benchmark/02_tasks/brain_ms/open-ms/7_analysis_open-ms/histogram_coverage_lvl_1/scripts/generate_openms_volumes.py`
   — added `baseline_kmeans`, `baseline_kmeans_label_remap`, `v26_6_2_noisefill_v2`
   to the `--methods` choices list.
-- `datasets/open-ms/7_analysis_open-ms/data/configs_noblur_nospatial/{baseline_kmeans,baseline_kmeans_label_remap}.json`
+- `benchmark/02_tasks/brain_ms/open-ms/7_analysis_open-ms/data/configs_noblur_nospatial/{baseline_kmeans,baseline_kmeans_label_remap}.json`
   + the on-harmony-style pair — derived from the AugLab training JSONs'
   `skip_sub_parc_prob`/`label_remap_prob` knobs (rung2: sub_parc=1.0, remap=0.0;
   rung3: sub_parc=1.0, remap=0.5), verified same transform class
   (`ImageContrastV26_6_2NoiseFillGPUTransform`) as the already-adopted rung.
-- `datasets/open-ms/7_analysis_open-ms/texture_analysis_lvl_1/scripts/run_ngf_eroded_openms.sh`
+- `benchmark/02_tasks/brain_ms/open-ms/7_analysis_open-ms/texture_analysis_lvl_1/scripts/run_ngf_eroded_openms.sh`
   (superseded by the full-pipeline version below, kept for reference).
 - `scripts/cluster/tamia_env_chaos.sh` — own-training scratch override for CHAOS on
   TamIA (mirrors `tamia_env.sh`'s pattern for brats2024-glioma; distinct from the
   `_chaoscross` files, which point the other direction).
-- `datasets/chaos/5_scripts_chaos/04_train/04_5{5,6,7}...sh` — pre-existing, never
+- `benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/04_train/04_5{5,6,7}...sh` — pre-existing, never
   run; just launched them.
-- `datasets/brats2024-glioma/5_scripts_brats2024-glioma/04_train/04_40/41/42...sh`
+- `benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/04_train/04_40/41/42...sh`
   (3 new ladder-rung wrappers) + `04_43_tamia_pack_t1n_ladder.sh` (pack launcher,
   modeled exactly on the existing `04_33` pattern).
 

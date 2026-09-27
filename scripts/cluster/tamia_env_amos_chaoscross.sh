@@ -1,6 +1,6 @@
-# Source AFTER datasets/amos/5_scripts_amos/00_utils/env.sh, to point AMOS's
+# Source AFTER benchmark/02_tasks/abdomen_healthy/amos/5_scripts_amos/00_utils/env.sh, to point AMOS's
 # cross-dataset (chaos-model) prediction at scratch-resident data on tamia.
-#   source datasets/amos/5_scripts_amos/00_utils/env.sh
+#   source benchmark/02_tasks/abdomen_healthy/amos/5_scripts_amos/00_utils/env.sh
 #   source scripts/cluster/tamia_env_amos_chaoscross.sh
 # Cluster differences are expressed as env overrides only — run_job.sh / predict_common.sh
 # are never forked. Mirrors scripts/cluster/tamia_env.sh's pattern for brats2024-glioma.

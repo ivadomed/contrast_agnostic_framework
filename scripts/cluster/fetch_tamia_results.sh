@@ -36,7 +36,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TAMIA_HOST="${TAMIA_HOST:-tamia.alliancecan.ca}"
 TAMIA_SCRATCH="${TAMIA_SCRATCH:-/scratch/p/paulh}"
 
-LOCAL_RESULTS="${PROJECT_ROOT}/datasets/${DATASET}/8_results_${DATASET}"
+LOCAL_RESULTS="${PROJECT_ROOT}/benchmark/${DATASET}/8_results_${DATASET}"
 REMOTE_RESULTS="${TAMIA_SCRATCH}/${DATASET}/8_results_${DATASET}"
 
 [ -d "${LOCAL_RESULTS}" ] || { echo "ERROR: no local results dir: ${LOCAL_RESULTS}" >&2; exit 1; }

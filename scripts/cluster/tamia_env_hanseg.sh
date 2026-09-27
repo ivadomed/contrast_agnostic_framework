@@ -1,4 +1,4 @@
-# Source AFTER datasets/hanseg/5_scripts_hanseg/00_utils/env.sh on tamia.
+# Source AFTER benchmark/02_tasks/mandible_healthy/hanseg/5_scripts_hanseg/00_utils/env.sh on tamia.
 # hanseg is TEST-ONLY: its own dirs hold the prepared CT test inputs, while the
 # TF2_* vars must point at the toothfairy2 TRAINED model, which on tamia lives only
 # under /scratch/p/paulh/toothfairy2 (CLAUDE.md: bulk data on tamia is scratch-only).

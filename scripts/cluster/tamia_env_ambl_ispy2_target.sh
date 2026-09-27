@@ -1,4 +1,4 @@
-# Source AFTER datasets/ambl/5_scripts_ambl/00_utils/env.sh, to run the ispy2 ->
+# Source AFTER benchmark/03_archive/ambl/5_scripts_ambl/00_utils/env.sh, to run the ispy2 ->
 # ambl cross-dataset predict/evaluate direction entirely on tamia scratch.
 #
 # CORRECTED 2026-09-06 (was wrong on first write): this file originally left
@@ -21,7 +21,7 @@
 # but do not source that file here, it does not set the ISPY2_* vars this
 # cross-dataset direction needs).
 #
-#   source datasets/ambl/5_scripts_ambl/00_utils/env.sh
+#   source benchmark/03_archive/ambl/5_scripts_ambl/00_utils/env.sh
 #   source scripts/cluster/tamia_env_ambl_ispy2_target.sh
 #
 # Override every path outright (not with a ${VAR:-default} guard) -- see

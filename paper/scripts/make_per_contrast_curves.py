@@ -47,8 +47,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 REPO = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
 from ladder_ood_common import load_case_means, resolve_run_dir, _src_key as _engine_src_key  # noqa: E402
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
 
@@ -62,7 +62,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 # here means reading the cross-task result does not require building the paper.
 COMMUN = REPO / "datasets" / "01_commun_results"
 
-M = "datasets/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
+M = "benchmark/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
 
 
 def _j(ds, model, contrast):

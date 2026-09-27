@@ -1,7 +1,7 @@
-# Source AFTER datasets/open-ms/5_scripts_open-ms/00_utils/env.sh (or env_t1w.sh), to
+# Source AFTER benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/00_utils/env.sh (or env_t1w.sh), to
 # point open-ms's OWN training/prediction at scratch-resident data on tamia. Mirrors
 # scripts/cluster/tamia_env_chaos.sh's pattern (own-training override).
-#   source datasets/open-ms/5_scripts_open-ms/00_utils/env_t1w.sh
+#   source benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/00_utils/env_t1w.sh
 #   source scripts/cluster/tamia_env_openms.sh
 
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells

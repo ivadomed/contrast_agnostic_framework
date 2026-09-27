@@ -1,6 +1,6 @@
-# Source AFTER datasets/sliver07/5_scripts_sliver07/00_utils/env.sh, to point
+# Source AFTER benchmark/02_tasks/abdomen_healthy/sliver07/5_scripts_sliver07/00_utils/env.sh, to point
 # SLIVER07's cross-dataset (chaos-model) prediction at scratch-resident data on tamia.
-#   source datasets/sliver07/5_scripts_sliver07/00_utils/env.sh
+#   source benchmark/02_tasks/abdomen_healthy/sliver07/5_scripts_sliver07/00_utils/env.sh
 #   source scripts/cluster/tamia_env_sliver07_chaoscross.sh
 # Cluster differences are expressed as env overrides only — run_job.sh / predict_common.sh
 # are never forked. Mirrors scripts/cluster/tamia_env.sh's pattern for brats2024-glioma.

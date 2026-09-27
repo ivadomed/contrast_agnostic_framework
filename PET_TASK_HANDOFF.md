@@ -132,7 +132,7 @@ requirement — better to find that out in an hour than after training 30 fold-j
 Concretely: take ~20 cases, and for the GTV mask measure tumour-vs-surrounding contrast
 in CT and in PET (e.g. mean intensity inside the mask vs in a dilated shell, plus the
 boundary-gradient check used in
-`datasets/hanseg/5_scripts_hanseg/01_prepare/01_03_validate_mr_registration.py`). Report
+`benchmark/02_tasks/mandible_healthy/hanseg/5_scripts_hanseg/01_prepare/01_03_validate_mr_registration.py`). Report
 both. If CT contrast is near zero, say so and stop rather than proceeding.
 
 ⚠️ Verify for HECKTOR before committing: **is the CT diagnostic or low-dose
@@ -162,7 +162,7 @@ limitation rather than a footnote.
 
 ## Recipe — copy ToothFairy2, it is the freshest and cleanest scaffold
 
-`datasets/toothfairy2/5_scripts_toothfairy2/` is the template. Files worth copying
+`benchmark/02_tasks/mandible_healthy/toothfairy2/5_scripts_toothfairy2/` is the template. Files worth copying
 almost verbatim, adapting names:
 - `00_utils/env.sh` + `<name>_labels.py` (single source of truth for the label map)
 - `00_utils/00_01_audit_source_labels.py` — **run an equivalent FIRST.** On ToothFairy2
@@ -187,7 +187,7 @@ almost verbatim, adapting names:
 2. **A QC metric must be shown to respond to the error it is meant to catch.** The
    HaN-Seg MR arm's `tissue_frac` gate turned out ANTI-correlated with accuracy (a
    12 mm-displaced mask scored *better*). Test any new QC by synthetic perturbation —
-   see `datasets/hanseg/5_scripts_hanseg/01_prepare/01_03_validate_mr_registration.py`.
+   see `benchmark/02_tasks/mandible_healthy/hanseg/5_scripts_hanseg/01_prepare/01_03_validate_mr_registration.py`.
 3. **A zero-variance statistic is a bug signal, not convergence.** `centroid_shift =
    0.00` on all 42 cases revealed a refinement pass that never ran (a silently-swallowed
    exception).

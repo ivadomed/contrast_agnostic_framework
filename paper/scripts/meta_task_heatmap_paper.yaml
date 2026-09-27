@@ -6,7 +6,7 @@
 # edit the shared config (which that other workstream depends on) or let
 # that task silently drift into the paper's headline table, this file pins
 # the paper's own task list, output to a paper-local dir so it never
-# collides with datasets/01_commun_results/meta_task_heatmap_summary.md (now
+# collides with benchmark/01_commun_results/meta_task_heatmap_summary.md (now
 # serving the broader, multi-task project).
 #
 # atlas-liver-hcc (liver tumour, HCC) REMOVED 2026-09-02: the whole
@@ -20,7 +20,7 @@
 # and the ladder's sign flips depending on whether it's included; and
 # ATLAS's own training cohort is itself an uncontrolled mix of CE-T1w
 # phases, undermining a clean in-domain/out-of-domain split). The dataset
-# directories moved to datasets/03_archive/. It was briefly a 5th task here
+# directories moved to benchmark/03_archive/. It was briefly a 5th task here
 # (added 2026-08-29, single training modality CE-T1w, no second in-house
 # contrast to cross-evaluate -- see the pre-2026-09-02 git history of this
 # file for that config if it's ever needed for reference).
@@ -34,19 +34,19 @@ ref: auglabAug_v26_6_2_train050_val000
 tasks:
   - name: brats2024-glioma
     dataset: brats2024-glioma
-    config: "${PROJECT_ROOT}/datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_combined_01_results.yaml"
   - name: chaos
     dataset: chaos
-    config: "${PROJECT_ROOT}/datasets/chaos/5_scripts_chaos/06_evaluate/configs/chaos_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/configs/chaos_combined_01_results.yaml"
   - name: on-harmony
     dataset: on-harmony
-    config: "${PROJECT_ROOT}/datasets/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_combined_01_results.yaml"
   - name: open-ms
     dataset: open-ms
-    config: "${PROJECT_ROOT}/datasets/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_combined_01_results.yaml"
   - name: toothfairy2
     dataset: toothfairy2
-    config: "${PROJECT_ROOT}/datasets/toothfairy2/5_scripts_toothfairy2/06_evaluate/configs/toothfairy2_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/5_scripts_toothfairy2/06_evaluate/configs/toothfairy2_combined_01_results.yaml"
   - name: ispy2
     dataset: ispy2
-    config: "${PROJECT_ROOT}/datasets/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml"

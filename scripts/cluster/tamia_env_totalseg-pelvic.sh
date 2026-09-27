@@ -1,9 +1,9 @@
-# Source AFTER datasets/totalseg-pelvic/5_scripts_totalseg-pelvic/00_utils/env.sh (or
+# Source AFTER benchmark/02_tasks/pelvis_healthy/totalseg-pelvic/5_scripts_totalseg-pelvic/00_utils/env.sh (or
 # env_mri.sh), to point totalseg-pelvic's OWN training/prediction at scratch-resident
 # data on tamia. Mirrors scripts/cluster/tamia_env_chaos.sh's pattern (own-training
 # override) -- totalseg-pelvic is CT+MRI like chaos, but UNPAIRED with a per-modality
 # splits dir (4_splits_totalseg-pelvic/{ct,mri}/), unlike chaos's single shared split.
-#   source datasets/totalseg-pelvic/5_scripts_totalseg-pelvic/00_utils/env.sh       # or env_mri.sh
+#   source benchmark/02_tasks/pelvis_healthy/totalseg-pelvic/5_scripts_totalseg-pelvic/00_utils/env.sh       # or env_mri.sh
 #   source scripts/cluster/tamia_env_totalseg-pelvic.sh
 
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells

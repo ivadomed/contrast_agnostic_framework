@@ -7,7 +7,7 @@ WORSENS OOD Dice, -9.8, p=4.5e-05) and ET (enhancing tumour, where the same
 step is flat/non-significant, +0.9, p=0.38). Companion to the per-label
 tables in sec/X_suppl.tex; case and rung choice documented in
 paper/compute_ladder_significance.py's sibling analysis and
-datasets/brats2024-glioma/.../ablations/t1n_t2w_transfer_per_label/summary.md.
+benchmark/02_tasks/brain_tumor/brats2024-glioma/.../ablations/t1n_t2w_transfer_per_label/summary.md.
 
 Usage:
   .venv/bin/python make_snfh_et_zoom_figure.py
@@ -26,10 +26,10 @@ import matplotlib.pyplot as plt
 REPO = Path(__file__).resolve().parent.parent.parent
 CASE = "BraTSGLI02108101"
 
-RAW051 = REPO / "datasets/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset051_BraTS2024GliomaT1n"
-GT_DIR = REPO / "datasets/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset052_BraTS2024GliomaT2w/labelsTr"
-P_REAL = REPO / "datasets/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217/fold0/t1n"
-P_NOISE = REPO / "datasets/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659/fold0/t1n"
+RAW051 = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset051_BraTS2024GliomaT1n"
+GT_DIR = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset052_BraTS2024GliomaT2w/labelsTr"
+P_REAL = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217/fold0/t1n"
+P_NOISE = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659/fold0/t1n"
 
 OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "snfh_et_zoom.pdf"
 

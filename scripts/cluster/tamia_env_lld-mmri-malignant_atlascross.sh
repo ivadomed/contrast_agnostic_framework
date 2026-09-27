@@ -1,7 +1,7 @@
-# Source AFTER datasets/lld-mmri-malignant/5_scripts_lld-mmri-malignant/00_utils/env.sh, to point
+# Source AFTER benchmark/03_archive/lld-mmri-malignant/5_scripts_lld-mmri-malignant/00_utils/env.sh, to point
 # LLD-MMRI-MALIGNANT's cross-dataset (atlas-liver-hcc-model) prediction at scratch-resident
 # data on tamia.
-#   source datasets/lld-mmri-malignant/5_scripts_lld-mmri-malignant/00_utils/env.sh
+#   source benchmark/03_archive/lld-mmri-malignant/5_scripts_lld-mmri-malignant/00_utils/env.sh
 #   source scripts/cluster/tamia_env_lld-mmri-malignant_atlascross.sh
 # Cluster differences are expressed as env overrides only — run_job.sh / predict_common.sh
 # are never forked. Mirrors scripts/cluster/tamia_env_msd-spleen_chaoscross.sh's pattern.

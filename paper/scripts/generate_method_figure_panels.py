@@ -170,10 +170,10 @@ def save_panel(arr: np.ndarray, path: Path):
 
 
 CASES = [
-    ("chaos", "datasets/chaos/2_nnUNet_chaos/raw/Dataset061_CHAOS_MR_T2spir/imagesTr/MR01_0000.nii.gz",
-     "datasets/chaos/2_nnUNet_chaos/raw/Dataset061_CHAOS_MR_T2spir/labelsTr/MR01.nii.gz"),
-    ("onharmony", "datasets/on-harmony/2_nnUNet_on-harmony/raw/Dataset031_OnHarmonyT1w31/imagesTr/sub-03286_ses-NOT2ING001_T1w_0000.nii.gz",
-     "datasets/on-harmony/2_nnUNet_on-harmony/raw/Dataset031_OnHarmonyT1w31/labelsTr/sub-03286_ses-NOT2ING001_T1w.nii.gz"),
+    ("chaos", "benchmark/02_tasks/abdomen_healthy/chaos/2_nnUNet_chaos/raw/Dataset061_CHAOS_MR_T2spir/imagesTr/MR01_0000.nii.gz",
+     "benchmark/02_tasks/abdomen_healthy/chaos/2_nnUNet_chaos/raw/Dataset061_CHAOS_MR_T2spir/labelsTr/MR01.nii.gz"),
+    ("onharmony", "benchmark/02_tasks/brain_healthy/on-harmony/2_nnUNet_on-harmony/raw/Dataset031_OnHarmonyT1w31/imagesTr/sub-03286_ses-NOT2ING001_T1w_0000.nii.gz",
+     "benchmark/02_tasks/brain_healthy/on-harmony/2_nnUNet_on-harmony/raw/Dataset031_OnHarmonyT1w31/labelsTr/sub-03286_ses-NOT2ING001_T1w.nii.gz"),
 ]
 
 for slug, img_rel, lbl_rel in CASES:

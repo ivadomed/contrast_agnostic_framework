@@ -3,41 +3,41 @@
 # averaged over its own tested contrasts AND its two training modalities via that
 # dataset's own *_combined_01_results.yaml), + overall (equal weight per task) +
 # inline significance vs ref. Consumed by
-# datasets/00_commun_scripts/00_03_evaluate/meta_task_heatmap.py (see its header for
+# benchmark/00_commun_scripts/00_03_evaluate/meta_task_heatmap.py (see its header for
 # the full statistical model) via run_meta_task_heatmap.sh.
 title: "Cross-dataset — task-level heatmap (7-method suite, all 8 datasets)"
-output_dir: "${PROJECT_ROOT}/datasets/01_commun_results"
+output_dir: "${PROJECT_ROOT}/benchmark/01_commun_results"
 output_prefix: "meta_task_heatmap"
 ref: auglabAug_v26_6_2_train050_val000
 
 tasks:
   - name: brats2024-glioma
     dataset: brats2024-glioma
-    config: "${PROJECT_ROOT}/datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/configs/brats_combined_01_results.yaml"
   - name: chaos
     dataset: chaos
-    config: "${PROJECT_ROOT}/datasets/chaos/5_scripts_chaos/06_evaluate/configs/chaos_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/configs/chaos_combined_01_results.yaml"
   - name: on-harmony
     dataset: on-harmony
-    config: "${PROJECT_ROOT}/datasets/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/configs/on-harmony_combined_01_results.yaml"
   - name: open-ms
     dataset: open-ms
-    config: "${PROJECT_ROOT}/datasets/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/configs/open-ms_combined_01_results.yaml"
   - name: toothfairy2
     dataset: toothfairy2
-    config: "${PROJECT_ROOT}/datasets/toothfairy2/5_scripts_toothfairy2/06_evaluate/configs/toothfairy2_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/5_scripts_toothfairy2/06_evaluate/configs/toothfairy2_combined_01_results.yaml"
   - name: ispy2
     dataset: ispy2
-    config: "${PROJECT_ROOT}/datasets/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml"
   - name: healthy-spine-tum
     dataset: healthy-spine-tum
-    config: "${PROJECT_ROOT}/datasets/healthy-spine-tum/5_scripts_healthy-spine-tum/06_evaluate/configs/healthy-spine-tum_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/spine_healthy/healthy-spine-tum/5_scripts_healthy-spine-tum/06_evaluate/configs/healthy-spine-tum_combined_01_results.yaml"
   - name: totalseg-pelvic
     dataset: totalseg-pelvic
-    config: "${PROJECT_ROOT}/datasets/totalseg-pelvic/5_scripts_totalseg-pelvic/06_evaluate/configs/totalseg-pelvic_combined_01_results.yaml"
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/pelvis_healthy/totalseg-pelvic/5_scripts_totalseg-pelvic/06_evaluate/configs/totalseg-pelvic_combined_01_results.yaml"
   # atlas-liver-hcc REMOVED 2026-09-02 -- excluded from the paper and all
   # meta-evaluation/aggregation. See CLAUDE.md "Atlas-Liver-HCC exclusion
   # (2026-09-02)" for the full rationale (LLD-MMRI redistribution/git-annex
   # block, outphase in-domain ambiguity, ATLAS's own CE-T1w phase mix). The
-  # dataset itself moved to datasets/03_archive/atlas-liver-hcc (+ its two
+  # dataset itself moved to benchmark/03_archive/atlas-liver-hcc (+ its two
   # eval-only companions lld-mmri-hcc, lld-mmri-malignant, liverhccseg).

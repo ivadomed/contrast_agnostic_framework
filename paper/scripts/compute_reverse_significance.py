@@ -44,8 +44,8 @@ import numpy as np
 import yaml
 
 REPO = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
 from aggregate_from_config import (  # noqa: E402
     load_run_cases, load_run_cases_raw, paired, resolve_group,
     find_ref_key, load_run_from_sources,
@@ -67,7 +67,7 @@ def _expand(raw: str) -> Path:
     if "${" in out or (out.startswith("$") and "/" in out):
         sys.exit(f"ERROR: unexpanded variable in config path: {out!r}\n"
                  f"       Source the dataset's 00_utils/env.sh first, e.g.\n"
-                 f"       set -a; source datasets/<ds>/5_scripts_<ds>/00_utils/env.sh; set +a")
+                 f"       set -a; source benchmark/<ds>/5_scripts_<ds>/00_utils/env.sh; set +a")
     return Path(out)
 
 

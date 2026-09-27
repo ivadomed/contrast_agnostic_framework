@@ -1,9 +1,9 @@
-# Source AFTER datasets/on-harmony/5_scripts_on-harmony/00_utils/env.sh (or env_t2w.sh),
+# Source AFTER benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/00_utils/env.sh (or env_t2w.sh),
 # to point on-harmony's OWN training/prediction at scratch-resident data on tamia.
 # Mirrors scripts/cluster/tamia_env_chaos.sh's pattern (own-training override). Note
 # on-harmony's scratch layout has NO "_on-harmony" suffix on 2_nnUNet/8_results
 # (unlike chaos/open-ms) — confirmed against the actual staged directories on tamia.
-#   source datasets/on-harmony/5_scripts_on-harmony/00_utils/env_t2w.sh
+#   source benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/00_utils/env_t2w.sh
 #   source scripts/cluster/tamia_env_onharmony.sh
 
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells

@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 CLUSTERS = ["vulcan", "killarney"]
 
 # Job-name prefixes used by each dataset's predict/eval submission scripts
-# (see datasets/<dataset>/5_scripts_<dataset>/05_predict/05_01_predict_common.sh's
+# (see benchmark/<dataset>/5_scripts_<dataset>/05_predict/05_01_predict_common.sh's
 # PREDICT_JOB_PREFIX and each dataset's 06_evaluate/06_01_evaluate_*.sh
 # `run_job --name` line). on-harmony has no separate predict job -- its
 # 06_01_evaluate_testset.sh fans out one job per fold that predicts AND

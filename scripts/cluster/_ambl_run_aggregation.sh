@@ -9,7 +9,7 @@
 # steps on Vulcan (metrics already rsynced onto the project-relative path).
 set -euo pipefail
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-HERE="datasets/ambl/5_scripts_ambl/06_evaluate"
+HERE="benchmark/03_archive/ambl/5_scripts_ambl/06_evaluate"
 
 echo "=== 06_10 aggregate: t1wce ==="
 bash "${HERE}/06_10_aggregate_from_config.sh" configs/ambl_t1wce_01_results.yaml

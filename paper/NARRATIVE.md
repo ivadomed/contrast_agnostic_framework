@@ -100,7 +100,7 @@ do NOT pretend they don't exist:
   neutralize the "it's noise / better tuning" objection. Necessary, not sufficient —
   significance kills "noise," not "marginal"; effect size comes from the crush cases.
 
-### Datasets (canonical results in `datasets/{ds}/8_results_{ds}` ONLY — `eval/` is STALE)
+### Datasets (canonical results in `benchmark/{ds}/8_results_{ds}` ONLY — `eval/` is STALE)
 
 **VERIFIED 2026-07-04 — Ours (auglab+PALETTE) is best on aggregate Dice in ALL 6
 train-contrast settings.** Cross-fold, cross-class mean Dice, averaged over all test
@@ -233,7 +233,7 @@ interface-defined, and here is a controlled dissociation" is a CVPR-shaped contr
 ## B. The "why" paragraph — drop-in, cite as written
 
 Verified 2026-08-02. Full citation audit, including what NOT to cite and why:
-`datasets/00_commun_scripts/00_04_analysis/label_cue_importance/LITERATURE_REVIEW.md` §9–10.
+`benchmark/00_commun_scripts/00_04_analysis/label_cue_importance/LITERATURE_REVIEW.md` §9–10.
 
 > Preserving real intensity structure matters where the target is defined by tissue
 > appearance, and not where it is defined by an anatomical interface. Liver, spleen and

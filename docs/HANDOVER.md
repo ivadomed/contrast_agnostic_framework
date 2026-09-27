@@ -182,7 +182,7 @@ For a new version `vXX_Y` with LHC sampling, run these steps in order:
 #### Step 1 — Extract features
 
 ```bash
-set_slot 0 .venv/bin/python datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/scripts/extract_features_regional_hist.py \
+set_slot 0 .venv/bin/python benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/contrast_manifold/scripts/extract_features_regional_hist.py \
     --mode synthetic \
     --synth-root data/ON-Harmony/derivatives/synthetic_vXX_Y_guidance_lhc \
     --output-csv analysis/contrast_manifold/outputs/data/synthetic_vXX_Y_guidance_lhc/regional_hist_64/synthetic_vXX_Y_guidance_lhc_features.csv \
@@ -192,7 +192,7 @@ set_slot 0 .venv/bin/python datasets/on-harmony/7_analysis_on-harmony/contrast_m
 #### Step 2 — Normalize + feature selection
 
 ```bash
-set_slot 0 .venv/bin/python datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/scripts/normalize_combined.py \
+set_slot 0 .venv/bin/python benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/contrast_manifold/scripts/normalize_combined.py \
     --original_csv  analysis/contrast_manifold/outputs/data/original/regional_hist_64/on_harmony_features.csv \
     --synthetic_csv analysis/contrast_manifold/outputs/data/synthetic_vXX_Y_guidance_lhc/regional_hist_64/synthetic_vXX_Y_guidance_lhc_features.csv \
     --output_original  analysis/contrast_manifold/outputs/data/synthetic_vXX_Y_guidance_lhc/regional_hist_64/on_harmony_features_normalized_combined_downsampled100.csv \
@@ -205,7 +205,7 @@ set_slot 0 .venv/bin/python datasets/on-harmony/7_analysis_on-harmony/contrast_m
 #### Step 3 — Run analysis
 
 ```bash
-set_slot 0 .venv/bin/python datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/scripts/run_all_analysis.py \
+set_slot 0 .venv/bin/python benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/contrast_manifold/scripts/run_all_analysis.py \
     --mask-type regional_hist_64 \
     --only vXX_Y_guidance_lhc_r1
 ```
@@ -240,7 +240,7 @@ In `analysis/contrast_manifold/scripts/run_all_analysis.py`, add a tuple to the 
 `run_all_analysis.py` has no `--steps` argument. To re-run only specific plots:
 
 ```bash
-ANALYSIS=datasets/on-harmony/7_analysis_on-harmony/contrast_manifold
+ANALYSIS=benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/contrast_manifold
 
 # PCA only (skip UMAP)
 .venv/bin/python $ANALYSIS/scripts/plot_umap_joint.py \
@@ -274,9 +274,9 @@ done
 
 ### Dataset root structure
 
-All datasets live under `datasets/`. Every dataset uses the same 9-subdir standard:
+All datasets live under `benchmark/`. Every dataset uses the same 9-subdir standard:
 ```
-datasets/
+benchmark/
   validate_standard_dataset_structure.py  # run to verify compliance
   on-harmony/
     1_BIDS_on-harmony/brain-onharmony/     # BIDS data (real scans + derivatives); leaf dir
@@ -298,7 +298,7 @@ datasets/
 
 ### Feature data (manifold analysis)
 ```
-datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/outputs/data/
+benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/contrast_manifold/outputs/data/
   original/<mask_type>/
     on_harmony_features.csv
     on_harmony_features_normalized_combined_downsampled100_feat_selected.csv
@@ -310,7 +310,7 @@ datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/outputs/data/
 
 ### Plots / results (manifold analysis)
 ```
-datasets/on-harmony/7_analysis_on-harmony/contrast_manifold/outputs/plots/
+benchmark/02_tasks/brain_healthy/on-harmony/7_analysis_on-harmony/contrast_manifold/outputs/plots/
   v<major>/<version>_r<run>/<mask_type>/
     pca/   umap/   prdc/   prdc_pca60/   coverage/
 ```
@@ -324,7 +324,7 @@ conf/
   logging/wandb.yaml
   model/   segmenter/
 
-datasets/<ds>/3_conf_<ds>/data.yaml   # dataset-specific Hydra config (auto-discovered)
+benchmark/<ds>/3_conf_<ds>/data.yaml   # dataset-specific Hydra config (auto-discovered)
 ```
 
 ---

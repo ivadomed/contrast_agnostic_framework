@@ -1,4 +1,4 @@
-# Source AFTER datasets/duke-breast-mri/5_scripts_duke-breast-mri/00_utils/env.sh,
+# Source AFTER benchmark/02_tasks/breast_cancer/duke-breast-mri/5_scripts_duke-breast-mri/00_utils/env.sh,
 # to run the ispy2 -> duke-breast-mri cross-dataset predict/evaluate direction
 # entirely on tamia scratch. Modeled directly on
 # scripts/cluster/tamia_env_ambl_ispy2_target.sh (same shape: an eval-only
@@ -10,7 +10,7 @@
 # (duke only has one modality) = ~1050 predict-output dirs -- put everything
 # on scratch from the start, do not repeat that mistake.
 #
-#   source datasets/duke-breast-mri/5_scripts_duke-breast-mri/00_utils/env.sh
+#   source benchmark/02_tasks/breast_cancer/duke-breast-mri/5_scripts_duke-breast-mri/00_utils/env.sh
 #   source scripts/cluster/tamia_env_duke-breast-mri.sh
 #
 # Override every path outright (not with a ${VAR:-default} guard) -- see

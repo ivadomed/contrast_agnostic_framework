@@ -1,7 +1,7 @@
-# Source AFTER datasets/cirrmri-liver/5_scripts_cirrmri-liver/00_utils/env.sh, to
+# Source AFTER benchmark/03_archive/cirrmri-liver/5_scripts_cirrmri-liver/00_utils/env.sh, to
 # point CIRRMRI-LIVER's cross-dataset (chaos-model) prediction at scratch-resident
 # data on tamia.
-#   source datasets/cirrmri-liver/5_scripts_cirrmri-liver/00_utils/env.sh
+#   source benchmark/03_archive/cirrmri-liver/5_scripts_cirrmri-liver/00_utils/env.sh
 #   source scripts/cluster/tamia_env_cirrmri-liver_chaoscross.sh
 # Cluster differences are expressed as env overrides only — run_job.sh / predict_common.sh
 # are never forked. Mirrors scripts/cluster/tamia_env_msd-spleen_chaoscross.sh's pattern.

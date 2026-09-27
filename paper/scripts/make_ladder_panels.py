@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Reads the 8 canonical ladder_series.json files (written by the shared
-datasets/00_commun_scripts/00_03_evaluate/ladder_ood_common.py engine) and
+benchmark/00_commun_scripts/00_03_evaluate/ladder_ood_common.py engine) and
 emits 6 grouped PDF panels -- 3 boundary-type groups (tissue interface:
 CHAOS T1in+T2spir; no tissue interface: BraTS T1n/T2w + Open-MS FLAIR/T1w;
 dense label map: ON-Harmony T1w+T2w) x 2 metrics (Dice for the main-text
@@ -40,24 +40,24 @@ GROUPS = {
     "interface": (
         "Tissue interface (CHAOS)", "#2471a3",
         [
-            ("T1in", "datasets/chaos/8_results_chaos/02_metrics/chaos_model/t1in/ablations/ladder_series.json", "o", "-"),
-            ("T2spir", "datasets/chaos/8_results_chaos/02_metrics/chaos_model/t2spir/ablations/ladder_series.json", "s", "--"),
+            ("T1in", "benchmark/02_tasks/abdomen_healthy/chaos/8_results_chaos/02_metrics/chaos_model/t1in/ablations/ladder_series.json", "o", "-"),
+            ("T2spir", "benchmark/02_tasks/abdomen_healthy/chaos/8_results_chaos/02_metrics/chaos_model/t2spir/ablations/ladder_series.json", "s", "--"),
         ],
     ),
     "no_interface": (
         "No tissue interface (BraTS, Open-MS)", "#c0392b",
         [
-            ("BraTS T1n", "datasets/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1n/ablations/ladder_series.json", "o", "-"),
-            ("BraTS T2w", "datasets/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations/ladder_series.json", "o", "--"),
-            ("Open-MS FLAIR", "datasets/open-ms/8_results_open-ms/02_metrics/open_ms_model/flair/ablations/ladder_series.json", "s", "--"),
-            ("Open-MS T1w", "datasets/open-ms/8_results_open-ms/02_metrics/open_ms_model/t1w/ablations/ladder_series.json", "s", "-"),
+            ("BraTS T1n", "benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1n/ablations/ladder_series.json", "o", "-"),
+            ("BraTS T2w", "benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations/ladder_series.json", "o", "--"),
+            ("Open-MS FLAIR", "benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/02_metrics/open_ms_model/flair/ablations/ladder_series.json", "s", "--"),
+            ("Open-MS T1w", "benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/02_metrics/open_ms_model/t1w/ablations/ladder_series.json", "s", "-"),
         ],
     ),
     "dense": (
         "Dense label map (ON-Harmony)", "#7d3c98",
         [
-            ("T1w", "datasets/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T1w/ablations/ladder_series.json", "o", "-"),
-            ("T2w", "datasets/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T2w/ablations/ladder_series.json", "o", "--"),
+            ("T1w", "benchmark/02_tasks/brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T1w/ablations/ladder_series.json", "o", "-"),
+            ("T2w", "benchmark/02_tasks/brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T2w/ablations/ladder_series.json", "o", "--"),
         ],
     ),
 }

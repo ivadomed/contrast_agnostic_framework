@@ -8,12 +8,12 @@
 #   bash scripts/evaluate/run_meta_task_heatmap.sh [meta_config.yaml]
 #
 # Default meta-config: scripts/evaluate/meta_task_heatmap.yaml
-# Writes: datasets/01_commun_results/meta_task_heatmap_summary.md
-#         datasets/01_commun_results/meta_task_heatmap_heatmap_{dice,hd95}.png
+# Writes: benchmark/01_commun_results/meta_task_heatmap_summary.md
+#         benchmark/01_commun_results/meta_task_heatmap_heatmap_{dice,hd95}.png
 set -euo pipefail
 : "${PROJECT_ROOT:=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 export PROJECT_ROOT
 PY="${PROJECT_ROOT}/.venv/bin/python"
-SCRIPT="${PROJECT_ROOT}/datasets/00_commun_scripts/00_03_evaluate/meta_task_heatmap.py"
+SCRIPT="${PROJECT_ROOT}/benchmark/00_commun_scripts/00_03_evaluate/meta_task_heatmap.py"
 CFG="${1:-${PROJECT_ROOT}/scripts/evaluate/meta_task_heatmap.yaml}"
 "$PY" "$SCRIPT" "$CFG"

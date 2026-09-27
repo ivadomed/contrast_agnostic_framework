@@ -21,7 +21,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-PREP = ROOT / "datasets/on-harmony/2_nnUNet_on-harmony/preprocessed/Dataset030_OnHarmonyT1w"
+PREP = ROOT / "benchmark/02_tasks/brain_healthy/on-harmony/2_nnUNet_on-harmony/preprocessed/Dataset030_OnHarmonyT1w"
 N_WARMUP = 5
 N_ITERS = 20
 

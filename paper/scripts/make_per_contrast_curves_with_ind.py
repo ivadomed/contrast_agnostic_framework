@@ -40,8 +40,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 REPO = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_00_utils"))
-sys.path.insert(0, str(REPO / "datasets/00_commun_scripts/00_03_evaluate"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
+sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
 from ladder_ood_common import (  # noqa: E402
     load_case_means, resolve_run_dir, rung_means, _per_contrast_rung_means,
     _cross_dataset_contrast_labels, _per_contrast_rung_means_cross_dataset, _dataset_name,
@@ -60,14 +60,14 @@ def _load_wrapper(path: Path):
 
 
 WRAPPERS = [
-    ("CHAOS T1in", "datasets/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py"),
-    ("ON-Harmony T1w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"),
-    ("Brats-GLI T1n", "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
-    ("Open-MS FLAIR", "datasets/open-ms/5_scripts_open-ms/06_evaluate/06_14_ladder_summary_ood.py"),
-    ("CHAOS T2spir", "datasets/chaos/5_scripts_chaos/06_evaluate/06_33_ladder_summary_t2spir.py"),
-    ("ON-Harmony T2w", "datasets/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
-    ("Brats-GLI T2w", "datasets/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
-    ("Open-MS T1w", "datasets/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
+    ("CHAOS T1in", "benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py"),
+    ("ON-Harmony T1w", "benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"),
+    ("Brats-GLI T1n", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
+    ("Open-MS FLAIR", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_14_ladder_summary_ood.py"),
+    ("CHAOS T2spir", "benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_33_ladder_summary_t2spir.py"),
+    ("ON-Harmony T2w", "benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
+    ("Brats-GLI T2w", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
+    ("Open-MS T1w", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
     # ATLAS-Liver-HCC REMOVED 2026-09-02 -- dataset excluded from the paper
     # entirely, see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)".
 ]

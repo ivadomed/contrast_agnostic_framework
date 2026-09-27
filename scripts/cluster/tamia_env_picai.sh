@@ -1,7 +1,7 @@
-# Source AFTER datasets/picai-prostate/5_scripts_picai-prostate/00_utils/env.sh (or
+# Source AFTER benchmark/picai-prostate/5_scripts_picai-prostate/00_utils/env.sh (or
 # env_adc.sh), to point picai-prostate's OWN training/prediction at scratch-resident data
 # on tamia. Mirrors scripts/cluster/tamia_env_openms.sh's pattern (own-training override).
-#   source datasets/picai-prostate/5_scripts_picai-prostate/00_utils/env_adc.sh
+#   source benchmark/picai-prostate/5_scripts_picai-prostate/00_utils/env_adc.sh
 #   source scripts/cluster/tamia_env_picai.sh
 #
 # tamia's /project is at 492K/500K FILES (file count, not space, is the binding quota there),

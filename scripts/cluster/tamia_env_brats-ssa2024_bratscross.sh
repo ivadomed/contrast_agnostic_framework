@@ -1,7 +1,7 @@
-# Source AFTER datasets/brats-ssa2024/5_scripts_brats-ssa2024/00_utils/env.sh (or env_t2w.sh),
+# Source AFTER benchmark/03_archive/brats-ssa2024/5_scripts_brats-ssa2024/00_utils/env.sh (or env_t2w.sh),
 # to point brats-ssa2024's cross-dataset (brats2024-glioma-model) prediction at
 # scratch-resident data on tamia.
-#   source datasets/brats-ssa2024/5_scripts_brats-ssa2024/00_utils/env.sh
+#   source benchmark/03_archive/brats-ssa2024/5_scripts_brats-ssa2024/00_utils/env.sh
 #   source scripts/cluster/tamia_env_brats-ssa2024_bratscross.sh
 # Cluster differences are expressed as env overrides only -- run_job.sh / predict_common.sh
 # are never forked. Mirrors tamia_env_mslesseg_openmscross.sh's pattern (same section-14

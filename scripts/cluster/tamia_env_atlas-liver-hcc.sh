@@ -1,8 +1,8 @@
-# Source AFTER datasets/atlas-liver-hcc/5_scripts_atlas-liver-hcc/00_utils/env.sh, to
+# Source AFTER benchmark/03_archive/atlas-liver-hcc/5_scripts_atlas-liver-hcc/00_utils/env.sh, to
 # point atlas-liver-hcc's OWN training/prediction at scratch-resident data on tamia.
 # Mirrors scripts/cluster/tamia_env_openms.sh's pattern (own-training override, single
 # training contrast).
-#   source datasets/atlas-liver-hcc/5_scripts_atlas-liver-hcc/00_utils/env.sh
+#   source benchmark/03_archive/atlas-liver-hcc/5_scripts_atlas-liver-hcc/00_utils/env.sh
 #   source scripts/cluster/tamia_env_atlas-liver-hcc.sh
 
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
