@@ -24,6 +24,11 @@ train-one-modality / evaluate-cross-contrast methodology (see root `CLAUDE.md`).
 | `PALETTE-05+Paper` | `auglabAug_v26_6_2` (**OURS**) | auglab | user-confirmed 2026-08-05 |
 | `PALETTE-05+GE` | `palette05_ge` | auglab | extra arm, **not** part of the fixed 6 — kept under its own name rather than force-mapped |
 
+`palette05_ge`'s `eval_all.csv` files exist on disk under `8_results_healthy-spine-tum/02_metrics/`
+but are intentionally excluded from every `06_evaluate/configs/*.yaml` — it never appears in the
+per-modality, combined, or significance tables. This is a deliberate scope decision (not part of
+the fixed 6/7-method suite), not an oversight.
+
 No SRCSM arm is present in this drop — the 6-method table for this dataset is currently missing
 that row (unlike the 4 core training datasets, which have all 6).
 
