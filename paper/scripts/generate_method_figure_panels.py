@@ -176,12 +176,20 @@ CASES = [
      "benchmark/02_tasks/brain_healthy/on-harmony/2_nnUNet_on-harmony/raw/Dataset031_OnHarmonyT1w31/labelsTr/sub-03286_ses-NOT2ING001_T1w.nii.gz"),
 ]
 
-for slug, img_rel, lbl_rel in CASES:
-    img_slice, lbl_slice = load_slice(REPO / img_rel, REPO / lbl_rel)
-    img_slice, lbl_slice = crop_to_foreground(img_slice, lbl_slice)
-    img01 = normalize01(img_slice)
-    panels = run_pipeline(img01, lbl_slice)
-    for letter, arr in panels.items():
-        out = OUT_DIR / f"{slug}_{letter}.png"
-        save_panel(arr, out)
-        print(f"-> {out}")
+def main():
+    for slug, img_rel, lbl_rel in CASES:
+        img_slice, lbl_slice = load_slice(REPO / img_rel, REPO / lbl_rel)
+        img_slice, lbl_slice = crop_to_foreground(img_slice, lbl_slice)
+        img01 = normalize01(img_slice)
+        panels = run_pipeline(img01, lbl_slice)
+        for letter, arr in panels.items():
+            out = OUT_DIR / f"{slug}_{letter}.png"
+            save_panel(arr, out)
+            print(f"-> {out}")
+
+
+# Guarded so run_pipeline() can be imported and reused (it is, by
+# make_brats_contrast_overlay_figure.py) without regenerating this figure's
+# ten panels as an import side effect and stamping new mtimes on them.
+if __name__ == "__main__":
+    main()

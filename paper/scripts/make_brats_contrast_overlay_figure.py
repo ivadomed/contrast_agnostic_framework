@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """
-Three-panel BraTS illustration: one central axial slice of one case, shown on
-T1w (no overlay), T2w (ground-truth region), and T2-FLAIR (a DEGRADED region).
+BraTS illustration: one central axial slice of one case, shown on T1w (no
+overlay), T2w (ground-truth region), T2-FLAIR (a DEGRADED region), and the
+same T1w slice with PALETTE applied.
+
+Two output forms, from the same slice and the same crop so they line up:
+  * one combined 3-panel PDF/PNG (labelled, for dropping into a document);
+  * individual undecorated PNGs in figures/FRQ_illustration/ (no titles, no
+    axes, overlay burnt into the pixels) for composing slides by hand --
+    same convention as figures/method_panels/.
 
 ⚠️ THE DEGRADED MASK IS SYNTHETIC. It is the ground truth eroded by this
 script, NOT a prediction from any model in this project. Nothing about it is a
@@ -18,11 +25,23 @@ on a genuinely central slice (0.3-0.7 of the S-I extent), so the region reads
 clearly without hunting: sub-BraTSGLI00078101, label 2 (SNFH / peritumoural
 oedema, the largest of the BraTS labels), z=110, 2537 px in plane.
 
+The PALETTE panels are the REAL transform, not a mock-up: they call
+run_pipeline() from generate_method_figure_panels.py, which is built on
+src/synthesis/v26_6_synthesis.py's own _kmeans_1d/_voronoi_region_ids and
+Eq. (1) remap. Two consequences worth knowing. PALETTE is stochastic, so
+N_PALETTE_VARIANTS seeded draws are written and you pick one -- that
+variability IS the method, not noise in the figure. And the transform runs on
+the cropped slice, so its k-means clusters come from this field of view
+rather than the whole volume; for an illustration that is what you want (the
+panels then match pixel-for-pixel), but it is not identical to a training-time
+draw over a full volume.
+
 Usage:
   .venv/bin/python make_brats_contrast_overlay_figure.py
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import nibabel as nib
@@ -37,7 +56,19 @@ REPO = Path(__file__).resolve().parent.parent.parent
 BIDS = (REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma"
              / "1_BIDS_brats2024-glioma/glioma-brain-brats2024")
 OUT_DIR = REPO / "paper" / "cvpr_format_latex" / "figures"
+PANEL_DIR = OUT_DIR / "FRQ_illustration"
 STEM = "brats_contrast_overlay_illustration"
+
+# Reuse the real PALETTE pass rather than reimplementing it — CLAUDE.md's
+# shared-layer rule. generate_method_figure_panels.py is a sibling script, so
+# it is imported by path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from generate_method_figure_panels import (  # noqa: E402
+    normalize01, run_pipeline,
+)
+import torch  # noqa: E402  (only needed to seed the stochastic transform)
+
+N_PALETTE_VARIANTS = 4
 
 CASE = "sub-BraTSGLI00078101"
 Z = 110
@@ -102,6 +133,49 @@ def overlay(ax, base: np.ndarray, mask: np.ndarray, color: str, alpha=0.38):
     ax.imshow(edge, interpolation="nearest")
 
 
+def burn_overlay(base: np.ndarray, mask: np.ndarray | None, color: str,
+                 alpha=0.38) -> np.ndarray:
+    """Grey base + translucent mask + solid 1-px edge, flattened to RGB.
+
+    The standalone panels carry no axes or titles, so the overlay has to live
+    in the pixels rather than in a matplotlib artist drawn on top."""
+    rgb = np.repeat(base[:, :, None], 3, axis=2).astype(float)
+    if mask is None or not mask.any():
+        return np.clip(rgb, 0, 1)
+    c = np.array(matplotlib.colors.to_rgb(color))
+    rgb[mask] = (1 - alpha) * rgb[mask] + alpha * c
+    rgb[outline(mask)] = c
+    return np.clip(rgb, 0, 1)
+
+
+def write_panels(t1_disp, t2_disp, fl_disp, gt, degraded, t1_raw, lbl_slice):
+    """Individual undecorated PNGs, all on the same crop so they overlay."""
+    PANEL_DIR.mkdir(parents=True, exist_ok=True)
+    written = []
+
+    for name, arr in (
+        ("t1w", burn_overlay(t1_disp, None, GOOD)),
+        ("t2w_gt", burn_overlay(t2_disp, gt, GOOD)),
+        ("t2flair_degraded", burn_overlay(fl_disp, degraded, BAD)),
+    ):
+        out = PANEL_DIR / f"{name}.png"
+        plt.imsave(out, arr)
+        written.append(out)
+
+    # PALETTE on the same T1w slice. normalize01 (not the display window) is
+    # what the transform's DARK_THRESHOLD and k-means expect as input.
+    img01 = normalize01(t1_raw)
+    for k in range(1, N_PALETTE_VARIANTS + 1):
+        torch.manual_seed(k)
+        out_arr = run_pipeline(img01, lbl_slice)["e"]
+        out = PANEL_DIR / f"t1w_palette_{k}.png"
+        plt.imsave(out, out_arr, cmap="gray", vmin=0.0, vmax=1.0)
+        written.append(out)
+
+    for w in written:
+        print("wrote", w)
+
+
 def main():
     t1 = load(f"{CASE}/anat/{CASE}_T1w.nii")
     t2 = load(f"{CASE}/anat/{CASE}_T2w.nii")
@@ -149,10 +223,19 @@ def main():
     x0, x1 = max(xs.min() - m, 0), min(xs.max() + m + 1, brain.shape[1])
     crop = (slice(y0, y1), slice(x0, x1))
 
+    t1_disp = window(axial(t1, Z))[crop]
+    t2_disp = window(axial(t2, Z))[crop]
+    fl_disp = window(axial(fl, Z))[crop]
+
+    # Standalone panels first, so a failure in the combined figure's layout
+    # doesn't cost the images that are the actual deliverable here.
+    write_panels(t1_disp, t2_disp, fl_disp, gt[crop], degraded[crop],
+                 axial(t1, Z)[crop], axial(seg, Z)[crop].astype(np.int64))
+
     panels = [
-        (window(axial(t1, Z))[crop], None,            None, "T1w",      "no overlay"),
-        (window(axial(t2, Z))[crop], gt[crop],        GOOD, "T2w",      "ground truth"),
-        (window(axial(fl, Z))[crop], degraded[crop],  BAD,  "T2-FLAIR", "degraded delineation"),
+        (t1_disp, None,           None, "T1w",      "no overlay"),
+        (t2_disp, gt[crop],       GOOD, "T2w",      "ground truth"),
+        (fl_disp, degraded[crop], BAD,  "T2-FLAIR", "degraded delineation"),
     ]
 
     fig, axes = plt.subplots(1, 3, figsize=(10.5, 4.1))
