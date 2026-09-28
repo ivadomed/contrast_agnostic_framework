@@ -330,6 +330,26 @@ per-method wrapper (~5 lines)       dataset shim                         shared 
 
 A new **method** is a ~5-line wrapper (set METHOD/TRAINER/CATEGORY/config, source the dataset common). A new **dataset** gets the numbered `5_scripts_*` skeleton whose `*_common.sh` shims source the shared drivers. **If you catch yourself writing predict/eval/aggregate/significance logic inline, stop — it already exists in `00_commun_scripts` (use it), or belongs there (add it once, for all datasets).**
 
+**⚠️ This "always use the shared/common scripts" rule is the single most important thing in this file, worth restating plainly: never hand-roll a train/predict/evaluate/aggregate/significance step, never copy-paste one dataset's logic into another's, and never write a one-off script for something a shared driver already does.** A 2026-09-27 full-project audit (below) found that the project mostly follows this well — no hand-rolled duplicate logic was found anywhere in eval/aggregate/significance/ladder code across any of the 8 tasks — but real, costly drift still crept in through **naming/numbering inconsistency** (the same shared script invoked via a differently-numbered wrapper in every dataset) and through **silent staleness** (a hardcoded path/list in a shared file quietly falling behind reality, e.g. a venv-rebuild trainer-shim list that named only 3 of 8 real files, or a cross-task heatmap script that silently blanked 5 of 8 tasks' columns after the `datasets/`→`benchmark/` restructuring and nobody re-ran it to notice). Two concrete habits that prevent this going forward:
+- **New dataset → scaffold it, don't hand-write it.** `benchmark/create_dataset_structure.py` now generates the canonical `06_evaluate/` skeleton (below) for you.
+- **After any change to a shared path/list/glob, run `benchmark/validate_standard_dataset_structure.py` (full repo, no args) before considering the change done** — it now enforces both the 9-subdir structure AND the canonical `06_evaluate/` numbering below (advisory warnings, not hard failures, since real per-dataset exceptions exist — but a new warning after your change is a signal to go look, not to ignore).
+
+### Canonical `06_evaluate/` entry-point numbering (settled 2026-09-27)
+
+Every dataset's `06_evaluate/` should — pending any real exception noted in that dataset's own comments — read as this exact sequence, skipping roles a dataset genuinely doesn't need, but never renumbering the roles it does have:
+
+| Number | Role | Notes |
+|---|---|---|
+| `06_00` | `evaluate<_name>.py` shim | may legitimately be absent (e.g. on-harmony scores inline from its evaluate_run driver) |
+| `06_01` | `evaluate_run.sh` (or `_own_run`/`_testset`/`_ispy2_run`/`eval_mandible_only` — suffix may vary, number must not) | the per-run evaluate driver |
+| `06_02` | `aggregate_from_config.sh` | canonical config-driven aggregate for the dataset's own standalone headline table; documented exceptions use a purpose-built sibling instead of degrading the report — e.g. amos/sliver07's `aggregate_per_organ_from_config.sh`, which reports a per-organ (liver/kidney/spleen) breakdown `aggregate_from_config.py`'s macro-averaged single-number table can't represent, via its own shared script `00_03_evaluate/aggregate_per_organ_from_config.py` rather than a hand-rolled one-off |
+| `06_03` | `significance_from_config.sh` | may legitimately be absent if no significance yaml config exists yet for that dataset — don't invent a config just to fill this slot, but don't leave the wrapper un-added once a config does exist either |
+| `06_04` | `combined_modality_summary.sh` | only if the dataset pools ≥2 of its own training/test-contrast sources into one table (this includes an eval-only cross-dataset companion pooling its own upstream models, e.g. duke-breast-mri pooling ispy2's t1wce-trained + t2w-trained models — "combined" here means "this dataset's own multi-source table", not specifically "≥2 training modalities") |
+| `06_1X` | `ladder_summary*.py` | causal-ablation ladder rung scripts, one per training contrast |
+| `06_9X` | archived legacy script | a superseded hand-rolled script kept only because something still calls it — not a live entry point |
+
+`06_XX_write_configs.py`-style config-generation utilities, one-off backfill/translation-compare scripts, and dataset-specific bespoke analyses (e.g. lesion-wise breakdowns) don't have a canonical number — just don't let them collide with the slots above. `validate_standard_dataset_structure.py` checks this automatically; a WARN from it means go verify, not "ignore, it's just advisory."
+
 ### Standardized output layout (so aggregation/significance/plots stay uniform)
 
 ```
