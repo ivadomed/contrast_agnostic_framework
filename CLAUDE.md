@@ -62,13 +62,11 @@ Only `04_train/04_00_common.sh` (brats2024-glioma) and `00_utils/00_00_download_
 - `nnunetv2==2.7.0` (the version this project is built against) isn't in the Alliance wheelhouse at all (only 2.5.1/2.1 are) — pre-download it with `pip download --no-deps` on the login node first, same for its two underversioned transitive deps (`acvl-utils>=0.2.6,<0.3`, `dynamic-network-architectures>=0.4.1,<0.5`) and `batchgeneratorsv2>=0.3.2` (wheelhouse only has 0.3.0).
 - Plain `pip install "monai[all]"` silently backtracks to a broken `monai==0.1.0` if any single extra can't be satisfied locally — it does NOT error, it just degrades. Pin `monai==1.5.2` explicitly and install its extras as an enumerated list, excluding `clearml`/`nni`/`mlflow` (three different experiment-tracking/AutoML tools this project doesn't use — WandB is the actual tracker — and each hits an unsatisfiable-from-wheelhouse pin) and `itk`/`pyamg` (no python-3.11 build / absent entirely; unused — SimpleITK+nibabel already cover the imaging I/O monai would otherwise want itk for).
 
-nnunetv2 also needs 4 files restored that exist ONLY as plain pip-installed files inside its own site-packages dir — there is no auto-copy step for these (unlike the `auglab_add_nnunettrainer` mechanism below), so a fresh `pip install nnunetv2` will NOT bring them back on its own (the setup script above already does this; listed here for when it needs doing by hand):
+nnunetv2 also needs files restored that exist ONLY as plain pip-installed files inside its own site-packages dir — there is no auto-copy step for these (unlike the `auglab_add_nnunettrainer` mechanism below), so a fresh `pip install nnunetv2` will NOT bring them back on its own (the setup script above already does this; listed here for when it needs doing by hand):
 1. `cp src/nnunet/patches/nnunet_logger.py .venv/lib/python3.*/site-packages/nnunetv2/training/logging/nnunet_logger.py` — hand-patched WandB logger (`nnUNet_wandb_run_id` resume + `allow_val_change` for epoch-extension). Without it, WandB resume-by-id and raising `NNUNET_NUM_EPOCHS` on resume both break.
-2. `cp benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/02_nnunet/BraTS2024GliomaTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
-3. `cp benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/02_nnunet/CHAOSTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
-4. `cp benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/02_nnunet/OnHarmonyTrainers.py .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/`
+2. Every dataset's own nnU-Net trainer-registration shim (each `5_scripts_<name>/02_nnunet/*Trainers.py`) — **auto-discovered and copied via `find benchmark/02_tasks -path '*/02_nnunet/*Trainers.py'`** (fixed 2026-09-27: this used to be a hand-maintained list that had already silently drifted out of sync with reality — it named only 3 of the 8 real shims that existed at the time, missing `OpenMSTrainers.py` from the script itself and `CHAOSLowDataTrainers.py`/`ISPY2Trainers.py`/`ToothFairy2Trainers.py`/`TotalsegPelvicTrainers.py` from both the script and this doc entirely). A hardcoded list can't help but silently miss a future dataset's shim — training then fails with a cryptic "trainer not found", with no link back to this root cause. Don't reintroduce a fixed list here; if you need to know the current real roster, just run that `find` command.
 
-(2–4 are "registration shims" — nnU-Net's `recursive_find_python_class` only searches inside its own `training/nnUNetTrainer/` dir, so each dataset's real trainer classes, which safely live in git under e.g. `benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/brats2024_glioma/trainers/` already, need a thin shim there that imports them via `NNUNET_PROJECT_ROOT`. Without its shim, **no custom trainer for that dataset is discoverable at all** — training fails with "trainer not found".)
+(2 is a "registration shim" mechanism — nnU-Net's `recursive_find_python_class` only searches inside its own `training/nnUNetTrainer/` dir, so each dataset's real trainer classes, which safely live in git under e.g. `benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/brats2024_glioma/trainers/` already, need a thin shim there that imports them via `NNUNET_PROJECT_ROOT`. Without its shim, **no custom trainer for that dataset is discoverable at all** — training fails with "trainer not found".)
 
 Also re-run for the AugLab-provided trainers (source of truth: the separate git repo at `sub-workspaces/auglab_workspace/AugLab/`, editable-installed): `pip install -e sub-workspaces/auglab_workspace/AugLab`, then `auglab_add_nnunettrainer -t nnUNetTrainerDAExt` and `-t nnUNetTrainerTest`.
 
@@ -586,8 +584,15 @@ configs against this standard if revisiting them.
   orphaned now that AMBL is archived (see "Breast task" section above). Same call as the archived
   liver-HCC datasets' `tamia_env_*` files: harmless, leave in place unless doing a dedicated pass.
 
-**Known inconsistency worth fixing during cleanup:** the four ablation ladders do not share a summary
-format — BraTS T1n and CHAOS T2spir have `ablations/ladder_summary.md` with explicit rung tables,
-while Open-MS FLAIR and CHAOS T1in only have per-contrast `*_summary.md` whose OOD rungs must be
-averaged by hand. **This let a wrong number into the paper's central table** (an HD95 delta
-transcribed from the wrong ladder). Unify them onto one generator.
+**Correction (2026-09-27): the ladder-format inconsistency below is stale, already fixed.** This note
+used to say the four ablation ladders didn't share a summary format (BraTS T1n/CHAOS T2spir having an
+explicit `ablations/ladder_summary.md` rung table, Open-MS FLAIR/CHAOS T1in only having per-contrast
+`*_summary.md` requiring hand-averaging) and that this caused a wrong HD95 number in the paper's
+central table. That divergence was root-caused to `benchmark/00_commun_scripts/00_03_evaluate/
+ladder_ood_common.py`'s extraction (2026-08-03) already having fixed this: `run_ladder()`/
+`run_ladder_cross_dataset()` unconditionally write `ablations/ladder_summary.md` with the explicit
+rung table for every caller — verified 2026-09-27 that all four datasets' ladder scripts
+(`06_1X_ladder_summary*.py`) already call into this shared engine and already have the rung-table
+`ladder_summary.md` on disk (open-ms: `flair/ablations/`, `t1w/ablations/`; chaos: `t1in/ablations/`,
+`t2spir/ablations/`). No code change was needed — this note itself just hadn't been updated after the
+2026-08-03 consolidation.

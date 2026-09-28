@@ -79,10 +79,17 @@ auglab_add_nnunettrainer -t nnUNetTrainerTest --overwrite
 echo "=== restoring this project's nnunetv2 patches (see CLAUDE.md) ==="
 SITE_PKGS="$(python -c 'import nnunetv2, os; print(os.path.dirname(os.path.dirname(nnunetv2.__file__)))')"
 cp src/nnunet/patches/nnunet_logger.py "${SITE_PKGS}/nnunetv2/training/logging/nnunet_logger.py"
-cp benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/02_nnunet/BraTS2024GliomaTrainers.py "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
-cp benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/02_nnunet/CHAOSTrainers.py "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
-cp benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/02_nnunet/OnHarmonyTrainers.py "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
-cp benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/02_nnunet/OpenMSTrainers.py "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
+
+# Auto-discover every dataset's nnU-Net trainer-registration shim instead of a
+# hand-maintained list -- a hardcoded list silently misses any new dataset's
+# shim (training then fails with a cryptic "trainer not found", with no link
+# back to this root cause). Only benchmark/02_tasks/ (active datasets) is
+# scanned -- benchmark/03_archive/ datasets don't need their trainers
+# registered for anyone to actually train against.
+while IFS= read -r shim; do
+    echo "  -> ${shim}"
+    cp "${shim}" "${SITE_PKGS}/nnunetv2/training/nnUNetTrainer/"
+done < <(find benchmark/02_tasks -path '*/02_nnunet/*Trainers.py' | sort)
 
 echo "=== verification ==="
 export NNUNET_PROJECT_ROOT="$(pwd)"
@@ -90,13 +97,19 @@ python -c "
 import importlib.metadata as m
 import torch, numpy, scipy, kornia, nibabel, wandb, monai, batchgeneratorsv2, torchio
 import auglab, nnunetv2
-from nnunetv2.training.nnUNetTrainer.BraTS2024GliomaTrainers import nnUNetTrainerBraTS2024GliomaV26_6_2
-from nnunetv2.training.nnUNetTrainer.CHAOSTrainers import nnUNetTrainerCHAOSV26_6_2
-from nnunetv2.training.nnUNetTrainer.OnHarmonyTrainers import nnUNetTrainerOnHarmonyV26_6_2
-from nnunetv2.training.nnUNetTrainer.OpenMSTrainers import nnUNetTrainerOpenMSV26_6_2
+import importlib.util, pathlib
 from nnunetv2.training.nnUNetTrainer.nnUNetTrainerDAExt import nnUNetTrainerDAExt
 from nnunetv2.training.nnUNetTrainer.nnUNetTrainerTest import nnUNetTrainerTest
 from nnunetv2.training.logging.nnunet_logger import WandbLogger
+# Every auto-discovered *Trainers.py shim must import cleanly on its own --
+# this is what recursive_find_python_class relies on at train time, so a
+# broken shim here means training would fail later with no earlier warning.
+trainer_dir = pathlib.Path(nnunetv2.__file__).parent / 'training' / 'nnUNetTrainer'
+for shim in sorted(trainer_dir.glob('*Trainers.py')):
+    spec = importlib.util.spec_from_file_location(shim.stem, shim)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    print(f'  shim OK: {shim.name}')
 print('torch', torch.__version__, 'cuda_available=', torch.cuda.is_available())
 print('nnunetv2', m.version('nnunetv2'))
 print('monai', monai.__version__)
