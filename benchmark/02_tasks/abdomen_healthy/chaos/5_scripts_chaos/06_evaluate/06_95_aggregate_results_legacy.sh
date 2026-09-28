@@ -13,10 +13,9 @@
 # Prerequisites: run 06_evaluate_run.sh for each experiment first.
 
 set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${HERE}/../00_utils/env.sh"
 cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
-source "$(dirname "$0")/../00_utils/env.sh"
-
-HERE="$(cd "$(dirname "$0")" && pwd)"
 
 _AGG_DIR="${METRICS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}"
 echo "[$(date '+%H:%M:%S')] aggregating metrics from ${_AGG_DIR}/"

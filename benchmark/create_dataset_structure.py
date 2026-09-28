@@ -68,7 +68,7 @@ _EVALUATE_RUN_SH_TEMPLATE = '''#!/usr/bin/env bash
 # it silently writes an empty, _logs-only metrics dir. Check eval_all.csv actually
 # exists before trusting a run finished.
 set -euo pipefail
-source "$(dirname "$0")/../00_utils/env.sh"
+source "$(dirname "${{BASH_SOURCE[0]}}")/../00_utils/env.sh"
 cd "${{PROJECT_ROOT}}"
 
 RUN_ID="${{1:?need RUN_ID}}"
@@ -84,7 +84,7 @@ _AGGREGATE_FROM_CONFIG_SH_TEMPLATE = '''#!/usr/bin/env bash
 # do NOT compute ad-hoc tables or p-values; the inline "sig. vs ref" column is auto-wired).
 #   bash 06_02_aggregate_from_config.sh [configs/{dataset}_01_results.yaml]
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")" && pwd)"
+HERE="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
 source "${{HERE}}/../00_utils/env.sh"
 cd "${{PROJECT_ROOT}}"
 CFG="${{1:-configs/{dataset}_01_results.yaml}}"
@@ -96,7 +96,7 @@ _SIGNIFICANCE_FROM_CONFIG_SH_TEMPLATE = '''#!/usr/bin/env bash
 # Full paired-significance report for {dataset} (canonical shared driver).
 #   bash 06_03_significance_from_config.sh [configs/{dataset}_01_results.yaml]
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")" && pwd)"
+HERE="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
 source "${{HERE}}/../00_utils/env.sh"
 cd "${{PROJECT_ROOT}}"
 CFG="${{1:-configs/{dataset}_01_results.yaml}}"

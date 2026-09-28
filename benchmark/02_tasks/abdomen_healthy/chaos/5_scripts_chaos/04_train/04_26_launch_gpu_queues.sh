@@ -32,8 +32,8 @@
 # Usage:
 #   bash benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/04_train/04_26_launch_gpu_queues.sh
 
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
-SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 TS="$(date +%Y%m%d_%H%M%S)"
 
 # Shared RUN_IDs for new batch5 runs (all 4 GPUs train different folds of each)

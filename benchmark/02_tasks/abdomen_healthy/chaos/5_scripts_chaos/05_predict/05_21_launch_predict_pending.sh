@@ -13,8 +13,8 @@
 #           auglabAug_090_val000 f0-3 | auglabAug_090_val100 f0-3
 #           synthseg_EM_val100 f0-3
 
+S="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
-S="$(cd "$(dirname "$0")" && pwd)"
 
 # Run IDs
 R090_100="chaos_t1in_v26_6_2_train090_val100_20260615_213615"

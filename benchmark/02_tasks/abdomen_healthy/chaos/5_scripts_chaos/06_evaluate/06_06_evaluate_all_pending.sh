@@ -10,8 +10,8 @@
 # After all evals complete, re-runs 06_02_aggregate_results.sh.
 
 set -euo pipefail
+EVAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd /home/ge.polymtl.ca/pahoa/mri_synthesis_project
-EVAL_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "[$(date '+%H:%M:%S')] Evaluating all pending CHAOS runs"
 
