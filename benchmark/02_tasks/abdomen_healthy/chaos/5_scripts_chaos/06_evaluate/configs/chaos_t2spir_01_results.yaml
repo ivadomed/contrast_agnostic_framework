@@ -5,7 +5,7 @@
 # being dropped, so the method list/order stays fixed.
 title: "CHAOS T2spir — results"
 metrics_dir: "${METRICS_ROOT}/chaos_model/t2spir"
-output_prefix: "03_01_results"
+output_prefix: "01_results"
 in_domain_contrast: t2spir
 
 runs:

@@ -1,6 +1,6 @@
 title: "CHAOS T1in models — cross-dataset results"
 in_domain_contrast: chaos_t1in
-output_prefix: "04_01_cross_dataset_t1in"
+output_prefix: "02_cross_dataset_t1in"
 output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/8_results_chaos/02_metrics/chaos_model/t1in"
 
 column_order:

@@ -8,7 +8,7 @@
 title: "SLIVER07 — MR→CT Generalization Results (chaos-trained models)"
 metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
 output_dir: "${METRICS_ROOT}/chaos_model/t1in"
-output_prefix: "00_comparison"
+output_prefix: "01_comparison"
 
 runs:
   - chaos_t1in_baseline_20260614_153230

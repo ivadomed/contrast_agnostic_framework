@@ -25,7 +25,7 @@ Config YAML format (same style as aggregate_from_config.py):
   title: "AMOS — MR->CT/MRI Generalization Results"
   metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
   output_dir: "${METRICS_ROOT}/chaos_model/t1in"      # explicit -- never omit
-  output_prefix: "00_comparison"
+  output_prefix: "01_comparison"
   runs:
     - chaos_t1in_baseline_20260614_153230
     - chaos_t1in_auglabAug_v26_6_2_train050_val100_20260616_112420
@@ -81,7 +81,7 @@ def main():
     metrics_dir = Path(os.path.expandvars(cfg["metrics_dir"]))
     out_dir = Path(os.path.expandvars(cfg.get("output_dir", cfg["metrics_dir"])))
     title = cfg.get("title", "Aggregated Results")
-    output_prefix = cfg.get("output_prefix", "00_comparison")
+    output_prefix = cfg.get("output_prefix", "01_comparison")
     run_keys = cfg.get("runs", [])
 
     if not metrics_dir.is_dir():
