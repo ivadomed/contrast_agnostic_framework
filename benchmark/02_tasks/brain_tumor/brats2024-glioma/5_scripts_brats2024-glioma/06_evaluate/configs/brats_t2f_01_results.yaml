@@ -1,6 +1,6 @@
 title: "BraTS 2024 Glioma T2f (FLAIR) — results (incl. srcsm 7th arm)"
 metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t2f"
-output_prefix: "03_01_results"
+output_prefix: "01_results"
 in_domain_contrast: t2f
 
 # FLAIR (t2f) as a TRAINING modality — added 2026-09-17 (previously held-out only). Same fixed

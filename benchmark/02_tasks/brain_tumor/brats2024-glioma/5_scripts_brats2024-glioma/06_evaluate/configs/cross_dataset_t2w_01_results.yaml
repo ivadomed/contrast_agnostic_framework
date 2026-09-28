@@ -3,7 +3,7 @@
 # for the T1n analog and general notes.
 title: "brats2024-glioma T2w models -- own test set + brats-ssa2024 cross-dataset generalization"
 in_domain_contrast: brats_t2w
-output_prefix: "04_01_cross_dataset_t2w"
+output_prefix: "02_cross_dataset_t2w"
 output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w"
 
 column_order:

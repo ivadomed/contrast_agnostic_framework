@@ -1,6 +1,6 @@
 title: "BraTS 2024 Glioma T1c (contrast-enhanced T1) — results (incl. srcsm 7th arm)"
 metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t1c"
-output_prefix: "03_01_results"
+output_prefix: "01_results"
 in_domain_contrast: t1c
 
 # T1c as a TRAINING modality — added 2026-09-21 (the last of the four BraTS contrasts; t1n/t2w/t2f were already
