@@ -120,9 +120,16 @@ PACK_GPU_TYPE=h100 PACK_NODE_GPUS=4 PACK_TIME="${PACK_TIME:-23:59:00}" PACK_CHAI
 PACK_USE_MPS="${PACK_USE_MPS:-0}" PACK_JOB_NAME="${PACK_JOB_NAME:-brats_t2f_suiteB}" \
   bash "${ROOT}/scripts/job_runner/run_job_pack_submit.sh" "${PACK_DIR_B}"
 
-# Pack C: explicit placement — 3 voronoi folds share GPU 3, srcsm's 3 folds get
-# GPUs 0/1/2 each to itself (index.tsv row order = voronoi f0,f1,f2, srcsm f0,f1,f2).
+# Pack C: explicit placement via the shared generator — 3 voronoi folds share
+# one GPU, srcsm's 3 folds get one GPU each to itself (srcsm measured ~3x
+# slower/epoch, see the note above). Pilot migration to
+# scripts/job_runner/generate_pack_gpu_map.py (2026-09-27): reproduces this
+# pack's original hand-written "3 3 3 0 1 2" exactly, derived instead of
+# hardcoded so it stays correct if the fold/method mix here ever changes.
+C_GPU_MAP="$(python3 "${ROOT}/scripts/job_runner/generate_pack_gpu_map.py" \
+    "${PACK_DIR_C}/index.tsv" --gpus 4 --heavy srcsm)"
+echo "[tamia-pack] Pack C GPU map (generated): ${C_GPU_MAP}"
 PACK_GPU_TYPE=h100 PACK_NODE_GPUS=4 PACK_TIME="${PACK_TIME:-23:59:00}" PACK_CHAIN="${PACK_CHAIN:-10}" \
 PACK_USE_MPS="${PACK_USE_MPS:-0}" PACK_JOB_NAME="${PACK_JOB_NAME:-brats_t2f_suiteC}" \
-PACK_GPU_MAP="3 3 3 0 1 2" \
+PACK_GPU_MAP="${C_GPU_MAP}" \
   bash "${ROOT}/scripts/job_runner/run_job_pack_submit.sh" "${PACK_DIR_C}"
