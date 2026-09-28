@@ -848,7 +848,12 @@ def main():
     else:
         metrics_dir = Path(os.path.expandvars(cfg["metrics_dir"]))
         sources = [{"metrics_dir": metrics_dir, "column_prefix": "", "column_rename": {}}]
-        out_dir = metrics_dir
+        # output_dir: explicit key, or fall back to metrics_dir (same precedence
+        # as the multi-source branch above -- this used to unconditionally use
+        # metrics_dir here, silently ignoring an explicit output_dir for any
+        # single-source config; fixed 2026-09-27, see checkpoint_comparison/
+        # reports that had always landed in the parent dir instead).
+        out_dir = Path(os.path.expandvars(cfg["output_dir"])) if "output_dir" in cfg else metrics_dir
         if not metrics_dir.is_dir():
             print(f"  note: metrics_dir does not exist yet: {metrics_dir}", file=sys.stderr)
         multi_source = False
