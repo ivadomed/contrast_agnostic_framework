@@ -70,6 +70,15 @@ import torch  # noqa: E402  (only needed to seed the stochastic transform)
 
 N_PALETTE_VARIANTS = 4
 
+# Export scale for the standalone panels. The DATA is 1 mm isotropic
+# (182x218x182, the same grid for all four contrasts and the segmentation --
+# BraTS resamples to an atlas upstream and does not ship the native
+# acquisition), so the crop below is 140x168 real voxels and that is the hard
+# information ceiling. SCALE only adds pixels so the panel does not look
+# blocky when a slide blows it up; it invents no detail. Set SCALE = 1 for a
+# strictly 1:1 export.
+SCALE = 8
+
 CASE = "sub-BraTSGLI00078101"
 Z = 110
 LABEL = 2                 # SNFH / peritumoural oedema — the largest BraTS label
@@ -133,18 +142,45 @@ def overlay(ax, base: np.ndarray, mask: np.ndarray, color: str, alpha=0.38):
     ax.imshow(edge, interpolation="nearest")
 
 
+def upscale(arr: np.ndarray, order: int) -> np.ndarray:
+    """Enlarge by SCALE.
+
+    order=3 for continuous anatomy; order=0 (nearest) for MASKS, so a region
+    boundary lands exactly where the voxels put it instead of feathering.
+
+    PALETTE output gets order=1, not 0. It is tempting to treat it as
+    piecewise-constant and keep hard edges, but it is not: the affine remap
+    preserves within-region texture (that is the entire point of the method),
+    so it carries real voxel-level detail just like the anatomy. Nearest
+    leaves it in visible SCALE-sized blocks while the neighbouring anatomy
+    panels are smooth -- a display artifact that reads as PALETTE being
+    coarse, which would misrepresent it. Bilinear rather than cubic because
+    the region boundaries are genuine step edges and cubic rings at them."""
+    if SCALE == 1:
+        return arr
+    return ndimage.zoom(arr.astype(float), SCALE, order=order,
+                        mode="nearest", grid_mode=False)
+
+
 def burn_overlay(base: np.ndarray, mask: np.ndarray | None, color: str,
                  alpha=0.38) -> np.ndarray:
-    """Grey base + translucent mask + solid 1-px edge, flattened to RGB.
+    """Grey base + translucent mask + solid edge, flattened to RGB, at SCALE.
 
     The standalone panels carry no axes or titles, so the overlay has to live
-    in the pixels rather than in a matplotlib artist drawn on top."""
-    rgb = np.repeat(base[:, :, None], 3, axis=2).astype(float)
+    in the pixels rather than in a matplotlib artist drawn on top. Anatomy is
+    interpolated smoothly but the mask is not, so the region boundary stays
+    exactly where the voxels put it instead of feathering."""
+    big = np.clip(upscale(base, order=3), 0, 1)
+    rgb = np.repeat(big[:, :, None], 3, axis=2).astype(float)
     if mask is None or not mask.any():
         return np.clip(rgb, 0, 1)
+    m = upscale(mask.astype(float), order=0) > 0.5
     c = np.array(matplotlib.colors.to_rgb(color))
-    rgb[mask] = (1 - alpha) * rgb[mask] + alpha * c
-    rgb[outline(mask)] = c
+    rgb[m] = (1 - alpha) * rgb[m] + alpha * c
+    # Edge thickness tracks SCALE, or an upscaled 1-px line vanishes.
+    w = max(1, SCALE // 3)
+    edge = m & ~ndimage.binary_erosion(m, np.ones((2 * w + 1, 2 * w + 1), bool))
+    rgb[edge] = c
     return np.clip(rgb, 0, 1)
 
 
@@ -169,11 +205,16 @@ def write_panels(t1_disp, t2_disp, fl_disp, gt, degraded, t1_raw, lbl_slice):
         torch.manual_seed(k)
         out_arr = run_pipeline(img01, lbl_slice)["e"]
         out = PANEL_DIR / f"t1w_palette_{k}.png"
-        plt.imsave(out, out_arr, cmap="gray", vmin=0.0, vmax=1.0)
+        # PALETTE runs at native voxel resolution (the real transform on real
+        # voxels); only its output is enlarged, for display.
+        plt.imsave(out, np.clip(upscale(out_arr, order=1), 0, 1),
+                   cmap="gray", vmin=0.0, vmax=1.0)
         written.append(out)
 
-    for w in written:
-        print("wrote", w)
+    h, w_ = gt.shape
+    print(f"  panels: {w_}x{h} voxels -> {w_ * SCALE}x{h * SCALE} px (SCALE={SCALE})")
+    for f in written:
+        print("wrote", f)
 
 
 def main():
