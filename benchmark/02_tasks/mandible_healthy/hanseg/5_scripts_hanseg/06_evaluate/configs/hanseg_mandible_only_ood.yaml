@@ -35,11 +35,11 @@
 title: "HaN-Seg — ToothFairy2 CBCT models, OOD only (mandible-only scoring)"
 in_domain_contrast: __none__
 output_prefix: "01_hanseg_ood_mandible_only"
-output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics_mandible_only/toothfairy2_model/cbct"
+output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/cbct"
 column_order: [hanseg_ct, hanseg_mrt1]
 
 sources:
-  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/hanseg/8_results_hanseg/02_metrics_mandible_only/toothfairy2_model/cbct"
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/hanseg/8_results_hanseg/02_metrics/toothfairy2_model/cbct"
     column_prefix: "hanseg_"
 
 runs:
