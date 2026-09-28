@@ -13,7 +13,7 @@
 # 06_03_significance_from_config.sh (same config, run separately).
 title: "open-ms FLAIR models — own test set (no external cross-dataset source currently)"
 in_domain_contrast: open-ms_flair
-output_prefix: "04_01_cross_dataset_flair"
+output_prefix: "02_cross_dataset_flair"
 output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/02_metrics/open_ms_model/flair"
 
 column_order:

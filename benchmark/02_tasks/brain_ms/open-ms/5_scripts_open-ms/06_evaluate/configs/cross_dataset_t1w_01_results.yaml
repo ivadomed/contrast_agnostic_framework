@@ -11,7 +11,7 @@
 # config, run separately).
 title: "open-ms T1w-TRAINED models -- own test set (no external cross-dataset source currently)"
 in_domain_contrast: open-ms_t1w
-output_prefix: "04_01_cross_dataset_t1w"
+output_prefix: "02_cross_dataset_t1w"
 output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/02_metrics/open_ms_model/t1w"
 
 column_order:
