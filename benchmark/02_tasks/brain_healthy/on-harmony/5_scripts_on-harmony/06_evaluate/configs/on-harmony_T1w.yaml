@@ -10,7 +10,7 @@
 # way as the other on-harmony tables, not as newly trustworthy.
 title: "ON-Harmony — T1w-trained models, cross-contrast (incl. srcsm)"
 metrics_dir: "${METRICS_ROOT}/on_harmony_model/T1w"
-output_prefix: "results"
+output_prefix: "01_results"
 in_domain_contrast: T1w
 
 # Fixed 7-method order (no others): baseline, synthseg_noEM, synthseg_EM,

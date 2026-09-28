@@ -14,7 +14,7 @@
 # way as the existing T1w/T2w tables, not as newly trustworthy.
 title: "ON-Harmony — dwi_ap-trained models, cross-contrast"
 metrics_dir: "${METRICS_ROOT}/on_harmony_model/dwi_ap"
-output_prefix: "results"
+output_prefix: "01_results"
 in_domain_contrast: dwi_ap
 
 # Fixed 7-method order (no others): baseline, synthseg_noEM, synthseg_EM,
