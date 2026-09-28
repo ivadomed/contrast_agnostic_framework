@@ -82,6 +82,90 @@ ALLOWED_ROOT_FILES = {"README.md"}
 REQUIRED_RESULTS_SUBDIRS = {"01_predictions", "02_metrics"}
 REQUIRED_NNUNET_SUBDIRS   = {"raw", "preprocessed"}
 
+# ── 06_evaluate/ canonical entry-point convention (settled 2026-09-27) ─────────
+# Ideal sequence, skipping roles that don't apply to a given dataset:
+#   06_00_evaluate<_name>.py           (shim)
+#   06_01_evaluate_run.sh              (suffix may vary: _own_run/_testset/_ispy2_run/eval_mandible_only)
+#   06_02_aggregate_from_config.sh      (or _results / _per_organ_from_config for documented exceptions)
+#   06_03_significance_from_config.sh
+#   06_04_combined_modality_summary.sh (only if the dataset pools >=2 of its own training modalities)
+# A dataset with NEITHER a 06_00 shim NOR a 06_01 evaluate_run (no in-repo
+# predict/eval pipeline at all, e.g. healthy-spine-tum's externally-imported
+# results) legitimately rebases the whole block down by 1. These are advisory
+# checks (WARN, not hard-fail) since real exceptions exist and more may show
+# up that aren't foreseen here -- see CLAUDE.md's "How experiments work".
+EVAL_ROLE_PATTERNS = {
+    "shim":          re.compile(r"^06_(\d{2})_evaluate(_\w+)?\.py$"),
+    "evaluate_run":  re.compile(r"^06_(\d{2})_(evaluate_run|evaluate_own_run|evaluate_testset|evaluate_\w+_run)\b"),
+    "aggregate":     re.compile(r"^06_(\d{2})_aggregate(_from_config|_results|_per_organ_from_config)\b"),
+    "significance":  re.compile(r"^06_(\d{2})_significance_from_config\b"),
+    "combined":      re.compile(r"^06_(\d{2})_combined_modality_summary\b"),
+}
+# `eval_mandible_only` (pddca's naming) only counts as fulfilling the
+# "evaluate_run" role when nothing else in the directory already matches the
+# standard patterns above -- some datasets (hanseg) have BOTH a standard
+# evaluate_run.sh AND a separate, differently-purposed eval_mandible_only.sh,
+# and treating the latter as a second "evaluate_run" there is a false positive.
+EVAL_RUN_FALLBACK_PATTERN = re.compile(r"^06_(\d{2})_eval_mandible_only\b")
+EVAL_CANONICAL_NUMBER = {"shim": 0, "evaluate_run": 1, "aggregate": 2, "significance": 3, "combined": 4}
+EVAL_LEGACY_ARCHIVE_MIN = 90  # 06_9X = intentionally archived legacy script, not canonical
+
+
+def validate_eval_entry_points(ds_path: Path, ds: str, slot_map: dict) -> list[str]:
+    if "5" not in slot_map:
+        return []
+    ev_dir = ds_path / slot_map["5"] / "06_evaluate"
+    if not ev_dir.is_dir():
+        return []
+
+    files = sorted(f.name for f in ev_dir.iterdir() if f.is_file())
+    found: dict[str, list[int]] = {role: [] for role in EVAL_ROLE_PATTERNS}
+    for f in files:
+        for role, pat in EVAL_ROLE_PATTERNS.items():
+            m = pat.match(f)
+            if m:
+                num = int(m.group(1))
+                if role == "aggregate" and num >= EVAL_LEGACY_ARCHIVE_MIN:
+                    continue  # intentionally archived legacy script, not canonical
+                found[role].append(num)
+
+    if not found["evaluate_run"]:
+        for f in files:
+            m = EVAL_RUN_FALLBACK_PATTERN.match(f)
+            if m:
+                found["evaluate_run"].append(int(m.group(1)))
+
+    warnings: list[str] = []
+
+    for role, nums in found.items():
+        if len(nums) > 1:
+            warnings.append(f"  [06_evaluate] multiple '{role}' entry points found at "
+                             f"{', '.join(f'06_{n:02d}' for n in sorted(nums))} -- expected exactly one")
+
+    offset = 1 if not found["shim"] and not found["evaluate_run"] else 0
+
+    for role in ("aggregate", "significance", "combined"):
+        nums = found[role]
+        if not nums:
+            continue
+        expected = EVAL_CANONICAL_NUMBER[role] - offset
+        actual = nums[0]
+        if actual != expected:
+            warnings.append(f"  [06_evaluate] '{role}' entry point at 06_{actual:02d}_*, expected "
+                             f"06_{expected:02d}_* by the project's canonical numbering (advisory -- "
+                             f"verify before assuming this needs a fix)")
+
+    cfg_dir = ev_dir / "configs"
+    cfg_names = [f.name.lower() for f in cfg_dir.iterdir()] if cfg_dir.is_dir() else []
+    if any("significance" in c for c in cfg_names) and not found["significance"]:
+        warnings.append("  [06_evaluate] a significance config exists under configs/ but no "
+                         "06_XX_significance_from_config.sh wrapper was found")
+    if any("combined" in c for c in cfg_names) and not found["combined"]:
+        warnings.append("  [06_evaluate] a combined-modality config exists under configs/ but no "
+                         "06_XX_combined_modality_summary.sh wrapper was found")
+
+    return warnings
+
 
 def _slot_and_type(name: str):
     """Parse '2_nnUNet_on-harmony' → ('2', 'nnUNet')."""
@@ -205,6 +289,9 @@ def validate_dataset(ds_path: Path) -> list[str]:
         for sub in REQUIRED_RESULTS_SUBDIRS:
             if sub not in present:
                 errors.append(f"  [8_results] missing subdir: {sub}/")
+
+    # ── 06_evaluate/ canonical entry-point numbering (advisory) ──────────────
+    errors.extend(validate_eval_entry_points(ds_path, ds, slot_map))
 
     return errors
 
