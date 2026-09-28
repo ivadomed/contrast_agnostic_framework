@@ -12,7 +12,12 @@ cross-fold mean±std Dice and HD95, and writes:
 Config YAML format:
   title: "CHAOS T1in — results"
   metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"   # env vars expanded
-  output_prefix: "03_03_results"
+  output_prefix: "01_results"   # canonical per-contrast headline prefix (settled 2026-09-27) --
+                                 # this used to show "03_03_results" here as the example, which
+                                 # is exactly why chaos/brats2024-glioma ended up on that
+                                 # nonstandard prefix (copied verbatim from this docstring) while
+                                 # open-ms/ispy2/totalseg-pelvic/duke-breast-mri/healthy-spine-tum
+                                 # independently converged on "01_results" -- use that.
   runs:
     - chaos_t1in_baseline_20260614_153230
     - chaos_t1in_v26_6_2_train050_val100_20260615_213615
@@ -814,7 +819,7 @@ def main():
     with config_path.open() as f:
         cfg = yaml.safe_load(f)
 
-    output_prefix = cfg.get("output_prefix", "03_aggregated")
+    output_prefix = cfg.get("output_prefix", "01_results")
     title = cfg.get("title", "Aggregated Results")
     run_keys = cfg.get("runs", [])
     in_domain_contrast = cfg.get("in_domain_contrast", None)
