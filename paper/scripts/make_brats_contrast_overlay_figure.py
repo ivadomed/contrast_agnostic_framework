@@ -194,6 +194,10 @@ def write_panels(t1_disp, t2_disp, fl_disp, gt, degraded, t1_raw, lbl_slice,
         ("t1w", burn_overlay(t1_disp, None, GOOD)),
         ("t2w_gt", burn_overlay(t2_disp, gt, GOOD)),
         ("t2flair_degraded", burn_overlay(fl_disp, degraded, BAD)),
+        # Same FLAIR image with the CORRECT ground truth instead, so the
+        # good/bad pair differs only in the mask, not in the underlying
+        # contrast. GOOD/BAD are the set's existing colours.
+        ("t2flair_gt", burn_overlay(fl_disp, gt, GOOD)),
     ):
         out = PANEL_DIR / f"{name}.png"
         plt.imsave(out, arr)
