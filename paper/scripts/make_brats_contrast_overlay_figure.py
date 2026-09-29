@@ -184,7 +184,8 @@ def burn_overlay(base: np.ndarray, mask: np.ndarray | None, color: str,
     return np.clip(rgb, 0, 1)
 
 
-def write_panels(t1_disp, t2_disp, fl_disp, gt, degraded, t1_raw, lbl_slice):
+def write_panels(t1_disp, t2_disp, fl_disp, gt, degraded, t1_raw, lbl_slice,
+                 fl_full):
     """Individual undecorated PNGs, all on the same crop so they overlay."""
     PANEL_DIR.mkdir(parents=True, exist_ok=True)
     written = []
@@ -197,6 +198,16 @@ def write_panels(t1_disp, t2_disp, fl_disp, gt, degraded, t1_raw, lbl_slice):
         out = PANEL_DIR / f"{name}.png"
         plt.imsave(out, arr)
         written.append(out)
+
+    # Plain T2-FLAIR, no overlay, written at 1:1 with the data (SCALE
+    # deliberately bypassed) — one pixel per voxel, nothing interpolated.
+    # Two framings: the crop the rest of the set uses, so it overlays them,
+    # and the whole uncropped slice.
+    for name, arr in (("t2flair", fl_disp), ("t2flair_fullfov", fl_full)):
+        out = PANEL_DIR / f"{name}.png"
+        plt.imsave(out, arr, cmap="gray", vmin=0.0, vmax=1.0)
+        written.append(out)
+        print(f"  {name}.png is 1:1 native: {arr.shape[1]}x{arr.shape[0]} px")
 
     # PALETTE on the same T1w slice. normalize01 (not the display window) is
     # what the transform's DARK_THRESHOLD and k-means expect as input.
@@ -271,7 +282,8 @@ def main():
     # Standalone panels first, so a failure in the combined figure's layout
     # doesn't cost the images that are the actual deliverable here.
     write_panels(t1_disp, t2_disp, fl_disp, gt[crop], degraded[crop],
-                 axial(t1, Z)[crop], axial(seg, Z)[crop].astype(np.int64))
+                 axial(t1, Z)[crop], axial(seg, Z)[crop].astype(np.int64),
+                 window(axial(fl, Z)))
 
     panels = [
         (t1_disp, None,           None, "T1w",      "no overlay"),
