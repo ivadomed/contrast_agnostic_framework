@@ -16,7 +16,7 @@ set -uo pipefail
 : "${GROUP:?}" "${PACK_DIR:?}" "${HERE_DIR:?}"
 cd "${HERE_DIR}/05_predict"
 source ../00_utils/env.sh
-source ../../../../scripts/cluster/tamia_env.sh
+source ../../../../../../scripts/cluster/tamia_env.sh
 source ../00_utils/t2f_runs.sh
 export TRAINING_CONTRAST=t2f
 RD_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/t2f"

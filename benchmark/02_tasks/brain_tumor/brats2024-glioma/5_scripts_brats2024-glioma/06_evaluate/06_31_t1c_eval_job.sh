@@ -13,7 +13,7 @@ cd "${HERE_DIR}/06_evaluate"
 # override it — set it to scratch BEFORE env.sh is sourced (common_env keeps an already-exported value).
 export METRICS_ROOT="/scratch/p/paulh/brats2024-glioma/8_results/02_metrics"
 source ../00_utils/env.sh
-source ../../../../scripts/cluster/tamia_env.sh
+source ../../../../../../scripts/cluster/tamia_env.sh
 source ../00_utils/t1c_runs.sh
 export TRAINING_CONTRAST=t1c DATASET_ID=054 EVAL_INLINE=1 CATEGORY METRICS_SUBDIR="${METRICS_SUBDIR:-}"
 echo "[eval-job] RUN_ID=${RUN_ID} CATEGORY=${CATEGORY} METRICS_SUBDIR='${METRICS_SUBDIR}' METRICS_ROOT=${METRICS_ROOT} host=$(hostname)"
