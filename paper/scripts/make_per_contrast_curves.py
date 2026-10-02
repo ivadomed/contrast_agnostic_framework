@@ -49,7 +49,8 @@ from matplotlib.lines import Line2D
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
-from ladder_ood_common import load_case_means, resolve_run_dir, _src_key as _engine_src_key  # noqa: E402
+from ladder_ood_common import (load_case_means, resolve_run_dir, _src_key as _engine_src_key,  # noqa: E402
+                               _labelled_case_values, _patient_key, _merge_by)
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
 
 OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "per_contrast_curves"
@@ -60,13 +61,15 @@ OUT.mkdir(parents=True, exist_ok=True)
 # meta_task_heatmap_*). The ablation ladders are exactly that: one panel per
 # task, and the only place all of them are visible side by side. Keeping a copy
 # here means reading the cross-task result does not require building the paper.
-COMMUN = REPO / "datasets" / "01_commun_results"
+COMMUN = REPO / "benchmark" / "01_commun_results"   # was datasets/... before the 2026-09-27 restructuring
 
-M = "benchmark/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
+M = "benchmark/02_tasks/{task}/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
+TASK_OF = {"chaos": "abdomen_healthy", "on-harmony": "brain_healthy", "toothfairy2": "mandible_healthy",
+           "brats2024-glioma": "brain_tumor", "open-ms": "brain_ms", "ispy2": "breast_cancer"}
 
 
 def _j(ds, model, contrast):
-    return M.format(ds=ds, model=model, contrast=contrast)
+    return M.format(task=TASK_OF[ds], ds=ds, model=model, contrast=contrast)
 
 
 # panel title -> list of (line label, ladder json path). A panel with two
@@ -173,6 +176,9 @@ def panel_pooled(ladders, metric, higher_is_better):
         delta = (s[FILL] - s[FILL - 1]) * (1 if higher_is_better else -1)
         return sig.get("pooled_p", float("nan")), delta
 
+    if any(d.get("mode") == "grouped_by_contrast" for d in ladders):
+        return _panel_pooled_grouped(ladders, metric, higher_is_better)
+
     xs, ys = [], []
     for d in ladders:
         keys = d.get("run_keys")
@@ -203,6 +209,36 @@ def panel_pooled(ladders, metric, higher_is_better):
     scale = 100.0 if metric == "dice" else 1.0
     delta = float(np.mean(y) - np.mean(x)) * scale * (1 if higher_is_better else -1)
     return p, delta
+
+
+def _panel_pooled_grouped(ladders, metric, higher_is_better):
+    """Panel test for ladders written by the engine's GROUPED mode (I-SPY2, 2026-10-01):
+    every case of every contrast group of every ladder in the panel, paired at the
+    fill-swap step, same-patient pairs merged (an I-SPY2 patient's _uni/_bil FOV variants,
+    and the same test patient scored by both training-modality models) -- the same unit
+    the engine's own grouped tests use. Re-derived from the per-case CSVs through the
+    engine's own loader so the panel pool cannot drift from the ladders' pools."""
+    pairs = {}
+    for li, d in enumerate(ladders):
+        keys = d["run_keys"]
+        root = d["_path"].parent.parent
+        extra = [{"metrics_root": Path(e["metrics_root"]), "run_subdir": e.get("run_subdir")}
+                 for e in d.get("extra_ood_sources", [])]
+        prev = _labelled_case_values(root, d["ood_contrasts"], extra, keys[FILL - 1], metric)
+        cur = _labelled_case_values(root, d["ood_contrasts"], extra, keys[FILL], metric)
+        members = {l for m in d["ood_groups"].values() for l in m}
+        for lbl in members:
+            a, b = prev.get(lbl, {}), cur.get(lbl, {})
+            for k in sorted(set(a) & set(b)):
+                if np.isfinite(a[k]) and np.isfinite(b[k]):
+                    pairs[f"{k}§{li}§{lbl}"] = (float(a[k]), float(b[k]))
+    if not pairs:
+        return float("nan"), float("nan")
+    x, y = _merge_by(pairs, lambda k: _patient_key(k.split("§", 1)[0]))
+    scale = 100.0 if metric == "dice" else 1.0
+    delta = float(np.mean([np.mean(np.asarray(d[metric][:N_RUNGS], float)[FILL] -
+                                   np.asarray(d[metric][:N_RUNGS], float)[FILL - 1]) for d in ladders]))
+    return wilcoxon_p(x, y), delta * (1 if higher_is_better else -1)
 
 
 def sig_color(p, delta, light=False):
@@ -243,7 +279,7 @@ def build(metric, ylabel, out_name, higher_is_better):
     nrow = len(rows)
     fig = plt.figure(figsize=(4.3 * ncol, 4.15 * nrow))
     gs = fig.add_gridspec(nrow, ncol, wspace=0.30, hspace=0.62,
-                          left=0.055, right=0.99, top=0.90, bottom=0.205)
+                          left=0.055, right=0.99, top=0.90, bottom=0.225)
     axes, row_axes = [], []
     for ri, row in enumerate(rows):
         this = [fig.add_subplot(gs[ri, ci]) for ci in range(len(row))]
@@ -300,8 +336,31 @@ def build(metric, ylabel, out_name, higher_is_better):
         top = ax.get_ylim()[1]
         word = "ns" if not (np.isfinite(p) and p < 0.05) else \
             ("improves *" if dl >= 0 else "worsens *")
+        ann = f"panel-pooled: {word}\np={fmt_p(p)}"
+        if metric == "dice":
+            # Real-fill's Δ as a % of this panel's TOTAL pipeline gain (floor ->
+            # final rung), not of remaining headroom-to-100 -- added 2026-10-01,
+            # replacing an earlier headroom-based version the same day. Headroom
+            # (100 - Dice before this step) answers "how much of what was still
+            # achievable did this step close", but that conflates a task already
+            # solved by OTHER ingredients (CHAOS: boundary cues alone get it to
+            # ~85%, so its small headroom inflates texture's apparent share) with
+            # texture actually mattering. Dividing by the pipeline's own total
+            # climb instead answers the actually-wanted question -- "how much of
+            # the improvement we engineered is specifically attributable to
+            # preserving real texture" -- and reproduces the project's existing
+            # texture-vs-boundary narrative cleanly (CHAOS +1%, Open-MS/BraTS-GLI
+            # +11-13%) rather than making CHAOS look comparable to BraTS-GLI.
+            # Guarded the same way: a near-zero total climb makes the ratio
+            # undefined, so it's dropped rather than shown.
+            total_climb = avg[-1] - avg[0]
+            if np.isfinite(total_climb) and abs(total_climb) > 2.0:
+                pct_total = dl / total_climb * 100.0
+                ann += f"\n{dl:+.2f}pt ({pct_total:+.0f}% of total gain)"
+            else:
+                ann += f"\n{dl:+.2f}pt (total gain <2pt, ratio omitted)"
         ax.text(FILL - 0.5, top - 0.02 * (top - ax.get_ylim()[0]),
-                f"panel-pooled: {word}\np={fmt_p(p)}", ha="center", va="top",
+                ann, ha="center", va="top",
                 fontsize=7.6, fontweight="bold", color=seg)
 
     for this in row_axes:
@@ -334,13 +393,18 @@ def build(metric, ylabel, out_name, higher_is_better):
         Line2D([0], [0], color=IMPROVE, marker="o", label="panel average: matches header", linewidth=3.0, markersize=7.5),
     ]
     fig.add_artist(fig.legend(handles=style_h + sig_h, loc="center", ncol=4, fontsize=9,
-                              frameon=False, bbox_to_anchor=(0.5, 0.098),
+                              frameon=False, bbox_to_anchor=(0.5, 0.116),
                               handlelength=2.2, columnspacing=1.6))
     fig.legend(handles=[Line2D([0], [0], color="#666666", marker=marker_of[c], linestyle="none",
                                markersize=7.5, label=c) for c in all_c],
-               loc="center", ncol=8, fontsize=8.5, frameon=False, bbox_to_anchor=(0.5, 0.034),
+               loc="center", ncol=12, fontsize=8.5, frameon=False, bbox_to_anchor=(0.5, 0.052),
                title="eval contrast (marker)", title_fontsize=9,
                handletextpad=0.5, columnspacing=1.4)
+    if metric == "dice":
+        fig.text(0.5, 0.008,
+                  "% of total gain = Δ Dice (real-fill step) ÷ (final rung − baseline Dice) "
+                  "— share of this panel's whole pipeline improvement attributable to texture",
+                  ha="center", va="bottom", fontsize=8, color="#555555", style="italic")
 
     out = OUT / out_name
     fig.savefig(out, dpi=300)
