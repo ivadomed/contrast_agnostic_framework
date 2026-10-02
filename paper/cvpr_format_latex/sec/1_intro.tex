@@ -35,16 +35,16 @@ survives; texture does not.
 
 We ask whether discarding texture is necessary for contrast robustness, or
 merely the path of least resistance once a dense label map is assumed. Our
-central finding is that the answer depends on the \emph{task}: preserving real
-intensity structure matters where the segmentation target is separated from its
-surroundings by a genuine anatomical interface, and not where it is not. That
-texture carries diagnostic signal in exactly the tasks where no such interface
-exists is established independently of us --- texture features discriminate MS
+central finding is that the answer depends on the \emph{task}: large gains
+from preserving real intensity structure occur only where the segmentation
+target is defined by tissue appearance rather than separated from its
+surroundings by a genuine anatomical interface. That texture carries
+diagnostic signal in exactly the tasks where no such interface exists is established independently of us --- texture features discriminate MS
 lesions from normal-appearing white matter~\cite{zhang2008mstexture}, and
 diffuse glioma infiltrates beyond every margin conventional MRI
 shows~\cite{gliomamargins2025,flairectomy2022} --- and our contribution is to
-show that this distinction governs whether a texture-preserving augmentation
-helps at all.
+show that this distinction governs where a texture-preserving augmentation can
+help substantially.
 
 We exploit it with \textbf{PALETTE}, a single-source augmentation that needs no
 dense label map. PALETTE partitions the foreground of a scan into intensity
@@ -62,55 +62,53 @@ dense parcellation.
 We test the mechanism claim directly rather than inferring it from aggregate
 scores. Holding the $k$-means/Voronoi partition and the per-region statistics
 fixed, we replace only the real-intensity affine remap with label-style noise
-fill, matching SynthSeg's resampling inside PALETTE's own geometry. The swap
-costs $7.7$ and $7.2$ Dice on tasks whose targets have no tissue interface,
-against $+1.1$ and $-1.1$ on organ tasks that do --- a separation by target
-type, not a uniform offset --- and $-4.5$/$-1.4$ on a third, far more
-densely-labelled interface task whose regions turn out, on inspection, to
-be tissue-interface targets too, just packed across near-total brain
-volume (\S\ref{subsec:e-ablation}). An independent gradient-orientation
-measurement confirms that texture is what changes at the fill-swap step.
+fill, matching SynthSeg's resampling inside PALETTE's own geometry, across
+fourteen training settings. Every large effect of that swap falls on a target
+without a tissue interface --- $+13.3$ and $+7.2$ Dice on brain tumour, $+7.7$
+on MS lesions --- while no interface-bounded target gains more than $1.4$.
+The converse does not hold: several appearance-defined settings, breast lesions
+among them, show no reliable effect, so we state the result in one direction
+only (\S\ref{subsec:e-ablation}). An independent, segmentation-free
+gradient-orientation measurement confirms that texture is what changes at the
+fill-swap step: the noise-fill steps leave it at the noise floor while Dice
+still rises, and only the real-fill swap restores it.
 
 Empirically, training a single nnU-Net~\cite{isensee2021nnunet} configuration
 --- fixed across datasets, with only the epoch budget varying --- we evaluate
-cross-contrast, cross-modality, and cross-dataset transfer on five
+cross-contrast, cross-modality, and cross-dataset transfer on eight
 segmentation tasks: healthy brain, MS lesion, brain tumour, abdominal organ,
-and liver tumour. We compare against a no-augmentation baseline, both
+mandible, breast lesion, spine and pelvis. We compare against a no-augmentation baseline, both
 variants of SynthSeg (the original dense-label-driven variant, and an EM
 variant with no public implementation that we re-implement),
 SRCSM~\cite{thaler2025semrandconv}, and Auglab~\cite{molinier2026auglab}, a
 published augmentation pipeline designed for cross-modality training and
-the strongest competitor. PALETTE improves significantly over every
-competing method on Dice at the task level, and remains at or near the best
-on boundary distance without always being the outright aggregate winner
-there. No competitor is reliably second: the runner-up changes identity
-across settings, so PALETTE is the only method at or near the top
+the strongest competitor. PALETTE is the best method overall: it attains
+the best Dice on six of the eight tasks and is significantly better than every
+competitor across tasks, on both Dice and boundary distance. No competitor is
+reliably second: the strongest alternative switches between Auglab and SRCSM
+from task to task, so PALETTE is the only method at or near the top
 throughout.
 
 In summary, we make the following contributions:
 \begin{itemize}
     \item \textbf{A task-level account of when texture preservation matters.}
-    Preserving real intensity structure helps where the segmentation target has
-    no anatomical interface separating it from its surroundings, and not where
-    it has one. We state this as a prediction and test it with a controlled
-    dissociation rather than asserting it post hoc.
+    Large gains from preserving real intensity structure occur only where the
+    segmentation target has no anatomical interface separating it from its
+    surroundings. We test this with a controlled intervention rather than
+    asserting it post hoc, and report where it does not extend.
     \item \textbf{A causal ablation isolating texture.} Holding the intensity
     and spatial partition and the per-region statistics fixed and swapping only
-    the real-intensity remap for label-style noise fill separates our headline
-    tasks by target type, a separation a third, far more densely-labelled
-    interface task also follows, just with a larger negative swing. An
+    the real-intensity remap for label-style noise fill, across fourteen
+    training settings, confines every large effect to no-interface targets. An
     independent gradient-orientation measurement confirms that texture, not
     the partitioning scheme, is what changes at that step.
     \item \textbf{PALETTE}, the single-source contrast augmentation that
     exploits this, requiring no dense anatomical label map and using only the
     sparse task labels a segmentation dataset already provides.
     \item \textbf{Breadth evidence.} Across cross-contrast, cross-modality and
-    cross-dataset transfer on six tasks --- healthy-brain, MS-lesion,
-    brain-tumour, abdominal-organ, mandible and breast-lesion segmentation ---
-    with one configuration reused across datasets, PALETTE attains the best
-    Dice on four and improves over all five competing methods on a
-    task-stratified test, though only thinly over the strongest of them. It
-    places second on the other two, and we report there what the usual
-    one-sided comparison cannot say: whether the method ahead of us is
-    actually ahead. One is a tie; one is not.
+    cross-dataset transfer on eight tasks and sixteen datasets, with one
+    configuration reused throughout, PALETTE is best on six tasks and
+    significantly better than every competitor across tasks. Where it does not
+    win we report whether the method ahead is actually ahead: on healthy brain
+    it is a tie, on mandible a real loss.
 \end{itemize}

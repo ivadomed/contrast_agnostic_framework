@@ -113,18 +113,14 @@ each region intact.
 \label{subsec:gap}
 
 We evaluate a model trained on a single real input modality on every
-held-out modality of the \emph{same} segmentation task, including the
-training modality itself, across four tasks spanning brain, abdominal and
-tumour anatomy in MRI and CT; a sixth task, spine segmentation, is a
-planned extension. This single-sequence-in, every-sequence-out design is
-not unprecedented -- Auglab's own evaluation follows the identical protocol
-for spine segmentation~\cite{molinier2026auglab} -- and our contribution is
-breadth (four distinct cross-contrast tasks, not one) and, for two of them,
-a further axis: MS-lesion and abdominal-organ segmentation are each also
-evaluated against independent external test datasets acquired at different
-sites, so the training dataset's own test set is one point among several
-rather than the only held-out evidence. A fifth task, liver-tumour
-segmentation, trains on a single modality and so has no cross-contrast axis
-of its own, but is evaluated against two independent external cohorts the
-same way, extending this same-site-is-not-enough argument to a setting
-where cross-contrast transfer cannot be measured at all.
+held-out modality of the \emph{same} segmentation task, including the training
+modality itself, across eight tasks spanning brain, abdominal, dental, breast,
+spine and pelvic anatomy in MRI, CT and CBCT. This
+single-sequence-in, every-sequence-out design is not unprecedented -- Auglab's
+own evaluation follows the identical protocol for spine
+segmentation~\cite{molinier2026auglab} -- and our contribution is breadth
+(eight tasks, not one) and a further axis: wherever an external cohort exists,
+it is pooled into its task as additional held-out contrasts from other sites,
+so the training dataset's own test set is one point among several rather than
+the only held-out evidence. For mandible, which is acquired as CBCT only, that
+cross-dataset transfer is the entire held-out axis.

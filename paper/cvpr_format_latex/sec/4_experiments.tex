@@ -19,7 +19,9 @@ per epoch, and the combined Dice-plus-cross-entropy loss --- and differs only
 in the augmentation applied at the input. The epoch budget is fixed per
 dataset and shared by every method on that dataset ($2500$ for Brats-GLI,
 $2000$ for ON-Harmony and Open-MS, $1000$ for ToothFairy2 and I-SPY2, $200$
-for CHAOS), and all results are
+for CHAOS and Pelvis; the Spine models were trained by our collaborators on
+their own pipeline with the same method suite, \cref{sec:suppl-data}), and
+all results are
 3-fold cross-validated, as is standard practice in medical image
 segmentation and so that every comparison rests on per-case statistics rather
 than a single split. All significance tests are paired per case and
@@ -28,26 +30,32 @@ details, and per-dataset descriptions (subject counts, acquisition
 protocols, and label provenance) are given in
 \cref{sec:suppl-persetting,sec:suppl-config,sec:suppl-data}.
 
-\paragraph{Datasets.} We evaluate on six tasks drawn from ten datasets
-(\cref{tab:datasets}), spanning abdominal CT/MRI, brain MRI, brain tumor
-MRI, dental CBCT and breast MRI. Every task trains on a single source
-modality and is tested on every other contrast of that task \emph{and} the
-training contrast itself -- eleven source-modality settings in total; no
-target modality is seen during training. Two tasks additionally transfer to
-an external cohort, which supplies further held-out test columns rather than
-a separate task: CHAOS~\cite{kavur2021chaos} to held-out CT from
-AMOS~\cite{ji2022amos} and SLIVER07~\cite{heimann2009comparison}, and
+\paragraph{Datasets.} We evaluate on eight tasks drawn from sixteen datasets
+(\cref{tab:datasets}): abdominal organs, healthy brain, brain tumour, MS
+lesions, mandible, breast lesions, spine and pelvic musculoskeletal anatomy,
+across MRI, CT and dental CBCT. Every task trains on a single source modality
+at a time and is tested on every other contrast of that task \emph{and} the
+training contrast itself --- eighteen source-modality settings in total; no
+target modality is seen during training. Wherever an external cohort exists,
+its contrasts are pooled into that task as further held-out test columns
+rather than reported as a task of their own: CHAOS~\cite{kavur2021chaos}
+transfers to CT from AMOS~\cite{ji2022amos} and
+SLIVER07~\cite{heimann2009comparison}; Mandible
+(ToothFairy2~\cite{bolelli2025toothfairy2}, CBCT only) to the CT and MR of
+HaN-Seg~\cite{podobnik2023hanseg} and the CT of PDDCA~\cite{raudaschl2017pddca},
+which makes it the one task whose held-out axis is entirely cross-dataset;
 Breast (I-SPY2~\cite{li2022ispy2}) to
-Duke-Breast-MRI~\cite{saha2018duke,garrucho2025mamamia}, tested on both its
-first-post-contrast and its pre-contrast acquisitions.
-Mandible is the one task with no second in-house contrast: ToothFairy2's
-cohort is CBCT only~\cite{bolelli2025toothfairy2}, so its entire held-out
-axis is the cross-\emph{modality} CT and MR of
-HaN-Seg~\cite{podobnik2023hanseg}, and it is marked as such wherever the
-distinction matters.
-ON-Harmony~\cite{warrington2025onharmony} reference labels are
+Duke-Breast-MRI~\cite{saha2018duke,garrucho2025mamamia},
+I-SPY1~\cite{hylton2012ispy1} and ACRIN-6698~\cite{partridge2018acrin6698},
+the last contributing diffusion-weighted MRI, a contrast neither training
+modality resembles; and Spine (a CT/Dixon cohort) to the T1w and T2w of
+SPIDER~\cite{vandergraaf2024spider}. Pelvis is built from the TotalSegmentator CT and MRI
+releases~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}, two unpaired
+cohorts. ON-Harmony~\cite{warrington2025onharmony} reference labels are
 silver-standard, obtained on T1w with FreeSurfer~\cite{fischl2012freesurfer}
 and registered to the other contrasts.
+% TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
+% in the imported results) -- no citable source for it exists in the repo.
 
 \begin{table}[t]
 \centering
@@ -63,27 +71,38 @@ Task & Dataset & Train modalities & Test modalities \\
  & AMOS       & --             & CT, MRI \\
  & SLIVER07   & --             & CT \\
 \midrule
-Brain Glioma  & Brats2024-GLI & T1n, T2w    & T1c, T1n, T2w, T2-FLAIR \\
+Brain Glioma  & Brats2024-GLI & T1n, T1c, T2w, FLAIR & T1n, T1c, T2w, FLAIR \\
 \midrule
 Brain MS      & Open-MS       & FLAIR, T1w  & FLAIR, T1w, T2w \\
 \midrule
-Healthy Brain & ON-Harmony    & T1w, T2w    & T1w, T2w, BOLD, DWI, EPI, GRE \\
+Healthy Brain & ON-Harmony    & T1w, T2w, DWI & T1w, T2w, BOLD, DWI, EPI, GRE \\
 \midrule
-\multirow{2}{*}{Mandible}
+\multirow{3}{*}{Mandible}
  & ToothFairy2     & CBCT        & CBCT \\
  & HaN-Seg         & --          & CT, MR-T1 \\
+ & PDDCA           & --          & CT \\
 \midrule
-\multirow{2}{*}{Breast}
+\multirow{4}{*}{Breast}
  & I-SPY2          & T1-CE, T2w  & T1-CE, T2w \\
  & Duke-Breast-MRI & --          & T1-CE, pre-contrast \\
+ & I-SPY1          & --          & T1-CE, pre-contrast \\
+ & ACRIN-6698      & --          & DWI \\
+\midrule
+\multirow{2}{*}{Spine$^\S$}
+ & CT/Dixon cohort & CT, Dixon in & CT, Dixon fat/in/water \\
+ & SPIDER          & --          & T1w, T2w \\
+\midrule
+Pelvis        & TotalSegmentator & CT, MRI & CT, MRI \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Per-task dataset roster. AMOS, SLIVER07, HaN-Seg and
-Duke-Breast-MRI are cross-dataset transfer targets only (``--'': never
-trained on); their contrasts are extra held-out test columns of the task they
-sit under, not tasks of their own. Mandible is the only task whose held-out
-axis is entirely cross-dataset, since ToothFairy2 acquires CBCT alone.
+\caption{Per-task dataset roster. Rows marked ``--'' are cross-dataset
+transfer targets only, never trained on; their contrasts are extra held-out
+test columns of the task they sit under, not tasks of their own. Mandible's
+held-out axis is entirely cross-dataset, since ToothFairy2 acquires CBCT
+alone. Pelvis's CT and MRI come from different patients. $^\S$Spine results
+were computed by our collaborators on their own pipeline, with the same
+method suite but without SRCSM and without HD95 (\cref{sec:suppl-data}).
 Subject counts, acquisition protocols, and label provenance are in
 \cref{sec:suppl-data}.}
 \label{tab:datasets}
@@ -117,107 +136,89 @@ add-one-component test isolating the contribution of the PALETTE transform.
 \subsection{Main comparison}
 \label{subsec:e-main}
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{3.5pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc|c}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccccc|c}
 \toprule
- & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & $p$ vs ours \\
+ & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Spine & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 21.7 & 29.3 & 31.1 & 21.0 & 59.2 & 35.2 & 9.7e-46 \\
-SynthSeg-noEM   &  8.6 & 59.6 & 66.3 &  4.3 & 52.9 & 11.4 & 2.0e-95 \\
-SynthSeg-EM     & 43.6 & 83.0 & 67.4 & 33.9 & 76.2 & 30.3 & 2.3e-35 \\
-SRCSM           & 42.1 & 83.9 & 66.6 & 33.0 & 61.9 & 11.5 & 1.1e-90 \\
-Auglab          & 46.7 & 83.3 & 67.4 & 34.3 & \textbf{76.4} & \textbf{38.6} & 0.049 \\
-\textbf{PALETTE (ours)} & \textbf{46.8} & \textbf{85.0} & \textbf{68.2} & \textbf{38.5} & 76.3 & 36.9 & --- \\
+Baseline        & 23.4 & 29.3 & 35.0 & 21.0 & 59.2 & 35.0 & 48.5 & 29.8 & 9.7e-75 \\
+SynthSeg-noEM   &  8.8 & 59.6 & 64.8 &  4.3 & 53.6 & 16.5 & 50.4 & 15.0 & 1.8e-85 \\
+SynthSeg-EM     & 43.1 & 83.0 & 66.3 & 33.9 & 76.3 & 39.6 & 80.6 & 62.5 & 1.4e-34 \\
+SRCSM           & 41.5 & 83.9 & \textbf{66.6} & 33.0 & \textbf{79.0} & 16.4 & --- & 65.3 & 2.3e-86 \\
+Auglab          & 44.8 & 83.3 & 66.1 & 34.3 & 78.3 & 40.1 & 80.9 & 64.3 & 1.0e-13 \\
+\textbf{PALETTE (ours)} & \textbf{45.9} & \textbf{85.0} & 66.5 & \textbf{38.5} & 77.7 & \textbf{41.2} & \textbf{82.3} & \textbf{65.6} & --- \\
+\midrule
+\multicolumn{1}{r}{\footnotesize competitors beaten ($p<0.05$)} &
+5/5 & 4/5 & 2/5 & 5/5 & 3/5 & 5/5 & 4/4 & 3/5 & \\
 \bottomrule
-\end{tabular}%
-}
+\end{tabular}
 \caption{Task-level Dice (\%). Each column pools that task's held-out
-contrasts and both source modalities, plus, where one exists, that task's
-external cohort, pooled by contrast group so that a modality tested by
-several external sources does not outvote one tested by fewer
-(\cref{sec:suppl-persetting}). We deliberately report no cross-task average:
-averaging Dice over targets as different as a whole liver and a breast
-lesion produces a number no task's clinician would recognise, and it hides
-exactly the per-task structure this paper is about. $p$: Holm-corrected
-one-sided sign-flip test on the macro-averaged per-case difference,
-stratified by task and weighting tasks equally --- a test across tasks, not
-an average of them. PALETTE is best on four of the six tasks and improves
-over every competitor on that test, but the margin over Auglab is thin
-($p=0.049$); Auglab leads on the two tasks added last, one of which is a
-statistical tie and one a real loss (\S\ref{subsec:e-main}).
-HD95, a secondary metric here, is reported separately in
-\cref{tab:meta-hd95}.}
+contrasts, all of its source modalities and, where one exists, its external
+cohorts, pooled by contrast group so that a modality tested by several
+external sources does not outvote one tested by fewer
+(\cref{sec:suppl-persetting}). $p$: Holm-corrected one-sided sign-flip test on
+the macro-averaged per-patient difference, stratified by task with tasks
+weighted equally --- a test \emph{across} tasks, not an average \emph{of} them;
+we deliberately print no cross-task mean Dice, since averaging a whole-liver
+Dice with a breast-lesion Dice yields a number no task's clinician would
+recognise. The bottom row counts, per task, the competitors PALETTE beats with
+the same test run within that task alone. Spine has no SRCSM run
+(\cref{tab:datasets}). HD95 is in \cref{tab:meta-hd95}.}
 \label{tab:meta}
-\end{table}
+\end{table*}
 
-Every synthetic-contrast method vastly outperforms the no-augmentation
-baseline, confirming that cross-contrast augmentation is indispensable under
-single-source evaluation. SynthSeg-noEM, which resamples intensities from a
-\emph{dense} anatomical label map, is competitive only on the brain-MRI
-settings where such maps are meaningful, and collapses on the sparse-label
-tumor and lesion tasks, where no such map exists and the generated images
-carry almost no anatomical structure to learn from -- a property of the
-method's input requirements, not an implementation artifact. The
+\paragraph{PALETTE is the best method overall.} It attains the best Dice on
+six of the eight tasks, and across tasks it is significantly better than every
+competitor, including the strongest, Auglab ($p=1.0\times10^{-13}$). Within
+individual tasks it significantly outperforms \emph{every} competitor on four
+(Brats-GLI, Open-MS, Breast and Spine) and most of them on the remaining four
+(bottom row of \cref{tab:meta}). Every synthetic-contrast method vastly
+outperforms the no-augmentation baseline, confirming that cross-contrast
+augmentation is indispensable under single-source evaluation. SynthSeg-noEM,
+which resamples intensities from a \emph{dense} anatomical label map, is
+competitive only where such maps are meaningful and collapses on the
+sparse-label tumour and lesion tasks, where no such map exists -- a property of
+the method's input requirements, not an implementation artifact. The
 re-implemented, label-using SynthSeg-EM closes most of that gap.
 
-\paragraph{No competitor is reliably second.} The identity of the runner-up
-changes from setting to setting. Across the eleven source-modality settings
-the best competing method is Auglab on most, SynthSeg-EM on ON-Harmony T2w,
-and SRCSM on Open-MS FLAIR. PALETTE is the only method first or second on
-every task's Dice, and on the cross-task Dice test it improves over all five
-competitors (\cref{tab:meta}), though only thinly over Auglab; on boundary
-distance (\cref{subsec:e-ablation}) it is at or near the top of the four
-original tasks but not of the two newest. We regard this breadth, rather than the
-size of any single margin, as the benchmark claim: a plug-in augmentation is
-useful precisely when it can be applied without knowing in advance which
-alternative would have been the right one for the task at hand.
+\paragraph{No competitor is reliably second.} The strongest competitor
+alternates between two methods with opposite failure modes: Auglab on
+Brats-GLI, Open-MS, Breast and Spine, and SRCSM on CHAOS, ON-Harmony, Mandible
+and Pelvis --- yet SRCSM collapses on Breast ($16.4$ Dice). Choosing between
+them would require knowing the answer in advance. PALETTE is first or second
+on every task but one. We regard this breadth, rather than the size of any
+single margin, as the benchmark claim: a plug-in augmentation is useful
+precisely when it can be applied without knowing in advance which alternative
+would have been the right one for the task at hand.
 
-\paragraph{Where PALETTE does not win, and by how much.} PALETTE is best on
-four of the six tasks; Auglab leads on Mandible ($76.4$ vs.\ $76.3$) and
-Breast ($38.6$ vs.\ $36.9$). The one-sided ``ours is better'' test that
-\cref{tab:meta} reports cannot adjudicate a lead in the other direction, so
-we ran the mirrored test --- the same paired sign-flip statistic with the
-per-case differences negated --- and the two results are not alike.
-On Mandible the difference is a tie by any reading: Auglab's lead is $0.08$
-Dice ($p=1.00$ two-sided) and SynthSeg-EM's deficit is $0.11$ ($p=1.00$),
-so three methods are statistically indistinguishable there. On Breast the
-loss is real: Auglab leads by $1.78$ Dice with $p=1.3\!\times\!10^{-14}$.
-We report it as such. It also sharpens rather than blunts the mechanism
-claim, because the two come apart precisely here: on the same Breast task the
-texture intervention of \cref{subsec:e-ablation} is among the largest and
-most significant in the study ($+3.7$ and $+3.6$ Dice, \cref{tab:dissociation}),
-while the full recipe that wraps it loses. The ingredient that this paper
-makes a claim about is helping on Breast; what costs us the task is the
-surrounding Auglab configuration, whose two largest penalties anywhere in the
-study fall on Mandible and Breast T2w --- the same two settings, as the
-per-rung numbers in \cref{sec:suppl-persetting} show directly. A benchmark win and a causal
-account are separate claims, and only the second is what we argue for.
+\paragraph{Where PALETTE does not win, and by how much.} The one-sided ``ours
+is better'' test cannot adjudicate a lead in the other direction, so on the two
+tasks PALETTE does not top we also ran the mirrored test, on the identical
+patient-level design. On ON-Harmony the result is a tie: SRCSM leads by
+$0.1$ Dice and neither method is significantly ahead of the other ($p=1.00$
+both ways). On Mandible the loss is real: SRCSM ($+1.3$ Dice, $p=6\times10^{-4}$)
+and Auglab ($+0.6$, $p=2.5\times10^{-3}$) are both significantly ahead and
+PALETTE places third. The ablation of \cref{subsec:e-ablation} locates that
+shortfall: on Mandible the texture step itself is significantly
+\emph{positive}, and it is the subsequent addition of the Auglab recipe that
+costs Dice (\cref{tab:ladder-full}). A benchmark ranking and a causal account
+are separate claims, and the second is the one this paper argues for.
 
-\paragraph{The Dice advantage is not uniform.} Where PALETTE does lead, the
-margin is not a flat offset -- it concentrates far more on some tasks than
-others (\cref{tab:meta}). That pattern is not noise; it is the dissociation
-we predict and test next.
-
-\subsection{Causal ablation: the texture dissociation}
+\subsection{Causal ablation: when does texture matter?}
 \label{subsec:e-ablation}
 
-\paragraph{Boundary distance (secondary metric).} HD95 is less standard for
-this class of augmentation comparison than Dice, so we move the full
-task-level breakdown to the supplementary material
-(\cref{tab:meta-hd95,fig:ladder-hd95}, \cref{sec:suppl-persetting}) rather
-than showing it here. In brief, it confirms the Dice ranking on the four
-original tasks --- PALETTE is best on ON-Harmony and Open-MS and within
-$0.2$mm and $4$mm of the best on Brats-GLI and CHAOS --- but on the two
-newest tasks it does not: Auglab is better by $1.10$mm on Mandible
-($p=0.032$) and by $7.56$mm on Breast ($p=8.6\!\times\!10^{-25}$), and the
-no-augmentation baseline is better still on Mandible. The cross-task test
-does not show PALETTE ahead of Auglab on this metric ($p=1.00$). We give the
-recall-based reading for the cases where HD95 and Dice disagree in the
-supplementary section.
+\paragraph{Boundary distance (secondary metric).} HD95 is less standard than
+Dice for this class of comparison, so its task-level table is in the
+supplement (\cref{tab:meta-hd95}). In brief, PALETTE has the lowest HD95 on
+four of the seven tasks that report it (Brats-GLI, ON-Harmony, Open-MS,
+Pelvis) and is significantly better than every competitor across tasks,
+Auglab included ($p=5.1\times10^{-6}$). It ties Auglab on Breast ($p\geq0.43$
+both ways), trails SRCSM on CHAOS without the gap being significant, and on
+Mandible is significantly behind SRCSM, Auglab and the no-augmentation
+baseline --- the same task, and the same cause, as its Dice shortfall.
 
 PALETTE shares its $k$-means/Voronoi partitioning scheme with a much simpler
 procedure, so the central question is whether the partitioning alone --- not
@@ -238,33 +239,24 @@ two points in the pipeline on both sides of this step, so blur is not
 confounded with the fill swap either. Any change at that step is therefore
 attributable to texture preservation alone.
 
-
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast}
-\caption{The one-variable test (rung sequence as above), shown per held-out
-\emph{eval contrast} rather than pooled, one panel per dataset, grouped by
-boundary type. Each thin line is one (training modality, eval contrast)
-pair, an external cohort's contrasts included; only its real-fill segment (shaded band) is coloured, by that curve's
-\emph{own} significance at this one step (Holm-corrected paired Wilcoxon
-within that ladder's own contrast family) -- light teal = significant
-improvement, light red = significant worsening, grey = not significant --
-since that is the only step being tested; every other segment is plain
-grey context. The bold black line is the panel's pooled average across
-every curve and training modality, with its own real-fill segment coloured
-to match the panel-level annotation above it exactly: a single p-value
-pooling \emph{both} training modalities into one paired Wilcoxon test
-(Holm-corrected across the six panels) -- a coarser, dataset-level
-reading than \cref{tab:dissociation}'s finer per-(task,modality) rows,
-which keep the modality-specific breakdown this panel-level view
-collapses. All three no-tissue-interface panels move significantly in the
-predicted direction. Of the three tissue-interface panels, ToothFairy2's is
-not significant either way --- the prediction for such a target coming true,
-rather than a null result --- CHAOS's is a small but significant gain
-($+0.72$), and ON-Harmony's is a significant \emph{worsening} (labelled accordingly, not a low $p$ defaulting to read
-as ``helps''). Solid/dashed = trained on a T1-weighted vs.\ T2-weighted/FLAIR
-contrast; marker shape = eval contrast, one mapping reused across every
-panel. Dice numbers pooled per ladder in \cref{tab:dissociation}; HD95 in
+\caption{The one-variable test, one panel per task with a ladder, grouped by
+boundary type. Each thin line is one (training modality, held-out contrast)
+pair, external cohorts included, and only its real-fill segment (shaded band)
+is coloured, by that pair's own significance at this one step -- teal =
+significant improvement, red = significant worsening, grey = not
+significant. The bold black line is the panel average; its real-fill segment
+is coloured to match the panel-level test annotated above it, which pools all
+of the panel's training modalities into one paired Wilcoxon test on
+\emph{patients} (each counted once across contrasts and models),
+Holm-corrected across the six panels. Two of the three no-tissue-interface
+panels improve significantly (Brats-GLI $p=2.4\times10^{-11}$, Open-MS
+$p=0.031$) and Breast does not move. Among the tissue-interface panels, CHAOS
+and ToothFairy2 show small significant gains and ON-Harmony a significant
+worsening. Solid/dashed = trained on a T1-weighted vs.\ other contrast; marker
+= held-out contrast. Per-row numbers in \cref{tab:dissociation}; HD95 in
 \cref{sec:suppl-persetting}.}
 \label{fig:ladder}
 \end{figure*}
@@ -277,117 +269,134 @@ panel. Dice numbers pooled per ladder in \cref{tab:dissociation}; HD95 in
 \toprule
 Task & boundary type & $\Delta$ Dice & $p$ \\
 \midrule
-CHAOS T1in      & tissue interface & $+1.07$ & 8.6e-4 \\
-CHAOS T2spir    & tissue interface & $-1.14$ & 0.50 \\
-ON-Harmony T1w  & tissue interface$^\dagger$ & $\mathbf{-4.48}$ & 4.6e-6 \\
-ON-Harmony T2w  & tissue interface$^\dagger$ & $-1.43$ & 1.4e-7 \\
-ToothFairy2 CBCT & tissue interface$^\ddagger$ & $+0.51$ & 0.65 \\
+CHAOS T1in       & interface & $+1.07$ & 0.0014 \\
+CHAOS T2spir     & interface & $-0.88$ & 0.17 \\
+ON-Harmony T1w   & interface$^\dagger$ & $\mathbf{-5.18}$ & 0.078$^*$ \\
+ON-Harmony T2w   & interface$^\dagger$ & $-1.55$ & 0.078$^*$ \\
+ON-Harmony DWI   & interface$^\dagger$ & $+0.78$ & 0.11$^*$ \\
+ToothFairy2 CBCT & interface$^\ddagger$ & $+1.36$ & 5.8e-6 \\
 \midrule
-Open-MS FLAIR   & no tissue interface & $\mathbf{+7.69}$ & 3.7e-4 \\
-Open-MS T1w     & no tissue interface & $+0.79$ & 0.65 \\
-Brats-GLI T1n   & no tissue interface & $\mathbf{+7.22}$ & 2.9e-25 \\
-Brats-GLI T2w   & no tissue interface & $+0.60$ & 0.50 \\
-I-SPY2 T1-CE    & no tissue interface & $+3.72$ & 1.9e-15 \\
-I-SPY2 T2w      & no tissue interface & $+3.59$ & 8.7e-25 \\
+Open-MS FLAIR    & no interface & $\mathbf{+7.69}$ & 0.078$^*$ \\
+Open-MS T1w      & no interface & $+0.79$ & 1.0$^*$ \\
+Brats-GLI T1n    & no interface & $\mathbf{+7.22}$ & 3.3e-11 \\
+Brats-GLI T1c    & no interface & $\mathbf{+13.27}$ & 5.0e-12 \\
+Brats-GLI T2w    & no interface & $+0.87$ & 0.38 \\
+Brats-GLI FLAIR  & no interface & $-0.19$ & 1.0 \\
+I-SPY2 T1-CE     & no interface & $-0.85$ & 0.26 \\
+I-SPY2 T2w       & no interface & $+0.50$ & 0.11 \\
 \bottomrule
 \end{tabular}
-\caption{Effect of replacing label-style noise fill with the real-intensity
-remap, \emph{holding the partition and per-region statistics fixed}, on
-out-of-domain Dice, across all six tasks (both training modalities each,
-except CBCT-only ToothFairy2). $p$ is a Holm-corrected paired Wilcoxon test
-on this one step, pooled over each row's held-out contrasts, corrected
-across all eleven rows. The separation is by \emph{magnitude}: every effect
-above $+1.1$ Dice is on a no-tissue-interface target, and the tissue-interface
-rows span $-4.48$ to $+1.07$ with no gain larger than a point. Within the
-no-tissue-interface group the size still varies --- large on Open-MS FLAIR,
-Brats-GLI T1n and both I-SPY2 rows, small on Open-MS T1w and Brats-GLI T2w
---- but the sign never flips there. HD95 for this same step is reported in
-\cref{sec:suppl-persetting}, where the separation is not as clean.
-$^\dagger$31 regions, all bounded by a genuine tissue-type transition
-(ventricles against CSF, cortex/nuclei against white matter), just packed
-across near-total brain volume rather than a handful of large organs like
-CHAOS -- see discussion below.
-$^\ddagger$ToothFairy2 acquires CBCT only, so this row's held-out axis is
-cross-\emph{dataset} (HaN-Seg CT and MR-T1) rather than a second in-house
-contrast; it is the one row whose estimand differs in that respect, and we
-mark it rather than pooling it in silently.}
+\caption{Replacing label-style noise fill with the real-intensity remap,
+\emph{holding the partition and per-region statistics fixed}: change in
+out-of-domain Dice for every training modality of every task with a ladder.
+$p$: paired Wilcoxon on patients, pooled over that row's held-out contrasts,
+Holm-corrected across all fourteen rows. Every large gain is on a
+no-tissue-interface target; no interface row gains more than $1.4$ Dice.
+$^*$Open-MS has eight test patients and ON-Harmony eight test sessions (four
+subjects, each scanned at two sites), so no row of theirs can reach $p<0.05$
+after correction even when all eight move the same way, as they do for
+Open-MS FLAIR ($8/8$ improve) and ON-Harmony T1w and T2w ($8/8$ worsen). For
+ON-Harmony we treat the session as the unit; two sessions of one subject are
+not fully independent, so its $p$-values are, if anything, optimistic. $^\dagger$31 regions, each bounded by a genuine tissue-type
+transition (see text). $^\ddagger$Held-out axis is cross-dataset (HaN-Seg,
+PDDCA), since ToothFairy2 is CBCT only. HD95 in \cref{sec:suppl-persetting}.}
 \label{tab:dissociation}
 \end{table}
 
-\cref{fig:ladder,tab:dissociation} show the predicted dissociation between
-the two kinds of target the ablation was designed to separate: preserving
-real texture is worth a large, significant Dice gain on tasks whose targets
-are defined by tissue appearance and have no anatomical interface, and
-close to nothing -- rarely a significant cost -- on tasks with one. This is
-the paper's central result: it identifies \emph{when} texture preservation
-matters, and it does so by intervention rather than by correlation across
-methods. Mandible is the sharpest test of the prediction because it was
-classified before the number was computed: a mandible is a bone with an
-unambiguous interface to the soft tissue around it, so the ablation should
-do nothing there, and it does nothing ($+0.51$ Dice, $p=0.65$) despite
-having the third-largest case pool of any row.
+\cref{fig:ladder,tab:dissociation} support a one-directional result. Every
+large gain from preserving real texture is on a target defined by tissue
+appearance rather than by an anatomical interface: Brats-GLI T1c ($+13.3$) and
+T1n ($+7.2$), both significant after correction over all fourteen rows, and
+Open-MS FLAIR ($+7.7$), positive for every one of its eight test patients. No
+tissue-interface row gains more than $1.4$ Dice; the two that gain
+significantly, CHAOS T1in and ToothFairy2, do so by about a point. The
+converse does not hold, and we do not claim it: several appearance-defined
+settings show no reliable effect --- Open-MS T1w, Brats-GLI T2w and FLAIR, and
+both Breast rows, where pooling five cohorts by contrast leaves the step at
+$-0.85$ and $+0.50$. A large texture gain is therefore diagnostic of an
+appearance-defined target, but an appearance-defined target does not guarantee
+one. This identifies \emph{when} texture preservation can matter, and does so
+by intervention rather than by correlation across methods.
 
-The size of the gain still varies within the no-tissue-interface group: it is
-large on Open-MS FLAIR, Brats-GLI T1n and both Breast rows, and much smaller
--- no longer significant on its own -- on Open-MS T1w and Brats-GLI T2w,
-though the sign never flips. We read this as the same mechanism at reduced
-strength rather than a contradiction of it, and note it rather than paper
-over it. One driver is visible in the Breast rows: the effect is largest
-where the distribution shift is hardest. Within I-SPY2's own cohort the
-T1-CE-trained model gains $+0.93$ Dice at this step, but on the external
-Duke cohort's pre-contrast acquisitions the same step is worth $+6.50$. A
-reader should therefore expect these numbers to understate the effect on
-tasks whose held-out axis stays close to home, not overstate it.
+Does ON-Harmony's negative effect reflect the same tissue-interface pattern as
+CHAOS, or a different phenomenon driven by how densely it labels the brain?
+ON-Harmony's 31 regions -- the standard subcortical parcellation (lateral,
+3rd and 4th ventricles, cortex, white matter, cerebellar white matter and
+cortex, brainstem, eight deep grey nuclei) -- are, without exception, bounded
+by a genuine tissue-type transition: CSF against tissue for the ventricles,
+grey against white matter for cortex and nuclei. There is no texture-only
+label in the set, unlike a tumour or lesion margin, so ON-Harmony groups with
+CHAOS as a tissue-interface task, one that labels near-total brain volume
+rather than a handful of organs. Whether that labelling \emph{density} has its
+own effect is a question one densely-labelled task cannot answer.
 
-Does ON-Harmony's negative pooled Dice (\cref{tab:dissociation}) reflect the
-same tissue-interface pattern as CHAOS, or is it a genuinely different
-phenomenon driven by how densely it labels the brain? We checked directly
-rather than speculating: ON-Harmony's 31 regions -- the standard
-subcortical parcellation (lateral/3rd/4th ventricles, cortex, white matter,
-cerebellar white matter and cortex, brainstem, eight deep grey nuclei) --
-are, without exception, bounded by a genuine tissue-type transition: CSF
-against tissue for the ventricles, grey matter against white matter for
-cortex and the nuclei. There is no texture-only, no-interface label in the
-set, unlike a tumour or lesion margin. ON-Harmony's result is therefore not
-a third pattern requiring its own account; it groups with CHAOS as a
-tissue-interface task, just one that labels near-total brain volume rather
-than a handful of organs -- plausibly why the effect is larger in magnitude
-than CHAOS's near-null one, though still never a significant \emph{gain}.
-Whether that labelling \emph{density} carries its own separate effect,
-beyond boundary type alone, is a question one densely-labelled task cannot
-answer; we leave it to a dedicated follow-up with a second such task.
+\paragraph{Does the fill swap change texture? Noise versus real fill.}
+The ladder shows that the fill swap changes Dice; it does not by itself show
+that what changed is texture. We measure that directly, without reference to
+any segmentation, using the normalized-gradient-field (NGF)
+similarity~\cite{haber2006ngf} between each augmented volume and its source
+scan --- an alignment-of-gradients measure that is high when local edge and
+texture structure is retained and falls towards the isotropic-noise floor
+($\approx\!1/3$) when it is destroyed. \cref{fig:ngf-dose} follows both
+quantities along the same rungs on Open-MS FLAIR. The three noise-fill rungs
+sit flat at the texture floor (NGF $0.45$--$0.46$) while their Dice still
+climbs from $11.2$ to $19.6$: those gains come from richer contrast
+randomization, not from texture. Only the real-fill swap moves both together,
+NGF to $0.81$ and Dice to $27.3$. \Cref{tab:ngf} places the methods on the same
+scale: PALETTE retains significantly more source texture than Auglab (FLAIR
+$p=3.2\times10^{-3}$, T1w $p=1.2\times10^{-6}$), while the label-style methods
+sit near the floor.
 
-Two further properties of this test are worth stating explicitly. First, it
-is not a comparison between methods but between two versions of the same
-method that differ in one component, so it cannot be explained by
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/ngf_dose_response_openms_flair}
+\caption{Noise versus real fill on Open-MS FLAIR. Left: out-of-domain Dice
+at each rung. Right: NGF similarity of the augmented volume to its source
+(mean $\pm$ s.e. over $30$ scans), a segmentation-free measure of retained
+texture. The noise-fill rungs stay at the texture floor while Dice rises; the
+real-fill swap (shaded) lifts both.}
+\label{fig:ngf-dose}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcc}
+\toprule
+Method & FLAIR & T1w \\
+\midrule
+\textbf{PALETTE} & \textbf{0.809} & \textbf{0.894} \\
+Auglab           & 0.768 & 0.777 \\
+SynthSeg-EM      & 0.462 & 0.422 \\
+noise fill       & 0.457 & 0.401 \\
+SynthSeg-noEM    & 0.330 & 0.319 \\
+\bottomrule
+\end{tabular}
+\caption{Texture fidelity: NGF similarity to the source scan (mean over
+$n{=}30$ Open-MS scans; $\approx\!1/3$ = isotropic-noise floor). PALETTE
+retains the most texture; the label-style methods sit near the floor.}
+\label{tab:ngf}
+\end{table}
+
+\paragraph{Why the margin over Auglab is the smallest.} The same measurement
+explains why Auglab is the closest competitor: it is \emph{not} a
+texture-destroying method, retaining NGF only modestly below PALETTE's and far
+above the label-style methods' (\cref{tab:ngf}). Two methods that both largely
+preserve texture should land close together where texture is the operative
+cue, and they do; the large margins appear against the methods that discard
+texture.
+
+\paragraph{Two properties of the test.} First, it compares two versions of the
+same method that differ in one component, so it cannot be explained by
 differences in augmentation strength, partition granularity or training
-schedule. Second, the test is independent of whether PALETTE wins the
-task: it is specifically the \emph{texture} ingredient whose effect varies,
-while the remaining ingredient, the wider space of region-to-region contrast
-relationships, continues to help throughout. Breast makes that independence
-concrete in the direction least convenient for us --- the texture step is
-strongly positive there while the full recipe places second
-(\S\ref{subsec:e-main}) --- and ON-Harmony makes it concrete in the other,
-with a negative texture step on a task where PALETTE leads.
-
-\paragraph{Why the margin over Auglab is thin where it is.} The same
-gradient-orientation measurement that isolates texture in
-\cref{subsec:e-ablation} also explains the size of the remaining gap: Auglab
-is \emph{not} a texture-destroying method, retaining a normalized-gradient-field
-similarity to the source scan only modestly below PALETTE's and far above
-the label-style methods' (\cref{sec:suppl-ngf}). Where the target has no
-tissue interface and texture is therefore the operative cue, two methods
-that both largely preserve texture should be expected to land close
-together --- which is what we observe. The large margins appear against the
-methods that discard texture, and the thin ones against the method that
-does not.
+schedule. Second, it is independent of whether PALETTE wins the task. Mandible
+makes that concrete: the texture step is significantly positive there
+($+1.36$), yet the full recipe places third, because the following rung --- adding
+the Auglab pipeline on top --- costs Dice ($69.5\to67.6$, \cref{tab:ladder-full}).
 
 \paragraph{Supporting analyses.} A component ablation separating the
-contributions of the $k$-means partition, the Voronoi sub-parcellation and
-the signed remap is given in \cref{sec:suppl-mechanism}. An independent,
-segmentation-free measurement of texture fidelity -- gradient-orientation
-agreement between each augmented volume and its source -- confirms that
-texture is what changes at the fill-swap step and is reported in
-\cref{sec:suppl-ngf}. Per-setting tables for all eleven source-modality
-settings are in \cref{sec:suppl-persetting}.
-
+$k$-means partition, the Voronoi sub-parcellation and the signed remap is in
+\cref{sec:suppl-mechanism}. Per-setting tables for all eighteen
+source-modality settings, every rung of every ladder and the HD95 versions of
+\cref{tab:dissociation} are in \cref{sec:suppl-persetting}.

@@ -23,32 +23,58 @@ spleen, both kidneys), evaluated across the CHAOS MR contrasts and, as a
 cross-modality transfer, on held-out CT from AMOS~\cite{ji2022amos} and
 SLIVER07~\cite{heimann2009comparison}.
 
-\paragraph{ToothFairy2} \cite{bolelli2025toothfairy2} --- mandible segmentation
-in dental cone-beam CT, the one non-CT, non-MRI training modality here. The
-released label set is 42 classes, but annotation coverage is cohort-dependent:
-several structures are annotated in only part of the cohort, so scoring them
-would measure which cohort a case came from as much as the model. We therefore
-reduce to the mandibular structures annotated throughout, and every column of
-this task --- in-domain and cross-dataset alike --- is scored on that same
-common label, so the numbers being averaged are commensurable. ToothFairy2
-acquires CBCT only, so its held-out evidence is entirely
-cross-modality: HaN-Seg~\cite{podobnik2023hanseg} head-and-neck CT and MR-T1.
-Only HaN-Seg's CT arm is usable as a paired test; its MR is not registered to
-its CT, and the MR-T1 column is scored against its own MR annotation.
+\paragraph{ToothFairy2, HaN-Seg and PDDCA}
+\cite{bolelli2025toothfairy2,podobnik2023hanseg,raudaschl2017pddca} ---
+mandible segmentation, trained on dental cone-beam CT, the one non-CT, non-MRI
+training modality here. ToothFairy2's annotation coverage is
+cohort-dependent, so every column of this task is scored on the mandible alone
+(teeth excluded, matching the external references), which keeps the numbers
+being averaged commensurable. ToothFairy2 acquires CBCT only, so its held-out
+evidence is entirely cross-dataset: HaN-Seg head-and-neck CT and MR-T1 and the
+PDDCA CT, the two CT sources pooled as one contrast group. ToothFairy2's volumes
+are stored superior-inferior inverted relative to the external cohorts --- an
+inversion invisible to the image header, found by checking anatomy directly ---
+so the external test volumes are flipped into ToothFairy2's convention before
+inference, which leaves Dice and HD95 unchanged under the rigid transform. The
+correction matters for the comparison: a method without flip augmentation
+(SRCSM) was penalised by the inversion far more than the others, and it is
+after this correction that SRCSM leads this task.
 
-\paragraph{I-SPY2 and Duke-Breast-MRI} \cite{li2022ispy2,saha2018duke} ---
-breast-lesion segmentation. I-SPY2 (CC BY 4.0) is a neoadjuvant-chemotherapy
-trial whose enrolment requires biopsy-proven invasive cancer, and its reference
-is the trial's own functional tumour volume mask; training uses its
-first-post-contrast T1 (T1-CE) and its T2w. Duke-Breast-MRI, obtained through
-the MAMA-MIA release~\cite{garrucho2025mamamia} (CC BY-NC 4.0, so it carries a
-non-commercial term the other cohorts here do not), is an external
-cross-dataset test cohort only, contributing a T1-CE and a pre-contrast column.
-Both are malignant-only cohorts with expert tumour masks. I-SPY2's DCE series
-are acquired unilaterally at some sites and bilaterally at others; both
-field-of-view variants are generated per patient rather than discarding either,
-which is why the two training contrasts yield different test-case counts (102
-for T1-CE, 168 for T2w) from the same 84 held-out patients.
+\paragraph{Breast: I-SPY2, Duke-Breast-MRI, I-SPY1, ACRIN-6698}
+\cite{li2022ispy2,saha2018duke,garrucho2025mamamia,hylton2012ispy1,partridge2018acrin6698}
+--- breast-lesion segmentation on malignant-only cohorts. I-SPY2 (CC BY 4.0)
+trains, on its first-post-contrast T1 (T1-CE) and its T2w; its reference is the
+trial's functional tumour volume mask. Three external cohorts are test-only.
+Duke-Breast-MRI and I-SPY1 come through the MAMA-MIA release, whose expert
+primary-lesion protocol both share, and contribute T1-CE and pre-contrast
+columns; Duke-Breast-MRI is CC BY-NC 4.0, a non-commercial term no other cohort
+here carries. ACRIN-6698, the diffusion sub-study of I-SPY2 with no patient in
+common with our I-SPY2 subjects, contributes the baseline diffusion-weighted
+acquisition with the trial's whole-tumour DWI region, a contrast neither
+training modality resembles. Because I-SPY2 is mostly acquired unilaterally,
+bilateral external volumes are cropped to the lesion side and, for the
+full-thorax acquisitions, also anterior-posteriorly to the breast-plus-chest-wall
+extent of I-SPY2's own crops; without the second crop every method's HD95 is
+dominated by the thorax. I-SPY2's DCE series are acquired unilaterally at some
+sites and bilaterally at others; both field-of-view variants are kept per
+patient, and the significance tests treat them as one patient.
+
+\paragraph{Spine} \cite{vandergraaf2024spider} --- vertebrae, intervertebral
+discs and spinal canal. Results for this task were computed by our
+collaborators on their own pipeline with the same method suite, trained on CT
+and Dixon in-phase MRI of a CT/Dixon cohort and tested on that cohort's held-out
+CT and Dixon fat, in-phase and water images and on the T1w and T2w of SPIDER.
+Their Dice is a whole-structure binary Dice per label; no HD95 and no SRCSM arm
+were computed, so Spine is absent from the HD95 table and from every SRCSM
+comparison.
+
+\paragraph{Pelvis} \cite{wasserthal2023totalseg,dantonoli2025totalsegmri} ---
+ten pelvic and hip musculoskeletal structures (both hips, sacrum, and the
+gluteus maximus, medius and minimus and iliopsoas on each side), from the
+TotalSegmentator CT (CC BY 4.0) and MRI (CC BY-NC-SA 2.0) releases. The two are
+unpaired cohorts, and the MRI release mixes sequences by design, so its MRI
+column is a sequence-heterogeneous test rather than one named contrast. CT is
+subsampled to 200 cases to keep training time comparable with the other tasks.
 
 \begin{table}[h]
 \centering
@@ -64,18 +90,17 @@ Open-MS        & 22  & 8  \\
 Brats2024-GLI  & 630 & 70 \\
 ToothFairy2    & 408 & 71 \\
 I-SPY2         & 476 & 84 \\
+Pelvis (CT / MRI) & 170 / 156 & 30 / 27 \\
 \bottomrule
 \end{tabular}
-\caption{Per-task subject/case counts, pooled across the 3 folds used
-everywhere in this paper ($\pm 1$ between folds). ON-Harmony counts are scan
-sessions, not unique subjects, since its travelling-heads design scans some
-subjects at multiple sites. CHAOS test includes its own held-out CT split,
-separate from the AMOS/SLIVER07 cross-dataset transfer counted
-independently (external cohorts, not re-tabulated here); likewise
-ToothFairy2's HaN-Seg transfer and I-SPY2's Duke-Breast-MRI transfer. I-SPY2
-counts are patients: each held-out patient yields one T1-CE case and, where
-both field-of-view variants exist, more than one T2w case, giving the 102 and
-168 per-contrast case counts quoted above. ToothFairy2 excludes one case with
-no mandible label.}
+\caption{Per-task subject counts for the training cohorts, pooled across the 3
+folds used throughout ($\pm 1$ between folds). ON-Harmony counts are scan
+sessions; the eight test sessions are four subjects, each scanned at two sites. External cohorts are
+test-only and counted separately: AMOS and SLIVER07 (CHAOS), HaN-Seg and PDDCA
+(Mandible), Duke-Breast-MRI (291), I-SPY1 (167) and ACRIN-6698 (371) for
+Breast, and SPIDER (171 T1w, 219 T2w) for Spine, whose own CT/Dixon test split
+has 27--29 cases per contrast. I-SPY2 counts are patients; one held-out
+patient can yield more than one T2w image (both field-of-view variants).
+Pelvis MRI keeps 183 of the 298 released cases.}
 \label{tab:suppl-datasets}
 \end{table}

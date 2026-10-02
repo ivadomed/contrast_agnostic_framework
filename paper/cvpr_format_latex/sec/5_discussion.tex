@@ -10,9 +10,9 @@ space of region-to-region contrast relationships (including the sign
 inversions in \cref{eq:affine}) that no single real acquisition protocol
 supplies. Disentangling these two effects further is left to future work.
 
-\paragraph{Why the dissociation follows from the anatomy.} Preserving real
-intensity structure matters where the target is defined by tissue
-\emph{appearance}, and not where it is defined by an anatomical
+\paragraph{Why the effect follows the anatomy, in one direction.} Large gains
+from preserving real intensity structure appear only where the target is
+defined by tissue \emph{appearance} rather than by an anatomical
 \emph{interface}. Liver, spleen and kidney are encapsulated organs bounded by
 fat planes -- a genuine physical interface, which is why edge-following methods
 such as geodesic active contours have long succeeded on
@@ -34,6 +34,18 @@ ones. The larger negative magnitude there, compared to CHAOS's near-null
 one, is plausibly a density effect -- near-total brain volume relabelled at
 once, rather than a handful of organs -- which we leave to a dedicated
 follow-up with a second densely-labelled task.
+
+\paragraph{Appearance-defined is necessary, not sufficient.} Several
+appearance-defined settings show no reliable texture effect: Open-MS T1w,
+Brats-GLI T2w and FLAIR, and both Breast rows. We do not have a tested
+explanation, and we state the result accordingly as one-directional. Two
+candidate factors are worth naming as hypotheses only. Within one task the
+effect differs sharply by training modality (Brats-GLI: $+13.3$ from T1c,
+$+7.2$ from T1n, about zero from T2w and FLAIR), so how much discriminative
+texture the \emph{training} contrast carries may matter as much as the target.
+And Breast pools five cohorts from different trials and sites, which may dilute
+a cohort-specific effect. Either would be a property of the data rather than of
+the mechanism, but neither is established here.
 
 \paragraph{The label step needs only the annotation training already
 assumes.} PALETTE's one label-consuming step uses whatever segmentation labels
@@ -60,26 +72,21 @@ of the augmentation: it matters where the target is defined by tissue
 appearance, and not where it is defined by an anatomical interface. A
 controlled intervention -- holding the partition and per-region statistics
 fixed and swapping only label-style noise fill for a real-intensity remap --
-separates our no-tissue-interface and tissue-interface tasks along exactly
-that line, worth $+7.7$ and $+7.2$ Dice on the former and nothing ($+1.1$,
-$-1.1$) on the latter -- a pattern a third, far more densely-labelled
-interface task (healthy-brain) also follows, just with a larger negative
-swing ($-4.5$, $-1.4$) plausibly reflecting how much more of the volume is
-relabelled at once (\cref{subsec:e-ablation}). PALETTE, the single-source
-augmentation built on this observation, partitions the foreground by
-unsupervised $k$-means and a Voronoi sub-parcellation and applies a signed
-affine remap of the real intensities within each sub-region, requiring
-neither a dense anatomical label map nor any target-domain data. Across
-eleven source-modality settings spanning six tasks --- abdominal, brain,
-brain-tumour, dental and breast imaging --- together with four cross-dataset
-external test cohorts, a single nnU-Net configuration trained with PALETTE
-attains the best Dice on four of the six tasks and improves over all five
-competing methods on a task-stratified test. It does not win everywhere, and
-the two exceptions are informative rather than embarrassing: on mandible the
-top three methods are statistically indistinguishable, and on breast the
-Auglab pipeline we build on is genuinely ahead while the texture
-intervention this paper argues for is, on that same task, among the
-strongest effects we measure. A benchmark ranking and a causal account are
+confines every large effect to no-tissue-interface targets --- $+13.3$ and
+$+7.2$ Dice on brain tumour, $+7.7$ on MS lesions --- while no interface-bounded
+target gains more than $1.4$; it does not, conversely, guarantee a gain on
+every appearance-defined target. PALETTE, the single-source augmentation built
+on this observation, partitions the foreground by unsupervised $k$-means and a
+Voronoi sub-parcellation and applies a signed affine remap of the real
+intensities within each sub-region, requiring neither a dense anatomical label
+map nor any target-domain data. Across eighteen source-modality settings
+spanning eight tasks and sixteen datasets, a single nnU-Net configuration
+trained with PALETTE is the best method overall: best Dice on six of the eight
+tasks and significantly better than every competitor across tasks. It does not
+win everywhere: on healthy brain it ties SRCSM, and on mandible SRCSM and
+Auglab are genuinely ahead, a shortfall the ablation traces to the Auglab
+recipe PALETTE runs inside rather than to the texture-preserving transform.
+A benchmark ranking and a causal account are
 separate claims; we regard the
 task-level account as the more durable contribution: it predicts in advance
 where a texture-preserving augmentation will and will not pay off, and that

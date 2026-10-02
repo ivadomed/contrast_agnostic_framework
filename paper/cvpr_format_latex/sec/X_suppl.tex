@@ -16,19 +16,24 @@
 \label{sec:suppl-persetting}
 
 \cref{tab:meta} in the main paper reports results at the task level, pooling
-each task's held-out test contrasts and both of its source modalities. This
-section reports the same evaluation broken out into the eleven individual
-source-modality settings. Every number is a cross-fold, cross-class average
+each task's held-out test contrasts, all of its source modalities and its
+external cohorts. This section reports the same evaluation broken out into the
+eighteen individual source-modality settings. Every number is a cross-fold, cross-class average
 over all held-out contrasts of that setting, under the protocol of
 \cref{subsec:e-setup}.
 
-\paragraph{Statistical test construction.} All tests are paired at the
-level of the individual test case, never per-fold, so significance reflects
-consistency across cases rather than aggregate noise. A case's score is its
-mean over labels and over the evaluated folds, giving one observation per
-held-out case; treating each fold's re-scoring of the same patient as an
-independent sample would be pseudo-replication and would inflate the
-effective sample size. Per-setting comparisons (below) use the paired
+\paragraph{Statistical test construction.} All tests are paired, and the
+unit of independence is the \emph{patient}, never the fold, the image or the
+contrast. A patient's score is its mean over labels and evaluated folds; where
+the same patient is scored in several held-out contrasts, or by the models of
+several training modalities, those scores move together as one unit under the
+null. Treating them as separate samples would be pseudo-replication and would
+inflate the effective sample size --- a real risk here, since several tasks
+test a handful of patients under many contrasts (ON-Harmony: eight sessions
+of four subjects, six contrasts). For ON-Harmony the unit is the session, since
+its four subjects leave a test that could never reach significance; two
+sessions of one subject are not fully independent, so its $p$-values are, if
+anything, optimistic, and we do not rest any claim on ON-Harmony alone. Per-setting comparisons (below) use the paired
 Wilcoxon signed-rank test~\cite{wilcoxon1945}, since there each setting is
 judged on its own. All tests are Holm-corrected~\cite{holm1979} for multiple
 comparisons.
@@ -75,34 +80,36 @@ single undifferentiated sample of paired differences. Applying it to the
 concatenation of all contrasts therefore tests a case-weighted null --- the
 imbalance above, reintroduced --- and there is no standard reweighting of
 the signed-rank statistic that recovers the equal-per-contrast estimand.
-The two tests do disagree on our data, and not in a way that flatters us. On
-ON-Harmony against SRCSM, $\text{macro}\Delta = +1.60$ Dice with a
-stratified $p$ of $0.012$, while the pooled Wilcoxon returns $p = 0.13$ and
-would miss it. In the other direction, on Mandible against SynthSeg-EM the
-pooled test returns $p < 10^{-4}$ for a $\text{macro}\Delta$ of $+0.11$
-Dice --- a tenth of a Dice point --- where the stratified test correctly
-declines to call a difference ($p = 0.35$).
+The disagreement this causes runs in both directions: a pooled test can
+declare a tenth of a Dice point significant because one large cohort supplies
+most of the cases, or miss a consistent effect confined to the smaller
+contrasts.
 
 \emph{The test.} Under the null that the two methods are exchangeable on a
-given case, that case's paired difference is equally likely to carry either
-sign. Sign-flipping is therefore a valid randomization null for \emph{any}
+given patient, that patient's paired differences are equally likely to carry
+either sign. Sign-flipping is therefore a valid randomization null for \emph{any}
 statistic computed from those differences~\cite{ernst2004permutation},
 $\text{macro}\Delta$ included, which is what makes it applicable where the
 signed-rank test is not. We
 report the one-sided $p$ in the direction of the stated hypothesis, with the
 two-sided $p$ retained as a secondary column, and give a $95\%$ confidence
-interval from a hierarchical bootstrap that resamples cases within each
-contrast before averaging across contrasts.
+interval from a bootstrap that resamples patients within groups of patients
+sharing the same set of contrasts, so each source keeps its observed size.
 
-\emph{Implementation and its one approximation.} We evaluate the sign-flip
-null in closed form, from its exact mean and variance under sign symmetry
-with a normal approximation to the tail, rather than by resampling. Several
-settings have few held-out cases ($16$ on Open-MS; $8$ per MR contrast on
-CHAOS), which is where such an approximation is least safe, so we checked it
-rather than assuming it: against a $200{,}000$-draw Monte-Carlo sign-flip
-null on the one comparison anywhere near the decision boundary --- the
-cross-task test against Auglab --- the resampled $p$ is $0.0237$ against the
-closed form's $0.0245$. No conclusion in this paper turns on the difference.
+\emph{Evaluating the tail.} The statistic is a weighted sum of per-patient
+contributions, so its sign-flip null distribution can be computed rather than
+sampled. We enumerate all $2^{M}$ sign patterns of the $M{=}20$ patients with
+the largest contributions exactly, and treat the remaining, lighter patients as
+a Gaussian term with their exact null variance; with twenty patients or fewer
+the test is therefore exact. A plain normal approximation to the whole null,
+which an earlier version of this analysis used, is badly conservative in
+exactly the designs we have, where a few patients spanning several contrasts
+carry most of the null variance: on the CHAOS table it returned $p=0.013$ for
+a comparison that a $200{,}000$-draw Monte-Carlo test places below
+$5\times10^{-6}$. The enumerated tail is deterministic and reaches far tails
+without the $1/B$ floor of resampling. Its corollary is a hard floor for small
+cohorts: eight patients admit $2^8=256$ sign patterns, so no one-sided $p$
+can fall below $1/256$ however consistent the effect.
 
 \emph{What is reported alongside.} Every generated significance report also
 carries a per-contrast table of mean $\Delta$ with the raw, uncorrected
@@ -122,78 +129,54 @@ their cases into one group before any averaging happens, then average
 modality groups with equal weight -- for CHAOS this additionally means
 averaging equal-weight across liver/spleen/kidney \emph{within} the pooled
 CT evidence, since AMOS's own CT column already blends all three organs
-into one number before it reaches this step. This changed some task-level
-numbers for CHAOS from earlier drafts of this paper; the other three tasks
-have no multi-source modality and are unaffected.
+into one number before it reaches this step. The same pooling applies to
+Mandible (HaN-Seg and PDDCA both supply CT) and Breast (I-SPY2, Duke-Breast-MRI
+and I-SPY1 all supply T1-CE and pre-contrast); the remaining tasks have no
+contrast evidenced by more than one source.
 
 \input{sec/_suppl_tables}
 
-Every task-level comparison in the main paper's \cref{tab:meta} is
-significant; non-significant margins appear only in the per-setting tables
-below. Where such a margin is not significant, the appropriate conclusion is
-equivalence on that setting, not a shortfall: the held-out sets used here
-are large, so these comparisons are not underpowered.
+\Cref{tab:suppl-dice,tab:suppl-hd95} break each task column of
+\cref{tab:meta} into its training modalities. Where a margin is not
+significant in a single setting, the honest reading is that one setting
+cannot separate the methods, not that they are equivalent: several settings
+have few test units (eight patients on Open-MS, eight sessions on ON-Harmony),
+which is why the
+main claims rest on the task- and cross-task-level tests.
 
-Two observations are easier to see here than at task level. First, PALETTE
-attains the best Dice in \emph{all eight} settings. Second, the identity of
-the runner-up is not stable: Auglab is the strongest competitor on six of the
-eight Dice settings, SRCSM on Open-MS FLAIR, and SynthSeg-EM on ON-Harmony
-T2w; on HD95 the runner-up changes again. No competing method can be relied
-upon as a default, which is the practical argument for a plug-in transform
-that is at or near the top everywhere.
+\paragraph{Boundary distance at task level.} \cref{tab:meta-hd95} gives the
+HD95 counterpart of \cref{tab:meta}. Across tasks PALETTE is significantly
+better than every competitor, Auglab included. Per task it has the lowest HD95
+on Brats-GLI, ON-Harmony, Open-MS and Pelvis; it ties Auglab on Breast and
+trails SRCSM on CHAOS without either gap being significant; and on Mandible it
+is significantly behind SRCSM, Auglab and the no-augmentation baseline, the
+one task where the baseline beats anything. When HD95 disagrees with Dice for a
+method -- a noticeably better HD95 than its Dice would predict -- the usual
+explanation is low recall: a method that predicts only a small, confident,
+well-localized fragment of the structure can have a deceptively good boundary
+distance while missing most of the target, so a strong HD95 paired with a weak
+Dice is a warning sign rather than evidence of competitiveness.
 
-\paragraph{Boundary distance at task level.} HD95 is less standard for this
-class of augmentation comparison than Dice, which is why it is reported here
-rather than in the main paper's headline table -- not because it is
-uninformative. \cref{tab:meta-hd95} gives the same task-level breakdown as
-\cref{tab:meta} (main paper). The no-augmentation baseline and SynthSeg-noEM
-are worst on both metrics, and PALETTE is significantly better across tasks
-than SynthSeg-noEM, SynthSeg-EM, SRCSM and the baseline. Auglab is the
-exception on this metric and the difference runs both ways depending on the
-task: PALETTE is better on ON-Harmony and Open-MS, Auglab on CHAOS, Mandible
-($+1.10$mm, $p=0.032$) and Breast ($+7.56$mm,
-$p=8.6\!\times\!10^{-25}$), and across tasks neither direction reaches
-significance ($p=1.00$ each way). The no-augmentation baseline also beats
-PALETTE on Mandible ($+3.40$mm, $p=1.9\!\times\!10^{-5}$) -- the only task
-where it beats anything -- which the recall reading below is the right lens
-for. When HD95 disagrees with Dice for a
-given method -- a noticeably better HD95 than its
-Dice would predict -- the usual explanation is low recall: a method that
-predicts only a small, confident, well-localized fragment of the true
-structure can have a deceptively good boundary distance despite missing
-most of the target. A strong HD95 paired with a weak Dice is therefore a
-warning sign about a method's predictions, not evidence that it is actually
-competitive.
-
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{3.5pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc|c}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccc|c}
 \toprule
- & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & $p$ vs ours \\
+ & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 47.9 & 124.4 & 28.6 & 35.2 & \textbf{20.8} & 135.6 & 2.2e-27 \\
-SynthSeg-noEM   & 78.9 &  89.9 &  7.5 & 41.9 & 33.3 & 168.7 & 1.4e-91 \\
-SynthSeg-EM     & 17.4 &  31.8 &  4.7 & 24.7 & 24.8 & 147.5 & 1.6e-16 \\
-SRCSM           & 18.3 & \textbf{26.7} &  5.6 & 24.6 & 29.5 & 168.6 & 1.2e-32 \\
-Auglab          & \textbf{15.0} &  39.3 &  4.7 & 26.5 & 23.1 & \textbf{132.2} & 1.00 \\
-\textbf{PALETTE (ours)} & 15.2 & 30.6 & \textbf{4.2} & \textbf{24.3} & 24.2 & 139.8 & --- \\
+Baseline        & 44.8 & 124.4 & 24.0 & 35.2 & 21.7 & 58.5 & 149.3 & 8.4e-33 \\
+SynthSeg-noEM   & 78.0 &  89.9 &  6.7 & 41.9 & 32.9 & 101.1 & 261.8 & 2.1e-39 \\
+SynthSeg-EM     & 17.9 &  31.8 &  4.7 & 24.7 & 24.9 & 60.9 & 34.0 & 4.7e-6 \\
+SRCSM           & 17.5 & \textbf{26.7} &  5.3 & 24.6 & \textbf{19.3} & 91.8 & 33.9 & 3.0e-23 \\
+Auglab          & 16.1 & 39.3 &  4.7 & 26.5 & 22.1 & \textbf{57.1} & 35.6 & 5.1e-6 \\
+\textbf{PALETTE (ours)} & \textbf{15.6} & 30.6 & \textbf{4.3} & \textbf{24.3} & 23.5 & 57.7 & \textbf{29.0} & --- \\
 \bottomrule
-\end{tabular}%
-}
-\caption{Task-level HD95 (mm, $\downarrow$), the secondary metric discussed
-above. Same pooling and significance test as \cref{tab:meta}, and likewise
-with no cross-task average printed. PALETTE separates significantly from
-every competitor except Auglab, against which the cross-task test is
-inconclusive in both directions ($p=1.00$ each way) even though the
-per-task differences are individually significant and point opposite ways.
-Breast's absolute values are large for every method because the target is a
-small lesion in a large field of view, so a single missed focus dominates
-the $95$th percentile; the column is still internally comparable.}
+\end{tabular}
+\caption{Task-level HD95 (mm, $\downarrow$). Same pooling and test as
+\cref{tab:meta}, and likewise no cross-task average. Spine reports no HD95.}
 \label{tab:meta-hd95}
-\end{table}
+\end{table*}
 
 \begin{figure*}[t]
 \centering
@@ -203,12 +186,9 @@ per-dataset panels, same boundary-type grouping, same fill-swap rung and
 same visual scheme (per-curve colour only on the real-fill segment; bold
 black panel average; one panel-pooled $p$-value per panel), reported on
 HD95 instead of Dice (\emph{improvement} means the fill-swap step lowers
-HD95, since lower is better here). The separation is messier than Dice:
-only two of four panels reach panel-pooled significance -- BraTS-GLI
-improves, ON-Harmony worsens -- while CHAOS and Open-MS are
-not significant, so HD95 disagrees with Dice most in exactly the two
-tasks (CHAOS, Open-MS) where the pooled effect is otherwise weakest.
-Underlying deltas in \cref{tab:dissociation-hd95}.}
+HD95). Brats-GLI and Breast improve significantly at panel level and
+ON-Harmony worsens; CHAOS, Open-MS and ToothFairy2 do not move significantly.
+Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
 \end{figure*}
 
@@ -216,65 +196,54 @@ Underlying deltas in \cref{tab:dissociation-hd95}.}
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{llc}
+\begin{tabular}{llcc}
 \toprule
-Task & boundary type & $\Delta$ HD95 (mm) \\
+Task & boundary type & $\Delta$ HD95 (mm) & $p$ \\
 \midrule
-CHAOS T1in      & tissue interface   & $-2.95$ \\
-CHAOS T2spir    & tissue interface   & $+4.20$ \\
-ON-Harmony T1w  & tissue interface$^\dagger$ & $+6.22$ \\
-ON-Harmony T2w  & tissue interface$^\dagger$ & $+0.38$ \\
-ToothFairy2 CBCT & tissue interface$^\ddagger$ & $-0.25$ \\
+CHAOS T1in       & interface & $-2.95$ & 0.035 \\
+CHAOS T2spir     & interface & $+2.64$ & 0.88 \\
+ON-Harmony T1w   & interface & $+6.82$ & 0.062 \\
+ON-Harmony T2w   & interface & $+0.38$ & 0.062 \\
+ON-Harmony DWI   & interface & $-0.05$ & 0.75 \\
+ToothFairy2 CBCT & interface & $-0.20$ & 0.37 \\
 \midrule
-Open-MS FLAIR   & no tissue interface & $-3.02$ \\
-Open-MS T1w     & no tissue interface & $+3.94$ \\
-Brats-GLI T1n   & no tissue interface & $-4.59$ \\
-Brats-GLI T2w   & no tissue interface & $-1.88$ \\
-I-SPY2 T1-CE    & no tissue interface & $-18.09$ \\
-I-SPY2 T2w      & no tissue interface & $-1.55$ \\
+Open-MS FLAIR    & no interface & $-3.02$ & 0.14 \\
+Open-MS T1w      & no interface & $+3.94$ & 0.88 \\
+Brats-GLI T1n    & no interface & $-4.59$ & 6.8e-10 \\
+Brats-GLI T1c    & no interface & $-9.91$ & 4.5e-11 \\
+Brats-GLI T2w    & no interface & $-1.95$ & 0.014 \\
+Brats-GLI FLAIR  & no interface & $-1.71$ & 0.21 \\
+I-SPY2 T1-CE     & no interface & $-3.21$ & 9.5e-5 \\
+I-SPY2 T2w       & no interface & $-1.82$ & 0.0026 \\
 \bottomrule
 \end{tabular}
-\caption{Same fill-swap step as \cref{tab:dissociation} (main paper),
-reported on HD95 instead of Dice (negative is better), all six tasks, both
-training modalities each where two exist. The separation is not clean on
-HD95 anywhere: the sign flips between the two modalities of the same task
-for both Open-MS and CHAOS, so we restrict the dissociation claim to Dice in
-the main paper and report HD95 here rather than presenting it as confirming
-that claim. The two newest tasks do not rescue it either, for opposite
-reasons: ToothFairy2 moves by a quarter of a millimetre ($p=0.59$), and
-I-SPY2 T1-CE's $-18$mm is by far the largest movement in the table but comes
-from a task whose absolute HD95 is $150$--$175$mm, where a single recovered
-lesion focus shifts the $95$th percentile a long way.
-$^\dagger$Grouped with CHAOS as tissue-interface, not a separate category
--- see \S4.3 of the main paper. $^\ddagger$Cross-dataset held-out axis
-(HaN-Seg), as in \cref{tab:dissociation}.}
+\caption{Same fill-swap step as \cref{tab:dissociation} (main paper), on HD95
+(negative is better), with $p$ Holm-corrected across the fourteen rows. Five of
+the six significant improvements are on no-tissue-interface targets, including
+both Breast rows, whose Dice does not move; the sixth is CHAOS T1in. HD95
+therefore leans the same way as the main paper's one-directional Dice result,
+but its sign is less consistent within a task (it flips between the two
+modalities of Open-MS and of CHAOS), so we state the claim on Dice and report
+HD95 here rather than as confirmation of it.}
 \label{tab:dissociation-hd95}
 \end{table}
 
 \paragraph{Full ladder: numbers and significance.} \cref{fig:ladder} (main
 paper) shows the rung sequence visually; \cref{tab:ladder-full} gives the
-underlying OOD Dice at every rung, with significance for each step against
-the rung immediately before it (Holm-corrected paired Wilcoxon test within
-each ladder's transitions). Most steps that add an ingredient help,
-significantly, as expected. Eight cells are significant \emph{decreases}
-(marked $\downarrow$), and they fall into three groups. The fill-swap step
-on both ON-Harmony modalities (T1w and T2w), consistent with ON-Harmony's
-tissue-interface grouping (\cref{subsec:e-ablation}) and replicating across
-modalities. The Voronoi sub-parcellation step on Brats-GLI T1n (not T2w),
-and the $k$-means and label-remap steps on the Breast ladders, where the
-early partition-only rungs cost accuracy before the real-intensity fill
-recovers it and more.
-
-The third group is the one that explains \S\ref{subsec:e-main}: the final
-$+$AugLab rung is a significant \emph{decrease} on Mandible ($69.2
-\rightarrow 65.6$) and on Breast T2w ($35.8 \rightarrow 32.9$) --- the two
-tasks where the complete method does not win. On both, PALETTE alone (the
-$+$real rung) is at the ladder's maximum and the surrounding Auglab recipe
-takes it back down. That localises the shortfall to the wrapper rather than
-to the transform this paper argues for, and it is visible here in the same
-per-rung numbers that carry the positive results, not in a separate analysis
-constructed after the fact. We have not diagnosed which Auglab operator is
-responsible; that is a question for the pipeline it belongs to.
+underlying out-of-domain Dice at every rung of all fourteen ladders, with
+significance for each step against the rung immediately before it
+(Holm-corrected paired Wilcoxon on patients, within each ladder's family of
+steps). Most steps that add an ingredient help, as expected. Six cells are
+significant \emph{decreases} (marked $\downarrow$). Two are the fill-swap step
+on ON-Harmony T1w and T2w, consistent with its tissue-interface grouping. One
+is the Voronoi sub-parcellation step on Brats-GLI T1n, which the real-fill
+step then more than recovers. The other three are the final $+$Auglab rung
+--- on ON-Harmony DWI and twice on Mandible, the task where the complete
+method places third (\cref{subsec:e-main}). There PALETTE alone (the $+$real
+rung, $69.5$) is the ladder's maximum and adding the Auglab recipe takes it
+back down, which places the Mandible shortfall in the wrapper rather than in
+the transform this paper argues for. We have not diagnosed which Auglab
+operator is responsible.
 
 We likewise do not hide that Voronoi's own marginal contribution is
 task-dependent rather than uniformly positive -- a separate paired
@@ -293,50 +262,48 @@ pipeline is positive even though one internal component is not.
 \scriptsize
 \setlength{\tabcolsep}{2.4pt}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccccc}
+\begin{tabular}{lccccccc}
 \toprule
-Rung & Open-MS & Open-MS & Brats-GLI & Brats-GLI & CHAOS & CHAOS & ON-Harm. & ON-Harm. \\
-     & FLAIR   & T1w     & T1n       & T2w       & T1in  & T2spir & T1w     & T2w \\
+Rung & Open-MS & Open-MS & Brats-GLI & Brats-GLI & Brats-GLI & Brats-GLI & CHAOS \\
+     & FLAIR & T1w & T1n & T1c & T2w & FLAIR & T1in \\
 \midrule
-base       & 2.5 & 1.1 & 16.9 & 6.0 & 21.0 & 21.2 & 15.0 & 25.6 \\
-+km        & $11.2^{**}$ & $9.8^{***}$ & $38.4^{***}$ & $38.6^{***}$ & $84.2^{***}$ & $79.0^{***}$ & $62.5^{***}$ & $63.5^{***}$ \\
-+lbl       & $17.5^{***}$ & $22.4^{***}$ & $41.8^{***}$ & $40.2^{***}$ & $87.7^{***}$ & $83.4^{***}$ & 62.9 & 63.6 \\
-+vor       & $19.6^{*}$ & $34.1^{***}$ & $39.8^{***}{\downarrow}$ & 41.0 & 87.2 & 82.7 & $63.2^{*}$ & $64.2^{***}$ \\
-+real      & $27.3^{***}$ & 34.9 & $47.0^{***}$ & 41.5 & $88.2^{***}$ & 81.6 & $58.7^{***}{\downarrow}$ & $62.7^{***}{\downarrow}$ \\
-+AL(v000)  & 30.6 & 36.4 & 46.9 & $46.8^{***}$ & 87.6 & 86.3 & $64.2^{*}$ & 63.9 \\
-+AL(v100)  & 31.3 & 34.7 & $47.6^{*}$ & $46.9^{*}$ & 87.1 & $87.1^{*}$ & 64.2 & 64.4 \\
+base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 21.4 \\
++km        & $11.2^{*}$ & $9.8^{*}$ & $38.4^{***}$ & $29.6^{***}$ & $38.6^{***}$ & $26.1^{***}$ & $84.2^{***}$ \\
++lbl       & $17.5^{*}$ & $22.4^{*}$ & $41.8^{***}$ & 30.3 & $40.2^{**}$ & 26.4 & $87.7^{***}$ \\
++vor       & 19.6 & $34.1^{*}$ & $39.8^{***}{\downarrow}$ & 30.5 & 41.0 & $31.9^{***}$ & 87.2 \\
++real      & $27.3^{*}$ & 34.9 & $47.0^{***}$ & $43.7^{***}$ & 41.8 & 31.7 & $88.2^{***}$ \\
++AL(v000)  & 30.6 & 36.4 & 46.9 & 44.2 & $46.8^{***}$ & $40.9^{***}$ & 87.7 \\
++AL(v100)  & 31.3 & 34.7 & $47.6^{*}$ & $46.5^{***}$ & 46.9 & 41.2 & 87.3 \\
 \bottomrule
 \end{tabular}%
 }
 
 \vspace{0.6em}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lccc}
+\begin{tabular}{lccccccc}
 \toprule
-Rung & Mandible & Breast & Breast \\
-     & CBCT     & T1-CE  & T2w \\
+Rung & CHAOS & ON-Harm. & ON-Harm. & ON-Harm. & Mandible & Breast & Breast \\
+     & T2spir & T1w & T2w & DWI & CBCT & T1-CE & T2w \\
 \midrule
-base       & 39.9 & 13.9 & 32.6 \\
-+km        & $64.7^{***}$ & $22.0^{***}$ & $31.4^{***}{\downarrow}$ \\
-+lbl       & $65.9^{***}$ & $20.5^{***}{\downarrow}$ & $29.9^{***}{\downarrow}$ \\
-+vor       & $68.6^{***}$ & 20.3 & $32.2^{***}$ \\
-+real      & 69.2 & $24.0^{***}$ & $35.8^{***}$ \\
-+AL(v000)  & $65.6^{***}{\downarrow}$ & $28.0^{***}$ & $32.9^{***}{\downarrow}$ \\
-+AL(v100)  & $65.7^{**}$ & --- & --- \\
+base       & 18.3 & 14.8 & 24.5 & 36.1 & 39.4 & 23.7 & 33.5 \\
++km        & $79.0^{***}$ & $62.5^{*}$ & $63.5^{*}$ & $60.4^{*}$ & $64.6^{***}$ & $28.8^{***}$ & $37.0^{***}$ \\
++lbl       & $83.4^{***}$ & 62.9 & 63.6 & $64.5^{*}$ & $65.6^{***}$ & 28.5 & $38.8^{***}$ \\
++vor       & 82.7 & 63.2 & $64.2^{*}$ & 64.6 & $68.1^{***}$ & $30.8^{***}$ & $39.8^{**}$ \\
++real      & 81.8 & $58.0^{*}{\downarrow}$ & $62.6^{*}{\downarrow}$ & $65.4^{*}$ & $69.5^{***}$ & 29.9 & $40.3^{*}$ \\
++AL(v000)  & 86.3 & 64.2 & 63.9 & $60.9^{*}{\downarrow}$ & $67.6^{***}{\downarrow}$ & $34.7^{***}$ & $41.9^{***}$ \\
++AL(v100)  & 87.1 & 64.2 & $64.4^{*}$ & 60.9 & $67.5^{***}{\downarrow}$ & --- & --- \\
 \bottomrule
 \end{tabular}%
 }
-\caption{OOD Dice (\%) at every ladder rung (\cref{fig:ladder}, main paper),
-all six tasks, both training modalities each where two exist, with
-significance for each step vs.\ the rung immediately above it:
-$^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$ (Holm-corrected paired
-Wilcoxon, within-ladder family of tests), $\downarrow$ marks a significant
-\emph{decrease}. Rungs: base(line), +$k$-means, +label-remap, +Voronoi
-(noise fill), +real-intensity fill (PALETTE alone), +AugLab (val000/val100).
-The two newest tasks (lower block) have no val100 arm: I-SPY2's was never
-trained, and ToothFairy2's was trained but not evaluated on the
-cross-dataset half that forms its OOD axis, so no comparable figure exists.
-Mandible's OOD axis is cross-dataset (HaN-Seg), as elsewhere.}
+\caption{Out-of-domain Dice (\%) at every rung of every ladder
+(\cref{fig:ladder}), with significance for each step against the rung above
+it: $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$ (Holm-corrected paired
+Wilcoxon on patients, within each ladder); $\downarrow$ marks a significant
+\emph{decrease}. Rungs: base(line), $+k$-means, $+$label-remap, $+$Voronoi
+(noise fill), $+$real-intensity fill (PALETTE alone), $+$Auglab
+(val000/val100). Open-MS and ON-Harmony have eight test units each, so their
+smallest attainable $p$ after correction is just under $0.05$. I-SPY2 has no
+val100 arm. Mandible's held-out axis is cross-dataset.}
 \label{tab:ladder-full}
 \end{table}
 
@@ -452,37 +419,27 @@ contrast as well (\emph{train050/val100}).
  & \multicolumn{2}{c|}{Dice $\uparrow$} & \multicolumn{2}{c}{HD95 (mm) $\downarrow$} \\
 Task & val000 & val100 & val000 & val100 \\
 \midrule
-Brats-GLI    & 46.8 & \textbf{47.3} & 15.2 & \textbf{14.7} \\
+Brats-GLI    & 45.9 & \textbf{46.6} & 15.6 & \textbf{15.1} \\
 CHAOS        & 85.0 & \textbf{85.2} & 30.6 & \textbf{28.7} \\
-ON-Harmony   & 68.2 & \textbf{68.4} &  4.2 & \textbf{4.1}  \\
+ON-Harmony   & 66.5 & \textbf{66.6} &  4.3 &  4.3 \\
 Open-MS      & \textbf{38.5} & 37.9 & 24.3 & \textbf{24.2} \\
-\midrule
-\textbf{mean (4 tasks)} & 59.6 & \textbf{59.7} & 18.6 & \textbf{17.9} \\
 \bottomrule
 \end{tabular}
-\caption{Applying PALETTE at validation time as well as at training time.
-Restricted to the four tasks where both configurations exist: Mandible's
-val100 arm was trained but never evaluated on the cross-dataset half that
-forms its OOD axis, and Breast's was never trained, so neither can appear
-here. The mean row is therefore over those four tasks in both columns --- it
-is a within-configuration comparison on a fixed task set, not the cross-task
-average the main paper declines to report. The two configurations are
-statistically indistinguishable
-at task level (Dice $p = 0.49$, HD95 $p = 0.93$, same task-stratified test
-as \cref{tab:meta}), so we report the like-for-like \emph{val000}
-configuration in the main paper and note \emph{val100} as a free additional
-gain where it helps -- it requires no extra data, annotation or training
-cost, only applying the same transform to the validation split. Open-MS's
-own Dice moves the other way (38.5 $\to$ 37.9), which keeps \textbf{overall}
-Dice an effective wash across the two configurations (59.6 vs.\ 59.7, not a
-significant difference) despite three of the four tasks favoring val100.}
+\caption{Applying PALETTE at validation time as well as at training time, on
+the four tasks where both configurations were evaluated (Mandible's val100
+arm was not evaluated on its cross-dataset test sets; the Breast, Spine and
+Pelvis arms were not trained). Across these tasks the two are statistically
+indistinguishable in either direction (same cross-task test as
+\cref{tab:meta}; two-sided Dice $p=0.62$, HD95 $p=0.18$), though val100 is
+significantly ahead within Brats-GLI and ON-Harmony individually. We report
+the like-for-like val000 configuration throughout the main paper.}
 \label{tab:suppl-val100}
 \end{table}
 
 Validation-time randomization improves most tasks on both metrics
 (\cref{tab:suppl-val100}), most visibly on boundary distance for CHAOS
-($30.6 \rightarrow 28.7$~mm). The effect is not significant at task level,
-and Open-MS Dice moves slightly the other way, so we do
+($30.6 \rightarrow 28.7$~mm). The effect is not significant across tasks, and
+Open-MS Dice moves slightly the other way, so we do
 not claim it as a separate contribution; we report it because it costs
 nothing and because it indicates that the benefit of contrast randomization
 extends to model selection and is not confined to the gradient updates.
@@ -492,7 +449,5 @@ extends to model selection and is not confined to the gradient updates.
 
 \input{sec/_suppl_mechanism}
 
-\section{Direct measurement of texture fidelity}
-\label{sec:suppl-ngf}
-
-\input{sec/_suppl_ngf}
+% The NGF texture-fidelity analysis (fig:ngf-dose, tab:ngf) moved to the main
+% text, Sec. 4.3, on 2026-10-02 (Paul). sec/_suppl_ngf.tex is no longer input.
