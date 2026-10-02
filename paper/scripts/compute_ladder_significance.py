@@ -32,20 +32,35 @@ REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 from stat_tests import fmt_p  # noqa: E402
 
-M = "benchmark/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
+M = ("benchmark/02_tasks/{task}/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}"
+     "/ablations/ladder_series.json")
+# Same mapping as make_per_contrast_curves.py; the template lacked the
+# 2026-09-27 task folder, so every ladder silently resolved to a missing file.
+TASK_OF = {"chaos": "abdomen_healthy", "on-harmony": "brain_healthy",
+           "toothfairy2": "mandible_healthy", "brats2024-glioma": "brain_tumor",
+           "open-ms": "brain_ms", "ispy2": "breast_cancer"}
 
+
+def _j(ds, model, contrast):
+    return M.format(task=TASK_OF[ds], ds=ds, model=model, contrast=contrast)
+
+
+# All 14 training modalities, matching compute_dissociation_pvalues.py.
 LADDERS = [
-    ("Open-MS FLAIR",    M.format(ds="open-ms", model="open_ms_model", contrast="flair")),
-    ("Open-MS T1w",      M.format(ds="open-ms", model="open_ms_model", contrast="t1w")),
-    ("Brats-GLI T1n",    M.format(ds="brats2024-glioma", model="brats2024_glioma_model", contrast="t1n")),
-    ("Brats-GLI T2w",    M.format(ds="brats2024-glioma", model="brats2024_glioma_model", contrast="t2w")),
-    ("CHAOS T1in",       M.format(ds="chaos", model="chaos_model", contrast="t1in")),
-    ("CHAOS T2spir",     M.format(ds="chaos", model="chaos_model", contrast="t2spir")),
-    ("ON-Harmony T1w",   M.format(ds="on-harmony", model="on_harmony_model", contrast="T1w")),
-    ("ON-Harmony T2w",   M.format(ds="on-harmony", model="on_harmony_model", contrast="T2w")),
-    ("ToothFairy2 CBCT", M.format(ds="toothfairy2", model="toothfairy2_model", contrast="cbct")),
-    ("I-SPY2 T1-CE",     M.format(ds="ispy2", model="ispy2_model", contrast="t1wce")),
-    ("I-SPY2 T2w",       M.format(ds="ispy2", model="ispy2_model", contrast="t2w")),
+    ("Open-MS FLAIR",    _j("open-ms", "open_ms_model", "flair")),
+    ("Open-MS T1w",      _j("open-ms", "open_ms_model", "t1w")),
+    ("Brats-GLI T1n",    _j("brats2024-glioma", "brats2024_glioma_model", "t1n")),
+    ("Brats-GLI T1c",    _j("brats2024-glioma", "brats2024_glioma_model", "t1c")),
+    ("Brats-GLI T2w",    _j("brats2024-glioma", "brats2024_glioma_model", "t2w")),
+    ("Brats-GLI FLAIR",  _j("brats2024-glioma", "brats2024_glioma_model", "t2f")),
+    ("CHAOS T1in",       _j("chaos", "chaos_model", "t1in")),
+    ("CHAOS T2spir",     _j("chaos", "chaos_model", "t2spir")),
+    ("ON-Harmony T1w",   _j("on-harmony", "on_harmony_model", "T1w")),
+    ("ON-Harmony T2w",   _j("on-harmony", "on_harmony_model", "T2w")),
+    ("ON-Harmony DWI",   _j("on-harmony", "on_harmony_model", "dwi_ap")),
+    ("ToothFairy2 CBCT", _j("toothfairy2", "toothfairy2_model", "cbct")),
+    ("I-SPY2 T1-CE",     _j("ispy2", "ispy2_model", "t1wce")),
+    ("I-SPY2 T2w",       _j("ispy2", "ispy2_model", "t2w")),
 ]
 
 STARS = [(0.001, "***"), (0.01, "**"), (0.05, "*")]
