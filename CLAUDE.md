@@ -19,20 +19,29 @@ If a named session ever seems to have vanished, check `tmux -L <name> ls` (each 
 
 **Separately: session transcripts themselves also expire** — Claude Code stores them under `~/.claude/projects/` and deletes anything older than `cleanupPeriodDays` (default 30 days), independent of the tmux/systemd issue above; past that, `claude --resume` fails with "No conversation found." This project's `.claude/settings.json` sets `"cleanupPeriodDays": 36500` to keep long-lived named sessions resumable indefinitely — don't remove that setting.
 
-## ⚠️ Vulcan/Killarney/TamIA repo-layout mismatch (2026-09-27, until migrated)
+## ⚠️ Killarney repo-layout mismatch (since 2026-09-27, until migrated)
 
-Vulcan's repo was just restructured: `datasets/` → `benchmark/`, with every dataset moved one
+Vulcan's repo was restructured 2026-09-27: `datasets/` → `benchmark/`, with every dataset moved one
 level deeper into `benchmark/02_tasks/<task>/<dataset>/` (see "Dataset structure" below for the
-full mapping). **Killarney and TamIA have NOT been migrated yet** — their own separate clones and
-scratch-data layouts still use the old `datasets/<name>/` structure, deliberately, so their
-in-flight jobs aren't disrupted. **Do not `git pull` this restructuring commit onto Killarney or
-TamIA until their own data directories are migrated to match** — pulling the new scripts onto
-still-old data would break every path resolution there. Do the physical `mv` on each cluster's own
-`$SCRATCH`/repo checkout first (same task-folder mapping as Vulcan), then pull. Until that
-follow-up happens, treat Killarney/TamIA as still being on the pre-restructuring layout for
-anything you tell either of them to run.
+full mapping). **TamIA was migrated 2026-09-27/30 and is now current** (physical `mv` of its
+`$SCRATCH` data done, repo pulled up to date — confirmed via direct HEAD comparison). **Killarney
+has NOT been migrated** — its own separate clone and scratch-data layout still use the old
+`datasets/<name>/` structure, deliberately, so its in-flight jobs aren't disrupted. **Do not
+`git pull` this restructuring commit onto Killarney until its own data directories are migrated to
+match** — pulling the new scripts onto still-old data would break every path resolution there. Do
+the physical `mv` on Killarney's own `$SCRATCH`/repo checkout first (same task-folder mapping as
+Vulcan/TamIA), then pull. Until that follow-up happens, treat Killarney as still being on the
+pre-restructuring layout for anything you tell it to run.
 
 ## Cluster resource management (Vulcan / Slurm)
+
+**`git mv` on a directory silently drops untracked/gitignored files inside it** — verified via a
+sandbox test. For any directory move (dataset restructuring, archival, etc.), use plain `mv` then
+`git add -A` to let git's content-based rename detection take over; never `git mv` a directory.
+
+**Multiple agents/sessions share one working tree — never run a bare `git commit`.** It commits
+everything currently staged, including files another concurrent agent staged. Always
+`git add <exact paths>` then commit, even for a single-file change.
 
 **Three machines are in active use** (`run_job` auto-detects the backend on each — see below, so pipeline scripts run unchanged everywhere):
 
@@ -103,6 +112,15 @@ ssh vulcan.alliancecan.ca
 ssh tamia.alliancecan.ca   # from a vulcan login shell, using the relay ControlMaster set up in vulcan's ~/.ssh/config
 ```
 Wrap remote commands in `bash -lc "..."` — a bare `ssh tamia.alliancecan.ca 'cmd'` gets a non-login shell without the CVMFS module PATH. Deeply nested quoting through the relay mangles reliably (`sed`/`awk`/`$(...)` get eaten) — write scripts to a local file and pipe them over (`tar cf - -C /tmp s.sh | ssh tamia.alliancecan.ca "tar xf - -C /tmp && bash /tmp/s.sh"`) rather than inlining complex shell.
+
+**From inside a Claude Code session already running on Vulcan, skip the outer hop** — just `ssh
+tamia.alliancecan.ca` directly (you're already on Vulcan; wrapping it in another
+`ssh vulcan.alliancecan.ca` fails with "Permission denied (keyboard-interactive)").
+
+**Before any TamIA `git pull`, check `git status` for local modifications first** — twice now
+they've turned out to be stale pre-2026-09-27-restructuring path hop-counts (`../../../../` vs
+the current `../../../../../../`), already fixed upstream. Diff each against the current Vulcan
+file to confirm, then `git checkout --` to discard before pulling.
 
 **GPUs — bigger than Vulcan/Killarney, whole-node only:**
 
