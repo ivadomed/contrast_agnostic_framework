@@ -22,14 +22,14 @@ Open-MS T1w & 16.7$^{\ast}$ & 4.0$^{\ast}$ & 35.1$^{\ast}$ & 31.4$^{\ast}$ & 35.
 Mandible CBCT & 59.2$^{\ast}$ & 53.6$^{\ast}$ & 76.3$^{\ast}$ & \textbf{79.0} & 78.3 & 77.7 \\
 Breast T1-CE & 34.1$^{\ast}$ & 16.6$^{\ast}$ & 40.4$^{\ast}$ & 18.0$^{\ast}$ & 41.1$^{\ast}$ & \textbf{41.9} \\
 Breast T2w & 35.9$^{\ast}$ & 16.5$^{\ast}$ & 38.9$^{\ast}$ & 14.8$^{\ast}$ & 39.0$^{\ast}$ & \textbf{40.5} \\
-Spine CT & 27.0$^{\ast}$ & 49.3$^{\ast}$ & 79.1$^{\ast}$ & --- & 77.5$^{\ast}$ & \textbf{80.2} \\
-Spine Dixon in & 69.9$^{\ast}$ & 51.6$^{\ast}$ & 82.2$^{\ast}$ & --- & 84.2 & \textbf{84.3} \\
+Spine CT & 27.0$^{\ast}$ & 46.7$^{\ast}$ & 79.1$^{\ast}$ & --- & 77.5$^{\ast}$ & \textbf{80.2} \\
+Spine Dixon in & 69.9$^{\ast}$ & 48.4$^{\ast}$ & 82.2$^{\ast}$ & --- & 84.2 & \textbf{84.3} \\
 Pelvis CT & 35.6$^{\ast}$ & 17.1$^{\ast}$ & 66.5$^{\ast}$ & \textbf{71.4} & 68.5 & 69.2 \\
 Pelvis MRI & 24.0$^{\ast}$ & 12.8$^{\ast}$ & 58.6$^{\ast}$ & 59.2$^{\ast}$ & 60.0 & \textbf{62.0} \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Per-setting Dice (\%, $\uparrow$), best per row in bold. Each row is one training modality of one task, scored on exactly the held-out contrasts and external cohorts of its task column in \cref{tab:meta}, so the rows of a task average to that column. $^{\ast}$: PALETTE significantly better than that method within the setting (same patient-level sign-flip test, Holm-corrected across competitors). Spine has no SRCSM run and no HD95.}
+\caption{Per-setting Dice (\%, $\uparrow$), best per row in bold. Each row is one training modality of one task, scored on exactly the held-out contrasts and external cohorts of its task column in \cref{tab:meta}, so the rows of a task average to that column. $^{\ast}$: PALETTE-Aug significantly better than that method within the setting (same patient-level sign-flip test, Holm-corrected across competitors). Spine has no SRCSM run.}
 \label{tab:suppl-dice}
 \end{table}
 \begin{table}[t]
@@ -55,11 +55,13 @@ Open-MS T1w & 30.5$^{\ast}$ & 42.3$^{\ast}$ & 25.9 & 25.5 & 26.3$^{\ast}$ & \tex
 Mandible CBCT & 21.7 & 32.9$^{\ast}$ & 24.9$^{\ast}$ & \textbf{19.3} & 22.1 & 23.5 \\
 Breast T1-CE & 61.8$^{\ast}$ & 103.2$^{\ast}$ & 61.7$^{\ast}$ & 92.4$^{\ast}$ & \textbf{57.3} & 59.0 \\
 Breast T2w & \textbf{55.2} & 99.1$^{\ast}$ & 60.1$^{\ast}$ & 91.2$^{\ast}$ & 56.9 & 56.3 \\
+Spine CT & 78.3$^{\ast}$ & 110.4$^{\ast}$ & 4.5$^{\ast}$ & --- & 5.8$^{\ast}$ & \textbf{3.9} \\
+Spine Dixon in & 21.6$^{\ast}$ & 113.2$^{\ast}$ & 3.5$^{\ast}$ & --- & 3.6 & \textbf{3.1} \\
 Pelvis CT & 146.2$^{\ast}$ & 252.0$^{\ast}$ & 20.0 & \textbf{16.0} & 23.5 & 21.6 \\
 Pelvis MRI & 152.3$^{\ast}$ & 271.6$^{\ast}$ & 48.0 & 51.9$^{\ast}$ & 47.8$^{\ast}$ & \textbf{36.4} \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Per-setting HD95 (mm, $\downarrow$), best per row in bold. Each row is one training modality of one task, scored on exactly the held-out contrasts and external cohorts of its task column in \cref{tab:meta}, so the rows of a task average to that column. $^{\ast}$: PALETTE significantly better than that method within the setting (same patient-level sign-flip test, Holm-corrected across competitors). Spine has no SRCSM run and no HD95.}
+\caption{Per-setting HD95 (mm, $\downarrow$), best per row in bold. Each row is one training modality of one task, scored on exactly the held-out contrasts and external cohorts of its task column in \cref{tab:meta}, so the rows of a task average to that column. $^{\ast}$: PALETTE-Aug significantly better than that method within the setting (same patient-level sign-flip test, Holm-corrected across competitors). Spine has no SRCSM run.}
 \label{tab:suppl-hd95}
 \end{table}

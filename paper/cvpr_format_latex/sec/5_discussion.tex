@@ -1,96 +1,50 @@
 \section{Discussion and Limitations}
 \label{sec:discussion}
 
-\paragraph{The causal ablation isolates a mechanism, not a full explanation.}
-The noise-fill comparison in \cref{subsec:e-ablation} shows that texture
-preservation, specifically, drives the advantage on no-tissue-interface
-structures; it does not by itself explain the smaller, more uniform gains
-observed on tissue-interface structures, which likely stem from the wider
-space of region-to-region contrast relationships (including the sign
-inversions in \cref{eq:affine}) that no single real acquisition protocol
-supplies. Disentangling these two effects further is left to future work.
+\paragraph{Why the effect follows the anatomy.} Liver, spleen and kidney are
+encapsulated organs with a clear physical boundary, and edge-following methods
+have long segmented them well~\cite{kavur2021chaos,lee2007gaclivers}. An
+augmentation that scrambles their internal texture but keeps the boundary loses
+little. Diffuse glioma has no such boundary: tumor cells infiltrate beyond both
+the enhancing margin and the FLAIR abnormality~\cite{gliomamargins2025,flairectomy2022},
+so the target must be inferred from appearance. MS lesions are likewise defined
+by tissue signal~\cite{zhang2008mstexture}. This account interprets the
+intervention of \cref{subsec:e-ablation}; it is not separate evidence for it.
 
-\paragraph{Why the effect follows the anatomy, in one direction.} Large gains
-from preserving real intensity structure appear only where the target is
-defined by tissue \emph{appearance} rather than by an anatomical
-\emph{interface}. Liver, spleen and kidney are encapsulated organs bounded by
-fat planes -- a genuine physical interface, which is why edge-following methods
-such as geodesic active contours have long succeeded on
-them~\cite{kavur2021chaos,lee2007gaclivers}; an augmentation that scrambles
-internal texture while preserving that interface loses little. Diffuse glioma
-has no such interface: tumour cells infiltrate beyond both the
-contrast-enhancing margin and the peritumoral FLAIR
-abnormality~\cite{gliomamargins2025,flairectomy2022}, so the target must be
-inferred from appearance rather than followed along an edge. MS lesions are
-likewise defined by tissue signal characteristics rather than an anatomical
-border~\cite{zhang2008mstexture}. This account is an interpretation of the
-ablation, not an independent proof of it; the causal evidence is the
-intervention in \cref{subsec:e-ablation}. It also extends to the ON-Harmony
-result once its actual labels are examined (\cref{subsec:e-ablation}): its
-31 regions -- ventricles, cortex, white matter, deep grey nuclei -- are
-bounded by genuine tissue-type transitions throughout, so despite first
-appearances it groups with the organ tasks rather than the no-interface
-ones. The larger negative magnitude there, compared to CHAOS's near-null
-one, is plausibly a density effect -- near-total brain volume relabelled at
-once, rather than a handful of organs -- which we leave to a dedicated
-follow-up with a second densely-labelled task.
+\paragraph{Appearance-defined is necessary, not sufficient.} Open-MS T1w,
+Brats-GLI T2w and FLAIR, and both Breast rows show no texture effect. We have
+two untested hypotheses. The effect differs sharply by training contrast within
+one task (Brats-GLI: $+13.3$ from T1c, $+7.2$ from T1n, about zero from T2w and
+FLAIR), so how much discriminative texture the training contrast carries may
+matter as much as the target. And Breast pools four cohorts from different
+trials, which may dilute a cohort-specific effect. The remaining gains on
+interface tasks, where texture does not help, likely come from the wider range
+of region-to-region contrasts, including sign inversions, that PALETTE-Aug
+samples.
 
-\paragraph{Appearance-defined is necessary, not sufficient.} Several
-appearance-defined settings show no reliable texture effect: Open-MS T1w,
-Brats-GLI T2w and FLAIR, and both Breast rows. We do not have a tested
-explanation, and we state the result accordingly as one-directional. Two
-candidate factors are worth naming as hypotheses only. Within one task the
-effect differs sharply by training modality (Brats-GLI: $+13.3$ from T1c,
-$+7.2$ from T1n, about zero from T2w and FLAIR), so how much discriminative
-texture the \emph{training} contrast carries may matter as much as the target.
-And Breast pools five cohorts from different trials and sites, which may dilute
-a cohort-specific effect. Either would be a property of the data rather than of
-the mechanism, but neither is established here.
-
-\paragraph{The label step needs only the annotation training already
-assumes.} PALETTE's one label-consuming step uses whatever segmentation labels
-the training set happens to carry -- sparse, partial, or task-specific -- and
-never a dense anatomical parcellation. This is the practical difference from
-label-generative synthesis: SynthSeg's dense requirement means the augmentation
-costs an annotation richer than the task, whereas here the step is free at
-training time and can be switched off entirely on an unlabelled dataset, in
-which case PALETTE degrades gracefully to its unsupervised steps.
-
-\paragraph{Scope.} PALETTE targets the single-source setting: one labelled
-training modality, no access to target-domain data of any kind. It is
-input-level and architecture-agnostic, and we do not claim it subsumes
-multi-source domain generalization methods that have access to several
-labelled source domains; the two are complementary rather than competing
-solutions to the same problem.
+\paragraph{Limitations.} We assign each target to the interface or
+no-interface group by its anatomy, not by a measured boundary statistic.
+Open-MS has eight test patients and ON-Harmony eight sessions of four subjects,
+so their effects can be consistent without reaching significance, and
+ON-Harmony's session-level tests are optimistic. Spine was run on a separate
+pipeline and has no SRCSM arm. The cross-task test treats our eight tasks as
+fixed; with the task as the unit, the advantage over SRCSM is not significant.
+PALETTE-Aug targets the single-source setting and is complementary to
+multi-source domain generalization, which assumes several labeled source
+domains.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 We asked when preserving real image texture matters for contrast-robust
-segmentation, and found that the answer is a property of the task rather than
-of the augmentation: it matters where the target is defined by tissue
-appearance, and not where it is defined by an anatomical interface. A
-controlled intervention -- holding the partition and per-region statistics
-fixed and swapping only label-style noise fill for a real-intensity remap --
-confines every large effect to no-tissue-interface targets --- $+13.3$ and
-$+7.2$ Dice on brain tumour, $+7.7$ on MS lesions --- while no interface-bounded
-target gains more than $1.4$; it does not, conversely, guarantee a gain on
-every appearance-defined target. PALETTE, the single-source augmentation built
-on this observation, partitions the foreground by unsupervised $k$-means and a
-Voronoi sub-parcellation and applies a signed affine remap of the real
-intensities within each sub-region, requiring neither a dense anatomical label
-map nor any target-domain data. Across eighteen source-modality settings
-spanning eight tasks and sixteen datasets, a single nnU-Net configuration
-trained with PALETTE is the best method overall: best Dice on six of the eight
-tasks and significantly better than every competitor across tasks. It does not
-win everywhere: on healthy brain it ties SRCSM, and on mandible SRCSM and
-Auglab are genuinely ahead, a shortfall the ablation traces to the Auglab
-recipe PALETTE runs inside rather than to the texture-preserving transform.
-A benchmark ranking and a causal account are
-separate claims; we regard the
-task-level account as the more durable contribution: it predicts in advance
-where a texture-preserving augmentation will and will not pay off, and that
-prediction is testable on any new task.
+segmentation. Large gains from it occur only where the target is defined by
+tissue appearance rather than by an anatomical interface ($+13.3$ and $+7.2$
+Dice on brain tumor, $+7.7$ on MS lesions, at most $+1.4$ on interface
+targets), though not on every appearance-defined target. PALETTE-Aug, which
+preserves texture and needs no dense label map, is the best method overall
+across eight tasks and sixteen datasets. The task-level account makes a
+testable prediction for new tasks: a large gain from texture preservation
+should not be expected where the target has an anatomical interface.
 
 %%%%%%%%% ACKNOWLEDGEMENTS - if applicable, uncomment for camera-ready
 % \paragraph{Acknowledgements.} This work was enabled in part by support

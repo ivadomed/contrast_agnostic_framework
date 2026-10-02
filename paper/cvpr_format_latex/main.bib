@@ -393,10 +393,10 @@ year = 2005
   year      = {2006}
 }
 
-@article{lee2007gaclivers,
+@inproceedings{lee2007gaclivers,
   title={Computerized Segmentation of Liver in Hepatic {CT} and {MRI} by Means of Level-Set Geodesic Active Contouring},
   author={Suzuki, Kenji and Huynh, Hieu Trung and Liu, Yipeng and Calabrese, Dominic and Zhou, Karen and Oto, Aytekin and Hori, Masatoshi},
-  journal={Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)},
+  booktitle={Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)},
   volume={2013}, pages={2984--2987}, year={2013},
   doi={10.1109/EMBC.2013.6610167},
   note={PMC4283827; edge-driven level-set/geodesic-active-contour segmentation of liver -- cited as evidence that a gradient ridge exists at organ boundaries. Original entry mis-cited a different (2007, non-matching-title) author list under this PMC id; corrected 2026-08-03 after verification.}
@@ -535,19 +535,10 @@ year = 2005
   year      = {2020}
 }
 
-@article{ouyang2023causality,
-  author  = {Ouyang, Cheng and Chen, Chen and Li, Surui and Li, Zeju and Qin, Chen and Bai, Wenjia and Rueckert, Daniel},
-  title   = {Causality-Inspired Single-Source Domain Generalization for Medical Image Segmentation},
-  journal = {IEEE Transactions on Medical Imaging},
-  volume  = {42}, number = {4}, pages = {1095--1106}, year = {2023},
-  doi     = {10.1109/TMI.2022.3224067},
-  note    = {validated on cross-modality (CT-MRI) abdominal and cross-sequence cardiac MRI segmentation; argues domain-specific spurious cues break on unseen domains, directly relevant to our contrast-specific-cue account}
-}
 
 % ---- Tasks added 2026-09-13 (Mandible / Breast). ----
-% VERIFY BEFORE SUBMISSION: the two entries flagged `% check` below are cited
-% from the repo's own provenance READMEs, which record the collection/challenge
-% but not a full bibliographic record. Do not invent a DOI or arXiv id for them.
+% MAMA-MIA and ToothFairy2 verified 2026-10-02 against their published records
+% (Sci. Data 12:453; Med. Image Anal. doi 10.1016/j.media.2026.104095).
 @misc{li2022ispy2,
   author       = {Li, Wen and Newitt, David C. and Gibbs, Jessica and
                   Wilmes, Lisa J. and Jones, Ella F. and Arasu, Vignesh A. and
@@ -572,24 +563,25 @@ year = 2005
   year    = {2018},
 }
 
-% check: preprint, no stable id recorded in-repo
-@misc{garrucho2025mamamia,
-  author = {Garrucho, Lidia and Kushibar, Kaisar and Reidel, Claire-Anne and
-            Joshi, Smriti and Osuala, Richard and Lang, Kristina and
-            Diaz, Oliver and Gonzalez-Huete, Apolline and Lekadir, Karim},
-  title  = {{MAMA-MIA}: A large-scale multi-center breast cancer {DCE-MRI}
-            benchmark dataset with expert segmentations},
-  year   = {2025},
-  note   = {Distributes the Duke-Breast-Cancer-MRI cohort (Synapse syn60868042)},
+@article{garrucho2025mamamia,
+  author  = {Garrucho, Lidia and Kushibar, Kaisar and Reidel, Claire-Anne and Joshi, Smriti
+             and Osuala, Richard and others and Lekadir, Karim},
+  title   = {A large-scale multicenter breast cancer {DCE-MRI} benchmark dataset with
+             expert segmentations},
+  journal = {Scientific Data},
+  volume  = {12},
+  number  = {1},
+  pages   = {453},
+  year    = {2025},
+  doi     = {10.1038/s41597-025-04707-4},
 }
 
-% check: MICCAI 2024 challenge, release 2024-04-20
-@misc{bolelli2025toothfairy2,
-  author = {Bolelli, Federico and Lumetti, Luca and Pipoli, Vittorio and
-            Marchesini, Kevin and Ficarra, Elisa and Grana, Costantino},
-  title  = {{ToothFairy2}: Multi-Structure Segmentation in {CBCT} Volumes},
-  year   = {2024},
-  note   = {MICCAI challenge dataset, University of Modena and Reggio Emilia},
+@article{bolelli2025toothfairy2,
+  author  = {Bolelli, Federico and Lumetti, Luca and others},
+  title   = {Multi-structure segmentation in {CBCT} volumes: The {ToothFairy2} challenge},
+  journal = {Medical Image Analysis},
+  year    = {2026},
+  doi     = {10.1016/j.media.2026.104095},
 }
 
 @article{podobnik2023hanseg,

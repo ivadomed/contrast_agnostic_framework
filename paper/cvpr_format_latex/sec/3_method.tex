@@ -1,26 +1,22 @@
 \section{Method}
 \label{sec:method}
 
-We describe PALETTE (\S\ref{subsec:m-transform}), how it is applied during
+We describe PALETTE-Aug (\S\ref{subsec:m-transform}), how it is applied during
 training (\S\ref{subsec:m-training}), and the causal ablation used to
 isolate texture preservation as the source of its effect
 (\S\ref{subsec:m-ablation}).
 
-\subsection{The PALETTE transform}
+\subsection{The PALETTE-Aug transform}
 \label{subsec:m-transform}
 
-Let $x$ denote the intensity volume of a training scan, min-max normalised
+Let $x$ denote the intensity volume of a training scan, min-max normalized
 to $[0,1]$, and $F \subset \Omega$ its foreground voxels (an intensity
-threshold; $x_v > 0.01$ in our implementation). PALETTE applies four steps
+threshold; $x_v > 0.01$ in our implementation). PALETTE-Aug applies four steps
 at every training iteration, illustrated end-to-end in
 \cref{fig:method-pipeline} on one real CHAOS (abdominal MRI) and one real
-OnHarmony (brain MRI) volume. The figure's five panels (a)--(e) are
-deliberately lettered rather than numbered $1$--$5$ so they are never
-confused with the four method steps below: panels are \emph{intermediate
-diagnostic renderings}, one per step plus the input, not a one-to-one
-visual walkthrough of the steps themselves (panel (e), the final training
-input, is the only panel that shows the texture the transform actually
-produces; (b)--(d) show flat preview values, defined in the caption).
+ON-Harmony (brain MRI) volume. Panels (b)--(d) show each step's flat target
+values; only (e), the training input, shows the texture the transform
+produces.
 
 \paragraph{1. Intensity partition.} We run 1-D $k$-means on the foreground
 intensities $\{x_v : v \in F\}$ with $k$ sampled per iteration from
@@ -29,7 +25,7 @@ $\{2,\dots,6\}$, producing $k$ intensity classes $C_1, \dots, C_k$
 requires no anatomical label map: it groups voxels by intensity alone, so
 the same operator applies unmodified to any input image regardless of its
 modality or contrast --- CT, T1, T2, FLAIR, or otherwise. This step is
-occasionally skipped in favour of a single global remap (step 3 below, with
+occasionally skipped in favor of a single global remap (step 3 below, with
 $C=1$); per-step probabilities are set once and never tuned per dataset,
 and are listed in \cref{sec:suppl-config}.
 
@@ -80,9 +76,9 @@ border regardless of whether step 3 preserved it, sharpening the boundary
 cue available to the network -- not the underlying anatomy. It consumes
 only the labels the segmentation task already requires, so it needs no
 additional annotation, and is optional: disabling it
-(\texttt{label\_remap\_prob}$=0$) degrades PALETTE gracefully to steps 1--3
+(\texttt{label\_remap\_prob}$=0$) degrades PALETTE-Aug gracefully to steps 1--3
 alone, e.g.\ on an unlabelled dataset. A final foreground z-score
-normalisation follows an optional second blur pass, giving the training
+normalization follows an optional second blur pass, giving the training
 input shown in panel (e) of \cref{fig:method-pipeline}. Per-step
 probabilities are set once, never tuned per dataset, and listed in full in
 \cref{sec:suppl-config}.
@@ -103,14 +99,14 @@ probabilities are set once, never tuned per dataset, and listed in full in
     \methodrowlabel{CHAOS T2SPIR\\(abdominal MRI)}
     & \methodpanel{chaos_a} & \methodpanel{chaos_b} & \methodpanel{chaos_c}
     & \methodpanel{chaos_d} & \methodpanel{chaos_e} \\
-    \methodrowlabel{OnHarmony T1w\\(brain MRI)}
+    \methodrowlabel{ON-Harmony T1w\\(brain MRI)}
     & \methodpanel{onharmony_a} & \methodpanel{onharmony_b} & \methodpanel{onharmony_c}
     & \methodpanel{onharmony_d} & \methodpanel{onharmony_e} \\
   \end{tabular}%
   }
-  \caption{The PALETTE pipeline on one real CHAOS T2SPIR volume (top) and
-  one real OnHarmony T1w volume (bottom); every panel is a deterministic
-  function of the same real volume (no external model), min--max normalised
+  \caption{The PALETTE-Aug pipeline on one real CHAOS T2SPIR volume (top) and
+  one real ON-Harmony T1w volume (bottom); every panel is a deterministic
+  function of the same real volume (no external model), min--max normalized
   to $[0,1]$ for display only. Panels (b)--(d) paint each region,
   sub-region, or label with its precomputed target mean $\mu$ from
   \cref{eq:affine}, isolating that flat value from the texture applied on
@@ -124,39 +120,35 @@ probabilities are set once, never tuned per dataset, and listed in full in
 \subsection{Training protocol}
 \label{subsec:m-training}
 
-PALETTE is applied on-the-fly as one contrast-augmentation operator inside
+PALETTE-Aug is applied on-the-fly as one contrast-augmentation operator inside
 an existing GPU-accelerated nnU-Net augmentation
 pipeline~\cite{molinier2026auglab,isensee2021nnunet}, alongside that
 pipeline's standard spatial and artifact augmentations; it adds no learned
 parameters and no measurable training-time overhead. A single
 configuration -- the same $k$-range, sub-region count, blur schedule, and
-$\alpha$ range given in \S\ref{subsec:m-transform} -- is tuned once and
+$\alpha$ range (\cref{sec:suppl-config}) -- is tuned once and
 reused unchanged across every dataset and modality in
 \cref{sec:experiments}; no dataset receives its own hyperparameter sweep.
 
 \subsection{Causal ablation: isolating texture preservation}
 \label{subsec:m-ablation}
 
-PALETTE differs from label-generative synthesis (e.g.\ SynthSeg) along two
+PALETTE-Aug differs from label-generative synthesis (e.g.\ SynthSeg) along two
 axes at once: the partition it perturbs (unsupervised $k$-means $+$ Voronoi
 vs.\ a supplied anatomical label map as the sole generative substrate) and
 the perturbation itself (an affine remap of real intensities vs.\
-resampling from a per-label Gaussian mixture). Comparing PALETTE to
+resampling from a per-label Gaussian mixture). Comparing PALETTE-Aug to
 SynthSeg directly therefore cannot attribute an advantage to either axis in
 isolation.
 
-We construct a controlled variant, \emph{noise-fill}, that holds the
-$k$-means/Voronoi partition and the per-region statistics $(\mu_R,
-\alpha_R)$ from \cref{eq:affine} exactly fixed, but fills each sub-region
-with samples drawn from a Gaussian with that region's $(\mu_R, \alpha_R
-\sigma_R)$ instead of remapping the real intensities inside it -- i.e.\ the
-same partitioning scheme, with SynthSeg-style noise substituted for the
-affine remap. Because the partition and target statistics are identical to
-PALETTE's own, any difference in downstream performance between PALETTE and
-noise-fill isolates the one variable that changed: whether real texture is
-preserved or discarded within each region. We report this comparison
-separately for structures with no tissue interface (fine internal gradients, low boundary
-contrast) and structures bounded by one
-(identified by a sharp, high-contrast border) in \cref{sec:experiments}, as
-the texture-preservation hypothesis predicts a widening gap specifically on
-the former.
+We construct a controlled variant, \emph{noise-fill}, with the same
+$k$-means/Voronoi partition and the same random target mean $\mu_R$ for each
+sub-region as \cref{eq:affine}. Instead of remapping the real intensities, it
+fills each sub-region with SynthSeg-style Gaussian noise, $\mu_R + \sigma_R
+\epsilon$ with $\epsilon\sim\mathcal{N}(0,1)$ and $\sigma_R$ drawn uniformly
+from $[0.05, 0.25]$ per sub-region. The partition and the target means are
+PALETTE-Aug's own, so a difference between the two isolates whether the real
+texture inside each region is kept or discarded. We report this comparison
+separately for targets with and without a tissue interface, assigned by
+anatomy (\cref{sec:experiments}); the texture hypothesis predicts a larger
+gap on the latter.

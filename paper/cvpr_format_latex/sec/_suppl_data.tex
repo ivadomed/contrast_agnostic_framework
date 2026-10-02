@@ -44,13 +44,13 @@ after this correction that SRCSM leads this task.
 \cite{li2022ispy2,saha2018duke,garrucho2025mamamia,hylton2012ispy1,partridge2018acrin6698}
 --- breast-lesion segmentation on malignant-only cohorts. I-SPY2 (CC BY 4.0)
 trains, on its first-post-contrast T1 (T1-CE) and its T2w; its reference is the
-trial's functional tumour volume mask. Three external cohorts are test-only.
+trial's functional tumor volume mask. Three external cohorts are test-only.
 Duke-Breast-MRI and I-SPY1 come through the MAMA-MIA release, whose expert
 primary-lesion protocol both share, and contribute T1-CE and pre-contrast
 columns; Duke-Breast-MRI is CC BY-NC 4.0, a non-commercial term no other cohort
 here carries. ACRIN-6698, the diffusion sub-study of I-SPY2 with no patient in
 common with our I-SPY2 subjects, contributes the baseline diffusion-weighted
-acquisition with the trial's whole-tumour DWI region, a contrast neither
+acquisition with the trial's whole-tumor DWI region, a contrast neither
 training modality resembles. Because I-SPY2 is mostly acquired unilaterally,
 bilateral external volumes are cropped to the lesion side and, for the
 full-thorax acquisitions, also anterior-posteriorly to the breast-plus-chest-wall
@@ -60,13 +60,13 @@ sites and bilaterally at others; both field-of-view variants are kept per
 patient, and the significance tests treat them as one patient.
 
 \paragraph{Spine} \cite{vandergraaf2024spider} --- vertebrae, intervertebral
-discs and spinal canal. Results for this task were computed by our
-collaborators on their own pipeline with the same method suite, trained on CT
+discs and spinal canal. Results for this task were computed on a separate pipeline with the same
+method suite except SRCSM, trained on CT
 and Dixon in-phase MRI of a CT/Dixon cohort and tested on that cohort's held-out
 CT and Dixon fat, in-phase and water images and on the T1w and T2w of SPIDER.
-Their Dice is a whole-structure binary Dice per label; no HD95 and no SRCSM arm
-were computed, so Spine is absent from the HD95 table and from every SRCSM
-comparison.
+Dice and HD95 are computed on each whole structure per label (the
+pipeline's \texttt{global\_bin} metrics). No SRCSM arm was run, so Spine
+is absent from every SRCSM comparison.
 
 \paragraph{Pelvis} \cite{wasserthal2023totalseg,dantonoli2025totalsegmri} ---
 ten pelvic and hip musculoskeletal structures (both hips, sacrum, and the

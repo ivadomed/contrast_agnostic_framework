@@ -8,12 +8,12 @@ Domain generalization (DG) targets unseen distributions without access to
 target data, unlike unsupervised domain adaptation, which assumes unlabelled
 target images and solves an easier problem~\cite{shin2023sdcuda}. Most
 medical DG methods are \emph{multi-source}, interpolating across several
-labelled domains by meta-learning, feature alignment, frequency-space
+labeled domains by meta-learning, feature alignment, frequency-space
 exchange, multi-frequency architectures, foundation-model scale, or
 diffusion-based stylization~\cite{li2018mldg,wang2020dofe,liu2021feddg,nam2024madgnet,sengupta2025synthfm,bao2024structaware}
 -- all of which still rely on source diversity. We instead work in the
 \emph{single-source} regime --- one
-labelled dataset, no target data, no second source -- the setting that
+labeled dataset, no target data, no second source -- the setting that
 matters when target-domain data is unavailable at training time, which is
 routine in clinical deployment~\cite{zhang2020bigaug,ouyang2022gin}. This
 rules out cross-domain interpolation and makes architecture-coupled methods
@@ -43,8 +43,7 @@ which instead fits its per-class intensity model to the real image by
 expectation-maximization and so needs only the sparse task labels a
 segmentation dataset already provides, not a dense parcellation. The EM
 variant has no released implementation; ours follows the mechanism described
-in the original paper~\cite{billot2023synthseg}, and a faithful
-re-implementation is itself a contribution.
+in the original paper~\cite{billot2023synthseg}.
 
 \subsection{Texture as a segmentation signal}
 \label{subsec:texture}
@@ -53,7 +52,7 @@ That local texture, not only intensity level, carries information a
 segmentation model can use is established independently of us: second-order
 gray-level statistics discriminate image content beyond simple
 intensity~\cite{haralick1973texture}, and quantitative texture features from
-tumour regions carry prognostic signal across CT, MRI and
+tumor regions carry prognostic signal across CT, MRI and
 PET~\cite{lambin2012radiomics}. Closer to our setting, Kang et al.\
 disentangle structure from texture in cross-domain image translation with a
 texture co-occurrence loss, targeting the same failure mode we do --- naive
@@ -75,19 +74,15 @@ second manufactures appearance diversity directly from the real image, with
 no generative label model. General-purpose libraries stack intensity,
 spatial and artifact transforms on an nnU-Net trainer; the recent Auglab
 pipeline~\cite{molinier2026auglab,isensee2021nnunet} is one such
-GPU-accelerated framework and is the strongest competitor in our
-experiments, and BigAug stacks a comparable set of coarse intensity, quality
+GPU-accelerated framework and is the strongest competitor across our tasks,
+and BigAug stacks a comparable set of coarse intensity, quality
 and spatial perturbations under the same single-source DG protocol we
-use~\cite{zhang2020bigaug}. Our method inserts the PALETTE transform as one
+use~\cite{zhang2020bigaug}. Our method inserts the PALETTE-Aug transform as one
 additional operator inside the Auglab pipeline, so the comparison against
-Auglab directly isolates PALETTE's contribution. Closer to our operator are
+Auglab directly isolates PALETTE-Aug's contribution. Closer to our operator are
 random-filter methods, which vary appearance with an untrained nonlinear
 filter: GIN applies randomly re-initialized convolutions for label-free
-appearance variants~\cite{ouyang2022gin} (the GIN-alone configuration we
-compare against is an ablation in the original paper of a two-view
-objective on 2-D slices, so our comparison is illustrative of the
-random-filter family rather than a reproduction of that paper's proposed
-method); related variants establish the random-filter principle for
+appearance variants~\cite{ouyang2022gin}; related variants establish the random-filter principle for
 natural images, perturb intensities per class using the task mask, add
 learned diffusion generators, or perturb the Fourier amplitude spectrum
 instead of the image
@@ -98,13 +93,13 @@ sub-regions and applies a signed \emph{affine} remap of the real intensities
 within each, invertible and gradient-preserving by construction. The
 closest peer is SRCSM~\cite{thaler2025semrandconv} (semantic-aware random
 convolution with source matching), which also localizes its perturbation
-region-wise in true 3-D and, like PALETTE, layers exactly one
+region-wise in true 3-D and, like PALETTE-Aug, layers exactly one
 label-consuming component over an otherwise label-free step: at training
 time it draws a fresh untrained convolution per anatomical class from the
 ground-truth map (needing a Gaussian smoothing pass to control the
 boundary-contrast artifacts this introduces), and at test time applies a
 label-free histogram matching onto the source distribution. The difference
-from PALETTE is not label use versus none, but \emph{how} that step
+from PALETTE-Aug is not label use versus none, but \emph{how} that step
 transforms the signal: an untrained nonlinear convolution versus a
 deterministic affine remap that leaves relative intensity structure inside
 each region intact.

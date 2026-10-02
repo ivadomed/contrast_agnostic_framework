@@ -1,34 +1,24 @@
 \begin{abstract}
-% PLACEHOLDER (2026-10-02): minimal factual corrections only, so the PDF does not
-% contradict its own results while Paul's rewritten abstract is pending. Replace
-% this whole block with Paul's text when it arrives.
-Segmentation models in medical imaging are trained on one acquisition setting
-and must generalize to others. Label-generative domain randomization, of which
-SynthSeg is the archetype, addresses this by discarding the acquired scan and
-resampling intensities from a per-label Gaussian mixture over a \emph{dense}
-anatomical label map -- an annotation far richer than the segmentation task
-itself provides, and one that does not preserve texture: real gradients and
-partial-volume detail become piecewise noise. We ask when that loss costs
-accuracy, and find the answer is a property of the \emph{task}. Where the
-target is separated from its surroundings by an anatomical interface --
-encapsulated abdominal organs, bounded by fat planes -- destroying texture
-costs little. Where no interface exists -- diffuse glioma, infiltrating beyond
-both the enhancing margin and the peritumoral FLAIR abnormality -- the target
-must be inferred from tissue appearance, and destroying texture can be expensive.
-We exploit this with PALETTE, a single-source augmentation needing no dense
-label map: it partitions a scan's foreground by unsupervised $k$-means,
-sub-divides each class spatially by a Voronoi partition, and applies a signed
-random affine remap to the \emph{real} intensities of each sub-region. Remapping
-existing intensities rather than replacing them leaves edges, gradients and
-partial-volume detail largely intact; only the contrast relationships between
-regions are randomized. A controlled ablation isolates this: holding the partition and per-region
-statistics fixed and swapping only the real-intensity remap for label-style
-noise fill, across fourteen training settings, every large effect falls on a
-target without a tissue interface ($+13.3$ and $+7.2$ Dice on brain tumour,
-$+7.7$ on MS lesions), while no interface-bounded target gains more than
-$1.4$; not every appearance-defined target shows a gain. Across
-cross-contrast, cross-modality and cross-dataset transfer on eight tasks and
-sixteen datasets, one nnU-Net configuration trained with PALETTE is the best
-method overall: best Dice on six tasks and significantly better than every
-competing method across tasks.
+\textbf{Introduction.} Deep learning for medical image segmentation generalizes
+poorly across imaging modalities, and annotating data for every new domain is
+prohibitively costly. Synthesis-based augmentation like SynthSeg
+address this by generating training images from label maps alone, but require
+dense label maps and discard the source image's texture. We introduce
+PALETTE-Aug, a texture-preserving alternative, and ask when texture matters
+for generalization.
+\textbf{Methods.} We benchmark PALETTE-Aug against five methods on eight
+segmentation tasks: five whose targets are bounded by an anatomical interface
+(healthy brain, multi-organ, healthy spine, mandible, pelvis) and three defined
+by tissue appearance (brain tumor, multiple sclerosis lesions, breast lesions).
+Each method trains on one modality and is evaluated in-domain and
+out-of-domain. An ablation isolates the effect of texture preservation.
+\textbf{Results.} PALETTE-Aug achieves the highest Dice on six of the eight
+tasks and significantly outperforms every competing method overall. In the
+ablation (six tasks), isolating texture preservation yields $+5.3$ and $+4.2$
+Dice on two interface-free targets (brain tumor, multiple sclerosis), versus at
+most $+1.4$ on interface-bounded ones (healthy brain: $-1.9$); breast lesions,
+also interface-free, show no Dice gain.
+\textbf{Conclusion.} Large gains from texture preservation arise only where the
+target lacks an anatomical interface, and PALETTE-Aug generalizes best
+overall across eight segmentation tasks.
 \end{abstract}

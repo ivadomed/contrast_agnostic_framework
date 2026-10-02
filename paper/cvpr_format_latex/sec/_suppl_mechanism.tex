@@ -8,10 +8,9 @@ additive ablation ladder on top of the no-augmentation anchor (\emph{Base},
 alone (\S\ref{subsec:m-transform}, step~1); then the anatomical label-remap
 step (step~4); then the Voronoi spatial sub-parcellation (step~2); and
 finally the full signed affine remap of \cref{eq:affine} (step~3), which
-together constitute PALETTE in its entirety and is denoted \textbf{Ours} in
-this ladder --- identical to the standalone (no-Auglab) configuration used
-throughout \cref{subsec:e-main}. Every rung is evaluated without Auglab, so
-that the ladder isolates PALETTE's own internal components from the
+together constitute PALETTE-Aug on its own. Every rung is evaluated without
+Auglab, so
+that the ladder isolates PALETTE-Aug's own internal components from the
 separate question of whether it composes with a prior augmentation
 pipeline, which we address next. The synthetic-data fraction is fixed at
 $50\%$ of training iterations throughout, as one of several augmentation
@@ -26,35 +25,35 @@ contrast at validation time).
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccc}
 \toprule
-Component & CHAOS & Open-MS & BraTS & ON-Harmony \\
+Component & CHAOS & Open-MS & Brats-GLI & ON-Harmony \\
+          & T1in  & FLAIR   & T1n       & T1w \\
 \midrule
-Base (no augmentation)                & 36.1 & 25.2 & 25.3 & 27.5 \\
-\quad + $k$-means partition           & 84.8 & 30.6 & 40.6 & 67.6 \\
-\quad + label remap                   & 87.7 & 34.6 & 43.2 & 68.0 \\
-\quad + Voronoi sub-parcellation      & 87.2 & 36.1 & 41.8 & 68.2 \\
-\quad + affine remap (\textbf{Ours})  & 87.9 & 40.4 & 47.4 & 63.6 \\
+Base (no augmentation)                & 36.1 & 25.2 & 26.0 & 27.5 \\
+\quad + $k$-means partition           & 84.8 & 30.6 & 41.7 & 67.6 \\
+\quad + label remap                   & 87.7 & 34.6 & 44.3 & 68.0 \\
+\quad + Voronoi sub-parcellation      & 87.2 & 36.1 & 42.8 & 68.2 \\
+\quad + affine remap (PALETTE-Aug alone) & 87.9 & 40.4 & 48.5 & 63.6 \\
 \midrule
-\quad + Auglab (deployed)             & 87.4 & 39.5 & 46.4 & 68.6 \\
+\quad + Auglab (\textbf{Ours}, deployed) & 87.4 & 39.5 & 47.5 & 68.6 \\
 \bottomrule
 \end{tabular}
 \caption{Mechanism ablation (top five rows, additive, no Auglab) and
 deployment composability check (bottom row). Each rung adds exactly one
-PALETTE component on top of the row above; all-modality Dice (\%),
-averaged over held-out test contrasts, folds 0--2, train fraction $50\%$.
-BraTS and ON-Harmony report their T1n/T1w settings, matching every other
-table in this paper. The deployed row matches \cref{tab:suppl-dice}'s
-\textbf{Ours} column exactly.}
+PALETTE-Aug component on top of the row above. Dice (\%) over all test
+contrasts of the setting, the training contrast included, with equal weight per
+contrast (the all-contrast series of the same ladders as
+\cref{tab:ladder-full}, which reports the held-out contrasts only).}
 \label{tab:mechanism}
 \end{table}
 
-\paragraph{Composability with Auglab.} PALETTE is deployed, throughout this
+\paragraph{Composability with Auglab.} PALETTE-Aug is deployed, throughout this
 paper, as one additional operator inside the Auglab pipeline rather than as
 a replacement for it (\cref{subsec:e-setup}); Auglab is a full prior
-augmentation method in its own right, not a component of PALETTE, so
+augmentation method in its own right, not a component of PALETTE-Aug, so
 stacking it on top of the ladder above is a composability/deployment check,
 not a further mechanism-ablation step. \cref{tab:mechanism} keeps the two
-separate: the top five rows isolate PALETTE's internal mechanism, evaluated
-with no Auglab throughout, while the bottom row reports PALETTE plus Auglab
+separate: the top five rows isolate PALETTE-Aug's internal mechanism, evaluated
+with no Auglab throughout, while the bottom row reports PALETTE-Aug plus Auglab
 --- the configuration used everywhere else in this paper --- set apart by a
 rule rather than presented as the next rung of the same ladder.
 

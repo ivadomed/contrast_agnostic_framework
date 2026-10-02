@@ -33,7 +33,8 @@ test a handful of patients under many contrasts (ON-Harmony: eight sessions
 of four subjects, six contrasts). For ON-Harmony the unit is the session, since
 its four subjects leave a test that could never reach significance; two
 sessions of one subject are not fully independent, so its $p$-values are, if
-anything, optimistic, and we do not rest any claim on ON-Harmony alone. Per-setting comparisons (below) use the paired
+anything, optimistic, and we do not rest any claim on ON-Harmony alone. Per-setting comparisons (below) use the same test within each setting; the
+ablation ladders use the paired
 Wilcoxon signed-rank test~\cite{wilcoxon1945}, since there each setting is
 judged on its own. All tests are Holm-corrected~\cite{holm1979} for multiple
 comparisons.
@@ -113,9 +114,9 @@ can fall below $1/256$ however consistent the effect.
 
 \emph{What is reported alongside.} Every generated significance report also
 carries a per-contrast table of mean $\Delta$ with the raw, uncorrected
-Wilcoxon $p$ for each contrast individually, and the per-setting tables in
-this section are Wilcoxon throughout. The standard test is reported; it is
-simply not the one the pooled headline number rests on.
+Wilcoxon $p$ for each contrast individually, and the ablation ladders use the
+paired Wilcoxon throughout. The standard test is reported; it is simply not the
+one the pooled headline numbers rest on.
 
 \paragraph{Contrast-group pooling.} For CHAOS, the same tested modality is
 sometimes evidenced by more than one source: CHAOS's CT evidence comes from
@@ -131,7 +132,8 @@ averaging equal-weight across liver/spleen/kidney \emph{within} the pooled
 CT evidence, since AMOS's own CT column already blends all three organs
 into one number before it reaches this step. The same pooling applies to
 Mandible (HaN-Seg and PDDCA both supply CT) and Breast (I-SPY2, Duke-Breast-MRI
-and I-SPY1 all supply T1-CE and pre-contrast); the remaining tasks have no
+and I-SPY1 supply T1-CE, and Duke-Breast-MRI and I-SPY1 also supply
+pre-contrast); the remaining tasks have no
 contrast evidenced by more than one source.
 
 \input{sec/_suppl_tables}
@@ -145,12 +147,12 @@ which is why the
 main claims rest on the task- and cross-task-level tests.
 
 \paragraph{Boundary distance at task level.} \cref{tab:meta-hd95} gives the
-HD95 counterpart of \cref{tab:meta}. Across tasks PALETTE is significantly
+HD95 counterpart of \cref{tab:meta}. Across tasks PALETTE-Aug is significantly
 better than every competitor, Auglab included. Per task it has the lowest HD95
-on Brats-GLI, ON-Harmony, Open-MS and Pelvis; it ties Auglab on Breast and
+on Brats-GLI, ON-Harmony, Open-MS, Spine and Pelvis; it ties Auglab on Breast and
 trails SRCSM on CHAOS without either gap being significant; and on Mandible it
 is significantly behind SRCSM, Auglab and the no-augmentation baseline, the
-one task where the baseline beats anything. When HD95 disagrees with Dice for a
+one task where the baseline beats PALETTE-Aug. When HD95 disagrees with Dice for a
 method -- a noticeably better HD95 than its Dice would predict -- the usual
 explanation is low recall: a method that predicts only a small, confident,
 well-localized fragment of the structure can have a deceptively good boundary
@@ -161,20 +163,20 @@ Dice is a warning sign rather than evidence of competitiveness.
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lccccccc|c}
+\begin{tabular}{lcccccccc|c}
 \toprule
- & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Pelvis & $p$ vs ours \\
+ & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Spine & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 44.8 & 124.4 & 24.0 & 35.2 & 21.7 & 58.5 & 149.3 & 8.4e-33 \\
-SynthSeg-noEM   & 78.0 &  89.9 &  6.7 & 41.9 & 32.9 & 101.1 & 261.8 & 2.1e-39 \\
-SynthSeg-EM     & 17.9 &  31.8 &  4.7 & 24.7 & 24.9 & 60.9 & 34.0 & 4.7e-6 \\
-SRCSM           & 17.5 & \textbf{26.7} &  5.3 & 24.6 & \textbf{19.3} & 91.8 & 33.9 & 3.0e-23 \\
-Auglab          & 16.1 & 39.3 &  4.7 & 26.5 & 22.1 & \textbf{57.1} & 35.6 & 5.1e-6 \\
-\textbf{PALETTE (ours)} & \textbf{15.6} & 30.6 & \textbf{4.3} & \textbf{24.3} & 23.5 & 57.7 & \textbf{29.0} & --- \\
+Baseline        & 44.8 & 124.4 & 24.0 & 35.2 & 21.7 & 58.5 & 49.9 & 149.3 & 4.8e-46 \\
+SynthSeg-noEM   & 78.0 &  89.9 &  6.7 & 41.9 & 32.9 & 101.1 & 111.8 & 261.8 & 1.8e-58 \\
+SynthSeg-EM     & 17.9 &  31.8 &  4.7 & 24.7 & 24.9 & 60.9 & 4.0 & 34.0 & 1.3e-6 \\
+SRCSM           & 17.5 & \textbf{26.7} &  5.3 & 24.6 & \textbf{19.3} & 91.8 & --- & 33.9 & 3.0e-23 \\
+Auglab          & 16.1 & 39.3 &  4.7 & 26.5 & 22.1 & \textbf{57.1} & 4.7 & 35.6 & 8.9e-7 \\
+\textbf{PALETTE-Aug (ours)} & \textbf{15.6} & 30.6 & \textbf{4.3} & \textbf{24.3} & 23.5 & 57.7 & \textbf{3.5} & \textbf{29.0} & --- \\
 \bottomrule
 \end{tabular}
 \caption{Task-level HD95 (mm, $\downarrow$). Same pooling and test as
-\cref{tab:meta}, and likewise no cross-task average. Spine reports no HD95.}
+\cref{tab:meta}, and likewise no cross-task average. Spine has no SRCSM run.}
 \label{tab:meta-hd95}
 \end{table*}
 
@@ -183,7 +185,7 @@ Auglab          & 16.1 & 39.3 &  4.7 & 26.5 & 22.1 & \textbf{57.1} & 35.6 & 5.1e
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_hd95}
 \caption{The causal-ablation ladder of \cref{fig:ladder} (main paper), same
 per-dataset panels, same boundary-type grouping, same fill-swap rung and
-same visual scheme (per-curve colour only on the real-fill segment; bold
+same visual scheme (per-curve color only on the real-fill segment; bold
 black panel average; one panel-pooled $p$-value per panel), reported on
 HD95 instead of Dice (\emph{improvement} means the fill-swap step lowers
 HD95). Brats-GLI and Breast improve significantly at panel level and
@@ -239,7 +241,7 @@ on ON-Harmony T1w and T2w, consistent with its tissue-interface grouping. One
 is the Voronoi sub-parcellation step on Brats-GLI T1n, which the real-fill
 step then more than recovers. The other three are the final $+$Auglab rung
 --- on ON-Harmony DWI and twice on Mandible, the task where the complete
-method places third (\cref{subsec:e-main}). There PALETTE alone (the $+$real
+method places third (\cref{subsec:e-main}). There PALETTE-Aug alone (the $+$real
 rung, $69.5$) is the ladder's maximum and adding the Auglab recipe takes it
 back down, which places the Mandible shortfall in the wrapper rather than in
 the transform this paper argues for. We have not diagnosed which Auglab
@@ -300,13 +302,15 @@ base       & 18.3 & 14.8 & 24.5 & 36.1 & 39.4 & 23.7 & 33.5 \\
 it: $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$ (Holm-corrected paired
 Wilcoxon on patients, within each ladder); $\downarrow$ marks a significant
 \emph{decrease}. Rungs: base(line), $+k$-means, $+$label-remap, $+$Voronoi
-(noise fill), $+$real-intensity fill (PALETTE alone), $+$Auglab
+(noise fill), $+$real-intensity fill (PALETTE-Aug alone), $+$Auglab
 (val000/val100). Open-MS and ON-Harmony have eight test units each, so their
 smallest attainable $p$ after correction is just under $0.05$. I-SPY2 has no
 val100 arm. Mandible's held-out axis is cross-dataset.}
 \label{tab:ladder-full}
 \end{table}
 
+% TODO(Paul): numbers in this per-label subsection predate the 2026-10-01
+% ladder fold-3 fix, which changed the BraTS T2w ladder; regenerate before submission.
 \paragraph{Per-label breakdown: is the fill-swap effect uniform within a task?}
 \label{par:per-label}
 \cref{fig:ladder} shows that Brats-GLI T2w's pooled fill-swap effect is
@@ -315,9 +319,9 @@ inside it (T2w$\to$T1n). This raises a further question: within that one
 (training, eval) pair, does the fill-swap step affect every anatomical
 sub-region equally, or is the worsening itself concentrated in specific
 labels? We break Brats-GLI T2w$\to$T1n down by its four labels -- necrotic
-core (NCR), oedema (SNFH), enhancing tumour (ET), resection cavity (RC);
+core (NCR), oedema (SNFH), enhancing tumor (ET), resection cavity (RC);
 $n=70$ test cases for SNFH and ET, present in essentially every case
-(NCR $n=51$, RC $n=67$, since not every tumour has a necrotic core or a
+(NCR $n=51$, RC $n=67$, since not every tumor has a necrotic core or a
 resection cavity).
 
 \begin{table}[h]
@@ -334,7 +338,7 @@ ET   & 27.5 & 27.9 & $-0.4$ \\
 RC   & 52.3 & 43.1 & $+9.1$ \\
 \bottomrule
 \end{tabular}
-\caption{Absolute OOD Dice (\%) of the deployed real-fill (v26\_6\_2) model,
+\caption{Absolute OOD Dice (\%) of the real-fill rung (PALETTE-Aug alone),
 per label, both transfer directions.}
 \label{tab:per-label-abs}
 \end{table}
@@ -353,15 +357,15 @@ ET   & $+2.3$ (p=0.017) & $+0.9$ (p=0.38) \\
 RC   & $+2.9$ (p=0.0003) & $\mathbf{-6.5}$ (p=0.0039) \\
 \bottomrule
 \end{tabular}
-\caption{Fill-swap step (+voronoi noise fill $\to$ v26\_6\_2 real fill),
+\caption{Fill-swap step (+Voronoi noise fill $\to$ real fill),
 per label, both directions. $p$: Holm-corrected paired Wilcoxon, family =
 the 4 labels within each direction. \textbf{Bold} = significant.}
 \label{tab:per-label-delta}
 \end{table}
 
-The worsening is not a property of ``the tumour'' -- it is concentrated
-almost entirely in SNFH, which alone accounts for $+21.0$ of the roughly
-14-point whole-tumour Dice gap between directions, and is the only label
+The worsening is not a property of ``the tumor'' -- it is concentrated
+almost entirely in SNFH, whose difference between directions ($+21.0$ Dice)
+is larger than the whole-tumor difference (about $14$), and is the only label
 whose fill-swap delta significantly reverses sign between the two training
 directions ($+14.7$ when trained on T1n, $-9.8$ when trained on T2w). RC
 shows the same reversal at smaller magnitude. NCR shows no significant
@@ -379,7 +383,7 @@ the two rungs.
 \caption{\texttt{BraTSGLI02108101}, fold 0, T2w-trained model evaluated on
 T1n. Zoomed crops before (noise-fill) and after (real-fill) the fill-swap
 step, for the SNFH-dominant (top) and ET-dominant (bottom) lesion
-components of the same case. Colour = ground truth wherever the prediction
+components of the same case. Color = ground truth wherever the prediction
 agrees; grey = false positive; outline = ground truth.}
 \label{fig:snfh-et-zoom}
 \end{figure}
@@ -392,7 +396,7 @@ mislead, if the model has come to rely on a contrast-specific cue that the
 other contrast does not reproduce. This would be an instance of shortcut
 learning~\cite{geirhos2020shortcut} -- specifically, a network relying on a
 domain-specific cue that does not reproduce across acquisition protocols,
-the mechanism~\citet{ouyang2023causality} identify behind failed
+the mechanism~\citet{ouyang2022gin} identify behind failed
 single-source domain generalization in cross-modality and cross-sequence
 medical segmentation -- rather than the intended, causal feature, which a
 simplicity-biased network need not prefer even when it would generalize
@@ -403,10 +407,10 @@ direction-dependent pattern above, not a demonstrated cause.
 \section{Synthetic contrast at validation time}
 \label{sec:suppl-val100}
 
-Throughout the main paper PALETTE is applied with synthetic contrast during
+Throughout the main paper PALETTE-Aug is applied with synthetic contrast during
 training only (\emph{train050/val000}), because every competing method is
 likewise evaluated with a real-contrast validation set; this keeps the
-comparison exactly like-for-like. PALETTE can additionally be applied to the
+comparison exactly like-for-like. PALETTE-Aug can additionally be applied to the
 validation set, so that model selection is performed under randomized
 contrast as well (\emph{train050/val100}).
 
@@ -425,11 +429,11 @@ ON-Harmony   & 66.5 & \textbf{66.6} &  4.3 &  4.3 \\
 Open-MS      & \textbf{38.5} & 37.9 & 24.3 & \textbf{24.2} \\
 \bottomrule
 \end{tabular}
-\caption{Applying PALETTE at validation time as well as at training time, on
+\caption{Applying PALETTE-Aug at validation time as well as at training time, on
 the four tasks where both configurations were evaluated (Mandible's val100
 arm was not evaluated on its cross-dataset test sets; the Breast, Spine and
-Pelvis arms were not trained). Across these tasks the two are statistically
-indistinguishable in either direction (same cross-task test as
+Pelvis arms were not trained). Across these tasks the two show no significant difference in either
+direction (same cross-task test as
 \cref{tab:meta}; two-sided Dice $p=0.62$, HD95 $p=0.18$), though val100 is
 significantly ahead within Brats-GLI and ON-Harmony individually. We report
 the like-for-like val000 configuration throughout the main paper.}
