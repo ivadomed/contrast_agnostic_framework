@@ -1,4 +1,17 @@
-# healthy-spine-TUM — externally-computed results (2026-08-05 import)
+# healthy-spine-TUM — externally-computed results
+
+> **Re-imported 2026-10-02** from the collaborators' second drop, which adds HD95.
+> The importer is now `5_scripts_healthy-spine-tum/06_evaluate/06_00_import_tum_tsv.py`
+> (replaces the one-off `_import_tum_tsv_20260805.py`, kept for provenance only).
+> Two things changed besides HD95, both verified row-by-row:
+> - Folder names: Ours is `ImageContrastV26-05+Paper` and Auglab is `newd` in the
+>   new drop (each reproduces the old folder's Dice exactly on all 4536 rows, and
+>   adds HD95). The script's `--verify` re-checks this for any future drop.
+> - `synthseg_noEM` in the 2026-08-05 import was **truncated** (8-81 subjects per
+>   test group instead of 27-219); now complete. Its combined Dice 50.4 -> 47.5.
+> The superseded metrics are archived at `benchmark/03_archive/healthy-spine-tum_import_20260805/`.
+> Still no SRCSM arm.
+
 
 > ⚠️ **This dataset currently exists as `8_results_healthy-spine-tum/` ONLY.** No raw data,
 > BIDS tree, nnUNet conversion, checkpoints, or split files live in this repo for this dataset —
@@ -43,9 +56,8 @@ not plain Dice/HD95. Per user decision (2026-08-05):
 - `dice` = `<label>-global_bin_dsc` (whole-structure binary Dice — the closest analog to how
   "dice" is used elsewhere in this project; NOT the same as `sq_dsc`/`pq_dsc`, which are
   instance-matching-sensitive).
-- `hd95` = left blank — **no HD95 was computed in this source data**; do not treat the blank
-  column as zero or missing-data-equals-perfect-score. Any aggregation/significance script run
-  against this dataset must currently be Dice-only.
+- `hd95` = `<label>-global_bin_hd95` since the 2026-10-02 drop; a non-finite/blank value is
+  written as `nan` (same as `evaluate.py` for an empty mask).
 - `group` in `eval_all.csv` = `<test_set>_<test_contrast>`, e.g. `spider_T1w`, `spinegan_dixon_fat`.
 
 Conversion script (one-off, not part of the repo's script layers — see root CLAUDE.md's "put new
