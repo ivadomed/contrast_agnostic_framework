@@ -54,7 +54,7 @@ import yaml
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent / "00_00_utils"))
-from stat_tests import holm, macro_perm  # noqa: E402
+from stat_tests import holm, macro_perm, macro_perm_design  # noqa: E402
 
 # Reuse the exact per-modality pooling machinery — one implementation, no drift
 # from the per-dataset combined_contrasts tables this rolls up.
@@ -156,6 +156,35 @@ def task_pooled_diffs(modalities: list, ref_key: str, comp_key: str, metric: str
     return np.concatenate(pooled) if pooled else np.array([])
 
 
+def task_design_entries(modalities: list, ref_key: str, comp_key: str, metric: str,
+                        contrast_groups: dict, tidx: int) -> list:
+    """One task's contribution to the cross-task design-based sign-flip test.
+
+    Builds the task's design with the SAME aggregate_from_config.build_design the
+    per-task combined tables use (patient-level units: a patient flips as ONE
+    unit across every contrast group and every training modality it appears in),
+    then rescales each entry by 1/K_task so the task contributes its own macroΔ.
+    Summed over tasks and divided by T (macro_perm_design's K) this is the mean
+    over tasks of each task's displayed `all` difference -- equal weight per task,
+    equal weight per contrast group within it.
+
+    Replaces task_pooled_diffs + macro_perm (2026-10-02). That path merged a
+    patient only WITHIN one contrast group, so a patient recurring across a task's
+    contrasts (ON-Harmony: 8 patients x 6 contrasts) entered the headline test as
+    several independent units, and it used macro_perm's plain normal tail, which
+    stat_tests.py documents as badly conservative for designs like CHAOS's. It
+    also pooled cases flat within a task, so the test weighted contrasts by case
+    count while the displayed `all` value weights them equally."""
+    ref_raw = _cms.load_combined_cases_raw(modalities, ref_key, metric)
+    comp_raw = _cms.load_combined_cases_raw(modalities, comp_key, metric)
+    groups = contrast_groups or {c: c for c in sorted(set(ref_raw) | set(comp_raw))}
+    entries, K = _agg.build_design(groups, ref_raw, comp_raw, _agg.DEFAULT_UNIT_SCOPE)
+    if not K:
+        return []
+    # namespace leaves and units by task so two tasks can never share a unit
+    return [(tidx, (tidx, leaf), (tidx, unit), c / K) for _, leaf, unit, c in entries]
+
+
 def main():
     import argparse
     ap = argparse.ArgumentParser(description=__doc__,
@@ -222,11 +251,16 @@ def main():
         competitors = [k for k in method_order if k != ref_key]
         p1s = []
         for comp in competitors:
-            arrs = [task_pooled_diffs(t["modalities"], ref_key, comp, metric,
-                                      contrast_groups=t["contrast_groups"]) for t in tasks]
-            arrs = [a for a in arrs if a.size]
-            _, _, p1 = macro_perm(arrs, higher_better)
-            p1s.append(p1)
+            per_task = [task_design_entries(t["modalities"], ref_key, comp, metric,
+                                            t["contrast_groups"], i)
+                        for i, t in enumerate(tasks)]
+            present = [e for e in per_task if e]
+            # re-index strata densely over the tasks this pair actually shares
+            # (e.g. Spine has no SRCSM run, no HD95): T = tasks with data.
+            entries = [(j, leaf, unit, c) for j, ents in enumerate(present)
+                       for _, leaf, unit, c in ents]
+            p1s.append(macro_perm_design(entries, len(present), higher_better)[2]
+                       if present else float("nan"))
         hp = holm(p1s)
         sig_by_metric[metric] = {ref_key: float("nan"), **dict(zip(competitors, hp))}
 
