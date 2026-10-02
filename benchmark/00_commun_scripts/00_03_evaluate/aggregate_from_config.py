@@ -461,12 +461,34 @@ def resolve_group_value(node, run_data: dict, metric: str) -> float:
     return m
 
 
-def unit_of(case_tag: str) -> str:
+def unit_of(case_tag: str, contrast: str | None = None) -> str:
     """Physical-patient identity of a case tag. Tags look like "<dataset>|<case>"
     (single-modality) or "<training_modality>::<dataset>|<case>" (combined tables —
     the same test patient is scored by every trained arm); drop the training-modality
-    prefix so the arms' scores of one patient share a unit."""
-    return case_tag.split("::", 1)[-1]
+    prefix so the arms' scores of one patient share a unit.
+
+    2026-10-01: also strips a trailing "_<contrast>" from the case id itself when
+    `contrast` is given and the tag ends with it. Root cause: every dataset's "case"
+    is supposed to be a bare patient/session id with contrast tracked SEPARATELY (the
+    column/group it's filed under) -- e.g. chaos's case is "CT16" under group "ct".
+    on-harmony's case ids instead carry the BIDS suffix verbatim ("sub-14230_ses-
+    NOT1ACH001_T1w" under group "T1w"), duplicating information already in the
+    column -- a data-generation inconsistency with every other dataset's convention,
+    not something this function should need to special-case, except that fixing it
+    at the source means re-deriving on-harmony's nnUNet case ids and re-running every
+    prediction, so this strips it here instead: contrast-suffixed and non-suffixed
+    case ids now collapse to the same unit either way, and this is a no-op for every
+    dataset whose case id never ends with its own contrast name (confirmed: chaos,
+    brats, open-ms, toothfairy2, ispy2 case ids don't). See project memory
+    project_onharmony_significance_rerun_20260921 / project_ladder_fold3_fix_applied_20261001
+    for how this was found."""
+    tag = case_tag.split("::", 1)[-1]
+    if contrast:
+        item = contrast.rsplit("/", 1)[-1]
+        suffix = f"_{item}"
+        if tag.endswith(suffix):
+            tag = tag[: -len(suffix)]
+    return tag
 
 
 def _leaf_entries(ref_raw: dict, comp_raw: dict, leaf) -> list:
@@ -536,7 +558,7 @@ def build_design(groups: dict, ref_raw: dict, comp_raw: dict,
         if not ents:
             continue
         for lid, tag, c in ents:
-            u = unit_of(tag)
+            u = unit_of(tag, lid[0])
             entries.append((K, lid, u if unit_scope == "patient" else (K, u), c))
         K += 1
     return entries, K
@@ -549,7 +571,7 @@ def resolve_group(node, ref_raw: dict, comp_raw: dict) -> np.ndarray:
     (`macro_perm`/`macro_ci`, meta_task_heatmap, paper scripts); those get patient units
     WITHIN a group but no cross-group patient joining — use `build_design` for that."""
     ents = resolve_group_entries(node, ref_raw, comp_raw)
-    arrs = stratum_arrays([(0, lid, unit_of(t), c) for lid, t, c in ents])
+    arrs = stratum_arrays([(0, lid, unit_of(t, lid[0]), c) for lid, t, c in ents])
     return arrs[0] if arrs else np.array([])
 
 

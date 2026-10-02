@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -43,6 +44,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "00_00_utils"))
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402 — shared math, see stat_tests.py
+from eval_folds import filter_fold_dirs  # noqa: E402 — single source of truth, see eval_folds.py
 
 # ── plot styling, matched to the paper's fig:ladder ───────────────────────────
 # (paper/scripts/make_per_contrast_curves.py). The per-dataset plots below and
@@ -60,9 +62,17 @@ FILL_SWAP_LABEL_HINT = "real fill"
 
 
 def load_case_means(run_dir: Path, metric: str) -> dict:
-    """{contrast: {case: mean metric over labels and folds}}."""
+    """{contrast: {case: mean metric over labels and folds}}.
+
+    2026-10-01: capped to EVAL_FOLDS (0-2) via filter_fold_dirs — this previously
+    globbed every fold*/ dir with no cap, so a rung bound to a legacy 4-fold run
+    dir (trained before the 2026-07-09 permanent 3-fold policy) silently included
+    fold3, while every ablation rung trained fresh for the ladder study (always
+    3-fold) did not — an inconsistent, policy-violating fold count across rungs
+    of the same ladder. See project memory project-ladder-engine-fold3-bug-20260924
+    and project-ladder-audit-20261001 for the 7 affected files this fixes."""
     per: dict = {}
-    for fold_dir in sorted(run_dir.glob("fold*")):
+    for fold_dir in filter_fold_dirs(sorted(run_dir.glob("fold*"))):
         csv_path = fold_dir / "eval_all.csv"
         if not csv_path.exists():
             continue
@@ -157,6 +167,39 @@ def _pairs_to_arrays(pairs: dict) -> tuple:
     return np.array(prev), np.array(cur)
 
 
+_FOV_VARIANT_RE = re.compile(r"_(uni|bil)$")
+
+
+def _patient_key(case_key: str, contrast: str | None = None) -> str:
+    """Physical-patient identity of a (namespaced) case key. I-SPY2's test sets hold
+    each patient twice -- a unilateral and a bilateral FOV variant
+    (ispy2_102011_uni / ispy2_102011_bil) -- which are one patient, not two
+    independent units (added 2026-10-01; no other dataset uses these suffixes).
+
+    2026-10-01: also strips a trailing "_<contrast>" when `contrast` is given and
+    the key ends with it. Root cause: a "case" is supposed to be a bare patient/
+    session id with contrast tracked SEPARATELY (the dict it's filed under) --
+    e.g. chaos's case is "CT16" under contrast "ct". on-harmony's case ids instead
+    carry the BIDS suffix verbatim ("sub-14230_ses-NOT1ACH001_T1w" under contrast
+    "T1w"), duplicating the contrast already implied by which dict they're in --
+    without this, the same physical patient's rows under two different held-out
+    contrasts (e.g. "..._T1w" and "..._bold") never collapse to one unit, massively
+    inflating this function's apparent sample size (confirmed: on-harmony's
+    T1w-trained ladder reported n_cases=35 for ~5-6 real subjects before this fix).
+    No-op for every other dataset — confirmed none of chaos/brats/open-ms/
+    toothfairy2/ispy2's case ids end with their own contrast name. Same
+    inconsistency as aggregate_from_config.unit_of's identical fix; see project
+    memory project_onharmony_significance_rerun_20260921 /
+    project_ladder_fold3_fix_applied_20261001 for how this was found."""
+    key = _FOV_VARIANT_RE.sub("", case_key)
+    if contrast:
+        item = contrast.rsplit("/", 1)[-1]
+        suffix = f"_{item}"
+        if key.endswith(suffix):
+            key = key[: -len(suffix)]
+    return key
+
+
 def _merge_patient_pairs(pairs_by_contrast: dict) -> tuple:
     """Merge SAME-PATIENT pairs across every contrast in `pairs_by_contrast` into one
     pair per physical patient before pooling — a case id recurring in two contrasts
@@ -169,9 +212,9 @@ def _merge_patient_pairs(pairs_by_contrast: dict) -> tuple:
     aggregate_from_config.build_design's patient-level entries, applied to this
     engine's own paired-Wilcoxon statistic instead of the macroΔ sign-flip test."""
     per_patient: dict = {}
-    for pairs in pairs_by_contrast.values():
+    for contrast, pairs in pairs_by_contrast.items():
         for pid, (p, c) in pairs.items():
-            xs, ys = per_patient.setdefault(pid, ([], []))
+            xs, ys = per_patient.setdefault(_patient_key(pid, contrast), ([], []))
             xs.append(p); ys.append(c)
     if not per_patient:
         return np.array([]), np.array([])
@@ -334,7 +377,8 @@ def _per_contrast_table_md(rungs, contrast_labels, per_contrast) -> list[str]:
 
 
 def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
-              in_domain, ood_contrasts, rungs, combined_png=True, extra_ood_sources=None):
+              in_domain, ood_contrasts, rungs, combined_png=True, extra_ood_sources=None,
+              ood_groups=None):
     """Compute the ladder, write ladder_summary.md + a JSON dump (for the shared
     multi-task plotting script) into ablations_root, plus the dataset-local pooled
     2-panel PNG and a per-eval-contrast "sub-ladder" 2-panel PNG. Returns the dump dict.
@@ -370,8 +414,21 @@ def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
     texture preservation help) shouldn't only be judged on held-out contrasts.
     Both figures are kept side by side (not one replacing the other) since OOD-only
     is still the project's headline generalization claim elsewhere — this lets a
-    reader see directly whether including in_domain changes the causal conclusion."""
+    reader see directly whether including in_domain changes the causal conclusion.
+
+    ood_groups (optional, added 2026-10-01): {group_name: [label, ...]} mapping every
+    OOD label (an own ood_contrast, or a cross-dataset "<dataset>/<item>" label) to its
+    TRUE held-out contrast. When given, the ladder runs in GROUPED mode
+    (run_ladder_grouped): each group POOLS ALL ITS CASES (e.g. every pre-contrast
+    case from every cohort together), OOD = equal weight per group, significance is
+    per group (pooled pairs, patient-merged, Holm across groups) plus one pooled OOD
+    test, and only OOD is reported. Every OOD label must belong to exactly one group."""
     extra_ood_sources = extra_ood_sources or []
+    if ood_groups:
+        return run_ladder_grouped(task_name=task_name, contrast_label=contrast_label,
+                                  metrics_root=metrics_root, ablations_root=ablations_root,
+                                  ood_contrasts=ood_contrasts, rungs=rungs,
+                                  extra_ood_sources=extra_ood_sources, ood_groups=ood_groups)
     extra_labels: list[str] = []
     for _, _, run_key in rungs:
         found = _cross_dataset_contrast_labels(extra_ood_sources, run_key, "dice")
@@ -832,7 +889,7 @@ def _write_combined_png(ablations_root, contrast_label, task_name, rungs, series
 
 
 def _write_per_contrast_png(ablations_root, contrast_label, task_name, rungs, series, per_contrast,
-                             plot_labels=None, sig=None):
+                             plot_labels=None, sig=None, file_suffix="_per_contrast"):
     """The "sub-ladder" 2-panel (Dice, HD95) plot -- one thin line per held-out
     eval contrast (each scored on its own, not pooled), plus the pooled OOD mean
     drawn bold black on top, so it's obvious at a glance whether a rung-to-rung
@@ -898,7 +955,184 @@ def _write_per_contrast_png(ablations_root, contrast_label, task_name, rungs, se
     fig.legend(handles, legend_labels, loc="lower center", ncol=min(len(legend_labels), 5),
                fontsize=8, bbox_to_anchor=(0.5, -0.05))
     fig.tight_layout()
-    png_path = ablations_root / f"ladder_{contrast_label}_per_contrast.png"
+    png_path = ablations_root / f"ladder_{contrast_label}{file_suffix}.png"
     fig.savefig(png_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"→ {png_path}")
+
+
+
+def _labelled_case_values(metrics_root, ood_contrasts, extra_ood_sources, run_key, metric):
+    """{OOD label: {"<ns>|<case>": value}} for ONE rung -- own ood_contrasts (label =
+    contrast) and every extra source's items (label = "<dataset>/<item>"). Values are
+    raw (dice in [0,1])."""
+    out = {}
+    own_ns = _dataset_name(metrics_root)
+    rd = resolve_run_dir(metrics_root, run_key)
+    if rd.is_dir():
+        data = load_case_means(rd, metric)
+        for c in ood_contrasts:
+            if data.get(c):
+                out[c] = {f"{own_ns}|{k}": v for k, v in data[c].items()}
+    for src in extra_ood_sources:
+        root = _src_root(src)
+        ds = _dataset_name(root)
+        rd = resolve_run_dir(root, _src_key(src, run_key))
+        if not rd.is_dir():
+            continue
+        for item, cases in load_case_means(rd, metric).items():
+            if cases:
+                out[f"{ds}/{item}"] = {f"{ds}|{k}": v for k, v in cases.items()}
+    return out
+
+
+def run_ladder_grouped(*, task_name, contrast_label, metrics_root, ablations_root,
+                       ood_contrasts, rungs, extra_ood_sources, ood_groups):
+    """GROUPED-mode ladder (see run_ladder's ood_groups). Per rung and metric:
+      group value = mean over ALL cases pooled from the group's member labels
+                    (case-level pooling: "all pre-contrast together");
+      OOD         = mean over groups (equal weight per true held-out contrast).
+    Significance (paired Wilcoxon, FOV variants/same patient merged via
+    _merge_patient_pairs): one test per group (Holm across groups) + one pooled OOD
+    test over every group's pairs; every rung-to-rung step tested the same way.
+    Reports OOD only. Writes ladder_summary.md, ladder_series.json,
+    ladder_<label>.png (pooled OOD curve) and ladder_<label>_cross_dataset_per_contrast.png
+    (one curve per contrast group); no per-item _per_contrast.png."""
+    groups = {g: list(m) for g, m in ood_groups.items()}
+    scale = {"dice": 100.0, "hd95": 1.0}
+    vals = {r[2]: {m: _labelled_case_values(metrics_root, ood_contrasts, extra_ood_sources, r[2], m)
+                   for m in ("dice", "hd95")} for r in rungs}
+    seen = set().union(*[set(v["dice"]) for v in vals.values()])
+    members = [l for m in groups.values() for l in m]
+    dup = sorted({l for l in members if members.count(l) > 1})
+    ungrouped = sorted(seen - set(members))
+    unknown = sorted(set(members) - seen)
+    if dup or ungrouped or unknown:
+        raise ValueError(f"ood_groups must cover every OOD label exactly once: duplicated={dup} "
+                         f"ungrouped={ungrouped} never-found={unknown} (labels found: {sorted(seen)})")
+
+    def group_cases(run_key, metric, g):
+        out = {}
+        for lbl in groups[g]:
+            for k, v in vals[run_key][metric].get(lbl, {}).items():
+                out[f"{lbl}§{k}"] = v
+        return out
+
+    per_group = {m: {g: [] for g in groups} for m in ("dice", "hd95")}
+    series = {"dice": [], "hd95": []}
+    n_info = {}
+    for _, _, rk in rungs:
+        for m in ("dice", "hd95"):
+            gv = []
+            for g in groups:
+                cs = [v for v in group_cases(rk, m, g).values() if np.isfinite(v)]
+                val = float(np.mean(cs)) * scale[m] if cs else float("nan")
+                per_group[m][g].append(val)
+                if np.isfinite(val):
+                    gv.append(val)
+            series[m].append(float(np.mean(gv)) if gv else float("nan"))
+    for g in groups:
+        cs = group_cases(rungs[0][2], "dice", g)
+        n_info[g] = {"cases": len(cs),
+                     "patients": len({_patient_key(k.split("§", 1)[1]) for k in cs}),
+                     "members": groups[g]}
+
+    def step_pairs(i, m):
+        """{group: {"<label>§<ns>|<case>": (prev, cur)}} for the step rung i-1 -> i."""
+        out = {}
+        for g in groups:
+            a, b = group_cases(rungs[i - 1][2], m, g), group_cases(rungs[i][2], m, g)
+            out[g] = {k.split("§", 1)[1] + "§" + k.split("§", 1)[0]: (float(a[k]), float(b[k]))
+                      for k in sorted(set(a) & set(b)) if np.isfinite(a[k]) and np.isfinite(b[k])}
+        return out
+
+    def _pk(k):  # pair key "<ns>|<case>§<label>" -> patient
+        return _patient_key(k.split("§", 1)[0])
+
+    def test(pairs_by_group):
+        per_g_raw = []
+        for g in groups:
+            per_g_raw.append(wilcoxon_p(*_merge_by(pairs_by_group[g], _pk)) if pairs_by_group[g] else float("nan"))
+        allp = {}
+        for g in groups:
+            allp.update(pairs_by_group[g])
+        x, y = _merge_by(allp, _pk)
+        return dict(zip(groups, holm(per_g_raw))), (wilcoxon_p(x, y) if len(x) else float("nan")), int(len(x))
+
+    fill_idx = _find_fill_swap_idx(rungs)
+    sig = {}
+    steps = {}
+    for m in ("dice", "hd95"):
+        if fill_idx is not None:
+            pg, pp, n = test(step_pairs(fill_idx, m))
+            sig[m] = {"per_contrast": pg, "pooled_p": pp, "n_cases": n}
+        st = []
+        for i in range(1, len(rungs)):
+            pg, pp, n = test(step_pairs(i, m))
+            st.append({"from": rungs[i - 1][0], "to": rungs[i][0], "p_raw": pp,
+                       "decrease": bool(series[m][i] < series[m][i - 1]), "n_cases": n,
+                       "per_group_p_holm": pg})
+        for e, adj in zip(st, holm([e["p_raw"] for e in st])):
+            e["p_holm"] = adj
+        steps[m] = st
+
+    lines = [f"# {task_name} — causal ablation ladder (OOD, pooled by contrast)", "",
+             "Each rung adds exactly one ingredient on top of the previous rung. **OOD only.** "
+             "Held-out items are pooled **by true contrast**: every case of a contrast, from every "
+             "cohort, goes into one pool (case-weighted within the contrast); the OOD figure is the "
+             "equal-weight mean over contrasts. Significance: paired Wilcoxon on patient-merged pairs "
+             "(an I-SPY2 patient's _uni/_bil FOV variants = one patient), per contrast (Holm across "
+             "contrasts) and pooled over all OOD contrasts.", "",
+             "| contrast group | pooled items | cases | patients |", "|---|---|---|---|"]
+    for g, inf in n_info.items():
+        lines.append(f"| {g} | {', '.join(inf['members'])} | {inf['cases']} | {inf['patients']} |")
+    lines += ["", "| rung | adds | OOD Dice | OOD HD95 | Δ Dice vs. prev | Δ HD95 vs. prev | p (Dice step) | p (HD95 step) |",
+              "|---|---|---|---|---|---|---|---|"]
+    for i, (label, ingredient, _) in enumerate(rungs):
+        dd = f"{series['dice'][i] - series['dice'][i-1]:+.2f}" if i else ""
+        dh = f"{series['hd95'][i] - series['hd95'][i-1]:+.2f}" if i else ""
+        pd_ = f"{steps['dice'][i-1]['p_raw']:.2g}" if i else ""
+        ph = f"{steps['hd95'][i-1]['p_raw']:.2g}" if i else ""
+        lines.append(f"| **{label}** | {ingredient} | {series['dice'][i]:.2f} | {series['hd95'][i]:.2f} "
+                     f"| {dd} | {dh} | {pd_} | {ph} |")
+    for m, title in (("dice", "Dice (%)"), ("hd95", "HD95 mm")):
+        lines += ["", f"### Per contrast group — {title}", "",
+                  "| rung | " + " | ".join(groups) + " |", "|---|" + "---|" * len(groups)]
+        for i, (label, _, _) in enumerate(rungs):
+            lines.append(f"| **{label}** | " + " | ".join(f"{per_group[m][g][i]:.2f}" for g in groups) + " |")
+        if fill_idx is not None:
+            lines.append("| *fill-swap p (Holm)* | " + " | ".join(
+                f"{sig[m]['per_contrast'][g]:.2g}" for g in groups) + " |")
+    if fill_idx is not None:
+        lines += ["", f"Fill-swap (noise→real fill) pooled OOD: Dice p={sig['dice']['pooled_p']:.2g}, "
+                      f"HD95 p={sig['hd95']['pooled_p']:.2g} (n={sig['dice']['n_cases']} patients)."]
+
+    ablations_root.mkdir(parents=True, exist_ok=True)
+    (ablations_root / "ladder_summary.md").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines))
+    dump = {"task_name": task_name, "contrast_label": contrast_label, "mode": "grouped_by_contrast",
+            "labels": [r[0] for r in rungs], "ingredients": [r[1] for r in rungs],
+            "run_keys": [r[2] for r in rungs], "dice": series["dice"], "hd95": series["hd95"],
+            "ood_contrasts": ood_contrasts,
+            "extra_ood_sources": [{"metrics_root": str(_src_root(src)),
+                                   "run_subdir": (src.get("run_subdir") if isinstance(src, dict) else None)}
+                                  for src in extra_ood_sources],
+            "ood_groups": groups, "group_sizes": n_info,
+            "per_contrast": per_group, "fill_swap_significance": sig, "rung_step_significance": steps}
+    (ablations_root / "ladder_series.json").write_text(json.dumps(dump, indent=2))
+    _write_combined_png(ablations_root, contrast_label, task_name, rungs, series, sig=sig)
+    _write_per_contrast_png(ablations_root, contrast_label, task_name, rungs, series, per_group,
+                             plot_labels=list(groups), sig=sig, file_suffix="_cross_dataset_per_contrast")
+    return dump
+
+
+def _merge_by(pairs: dict, key_fn) -> tuple:
+    """Average (prev, cur) pairs sharing key_fn(key) into one unit; returns arrays."""
+    per = {}
+    for k, (p, c) in pairs.items():
+        xs, ys = per.setdefault(key_fn(k), ([], []))
+        xs.append(p); ys.append(c)
+    if not per:
+        return np.array([]), np.array([])
+    return (np.array([np.mean(v[0]) for v in per.values()]),
+            np.array([np.mean(v[1]) for v in per.values()]))
