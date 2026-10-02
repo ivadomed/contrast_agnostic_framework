@@ -49,7 +49,7 @@ from matplotlib.lines import Line2D
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
-from ladder_ood_common import (load_case_means, resolve_run_dir, _src_key as _engine_src_key,  # noqa: E402
+from ladder_ood_common import (_merge_patient_pairs, _dataset_name, load_case_means, resolve_run_dir, _src_key as _engine_src_key,  # noqa: E402
                                _labelled_case_values, _patient_key, _merge_by)
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
 
@@ -82,13 +82,16 @@ PANELS = [
     ("ON-Harmony", "interface", [
         ("T1w", _j("on-harmony", "on_harmony_model", "T1w")),
         ("T2w", _j("on-harmony", "on_harmony_model", "T2w")),
+        ("DWI", _j("on-harmony", "on_harmony_model", "dwi_ap")),
     ]),
     ("ToothFairy2", "interface", [
         ("CBCT", _j("toothfairy2", "toothfairy2_model", "cbct")),
     ]),
     ("BraTS-GLI", "no_interface", [
         ("T1n", _j("brats2024-glioma", "brats2024_glioma_model", "t1n")),
+        ("T1c", _j("brats2024-glioma", "brats2024_glioma_model", "t1c")),
         ("T2w", _j("brats2024-glioma", "brats2024_glioma_model", "t2w")),
+        ("FLAIR", _j("brats2024-glioma", "brats2024_glioma_model", "t2f")),
     ]),
     ("Open-MS", "no_interface", [
         ("FLAIR", _j("open-ms", "open_ms_model", "flair")),
@@ -110,7 +113,7 @@ FILLSWAP_BAND = "#f0c96b"
 # Solid = trained on a T1-weighted contrast, dashed = T2-weighted/FLAIR, so a
 # line style means the same thing in every panel regardless of which of a
 # dataset's two training modalities it came from.
-T1_FAMILY = {"T1in", "T1w", "T1n", "T1WCE", "CBCT"}
+T1_FAMILY = {"T1in", "T1w", "T1n", "T1c", "T1WCE", "CBCT"}
 MARKER_CYCLE = ["o", "s", "^", "v", "D", "P", "X", "*", "h", "<", ">", "p", "8", "d"]
 
 plt.rcParams.update({
@@ -179,14 +182,23 @@ def panel_pooled(ladders, metric, higher_is_better):
     if any(d.get("mode") == "grouped_by_contrast" for d in ladders):
         return _panel_pooled_grouped(ladders, metric, higher_is_better)
 
-    xs, ys = [], []
+    # {"<training>/<item>": {patient-namespaced case: (prev, cur)}}. Merged by
+    # the ENGINE's own _merge_patient_pairs, so a physical patient counts once
+    # across held-out contrasts AND across this panel's training modalities --
+    # the same unit the combined tables test on. This used to concatenate raw
+    # case pairs instead, which counted every (patient, contrast, model) row as
+    # independent: Open-MS's 8 test patients became 48 "samples" and its panel
+    # read p=0.0014 while its own ladders cannot go below 0.0078 (2026-10-02).
+    pairs_by_contrast: dict = {}
     for d in ladders:
         keys = d.get("run_keys")
         if not keys or len(keys) <= FILL:
             continue
         prev_key, cur_key = keys[FILL - 1], keys[FILL]
         oods = set(ood_contrasts(d))
+        train = d.get("contrast_label", "?")
         for root, subdir in metrics_roots(d):
+            ns = _dataset_name(root)
             pk, ck = _src_key(subdir, prev_key), _src_key(subdir, cur_key)
             prev = load_case_means(resolve_run_dir(root, pk), metric)
             cur = load_case_means(resolve_run_dir(root, ck), metric)
@@ -195,13 +207,12 @@ def panel_pooled(ladders, metric, higher_is_better):
                 if oods and item not in oods and not any(o.endswith("/" + item) for o in oods):
                     continue
                 a, b = prev.get(item, {}), cur.get(item, {})
-                common = sorted(set(a) & set(b))
-                if common:
-                    xs.append(np.array([a[k] for k in common]))
-                    ys.append(np.array([b[k] for k in common]))
-    if not xs:
+                bucket = pairs_by_contrast.setdefault(f"{train}/{item}", {})
+                for k in set(a) & set(b):
+                    bucket[f"{ns}|{k}"] = (a[k], b[k])
+    x, y = _merge_patient_pairs(pairs_by_contrast)
+    if not len(x):
         return float("nan"), float("nan")
-    x, y = np.concatenate(xs), np.concatenate(ys)
     p = wilcoxon_p(x, y)
     # Case means are stored 0-1 for dice; x100 so this delta is in Dice POINTS,
     # comparable with the single-ladder branch above (which reads the already

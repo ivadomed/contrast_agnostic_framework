@@ -26,7 +26,7 @@
 # file for that config if it's ever needed for reference).
 #
 # Otherwise identical to the shared config: same ref, same per-task configs.
-title: "Cross-dataset — task-level heatmap (7-method suite, paper's 6 tasks)"
+title: "Cross-dataset — task-level heatmap (7-method suite, paper's 8 tasks)"
 output_dir: "${PROJECT_ROOT}/paper/generated_results"
 output_prefix: "meta_task_heatmap_paper"
 ref: auglabAug_v26_6_2_train050_val000
@@ -50,3 +50,12 @@ tasks:
   - name: ispy2
     dataset: ispy2
     config: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2/06_evaluate/configs/ispy2_combined_01_results.yaml"
+  # Added 2026-10-02 (Paul's decision): the paper reports all 8 tasks the
+  # project table carries. Neither has a causal-ablation ladder, so both appear
+  # in tab:meta but not in tab:dissociation / fig:ladder.
+  - name: healthy-spine-tum
+    dataset: healthy-spine-tum
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/spine_healthy/healthy-spine-tum/5_scripts_healthy-spine-tum/06_evaluate/configs/healthy-spine-tum_combined_01_results.yaml"
+  - name: totalseg-pelvic
+    dataset: totalseg-pelvic
+    config: "${PROJECT_ROOT}/benchmark/02_tasks/pelvis_healthy/totalseg-pelvic/5_scripts_totalseg-pelvic/06_evaluate/configs/totalseg-pelvic_combined_01_results.yaml"
