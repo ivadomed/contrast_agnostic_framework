@@ -36,49 +36,47 @@ REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 from stat_tests import holm  # noqa: E402
 
-M = "benchmark/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
+M = ("benchmark/02_tasks/{task}/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}"
+     "/ablations/ladder_series.json")
+# Same mapping as make_per_contrast_curves.py's TASK_OF. Before this existed the
+# template lacked the 2026-09-27 task folder, so EVERY row silently resolved to
+# a missing file and the script printed an empty table with only a warning.
+TASK_OF = {"chaos": "abdomen_healthy", "on-harmony": "brain_healthy",
+           "toothfairy2": "mandible_healthy", "brats2024-glioma": "brain_tumor",
+           "open-ms": "brain_ms", "ispy2": "breast_cancer"}
+
+
+def _j(ds, model, contrast):
+    return M.format(task=TASK_OF[ds], ds=ds, model=model, contrast=contrast)
+
 
 # (paper row label, boundary type, ladder_series.json path)
 #
-# ONE ROW PER (task, training modality), each on that task's OWN held-out
-# contrast axis. Two notes on what is deliberately NOT here:
+# ONE ROW PER (task, training modality) -- every modality the headline table
+# pools, so this family matches tab:meta's. 14 rows since 2026-10-02: BraTS
+# trains on all four of its contrasts and ON-Harmony on three, and a
+# Holm correction over a smaller family than the table claims would be
+# silently anti-conservative.
 #
-#  * ToothFairy2 trains on CBCT only, so it has no held-out in-house contrast
-#    and its OOD axis is necessarily cross-DATASET (HaN-Seg CT + MR). Footnoted
-#    in the table rather than silently mixed in with the cross-contrast rows.
-#  * The Duke-breast-MRI (MAMA-MIA) cohort is an external confirmation of the
-#    I-SPY2 result, not a separate task, so it gets no row of its own. Its
-#    genuinely held-out-contrast arms are instead POOLED INTO the two I-SPY2
-#    rows as extra equally-weighted OOD items by the ladder wrappers themselves
-#    (ispy2 06_04/06_05 `extra_ood_sources`) -- duke pre-contrast for the
-#    T1WCE-trained ladder, duke t1wce + pre-contrast for the T2w-trained one.
-#    The one combination that is NOT held-out-contrast evidence -- the
-#    T1WCE-trained model tested on duke t1wce, i.e. cross-DATASET at the SAME
-#    contrast -- is deliberately excluded from the pool and reported in the
-#    supplement below, so every row of this table stays one estimand.
+#  * ToothFairy2 trains on CBCT only, so its OOD axis is necessarily
+#    cross-DATASET (HaN-Seg + PDDCA). Footnoted in the table.
+#  * I-SPY2's rows pool its external cohorts (duke-breast-mri, ispy1,
+#    acrin6698) by TRUE contrast, inside the ladder wrappers themselves.
 ROWS = [
-    ("CHAOS T1in",      "tissue interface",
-     M.format(ds="chaos", model="chaos_model", contrast="t1in")),
-    ("CHAOS T2spir",    "tissue interface",
-     M.format(ds="chaos", model="chaos_model", contrast="t2spir")),
-    ("ON-Harmony T1w",  r"tissue interface$^\dagger$",
-     M.format(ds="on-harmony", model="on_harmony_model", contrast="T1w")),
-    ("ON-Harmony T2w",  r"tissue interface$^\dagger$",
-     M.format(ds="on-harmony", model="on_harmony_model", contrast="T2w")),
-    ("ToothFairy2 CBCT", r"tissue interface$^\ddagger$",
-     M.format(ds="toothfairy2", model="toothfairy2_model", contrast="cbct")),
-    ("Open-MS FLAIR",   "no tissue interface",
-     M.format(ds="open-ms", model="open_ms_model", contrast="flair")),
-    ("Open-MS T1w",     "no tissue interface",
-     M.format(ds="open-ms", model="open_ms_model", contrast="t1w")),
-    ("Brats-GLI T1n",   "no tissue interface",
-     M.format(ds="brats2024-glioma", model="brats2024_glioma_model", contrast="t1n")),
-    ("Brats-GLI T2w",   "no tissue interface",
-     M.format(ds="brats2024-glioma", model="brats2024_glioma_model", contrast="t2w")),
-    ("I-SPY2 T1WCE",    "no tissue interface",
-     M.format(ds="ispy2", model="ispy2_model", contrast="t1wce")),
-    ("I-SPY2 T2w",      "no tissue interface",
-     M.format(ds="ispy2", model="ispy2_model", contrast="t2w")),
+    ("CHAOS T1in",       "tissue interface",            _j("chaos", "chaos_model", "t1in")),
+    ("CHAOS T2spir",     "tissue interface",            _j("chaos", "chaos_model", "t2spir")),
+    ("ON-Harmony T1w",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "T1w")),
+    ("ON-Harmony T2w",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "T2w")),
+    ("ON-Harmony DWI",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "dwi_ap")),
+    ("ToothFairy2 CBCT", r"tissue interface$^\ddagger$", _j("toothfairy2", "toothfairy2_model", "cbct")),
+    ("Open-MS FLAIR",    "no tissue interface",         _j("open-ms", "open_ms_model", "flair")),
+    ("Open-MS T1w",      "no tissue interface",         _j("open-ms", "open_ms_model", "t1w")),
+    ("Brats-GLI T1n",    "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t1n")),
+    ("Brats-GLI T1c",    "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t1c")),
+    ("Brats-GLI T2w",    "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t2w")),
+    ("Brats-GLI FLAIR",  "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t2f")),
+    ("I-SPY2 T1WCE",     "no tissue interface",         _j("ispy2", "ispy2_model", "t1wce")),
+    ("I-SPY2 T2w",       "no tissue interface",         _j("ispy2", "ispy2_model", "t2w")),
 ]
 
 # Supplementary: the one Duke arm held OUT of the pooled I-SPY2 rows above,
@@ -87,7 +85,7 @@ ROWS = [
 # silent -- it is by far the largest fill-swap effect anywhere in the study.
 SUPPLEMENTARY = [
     ("Duke T1WCE-trained $\\to$ t1wce (cross-dataset, SAME contrast)",
-     "benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/t1wce_uni/ladder_series.json"),  # unilateral-crop (2026-09-17)
+     "benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/t1wce_uniap/ladder_series.json"),  # L-R + A-P crop, the current standard (2026-10-01)
 ]
 
 FILL = 4  # index of the "v26_6_2 (real fill)" rung; delta is FILL-1 -> FILL

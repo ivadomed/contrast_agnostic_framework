@@ -177,8 +177,17 @@ def paired(ref_cases: dict, comp_cases: dict, col: str) -> tuple:
 
 def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, metric: str,
                         modalities: list, contrast_groups: dict = None,
-                        unit_scope: str = _agg.DEFAULT_UNIT_SCOPE) -> dict:
+                        unit_scope: str = _agg.DEFAULT_UNIT_SCOPE,
+                        reverse: bool = False) -> dict:
     """method_key -> Holm-corrected one-sided ("ref better") macroΔ p-value vs ref.
+
+    reverse=True tests the OTHER direction ("competitor better") on the identical
+    design, groups and patient units. The default one-sided column cannot answer
+    "does the method that leads us do so significantly?" -- a p of 1.0 there only
+    means ref cannot be shown better. paper/scripts/compute_reverse_significance.py
+    used to answer that with its own copy of the test; that copy fell behind when
+    this function moved to patient-level units, so the direction is now a flag on
+    the one implementation instead.
 
     Same estimand/test as significance_from_config.py's headline block
     (contrast-stratified paired sign-flip on macroΔ), just fed pooled-modality
@@ -199,7 +208,7 @@ def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, m
     p1s = []
     for key in competitors:
         entries, K = _agg.build_design(groups, raw_data[ref_key], raw_data[key], unit_scope)
-        p1s.append(macro_perm_design(entries, K, higher_better)[2])
+        p1s.append(macro_perm_design(entries, K, higher_better != reverse)[2])
     hp = holm(p1s)
     out = {ref_key: float("nan")}
     out.update(dict(zip(competitors, hp)))

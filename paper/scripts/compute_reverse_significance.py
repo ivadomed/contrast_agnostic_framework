@@ -129,42 +129,38 @@ def _modalities_from_cfg(cfg):
 
 
 def analyse_combined(config_path: Path, cfg):
-    """Reverse test on a pooled-training-modality table (the task-column estimand)."""
+    """Both directions on a pooled-training-modality table, via the SAME function
+    that draws that table's own `sig. vs ref` column (patient-level units,
+    contrast_groups pooling, Holm across competitors) -- so a "they lead" call here
+    can never be on a different estimand than the number the table prints."""
     modalities = _modalities_from_cfg(cfg)
-    run_keys = list(modalities[0]["runs"])
-    for m in modalities[1:]:
-        run_keys += [k for k in m["runs"] if k not in run_keys]
     ref_key = cfg["ref"]
-    competitors = [k for k in run_keys if k != ref_key]
+    method_order = cfg.get("method_order") or list(modalities[0]["runs"])
+    runs_data = {k: _comb.load_combined_run(modalities, k)[0] for k in method_order}
+    runs_ordered = [k for k in method_order if runs_data[k]]
+    groups = cfg.get("contrast_groups") if cfg.get("use_contrast_groups", True) else None
+    all_contrasts = sorted({c for d in runs_data.values() for c in d.get("dice", {})})
+    unit_scope = cfg.get("unit_scope", _comb._agg.DEFAULT_UNIT_SCOPE)
 
     print(f"\n{'=' * 78}\n{cfg.get('title', config_path.name)}\n  config: {config_path}")
-    print(f"  ref (OURS): {ref_key}   [pooled across {len(modalities)} training modality/ies]")
-
+    print(f"  ref (OURS): {ref_key}   contrast_groups: {'yes' if groups else 'no'}")
     for metric in ("dice", "hd95"):
-        higher_better = metric == "dice"
-        scale = 100.0 if metric == "dice" else 1.0
-        ref_cases = _comb.load_combined_cases(modalities, ref_key, metric)
-        all_cols = sorted(ref_cases)
-        rows, p_ours_raw, p_them_raw, p_two_raw = [], [], [], []
-        for key in competitors:
-            comp_cases = _comb.load_combined_cases(modalities, key, metric)
-            arrs = []
-            for col in all_cols:
-                x, y = _comb.paired(ref_cases, comp_cases, col)
-                if len(x):
-                    arrs.append(x - y)
-            if not arrs:
+        kw = dict(contrast_groups=groups, unit_scope=unit_scope)
+        p_ours = _comb.significance_column(runs_ordered, ref_key, all_contrasts, metric,
+                                           modalities, **kw)
+        p_them = _comb.significance_column(runs_ordered, ref_key, all_contrasts, metric,
+                                           modalities, reverse=True, **kw)
+        higher = metric == "dice"
+        print(f"\n  --- {metric.upper()} ({'higher' if higher else 'lower'} is better) ---")
+        print(f"  {'method':<52} {'p_ours':>9} {'p_them':>9}")
+        for k in runs_ordered:
+            if k == ref_key:
                 continue
-            macro_d, p_two, p_ours = macro_perm(arrs, higher_better, scale=scale)
-            _, _, p_them = macro_perm([-a for a in arrs], higher_better)
-            rows.append((key, macro_d))
-            p_ours_raw.append(p_ours)
-            p_them_raw.append(p_them)
-            p_two_raw.append(p_two)
-        if not rows:
-            continue
-        _print_block(metric, higher_better, rows,
-                     holm(p_ours_raw), holm(p_them_raw), holm(p_two_raw), all_cols)
+            po, pt = p_ours[k], p_them[k]
+            flag = "  <- THEY LEAD, SIGNIFICANTLY" if (np.isfinite(pt) and pt < 0.05) else ""
+            print(f"  {k[:52]:<52} {fmt_p(po):>9} {fmt_p(pt):>9}{flag}")
+        print("  (p_ours / p_them: one-sided, Holm-corrected across competitors, "
+              "identical design to the table's own column)")
 
 
 def _print_block(metric, higher_better, rows, p_ours_adj, p_them_adj, p_two_adj, cols):

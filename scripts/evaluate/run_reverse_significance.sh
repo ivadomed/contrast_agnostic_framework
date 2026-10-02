@@ -29,7 +29,9 @@ if [ $# -lt 2 ]; then
 fi
 DATASET="$1"; shift
 
-ENV_SH="${PROJECT_ROOT}/benchmark/${DATASET}/5_scripts_${DATASET}/00_utils/env.sh"
+# Datasets sit under benchmark/02_tasks/<task>/<dataset>/ since the 2026-09-27
+# restructuring; resolve the task folder rather than hardcoding it here too.
+ENV_SH="$(ls "${PROJECT_ROOT}"/benchmark/02_tasks/*/"${DATASET}"/5_scripts_"${DATASET}"/00_utils/env.sh 2>/dev/null | head -1)"
 [ -f "${ENV_SH}" ] || { echo "No env.sh for dataset '${DATASET}': ${ENV_SH}" >&2; exit 1; }
 set -a; source "${ENV_SH}"; set +a
 
