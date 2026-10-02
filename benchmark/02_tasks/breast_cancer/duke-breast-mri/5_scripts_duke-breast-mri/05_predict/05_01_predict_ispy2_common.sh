@@ -21,7 +21,7 @@ PREDICT_LOG_PREFIX="duke_predict"
 # on every available modality of the target dataset" rule.
 PREDICT_ITEMS_DEFAULT="t1wce"
 PREDICT_FOLD_DEFAULT="all"
-PREDICT_TIME="00:30:00"
+PREDICT_TIME="${PREDICT_TIME_OVERRIDE:-00:30:00}"   # override for multi-item runs (e.g. both *_uniap items)
 PREDICT_EXTRA_FLAGS="-npp 4 -nps 2"
 
 source "${PROJECT_ROOT}/benchmark/00_commun_scripts/00_02_predict/predict_common.sh" "$@"

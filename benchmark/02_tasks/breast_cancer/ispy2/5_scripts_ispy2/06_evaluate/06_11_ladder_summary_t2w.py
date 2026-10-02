@@ -30,13 +30,34 @@ OOD_CONTRASTS = ["t1wce"]
 
 DUKE_ROOT = (DATASET_ROOT.parent / "duke-breast-mri"
              / "8_results_duke-breast-mri/02_metrics/ispy2_model/t2w")
-# 2026-09-17: duke arms are the UNILATERAL-CROP items (t1wce_uni / precontrast_uni),
+# 2026-09-17: duke arms are the UNILATERAL-CROP items (t1wce_uniap / precontrast_uniap),
 # the standard and only reported duke evaluation -- the bilateral ladders are
 # archived at benchmark/03_archive/{duke-breast-mri,ispy2}_bilateral_eval_20260917/.
 # Each item lives in a parallel `<item>/` subdir (ablations/<item>/<run_id>).
-EXTRA_OOD_SOURCES = [{"metrics_root": DUKE_ROOT, "run_subdir": "t1wce_uni"},
-                     {"metrics_root": DUKE_ROOT, "run_subdir": "precontrast_uni"}]
+# 2026-10-01 (Paul): + ispy1 (I-SPY1/MAMA-MIA, both arms -- t1wce AND precontrast are
+# held out for a t2w-trained model) and acrin6698 (ACRIN-6698 T0 DWI, `dwi`).
+# Pre-extension outputs: ablations/*.bak_20261001_pre_ispy1_acrin.
+ISPY1_ROOT = (DATASET_ROOT.parent / "ispy1" / "8_results_ispy1/02_metrics/ispy2_model/t2w")
+ACRIN_ROOT = (DATASET_ROOT.parent / "acrin6698" / "8_results_acrin6698/02_metrics/ispy2_model/t2w")
+EXTRA_OOD_SOURCES = [{"metrics_root": DUKE_ROOT, "run_subdir": "t1wce_uniap"},
+                     {"metrics_root": DUKE_ROOT, "run_subdir": "precontrast_uniap"},
+                     {"metrics_root": ISPY1_ROOT, "run_subdir": "t1wce"},
+                     {"metrics_root": ISPY1_ROOT, "run_subdir": "precontrast"},
+                     {"metrics_root": ACRIN_ROOT, "run_subdir": "dwi_uniap"}]
 
+# Pool by TRUE held-out contrast, not by (dataset, item) column (2026-10-01, Paul):
+# every case of a contrast from every cohort goes into ONE pool (all pre-contrast
+# together, ...); OOD = equal weight per contrast; OOD-only report; significance is
+# patient-merged (an I-SPY2 patient's _uni/_bil FOV variants are one patient).
+# Engine: ladder_ood_common.run_ladder(ood_groups=...) -> run_ladder_grouped.
+OOD_GROUPS = {
+    "t1wce": ["t1wce", "duke-breast-mri/t1wce_uniap", "ispy1/t1wce"],
+    "precontrast": ["duke-breast-mri/precontrast_uniap", "ispy1/precontrast"],
+    "dwi": ["acrin6698/dwi_uniap"],
+}
+
+# 2026-10-01: duke + acrin6698 columns/sources switched to the *_uniap items (L-R + skin-anchored
+# A-P crop to I-SPY2 unilateral training geometry); L-R-only versions archived under benchmark/03_archive/.
 TS = "20260905_163655"
 RUNGS = [
     ("baseline (floor)", "— (no augmentation at all)",
@@ -57,4 +78,5 @@ if __name__ == "__main__":
     run_ladder(task_name="ispy2 T2w (own-model)", contrast_label="t2w",
               metrics_root=METRICS_ROOT, ablations_root=ABLATIONS_ROOT,
               in_domain=IN_DOMAIN, ood_contrasts=OOD_CONTRASTS, rungs=RUNGS,
-              extra_ood_sources=EXTRA_OOD_SOURCES)
+              extra_ood_sources=EXTRA_OOD_SOURCES,
+              ood_groups=OOD_GROUPS)
