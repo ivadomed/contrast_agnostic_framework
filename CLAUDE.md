@@ -163,7 +163,7 @@ convention. Current roster:
 
 | Task folder | Datasets |
 |---|---|
-| `breast_cancer` | duke-breast-mri, ispy2 |
+| `breast_cancer` | ispy2 (trains); duke-breast-mri, ispy1, acrin6698 (eval-only) |
 | `brain_tumor` | brats2024-glioma |
 | `brain_ms` | open-ms |
 | `brain_healthy` | on-harmony |
@@ -570,6 +570,50 @@ trees (same spirit as the AMBL/atlas-liver-hcc archival precedent, so nobody cit
 bilateral numbers by accident), not deleted — see each archive's own README for exactly what
 moved and why. The underlying raw per-fold `eval_all.csv`/predictions were left in place (not
 archived), only the aggregate/summary/ladder outputs moved.
+
+**Two more eval-only breast companions (added 2026-09-30, session Breast_cancer_3, run on Vulcan):**
+- **`ispy1`** — I-SPY1/ACRIN 6657 via MAMA-MIA (Synapse; the SAME expert primary-lesion protocol as
+  duke's masks), BIDS `onc-breast-ispy1`, CC BY 3.0. 167/171 cases (3 bilateral cancers + 1 implant
+  excluded by a rule fixed before predicting). Natively sagittal/unilateral 1.5T. Items `t1wce`,
+  `precontrast`. Pathology/size match verified (T3 ≥3 cm, pre-NAC; mask volume median 14.9 vs I-SPY2
+  training 16.1 ml).
+- **`acrin6698`** — TCIA ACRIN-6698 (the I-SPY2 DWI sub-study), BIDS `onc-breast-acrin6698`, CC BY 4.0.
+  **0/385 patient overlap with our ispy2 subjects (verified by ID).** T0 baseline study only (select by
+  StudyDesc `_T0`, not by "TrT0" series names, which also occur at T2). Item `dwi` = b800 trace with the
+  trial's "Whole Tumor Manual" DWI ROI — a NEW contrast, held-out for BOTH training directions, but drawn on
+  DWI/ADC (not FTV semantics), so always its own column. Bilateral axial → lesion-side crop via the shared
+  `00_commun_scripts/00_00_utils/unilateral_crop.py`.
+- Wired into `ispy2_combined_01_results.yaml` (columns `ispy1_t1wce`, `ispy1_precontrast`,
+  `acrin6698_dwi`; combined + project meta heatmap regenerated, backups `*.bak_20261001_pre_ispy1_acrin`).
+  **Per Paul (2026-10-01) ispy2's HEADLINE ladders (`06_10`/`06_11` → `ablations/`, read by
+  `paper/scripts/compute_dissociation_pvalues.py`) now pool the new cohorts** (ispy1 t1wce only for the
+  t2w-trained ladder — same-contrast rule), **pooled by TRUE contrast (Paul, 2026-10-01)**: `run_ladder(
+  ood_groups=...)` → `run_ladder_grouped` (shared engine, opt-in): every case of a contrast from every cohort in
+  ONE pool ("all pre-contrast together"), OOD = equal weight per contrast, **OOD-only report**, significance
+  patient-merged (`_patient_key` collapses I-SPY2's `_uni`/`_bil` FOV variants — 168 t2w cases = 84 patients),
+  per-contrast curves in `ladder_<tc>_cross_dataset_per_contrast.png` (no `_per_contrast.png`). Same case-pooled
+  `contrast_groups` (lists) in `ispy2_combined_01_results.yaml`. Result (with the A-P-cropped `*_uniap` items,
+  final 2026-10-01): real-fill Δ OOD Dice t1wce-trained −0.85 (p=0.066; HD95 −3.2 mm, p=8e-6), t2w-trained
+  +0.50 (p=0.017; HD95 −1.8 mm, p=2.4e-4); combined table Ours 41.2 vs auglab_default 40.1 Dice (p=9.5e-9),
+  HD95 57.7 vs 57.1 (n.s.). ⚠️ `paper/scripts/make_per_contrast_curves*.py` read in-domain fields the
+  OOD-only grouped JSON no longer carries — check before re-running them. Pre-extension ladder outputs:
+  `ablations/*.bak_20261001_pre_ispy1_acrin`.
+  I-SPY1's own ladders show real-fill significantly NEGATIVE. MAMA-MIA was never formally excluded (the 2026-09-02 caution was only against
+  MERGING cohorts for training); never use MAMA-MIA's own ISPY2 subset — it contains 264 ACRIN-6698
+  patients. NACT-Pilot (64) was downloaded but deliberately not onboarded.
+
+**A-P crop standard (Paul, 2026-10-01): full-chest breast test sets are cropped A-P too, not only L-R.**
+duke-breast-mri's `*_uni` and acrin6698's `dwi` kept the whole thorax (~330-350 mm A-P) while I-SPY2's
+unilateral training crops are ~174 mm (breast + a little chest wall). New standard items: duke
+`t1wce_uniap`/`precontrast_uniap`, acrin6698 `dwi_uniap` — shared `00_commun_scripts/00_00_utils/derive_ap_crop.py`
++ `unilateral_crop.ap_skin_window` (27 mm air in front of each case's own anterior skin + 147.4 mm behind,
+the measured I-SPY2 unilateral-training geometry; extended, never clipped, to contain the lesion; ACRIN skin
+found on b0 since fat is dark at b800). ispy1 is natively unilateral sagittal (200 mm A-P) — untouched.
+L-R-only outputs archived: `benchmark/03_archive/{duke-breast-mri_lr_only_unicrop_eval_20261001,
+acrin6698_lr_only_crop_eval_20261001}/`. Effect: every method's absolute Dice rose and HD95 collapsed
+(~100 → ~30-45 mm); **duke's same-contrast fill-swap (+6.75 Dice, the paper's supplementary "largest effect")
+was a full-chest-FOV artefact — it is −0.71 after the A-P crop**; `paper/scripts/compute_dissociation_pvalues.py`'s
+SUPPLEMENTARY path still points at the archived `t1wce_uni` ladder.
 
 **Standing policy (Paul, 2026-09-17): every task's `combined_contrasts` table should be
 cross-dataset, not just cross-modality** — i.e. it should always pool in that task's external
