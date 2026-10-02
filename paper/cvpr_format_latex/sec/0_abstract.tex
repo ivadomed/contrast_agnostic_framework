@@ -1,4 +1,7 @@
 \begin{abstract}
+% PLACEHOLDER (2026-10-02): minimal factual corrections only, so the PDF does not
+% contradict its own results while Paul's rewritten abstract is pending. Replace
+% this whole block with Paul's text when it arrives.
 Segmentation models in medical imaging are trained on one acquisition setting
 and must generalize to others. Label-generative domain randomization, of which
 SynthSeg is the archetype, addresses this by discarding the acquired scan and
@@ -9,29 +12,23 @@ partial-volume detail become piecewise noise. We ask when that loss costs
 accuracy, and find the answer is a property of the \emph{task}. Where the
 target is separated from its surroundings by an anatomical interface --
 encapsulated abdominal organs, bounded by fat planes -- destroying texture
-costs nothing. Where no interface exists -- diffuse glioma, infiltrating beyond
+costs little. Where no interface exists -- diffuse glioma, infiltrating beyond
 both the enhancing margin and the peritumoral FLAIR abnormality -- the target
-must be inferred from tissue appearance, and destroying texture is expensive.
+must be inferred from tissue appearance, and destroying texture can be expensive.
 We exploit this with PALETTE, a single-source augmentation needing no dense
 label map: it partitions a scan's foreground by unsupervised $k$-means,
 sub-divides each class spatially by a Voronoi partition, and applies a signed
 random affine remap to the \emph{real} intensities of each sub-region. Remapping
 existing intensities rather than replacing them leaves edges, gradients and
 partial-volume detail largely intact; only the contrast relationships between
-regions are randomized. A controlled ablation isolates this: holding the
-partition and per-region statistics fixed and swapping only the real-intensity
-remap for label-style noise fill costs $7.7$ and $7.2$ Dice on tasks with no
-tissue interface, against $+1.1$ and $-1.1$ on organ tasks with one, and
-$-4.5$ and $-1.4$ on a third, far more densely-labelled interface task
-(31-region healthy-brain parcellation) whose regions are, on inspection,
-tissue-interface targets too -- negative rather than merely small,
-plausibly because so much more of the volume is relabelled at once, but
-never a significant gain either way.
-Across cross-contrast, cross-modality and cross-dataset transfer on six
-tasks --- healthy-brain, MS-lesion, brain-tumour, abdominal-organ, mandible
-and breast-lesion segmentation --- one nnU-Net configuration trained with
-PALETTE attains the best Dice on four, and improves over all five competing
-methods on a task-stratified test. On the other two it places second: a
-statistical tie on mandible, and a real if small loss on breast, where the
-texture intervention nonetheless remains among the strongest in the study.
+regions are randomized. A controlled ablation isolates this: holding the partition and per-region
+statistics fixed and swapping only the real-intensity remap for label-style
+noise fill, across fourteen training settings, every large effect falls on a
+target without a tissue interface ($+13.3$ and $+7.2$ Dice on brain tumour,
+$+7.7$ on MS lesions), while no interface-bounded target gains more than
+$1.4$; not every appearance-defined target shows a gain. Across
+cross-contrast, cross-modality and cross-dataset transfer on eight tasks and
+sixteen datasets, one nnU-Net configuration trained with PALETTE is the best
+method overall: best Dice on six tasks and significantly better than every
+competing method across tasks.
 \end{abstract}
