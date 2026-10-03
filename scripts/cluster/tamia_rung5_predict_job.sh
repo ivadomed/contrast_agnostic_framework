@@ -23,7 +23,10 @@ ROWS=(
 "onharmony|$T/brain_healthy/on-harmony/5_scripts_on-harmony|env.sh|tamia_env_onharmony.sh|T1w|05_predict/05_21_predict_t1w_v26_6_2_train050_val100.sh|${ONH_RUN}|T1w:8 T2w:8 bold:8 dwi_ap:8 epi_ap:4 gre_echo1_mag:8"
 "chaos|$T/abdomen_healthy/chaos/5_scripts_chaos|env_t2spir.sh|tamia_env_chaos.sh|t2spir|05_predict/05_22_predict_t2spir_v26_6_2_train050_val100.sh|${CHAOS_RUN}|t1in:4 t1out:4 t2spir:4 ct:20"
 )
-echo "[predict-job] host=$(hostname) job=${SLURM_JOB_ID:-?} ROOT=${ROOT}"
+# SKIP (optional, space-separated dataset names: brats onharmony chaos): leave those out (e.g. already done separately)
+_F=(); for row in "${ROWS[@]}"; do [[ " ${SKIP:-} " == *" ${row%%|*} "* ]] || _F+=("$row"); done; ROWS=("${_F[@]}")
+[ ${#ROWS[@]} -gt 0 ] || { echo "[predict-job] nothing to do (SKIP='${SKIP:-}')"; exit 0; }
+echo "[predict-job] host=$(hostname) job=${SLURM_JOB_ID:-?} ROOT=${ROOT} datasets: $(for r in "${ROWS[@]}"; do printf '%s ' "${r%%|*}"; done)"
 
 # envsetup <dir> <envfile> <tamia env> <tc>: source in the CURRENT shell (call inside a subshell)
 envsetup() { export TRAINING_CONTRAST="$4"; source "$1/00_utils/$2"; source "scripts/cluster/$3"; export TRAINING_CONTRAST="$4"; }

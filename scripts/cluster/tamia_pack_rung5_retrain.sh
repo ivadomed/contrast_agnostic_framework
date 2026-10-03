@@ -116,13 +116,13 @@ fi
 if [ "${MODE}" = queue-post ]; then
     LAST="$(cat "${ROOT}/TRAIN_LAST_JOB")"
     PJ="$(sbatch --parsable --dependency=afterany:"${LAST}" --job-name=rung5_predict --time=05:00:00 \
-          --output="${ROOT}/predict_job_%j.out" --export="ALL,ROOT=${ROOT}" scripts/cluster/tamia_rung5_predict_job.sh)"
+          --output="${ROOT}/predict_job_%j.out" --export="ALL,ROOT=${ROOT},SKIP=${SKIP:-}" scripts/cluster/tamia_rung5_predict_job.sh)"
     echo "${PJ}" > "${ROOT}/PREDICT_JOB"; echo "[rung5] predict job ${PJ} (afterany:${LAST})"
     submit() { local out; if out="$(sbatch --parsable "$@" 2>/dev/null)"; then echo "${out}"; return 0; fi
                echo "  (bare sbatch failed -- retrying with --partition=cpubase_bynode_b1)" >&2
                sbatch --parsable --partition=cpubase_bynode_b1 "$@"; }
     EJ="$(submit --dependency=afterany:"${PJ}" --job-name=rung5_eval --time=05:00:00 --cpus-per-task=16 --mem=96G \
-          --account=aip-jcohen --output="${ROOT}/eval_job_%j.out" --export="ALL,ROOT=${ROOT}" scripts/cluster/tamia_rung5_eval_job.sh)"
+          --account=aip-jcohen --output="${ROOT}/eval_job_%j.out" --export="ALL,ROOT=${ROOT},SKIP=${SKIP:-}" scripts/cluster/tamia_rung5_eval_job.sh)"
     echo "${EJ}" > "${ROOT}/EVAL_JOB"; echo "[rung5] eval job ${EJ} (afterany:${PJ})"
     exit 0
 fi

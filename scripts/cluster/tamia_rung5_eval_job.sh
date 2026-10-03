@@ -14,6 +14,7 @@ source "${ROOT}/RUN_IDS.env"
 T=benchmark/02_tasks
 export METRICS_SUBDIR=ablations
 rc_all=0
+is_skipped() { [[ " ${SKIP:-} " == *" $1 "* ]] && { echo "[eval-job] skipping $1 (SKIP)"; return 0; }; return 1; }
 audit() {   # audit <metrics_root> <run_id> "item:n ..."
 .venv/bin/python - "$1" "$2" $3 <<'PY'
 import csv, glob, sys, collections
@@ -34,17 +35,17 @@ PY
 
 echo "[eval-job] host=$(hostname) job=${SLURM_JOB_ID:-?}"
 # ---- chaos t2spir (DATASET_ID explicit: non-primary contrast scores against the wrong GT otherwise) ----
-( source "$T/abdomen_healthy/chaos/5_scripts_chaos/00_utils/env_t2spir.sh"; source scripts/cluster/tamia_env_chaos.sh
+is_skipped chaos || ( source "$T/abdomen_healthy/chaos/5_scripts_chaos/00_utils/env_t2spir.sh"; source scripts/cluster/tamia_env_chaos.sh
   export TRAINING_CONTRAST=t2spir DATASET_ID=61 CATEGORY=nnUNet
   bash "$T/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_01_evaluate_run.sh" "${CHAOS_RUN}"
   audit "${METRICS_ROOT}" "${CHAOS_RUN}" "t1in:4 t1out:4 t2spir:4 ct:20" ) || { echo "[eval-job] chaos FAILED"; rc_all=1; }
 # ---- on-harmony T1w (WORKER mode, one fold at a time) ----
-( source "$T/brain_healthy/on-harmony/5_scripts_on-harmony/00_utils/env.sh"; source scripts/cluster/tamia_env_onharmony.sh
+is_skipped onharmony || ( source "$T/brain_healthy/on-harmony/5_scripts_on-harmony/00_utils/env.sh"; source scripts/cluster/tamia_env_onharmony.sh
   export TRAINING_CONTRAST=T1w
   rc=0; for F in 0 1 2; do bash "$T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_01_evaluate_testset.sh" "${ONH_RUN}" "${F}" || rc=1; done
   audit "${METRICS_ROOT}" "${ONH_RUN}" "T1w:8 T2w:8 bold:8 dwi_ap:8 epi_ap:4 gre_echo1_mag:8" && [ "$rc" = 0 ] ) || { echo "[eval-job] on-harmony FAILED"; rc_all=1; }
 # ---- brats t2w (in-process, folds sequential: 3 folds x 4 contrasts at once OOM-killed a 64G job before) ----
-( export METRICS_ROOT="${SCRATCH}/brats2024-glioma/8_results/02_metrics"
+is_skipped brats || ( export METRICS_ROOT="${SCRATCH}/brats2024-glioma/8_results/02_metrics"
   source "$T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/00_utils/env_t2w.sh"; source scripts/cluster/tamia_env.sh
   export TRAINING_CONTRAST=t2w DATASET_ID=052 EVAL_INLINE=1 CATEGORY=nnUNet
   rc=0; for F in 0 1 2; do bash "$T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_01_evaluate_run.sh" "${BRATS_RUN}" "${F}" || rc=1; done
