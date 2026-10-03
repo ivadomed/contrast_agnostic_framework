@@ -7,7 +7,7 @@ momentum $0.99$, initial learning rate $10^{-2}$ with the nnU-Net
 cross-entropy loss, deep supervision on. Patch size, spacing and batch size
 are whatever the nnU-Net planner selects for that dataset, identically for
 every method. The epoch budget is fixed per dataset and shared by all methods
-on it: $2500$ (Brats-GLI), $2000$ (ON-Harmony, Open-MS), $1000$ (ToothFairy2,
+on it: $2500$ (BraTS-GLI), $2000$ (ON-Harmony, Open-MS), $1000$ (ToothFairy2,
 I-SPY2) and $200$ (CHAOS, Pelvis); Spine was trained on a separate pipeline.
 Each method is trained as three models on three train/validation folds, all
 scored on the same held-out test set; folds are the same across methods.
@@ -22,8 +22,8 @@ partition results from the $k$-means/Voronoi steps); per-label affine
 decoupling applied independently per label with probability $0.5$ (skipped
 for any label with under $4$ foreground voxels in that sample); Gaussian
 blur $\sigma$ drawn from $\{0,0,0,0.3,0.5,0.8\}$, applied twice (after the
-region-level and after the label-level remap), so mostly not applied at
-either point. The transform is applied on the GPU, on-the-fly, to a fixed
+region-level and after the label-level remap), so applied half the time at
+each point. The transform is applied on the GPU, on-the-fly, to a fixed
 $50\%$ of training
 iterations (\emph{train050}); the remaining half of iterations use the
 un-transformed real image.
@@ -45,6 +45,6 @@ the same folds, schedule and epoch budget as above.
 
 \paragraph{Compute.} Training was performed on NVIDIA L40S and H100 GPUs. A
 single fold costs from under an hour (CHAOS, $200$ epochs) to roughly three
-days (Brats-GLI, $2500$ epochs); the full study is dominated by the six
+days (BraTS-GLI, $2500$ epochs); the full study is dominated by the six
 methods $\times$ eighteen settings $\times$ three folds of the main comparison,
 plus the fourteen ablation ladders of \cref{subsec:e-ablation}.

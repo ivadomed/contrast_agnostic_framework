@@ -150,7 +150,7 @@ def main():
         if group != prev:
             if prev is not None:
                 print(r"\midrule")
-            title = "No tissue interface" if group == "no" else "Tissue interface"
+            title = "Appearance-defined" if group == "no" else "Interface-bounded"
             print(rf"\multicolumn{{5}}{{l}}{{\emph{{{title}}}}} \\")
         mark = btype[btype.index("$"):] if "$" in btype else ""
         d, rel = f"{r['delta']:+.2f}", f"{r['rel']:+.1f}"

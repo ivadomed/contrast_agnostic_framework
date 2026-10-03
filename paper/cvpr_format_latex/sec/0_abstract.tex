@@ -1,9 +1,9 @@
 \begin{abstract}
 \textbf{Introduction.} Deep learning for medical image segmentation generalizes
 poorly across imaging modalities, and annotating data for every new domain is
-prohibitively costly. Synthesis-based augmentation like SynthSeg
-address this by generating training images from label maps alone, but require
-dense label maps and discard the source image's texture. We introduce
+prohibitively costly. Synthesis-based augmentation methods such as SynthSeg
+address this by generating training images from label maps alone, but they
+require dense label maps and discard the source image's texture. We introduce
 PALETTE-Aug, a texture-preserving alternative, and ask when texture matters
 for generalization.
 \textbf{Methods.} We benchmark PALETTE-Aug against five methods on eight
@@ -14,11 +14,13 @@ Each method trains on one modality and is evaluated in-domain and
 out-of-domain. An ablation isolates the effect of texture preservation.
 \textbf{Results.} PALETTE-Aug achieves the highest Dice on six of the eight
 tasks and significantly outperforms every competing method overall. In the
-ablation (six tasks), isolating texture preservation raises out-of-domain Dice
-by $15\%$ and $16\%$ relative on two interface-free targets (brain tumor,
-multiple sclerosis), versus at most $4\%$ on interface-bounded ones (healthy
-brain: $-3\%$); breast lesions, also interface-free, show no Dice gain.
-\textbf{Conclusion.} Texture preservation helps most where the target lacks an
-anatomical interface, and PALETTE-Aug generalizes best
+ablation (six tasks), preserving texture raises out-of-domain Dice, pooled per
+task, by $15\%$ and $16\%$ relative to noise fill on two appearance-defined
+targets (brain tumor, multiple sclerosis lesions) and by at most $4\%$ on
+interface-bounded ones (healthy brain: $-3\%$). Breast lesions, also
+appearance-defined, show no Dice gain.
+\textbf{Conclusion.} Texture preservation helps most where the target is
+defined by tissue appearance rather than by an anatomical interface, though not
+on every such target, and PALETTE-Aug generalizes best
 overall across eight segmentation tasks.
 \end{abstract}

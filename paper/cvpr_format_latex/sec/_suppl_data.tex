@@ -17,7 +17,7 @@ Task & Dataset & Train modalities & Test modalities \\
  & AMOS       & --             & CT, MRI \\
  & SLIVER07   & --             & CT \\
 \midrule
-Brain Glioma  & Brats2024-GLI & T1n, T1c, T2w, FLAIR & T1n, T1c, T2w, FLAIR \\
+Brain Glioma  & BraTS2024-GLI & T1n, T1c, T2w, FLAIR & T1n, T1c, T2w, FLAIR \\
 \midrule
 Brain MS      & Open-MS       & FLAIR, T1w  & FLAIR, T1w, T2w \\
 \midrule
@@ -64,7 +64,7 @@ eight sessions of four subjects, each scanned at two sites.
 \paragraph{Open-MS} \cite{lesjak2018openms} --- MS-lesion segmentation with
 manual consensus annotations, evaluated across FLAIR, T1w and T2w.
 
-\paragraph{Brats2024-GLI} \cite{deverdier2024brats2024} --- post-treatment
+\paragraph{BraTS2024-GLI} \cite{deverdier2024brats2024} --- post-treatment
 glioma sub-region segmentation (necrotic core, surrounding FLAIR hyperintensity,
 enhancing tumor, resection cavity), trained on each of T1n, T1c, T2w and
 T2-FLAIR and evaluated on all four.
@@ -74,7 +74,8 @@ spleen, both kidneys), evaluated on the CHAOS MR contrasts (four held-out MR
 patients) and CT (20 held-out patients), and on two external cohorts: CT and
 T2w MRI from AMOS~\cite{ji2022amos} and liver-only CT from
 SLIVER07~\cite{heimann2009comparison}. In the pooled CT group, liver comes from
-CHAOS, AMOS and SLIVER07 and spleen and kidneys from CHAOS and AMOS. CHAOS
+CHAOS, AMOS and SLIVER07 and spleen and kidneys from AMOS only (CHAOS CT is
+annotated for the liver only). CHAOS
 images a restricted axial field of view, so the full-torso external volumes are
 cropped to the CHAOS-equivalent axial slab (median CHAOS margins around the
 kidneys for AMOS and the liver for SLIVER07) before prediction; the network
@@ -145,7 +146,7 @@ Task & Train & Test \\
 CHAOS          & 16  & 24 \\
 ON-Harmony     & 84$^a$ & 8  \\
 Open-MS        & 22  & 8  \\
-Brats2024-GLI  & 630 & 70 \\
+BraTS2024-GLI  & 630 & 70 \\
 ToothFairy2    & 408 & 71 \\
 I-SPY2         & 476 & 84 \\
 Pelvis (CT / MRI) & 170 / 156 & 30 / 27 \\

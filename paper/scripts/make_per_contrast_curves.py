@@ -105,7 +105,7 @@ PANELS = [
 
 N_RUNGS = 6
 FILL = 4                      # index of "v26_6_2 (real fill)"; step is FILL-1 -> FILL
-RUNG_SHORT = ["base", "+km", "+lbl", "+vor", "+real", "+AugLab"]
+RUNG_SHORT = ["base", "+km", "+lbl", "+vor", "+real", "+Auglab"]
 IMPROVE, WORSEN, FLAT = "#2f7d6b", "#c0392b", "#8a8a8a"
 IMPROVE_LIGHT, WORSEN_LIGHT = "#8fc4b4", "#e2988c"
 NEUTRAL = "#b5b5b5"
@@ -367,7 +367,7 @@ def build(metric, ylabel, out_name, higher_is_better):
     fig.canvas.draw()
 
     # One header per ROW, spanning that row's panels -- the row IS the group.
-    GROUP_TITLE = {"interface": "Tissue interface", "no_interface": "No tissue interface"}
+    GROUP_TITLE = {"interface": "Interface-bounded", "no_interface": "Appearance-defined"}
     for row, this in zip(rows, row_axes):
         p0, p1 = this[0].get_position(), this[-1].get_position()
         y = p0.y1 + 0.038
@@ -381,7 +381,7 @@ def build(metric, ylabel, out_name, higher_is_better):
 
     style_h = [
         Line2D([0], [0], color="#2a2a2a", linestyle="-", label="trained on T1-weighted", linewidth=1.8),
-        Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on T2-weighted/FLAIR", linewidth=1.8),
+        Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on another contrast", linewidth=1.8),
         Line2D([0], [0], color="black", label="panel average, other rungs", linewidth=2.6),
         Line2D([0], [0], color=NEUTRAL, label="per-curve, other rungs", linewidth=1.1),
     ]

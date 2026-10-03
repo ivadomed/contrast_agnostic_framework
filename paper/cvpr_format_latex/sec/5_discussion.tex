@@ -1,33 +1,40 @@
 \section{Discussion and Limitations}
 \label{sec:discussion}
 
-\paragraph{Why the effect follows the anatomy.} Liver, spleen and kidney are
+\paragraph{Why anatomy predicts the largest effects.} Liver, spleen and kidney are
 encapsulated organs with a clear physical boundary, and edge-following methods
-have long segmented them well~\cite{kavur2021chaos,lee2007gaclivers}. An
+have long segmented them well~\cite{lee2007gaclivers}. An
 augmentation that scrambles their internal texture but keeps the boundary loses
 little. Diffuse glioma has no such boundary: tumor cells infiltrate beyond both
 the enhancing margin and the FLAIR abnormality~\cite{gliomamargins2025,flairectomy2022},
-so the target must be inferred from appearance. MS lesions are likewise defined
-by tissue signal~\cite{zhang2008mstexture}. This account interprets the
+so the target must be inferred from appearance. MS lesions, though typically
+well demarcated, are identified by abnormal signal within white matter, and
+texture features separate them from normal-appearing white
+matter~\cite{zhang2008mstexture}. This account interprets the
 intervention of \cref{subsec:e-ablation}; it is not separate evidence for it.
 
-\paragraph{Appearance-defined is necessary, not sufficient.} Open-MS T1w,
-Brats-GLI T2w and FLAIR, and both Breast rows show no texture effect. We have
-two untested hypotheses. The effect differs sharply by training contrast within
-one task (Brats-GLI: $+13.3$ from T1c, $+7.2$ from T1n, about zero from T2w and
-FLAIR), so how much discriminative texture the training contrast carries may
-matter as much as the target. And Breast pools four cohorts from different
-trials, which may dilute a cohort-specific effect. On interface tasks, where
-texture adds little, PALETTE-Aug's gains likely come mostly from the wider range
-of region-to-region contrasts, including sign inversions, that PALETTE-Aug
+\paragraph{Not every appearance-defined target gains.} Open-MS T1w, BraTS-GLI
+T2w and FLAIR, and both Breast rows show no Dice gain. We have two hypotheses.
+The effect differs sharply by training contrast within one task (BraTS-GLI:
+$+13.3$ from T1c, $+7.2$ from T1n, about zero from T2w and FLAIR), and from T2w
+real fill helps some labels and hurts others (\cref{par:per-label}), so
+whether the training contrast's texture transfers may matter as much as the
+target. And Breast pools four cohorts from different
+trials, which may dilute a cohort-specific effect. On interface-bounded
+tasks, where texture adds little relative to the starting Dice, most of the
+gain arrives with the texture-free partition rungs (\cref{tab:ladder-full}),
+that is, from the wide range of region-to-region contrasts PALETTE-Aug
 samples.
 
-\paragraph{Limitations.} We assign each target to the interface or
-no-interface group by its anatomy, not by a measured boundary statistic. We
-state the texture effect relative to the noise-fill Dice; in absolute points,
-CHAOS T2spir ($+5.1$) exceeds several appearance-defined settings.
-Open-MS has eight test patients and ON-Harmony eight sessions of four subjects,
-so their effects can be consistent without reaching significance, and
+\paragraph{Limitations.} We assign each target to a group by its anatomy, not
+by a measured boundary statistic. Target type is confounded with difficulty:
+every interface-bounded row starts above $63\%$ noise-fill Dice and every
+appearance-defined row below $42\%$, so dividing by the starting Dice favors
+the latter; as a share of the remaining error, CHAOS T2spir would rank first.
+The group contrast is descriptive: with three ladder tasks per group, no test
+of it can reach $p<0.05$. Open-MS has eight test patients and ON-Harmony eight
+sessions of four subjects, so their single-setting effects can be consistent
+without reaching significance, and
 ON-Harmony's session-level tests are optimistic. Spine was run on a separate
 pipeline and has no SRCSM arm. The cross-task test treats our eight tasks as
 fixed; with the task as the unit, the advantage over SRCSM is not significant.
@@ -41,8 +48,9 @@ domains.
 We asked when preserving real image texture matters for contrast-robust
 segmentation. Its largest gains, relative to where the model starts, occur
 where the target is defined by tissue appearance rather than by an anatomical
-interface ($+44\%$ and $+18\%$ on brain tumor, $+39\%$ on MS lesions, at most
-$+6\%$ on interface targets), though not on every appearance-defined target. PALETTE-Aug, which
+interface ($+15\%$ on brain tumor and $+16\%$ on MS lesions, pooled per task,
+against at most $4\%$ on interface-bounded tasks), though not on every
+appearance-defined target. PALETTE-Aug, which
 preserves texture and needs no dense label map, is the best method overall
 across eight tasks and sixteen datasets. The task-level account makes a
 testable prediction for new tasks: a large relative gain from texture

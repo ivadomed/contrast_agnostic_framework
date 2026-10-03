@@ -58,8 +58,9 @@ measure the same thing. Equal weighting is not cosmetic here. The claim
 under test is cross-contrast generalization, and a contrast's held-out case
 count reflects how large a public cohort happens to be, not how much that
 contrast should say about generalizing. CHAOS is the extreme case: its
-held-out CT evidence includes an external cohort contributing $200$ cases,
-while each of its three MR contrasts contributes $8$. Weighting by case
+held-out CT evidence includes an external cohort of $100$ patients, while
+each of its three MR contrasts has $4$ (cases counted once per training
+modality: $200$ against $8$). Weighting by case
 count would let one CT cohort cast more than half the votes in a test whose
 conclusion is about transfer across MR contrasts.
 
@@ -149,9 +150,9 @@ main claims rest on the task- and cross-task-level tests.
 \paragraph{Boundary distance at task level.} \cref{tab:meta-hd95} gives the
 HD95 counterpart of \cref{tab:meta}. Across tasks PALETTE-Aug is significantly
 better than every competitor, Auglab included. Per task it has the lowest HD95
-on Brats-GLI, CHAOS, ON-Harmony, Open-MS, Spine and Pelvis (on CHAOS the gap to
+on BraTS-GLI, CHAOS, ON-Harmony, Open-MS, Spine and Pelvis (on CHAOS the gap to
 SRCSM is not significant); it ties Auglab on Breast without a significant gap; and on Mandible it
-is significantly behind SRCSM, Auglab and the no-augmentation baseline, the
+is significantly behind SRCSM, Auglab and the baseline, the
 one task where the baseline beats PALETTE-Aug. When HD95 disagrees with Dice for a
 method -- a noticeably better HD95 than its Dice would predict -- the usual
 explanation is low recall: a method that predicts only a small, confident,
@@ -165,7 +166,7 @@ Dice is a warning sign rather than evidence of competitiveness.
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccccccc|c}
 \toprule
- & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Spine & Pelvis & $p$ vs ours \\
+ & BraTS-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Spine & Pelvis & $p$ vs ours \\
 \midrule
 Baseline        & 44.8 & 122.1 & 24.0 & 35.2 & 21.7 & 58.5 & 49.9 & 149.3 & 4.7e-48 \\
 SynthSeg-noEM   & 78.0 &  80.6 &  6.7 & 41.9 & 32.9 & 101.1 & 111.8 & 261.8 & 2.9e-58 \\
@@ -188,7 +189,7 @@ per-dataset panels, same boundary-type grouping, same fill-swap rung and
 same visual scheme (per-curve color only on the real-fill segment; bold
 black panel average; one panel-pooled $p$-value per panel), reported on
 HD95 instead of Dice (\emph{improvement} means the fill-swap step lowers
-HD95). Brats-GLI, CHAOS and Breast improve significantly at panel level and
+HD95). BraTS-GLI, CHAOS and Breast improve significantly at panel level and
 ON-Harmony worsens; Open-MS and ToothFairy2 do not move significantly.
 Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
@@ -200,28 +201,28 @@ Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{llcc}
 \toprule
-Task & boundary type & $\Delta$ HD95 (mm) & $p$ \\
+Task & target type & $\Delta$ HD95 (mm) & $p$ \\
 \midrule
-CHAOS T1in       & interface & $-1.36$ & 0.80 \\
-CHAOS T2spir     & interface & $-18.47$ & 3.4e-12 \\
-ON-Harmony T1w   & interface & $+6.82$ & 0.062 \\
-ON-Harmony T2w   & interface & $+0.38$ & 0.062 \\
-ON-Harmony DWI   & interface & $-0.05$ & 0.75 \\
-ToothFairy2 CBCT & interface & $-0.20$ & 0.37 \\
+CHAOS T1in       & interface-bounded & $-1.36$ & 0.80 \\
+CHAOS T2spir     & interface-bounded & $-18.47$ & 3.4e-12 \\
+ON-Harmony T1w   & interface-bounded & $+6.82$ & 0.062 \\
+ON-Harmony T2w   & interface-bounded & $+0.38$ & 0.062 \\
+ON-Harmony DWI   & interface-bounded & $-0.05$ & 0.75 \\
+ToothFairy2 CBCT & interface-bounded & $-0.20$ & 0.37 \\
 \midrule
-Open-MS FLAIR    & no interface & $-3.02$ & 0.14 \\
-Open-MS T1w      & no interface & $+3.94$ & 0.80 \\
-Brats-GLI T1n    & no interface & $-4.59$ & 6.3e-10 \\
-Brats-GLI T1c    & no interface & $-9.91$ & 4.2e-11 \\
-Brats-GLI T2w    & no interface & $-1.95$ & 0.013 \\
-Brats-GLI FLAIR  & no interface & $-1.71$ & 0.21 \\
-I-SPY2 T1-CE     & no interface & $-3.21$ & 8.8e-5 \\
-I-SPY2 T2w       & no interface & $-1.82$ & 0.0024 \\
+Open-MS FLAIR    & appearance & $-3.02$ & 0.14 \\
+Open-MS T1w      & appearance & $+3.94$ & 0.80 \\
+BraTS-GLI T1n    & appearance & $-4.59$ & 6.3e-10 \\
+BraTS-GLI T1c    & appearance & $-9.91$ & 4.2e-11 \\
+BraTS-GLI T2w    & appearance & $-1.95$ & 0.013 \\
+BraTS-GLI FLAIR  & appearance & $-1.71$ & 0.21 \\
+I-SPY2 T1-CE     & appearance & $-3.21$ & 8.8e-5 \\
+I-SPY2 T2w       & appearance & $-1.82$ & 0.0024 \\
 \bottomrule
 \end{tabular}
 \caption{Same fill-swap step as \cref{tab:dissociation} (main paper), on HD95
 (negative is better), with $p$ Holm-corrected across the fourteen rows. Five of
-the six significant improvements are on no-tissue-interface targets, including
+the six significant improvements are on appearance-defined targets, including
 both Breast rows, whose Dice does not move; the sixth, and the largest in
 millimetres, is CHAOS T2spir. HD95 is less consistent than Dice within a task
 (its sign flips between the two modalities of Open-MS), so we state the claim
@@ -237,24 +238,26 @@ significance for each step against the rung immediately before it
 steps). Most steps that add an ingredient help, as expected. Eight cells are
 significant \emph{decreases} (marked $\downarrow$). Two are the fill-swap step
 on ON-Harmony T1w and T2w. Two are the Voronoi sub-parcellation step, on
-Brats-GLI T1n and CHAOS T1in, which the real-fill step then more than
-recovers. The other four are the $+$Auglab rung --- on ON-Harmony DWI, on
-CHAOS T1in, and twice on Mandible, the task where the complete method places
-third (\cref{subsec:e-main}). There PALETTE-Aug alone (the $+$real rung,
+BraTS-GLI T1n and CHAOS T1in, which the real-fill step then more than
+recovers. Three are the $+$Auglab rung --- on ON-Harmony DWI, CHAOS T1in and
+Mandible, the task where the complete method places third
+(\cref{subsec:e-main}) --- and one is Mandible's val000$\to$val100 step. There PALETTE-Aug alone (the $+$real rung,
 $69.5$) is the ladder's maximum and adding the Auglab recipe takes it back
-down, which places the Mandible shortfall in the wrapper rather than in the
-transform this paper argues for. Both CHAOS ladders peak at the same rung. We have not diagnosed which Auglab
+down; adding PALETTE-Aug to Auglab also lowers Mandible Dice
+(\cref{tab:meta}), so the two components interact negatively there and we
+cannot attribute the shortfall to either. Both CHAOS ladders peak at the same rung. We have not diagnosed which Auglab
 operator is responsible.
 
 We likewise do not hide that Voronoi's own marginal contribution is
 task-dependent rather than uniformly positive -- a separate paired
-significance check (same protocol as \cref{tab:mechanism}'s all-contrast
-Dice, not just the OOD slice used above) confirms the same pattern: Voronoi
+significance check on all-contrast Dice (the estimand of \cref{tab:mechanism},
+not the OOD slice above) shows: Voronoi
 significantly \emph{helps} Open-MS FLAIR and (by a small margin) ON-Harmony
-T1w, is flat on CHAOS T1in, and significantly \emph{hurts} Brats-GLI T1n
+T1w, is flat on CHAOS T1in (its OOD step above is a small significant
+decrease), and significantly \emph{hurts} BraTS-GLI T1n
 under the real-fill deployed configuration as well, not only here under
-noise fill. The full method still wins on Brats-GLI T1n regardless
-(\cref{tab:meta}): whatever Voronoi costs there is more than recovered by
+noise fill. The full method is still best on BraTS-GLI T1n
+(\cref{tab:suppl-dice}; not significantly ahead of Auglab): whatever Voronoi costs there is more than recovered by
 the subsequent real-intensity fill step, so the net effect of the complete
 pipeline is positive even though one internal component is not.
 
@@ -265,7 +268,7 @@ pipeline is positive even though one internal component is not.
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lccccccc}
 \toprule
-Rung & Open-MS & Open-MS & Brats-GLI & Brats-GLI & Brats-GLI & Brats-GLI & CHAOS \\
+Rung & Open-MS & Open-MS & BraTS-GLI & BraTS-GLI & BraTS-GLI & BraTS-GLI & CHAOS \\
      & FLAIR & T1w & T1n & T1c & T2w & FLAIR & T1in \\
 \midrule
 base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 17.0 \\
@@ -298,7 +301,7 @@ base       & 19.7 & 14.8 & 24.5 & 36.1 & 39.4 & 23.7 & 33.5 \\
 }
 \caption{Out-of-domain Dice (\%) at every rung of every ladder
 (\cref{fig:ladder}), with significance for each step against the rung above
-it: $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$ (Holm-corrected paired
+it (val100 against val000): $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$ (Holm-corrected paired
 Wilcoxon on patients, within each ladder); $\downarrow$ marks a significant
 \emph{decrease}. Rungs: base(line), $+k$-means, $+$label-remap, $+$Voronoi
 (noise fill), $+$real-intensity fill (PALETTE-Aug alone), $+$Auglab
@@ -311,12 +314,12 @@ val100 arm. Mandible's held-out axis is cross-dataset.}
 % Regenerated 2026-10-03 with folds capped to 0-2 (06_15_t1n_t2w_transfer_per_label.py).
 \paragraph{Per-label breakdown: is the fill-swap effect uniform within a task?}
 \label{par:per-label}
-\cref{fig:ladder} shows that Brats-GLI T2w's pooled fill-swap effect is
-small and not significant, with one significantly negative held-out contrast
+BraTS-GLI T2w's pooled fill-swap effect is small and not significant
+(\cref{tab:dissociation}), with one significantly negative held-out contrast
 inside it (T2w$\to$T1n, $-4.1$ Dice). This raises a further question: within that one
 (training, eval) pair, does the fill-swap step affect every anatomical
 sub-region equally, or is the worsening itself concentrated in specific
-labels? We break Brats-GLI T2w$\to$T1n down by its four labels -- necrotic
+labels? We break BraTS-GLI T2w$\to$T1n down by its four labels -- necrotic
 core (NCR), oedema (SNFH), enhancing tumor (ET), resection cavity (RC);
 $n=70$ test cases for SNFH and ET, present in essentially every case
 (NCR $n=51$, RC $n=67$, since not every tumor has a necrotic core or a
@@ -351,8 +354,8 @@ Label & T1n$\to$T2w $\Delta$ & T2w$\to$T1n $\Delta$ \\
 \midrule
 NCR  & $+1.9$ (p=0.10) & $+1.0$ (p=0.77) \\
 SNFH & $\mathbf{+14.7}$ (p=4.3e-11) & $\mathbf{-8.8}$ (p=1e-4) \\
-ET   & $+2.3$ (p=0.017) & $+1.6$ (p=0.24) \\
-RC   & $+2.9$ (p=0.0003) & $\mathbf{-6.9}$ (p=0.0004) \\
+ET   & $\mathbf{+2.3}$ (p=0.017) & $+1.6$ (p=0.24) \\
+RC   & $\mathbf{+2.9}$ (p=0.0003) & $\mathbf{-6.9}$ (p=0.0004) \\
 \bottomrule
 \end{tabular}
 \caption{Fill-swap step (+Voronoi noise fill $\to$ real fill),
@@ -361,10 +364,11 @@ the 4 labels within each direction. \textbf{Bold} = significant.}
 \label{tab:per-label-delta}
 \end{table}
 
-The worsening is concentrated in SNFH (oedema). SNFH has the largest gap
-between directions ($+19.9$ Dice) and is the only label whose fill-swap effect
-reverses sign significantly: $+14.7$ when trained on T1n, $-8.8$ when trained
-on T2w. RC shows the same reversal at a smaller size. NCR shows no significant
+The worsening is concentrated in SNFH (oedema)
+(\cref{tab:per-label-abs,tab:per-label-delta}). SNFH has the largest gap
+between directions ($+19.9$ Dice) and the largest significant sign reversal:
+$+14.7$ when trained on T1n, $-8.8$ when trained on T2w. RC reverses too, at a
+smaller size. NCR shows no significant
 effect in either direction, and ET improves only in the T1n$\to$T2w direction.
 \cref{fig:snfh-et-zoom} shows this on one case: with real fill, the
 T2w-trained model's SNFH prediction shrinks to a thin band near the ventricle,
@@ -416,19 +420,19 @@ contrast as well (\emph{train050/val100}).
  & \multicolumn{2}{c|}{Dice $\uparrow$} & \multicolumn{2}{c}{HD95 (mm) $\downarrow$} \\
 Task & val000 & val100 & val000 & val100 \\
 \midrule
-Brats-GLI    & 45.9 & \textbf{46.6} & 15.6 & \textbf{15.1} \\
+BraTS-GLI    & 45.9 & \textbf{46.6} & 15.6 & \textbf{15.1} \\
 CHAOS        & 85.9 & \textbf{86.0} & 22.7 & \textbf{20.6} \\
 ON-Harmony   & 66.5 & \textbf{66.6} &  4.3 &  4.3 \\
 Open-MS      & \textbf{38.5} & 37.9 & 24.3 & \textbf{24.2} \\
 \bottomrule
 \end{tabular}
 \caption{Applying PALETTE-Aug at validation time as well as at training time, on
-the four tasks where both configurations were evaluated (Mandible's val100
-arm was not evaluated on its cross-dataset test sets; the Breast, Spine and
+the four tasks with a task-level table for both configurations (Mandible's
+val100 arm is scored only in its ladder, \cref{tab:ladder-full}; the Breast, Spine and
 Pelvis arms were not trained). Across these tasks the two show no significant difference in either
 direction (same cross-task test as
 \cref{tab:meta}; two-sided Dice $p=0.74$, HD95 $p=0.096$), though val100 is
-significantly ahead within Brats-GLI and ON-Harmony individually. We report
+significantly ahead within BraTS-GLI and ON-Harmony individually. We report
 the like-for-like val000 configuration throughout the main paper.}
 \label{tab:suppl-val100}
 \end{table}
