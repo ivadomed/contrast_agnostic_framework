@@ -53,6 +53,8 @@ for CAT in nnUNet auglab; do
   for RUNDIR in "${TF2_PRED}/${CAT}"/*/; do
     RID="$(basename "${RUNDIR}")"
     [ "${RID}" = "_logs" ] && continue
+    # ONLY_RUN (optional): score just this one run id instead of re-scoring every run dir.
+    [ -n "${ONLY_RUN:-}" ] && [ "${RID}" != "${ONLY_RUN}" ] && continue
 
     if   [ -d "${TF2_METRICS_SRC}/${CAT}_${RID}" ];           then SUB=""
     elif [ -d "${TF2_METRICS_SRC}/ablations/${CAT}_${RID}" ]; then SUB="ablations"

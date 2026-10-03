@@ -117,6 +117,64 @@ if [ "${MODE}" = "record" ]; then
     exit 0
 fi
 
+# ---- post-training: predict + evaluate (run table: scripts/cluster/tamia_rung6_pv_runs.sh) ----
+#   bash scripts/cluster/tamia_pack_rung6_pv.sh postcheck            # resolve every row's env, no submit
+#   bash scripts/cluster/tamia_pack_rung6_pv.sh queue-post [PACK...] # predict job per pack + eval job per row
+if [ "${MODE}" = postcheck ] || [ "${MODE}" = queue-post ]; then
+    source scripts/cluster/tamia_rung6_pv_runs.sh
+    bad=0
+    for r in "${RUNG6_ROWS[@]}"; do IFS='|' read -r name pack dir envf tenv tc wrapper args run pexp ekind eexp <<<"$r"
+        [[ " ${SEL} " == *" ${pack} "* ]] || continue
+        line="$( rung6_eval_pre_env "$ekind"; export TRAINING_CONTRAST="$tc"
+                 source "$T/$dir/00_utils/$envf" >/dev/null 2>&1; source "scripts/cluster/$tenv" >/dev/null 2>&1
+                 echo "${PREDICTIONS_ROOT}|${METRICS_ROOT}|${MODEL_TYPE:-${TF2_MODEL_TYPE:-}}" )"
+        IFS='|' read -r pr mr mt <<<"$line"
+        ok=OK
+        [ -f "$T/$dir/05_predict/${wrapper}" ] || ok="${ok},NO_PREDICT_WRAPPER"
+        case "$pr" in /scratch/*) ;; *) ok="${ok},PRED_NOT_SCRATCH";; esac
+        case "$ekind" in tf2|hanseg|pddca) ;; *) case "$mr" in /scratch/*) ;; *) ok="${ok},METRICS_NOT_SCRATCH";; esac;; esac
+        model="${pr}/${mt}/${tc}/nnUNet/${run}"
+        flat="${SCRATCH}/brats2024-glioma/8_results/nnUNet/${run}"   # brats t1n/t2w/t2f: linked in at queue-post
+        case "$name" in *_sif) ;; *) [ -e "${model}" ] || { [ "$pack" = A_brats ] && [ -d "${flat}" ]; } || ok="${ok},MODEL_DIR_ABSENT(${model})";; esac
+        [ "$ok" = OK ] || bad=1
+        printf '%-6s %-13s %-14s pred=%s\n       metrics=%s model=%s\n' "${ok%%,*}" "$name" "$ekind" "$pr" "$mr" "$model"
+        [ "$ok" = OK ] || echo "       PROBLEMS: ${ok}"
+    done
+    [ "${MODE}" = postcheck ] && { [ "$bad" = 0 ] && echo "POSTCHECK PASSED" || echo "POSTCHECK FAILED"; exit 0; }
+    [ "$bad" = 0 ] || { echo "postcheck failed -- not queueing"; exit 1; }
+
+    # brats t1n/t2w/t2f trained into the flat 8_results/nnUNet/ (tamia_env.sh) -- link them where the
+    # predict wrappers look (t1c's wrapper already pinned the co-located path).
+    BS="${SCRATCH}/brats2024-glioma/8_results"
+    for r in "${RUNG6_ROWS[@]}"; do IFS='|' read -r name pack dir envf tenv tc wrapper args run _ <<<"$r"
+        [ "$pack" = A_brats ] && [[ " ${SEL} " == *" A_brats "* ]] || continue
+        dst="${BS}/01_predictions/brats2024_glioma_model/${tc}/nnUNet/${run}"
+        if [ -e "${dst}" ]; then echo "[queue-post] exists: ${dst}"
+        elif [ -d "${BS}/nnUNet/${run}" ]; then mkdir -p "$(dirname "${dst}")"; ln -s "${BS}/nnUNet/${run}" "${dst}"; echo "[queue-post] linked ${dst}"
+        else echo "[queue-post] ERROR: brats run dir not found: ${BS}/nnUNet/${run}"; exit 1; fi
+    done
+
+    cpu_submit() { local out; if out="$(sbatch --parsable "$@" 2>/dev/null)"; then echo "${out}"; return 0; fi
+                   echo "  (bare sbatch failed -- retrying with --partition=cpubase_bynode_b1)" >&2
+                   sbatch --parsable --partition=cpubase_bynode_b1 "$@"; }
+    for p in ${SEL}; do
+        last="$(squeue -u "${USER}" -h -n "rung6pv_${p}" -o %i | sort -n | tail -1)"
+        dep=(); [ -n "${last}" ] && dep=(--dependency=afterany:"${last}")
+        OUT="${PACKS_ROOT}/post_${p}"; mkdir -p "${OUT}"
+        PJ="$(sbatch --parsable "${dep[@]}" --job-name="rung6pv_predict_${p}" --time=06:00:00 \
+              --output="${OUT}/predict_job_%j.out" --export="ALL,PACK=${p},OUT=${OUT}" scripts/cluster/tamia_rung6_pv_predict_job.sh)"
+        echo "${PJ}" > "${OUT}/PREDICT_JOB"; echo "[queue-post] ${p}: predict job ${PJ} (after training job ${last:-none, already finished})"
+        for r in "${RUNG6_ROWS[@]}"; do IFS='|' read -r name pack _ <<<"$r"; [ "$pack" = "$p" ] || continue
+            EJ="$(cpu_submit --dependency=afterany:"${PJ}" --job-name="rung6pv_eval_${name}" --time=05:00:00 --cpus-per-task=16 \
+                  --mem=96G --account=aip-jcohen --output="${OUT}/eval_${name}_%j.out" --export="ALL,ROW=${name},OUT=${OUT}" \
+                  scripts/cluster/tamia_rung6_pv_eval_job.sh)"
+            echo "${EJ}" >> "${OUT}/EVAL_JOBS"; echo "[queue-post]   eval ${name}: job ${EJ}"
+            sleep 2
+        done
+    done
+    exit 0
+fi
+
 # submit
 submit() {
     local pack="$1" chain="$2"

@@ -36,7 +36,8 @@ source "${DATASET_ROOT}/../../../00_commun_scripts/00_00_utils/common_env.sh"
 # — the leaf is named ms-brain-openms, the resolved git-annex dataset name (single source
 # of truth for this path; every consumer reads BIDS_ROOT from the environment).
 export BIDS_ROOT="${DATASET_ROOT}/1_BIDS_open-ms/ms-brain-openms"
-export METRICS_ROOT="${DATASET_ROOT}/8_results_open-ms/02_metrics"
+# guarded (:-) like common_env.sh does, so a cluster override (scripts/cluster/tamia_env_openms.sh) survives a re-source
+export METRICS_ROOT="${METRICS_ROOT:-${DATASET_ROOT}/8_results_open-ms/02_metrics}"
 export nnUNet_results="${DATASET_ROOT}/8_results_open-ms/01_predictions/${MODEL_TYPE}/${TRAINING_CONTRAST}/nnUNet"
 export CHECKPOINTS_DIR="${DATASET_ROOT}/6_checkpoints_open-ms"
 export RESULTS_DIR="${DATASET_ROOT}/8_results_open-ms"

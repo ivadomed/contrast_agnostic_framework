@@ -82,6 +82,17 @@ run_job() {
         return 0
     fi
 
+    # ── INLINE MODE (opt-in via RUN_JOB_INLINE=1) ────────────────────────────
+    # For a caller that is ALREADY inside a Slurm allocation (e.g. a CPU eval job that
+    # invokes a dataset's 06_* wrapper, which itself calls run_job): run the command in
+    # this process instead of submitting a nested sbatch. Always blocking; log appended
+    # to --log like the submitted job would write it. Default (unset): unchanged.
+    if [ "${RUN_JOB_INLINE:-0}" = "1" ]; then
+        echo "run_job (inline): '${name}'${log:+ -> ${log}}"
+        if [ -n "${log}" ]; then mkdir -p "$(dirname "${log}")"; "$@" >> "${log}" 2>&1; else "$@"; fi
+        return $?
+    fi
+
     if [ -z "${cpus}" ]; then
         if [ "${gpus}" -gt 0 ]; then cpus=$((RUN_JOB_CPUS_PER_GPU * gpus)); else cpus="${RUN_JOB_CPUS_DEFAULT}"; fi
     fi

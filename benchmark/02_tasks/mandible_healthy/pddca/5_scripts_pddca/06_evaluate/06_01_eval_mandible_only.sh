@@ -44,11 +44,13 @@ for CAT in nnUNet auglab; do
   for RUNDIR in "${PD_PRED}/${CAT}"/*/; do
     RID="$(basename "${RUNDIR}")"
     [ "${RID}" = "_logs" ] && continue
+    # ONLY_RUN (optional): score just this one run id instead of re-scoring every run dir.
+    [ -n "${ONLY_RUN:-}" ] && [ "${RID}" != "${ONLY_RUN}" ] && continue
 
     # Ladder rungs -> ablations/, matching the toothfairy2/hanseg layout. Pattern-based
     # because a brand-new dataset has no existing metrics tree to mirror.
     case "${RID}" in
-      *baseline_kmeans*|*_v26_6_2_train050_val100_*) SUB="/ablations" ;;
+      *baseline_kmeans*|*_v26_6_2_train050_val100_*|*_v26_6_2_pv_train050_*) SUB="/ablations" ;;
       *) SUB="" ;;
     esac
     # auglabAug_v26_6_2_* is the HEADLINE method, not a ladder rung — don't let the

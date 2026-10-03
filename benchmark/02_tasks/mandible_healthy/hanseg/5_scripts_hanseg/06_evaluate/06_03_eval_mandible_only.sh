@@ -66,6 +66,8 @@ for CAT in nnUNet auglab; do
   for RUNDIR in "${HS_PRED}/${CAT}"/*/; do
     RID="$(basename "${RUNDIR}")"
     [ "${RID}" = "_logs" ] && continue
+    # ONLY_RUN (optional): score just this one run id instead of re-scoring every run dir.
+    [ -n "${ONLY_RUN:-}" ] && [ "${RID}" != "${ONLY_RUN}" ] && continue
 
     # Mirror the run's EXISTING metrics location so the mandible_only tree matches the
     # union tree one-for-one (headline runs flat, ladder rungs under ablations/).
