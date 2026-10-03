@@ -43,7 +43,8 @@ transfers to CT from AMOS~\cite{ji2022amos} and
 SLIVER07~\cite{heimann2009comparison}; Mandible
 (ToothFairy2~\cite{bolelli2025toothfairy2}, CBCT only) to the CT and MR of
 HaN-Seg~\cite{podobnik2023hanseg} and the CT of PDDCA~\cite{raudaschl2017pddca},
-which makes it the one task whose held-out axis is entirely cross-dataset;
+so that, apart from its own CBCT test set, every held-out contrast of this task
+comes from another dataset;
 Breast (I-SPY2~\cite{li2022ispy2}) to
 Duke-Breast-MRI~\cite{saha2018duke,garrucho2025mamamia},
 I-SPY1~\cite{hylton2012ispy1} and ACRIN-6698~\cite{partridge2018acrin6698},
@@ -52,8 +53,9 @@ modality resembles; and Spine (a CT/Dixon cohort) to the T1w and T2w of
 SPIDER~\cite{vandergraaf2024spider}. Pelvis is built from the TotalSegmentator CT and MRI
 releases~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}, two unpaired
 cohorts. ON-Harmony~\cite{warrington2025onharmony} reference labels are
-silver-standard, obtained on T1w with FreeSurfer~\cite{fischl2012freesurfer}
-and registered to the other contrasts.
+silver-standard SynthSeg~\cite{billot2023synthseg} parcellations of the T1w,
+registered to the other contrasts. On external CT for CHAOS we score only the
+axial slab matching CHAOS's restricted field of view (\cref{sec:suppl-data}).
 % TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
 % in the imported results) -- no citable source for it exists in the repo.
 
@@ -99,8 +101,8 @@ Pelvis        & TotalSegmentator & CT, MRI & CT, MRI \\
 \caption{Per-task dataset roster. Rows marked ``--'' are cross-dataset
 transfer targets only, never trained on; their contrasts are extra held-out
 test columns of the task they sit under, not tasks of their own. Mandible's
-held-out axis is entirely cross-dataset, since ToothFairy2 acquires CBCT
-alone. Pelvis's CT and MRI come from different patients. $^\S$Spine results
+non-CBCT test contrasts all come from other datasets, since ToothFairy2
+acquires CBCT alone. Pelvis's CT and MRI come from different patients. $^\S$Spine results
 were computed on a separate pipeline with the same method suite except SRCSM (\cref{sec:suppl-data}).
 Subject counts, acquisition protocols, and label provenance are in
 \cref{sec:suppl-data}.}
@@ -304,14 +306,14 @@ show no Dice effect: Open-MS T1w, Brats-GLI T2w and FLAIR, and both Breast rows
 gain indicates an appearance-defined target, but an appearance-defined target
 does not guarantee one.
 
-ON-Harmony labels 31 brain regions with the standard FreeSurfer subcortical
-parcellation~\cite{fischl2012freesurfer}: ventricles, cortex, white matter,
+ON-Harmony labels 31 brain regions in the FreeSurfer label
+set~\cite{fischl2012freesurfer}: ventricles, cortex, white matter,
 cerebellum, brainstem and eight deep grey nuclei. Every one is bounded by a
 tissue-type transition (CSF against tissue, grey against white matter), so we
 group it with CHAOS as an interface task. Its negative effect is larger than
 CHAOS's, perhaps because it labels nearly the whole brain; one densely labeled
-task cannot test this. Its reference labels are also made on T1w and
-registered to the other contrasts, which may favor some fills over others.
+task cannot test this. Its reference labels are SynthSeg output on the T1w, registered to the other
+contrasts, which may also favor some fills over others.
 
 \paragraph{Does the fill swap change texture? Noise versus real fill.}
 The ladder shows that the fill swap changes Dice, not that it changes texture.

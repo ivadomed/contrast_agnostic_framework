@@ -309,13 +309,12 @@ val100 arm. Mandible's held-out axis is cross-dataset.}
 \label{tab:ladder-full}
 \end{table}
 
-% TODO(Paul): numbers in this per-label subsection predate the 2026-10-01
-% ladder fold-3 fix, which changed the BraTS T2w ladder; regenerate before submission.
+% Regenerated 2026-10-03 with folds capped to 0-2 (06_15_t1n_t2w_transfer_per_label.py).
 \paragraph{Per-label breakdown: is the fill-swap effect uniform within a task?}
 \label{par:per-label}
 \cref{fig:ladder} shows that Brats-GLI T2w's pooled fill-swap effect is
-small and not significant, with one significantly negative eval contrast
-inside it (T2w$\to$T1n). This raises a further question: within that one
+small and not significant, with one significantly negative held-out contrast
+inside it (T2w$\to$T1n, $-4.1$ Dice). This raises a further question: within that one
 (training, eval) pair, does the fill-swap step affect every anatomical
 sub-region equally, or is the worsening itself concentrated in specific
 labels? We break Brats-GLI T2w$\to$T1n down by its four labels -- necrotic
@@ -332,10 +331,10 @@ resection cavity).
 \toprule
 Label & T1n$\to$T2w & T2w$\to$T1n & gap \\
 \midrule
-NCR  & 21.5 & 19.3 & $+2.1$ \\
-SNFH & 66.3 & 45.3 & $\mathbf{+21.0}$ \\
-ET   & 27.5 & 27.9 & $-0.4$ \\
-RC   & 52.3 & 43.1 & $+9.1$ \\
+NCR  & 21.5 & 20.0 & $+1.4$ \\
+SNFH & 66.3 & 46.4 & $\mathbf{+19.9}$ \\
+ET   & 27.5 & 29.0 & $-1.5$ \\
+RC   & 52.3 & 42.8 & $+9.5$ \\
 \bottomrule
 \end{tabular}
 \caption{Absolute OOD Dice (\%) of the real-fill rung (PALETTE-Aug alone),
@@ -351,10 +350,10 @@ per label, both transfer directions.}
 \toprule
 Label & T1n$\to$T2w $\Delta$ & T2w$\to$T1n $\Delta$ \\
 \midrule
-NCR  & $+1.9$ (p=0.10) & $+0.3$ (p=0.87) \\
-SNFH & $\mathbf{+14.7}$ (p=4.3e-11) & $\mathbf{-9.8}$ (p=4.5e-05) \\
-ET   & $+2.3$ (p=0.017) & $+0.9$ (p=0.38) \\
-RC   & $+2.9$ (p=0.0003) & $\mathbf{-6.5}$ (p=0.0039) \\
+NCR  & $+1.9$ (p=0.10) & $+1.0$ (p=0.77) \\
+SNFH & $\mathbf{+14.7}$ (p=4.3e-11) & $\mathbf{-8.8}$ (p=1e-4) \\
+ET   & $+2.3$ (p=0.017) & $+1.6$ (p=0.24) \\
+RC   & $+2.9$ (p=0.0003) & $\mathbf{-6.9}$ (p=0.0004) \\
 \bottomrule
 \end{tabular}
 \caption{Fill-swap step (+Voronoi noise fill $\to$ real fill),
@@ -363,19 +362,14 @@ the 4 labels within each direction. \textbf{Bold} = significant.}
 \label{tab:per-label-delta}
 \end{table}
 
-The worsening is not a property of ``the tumor'' -- it is concentrated
-almost entirely in SNFH, whose difference between directions ($+21.0$ Dice)
-is larger than the whole-tumor difference (about $14$), and is the only label
-whose fill-swap delta significantly reverses sign between the two training
-directions ($+14.7$ when trained on T1n, $-9.8$ when trained on T2w). RC
-shows the same reversal at smaller magnitude. NCR shows no significant
-effect in either direction, and ET helps a little only in the direction
-that already works (T1n$\to$T2w), never significantly reversing when
-trained on T2w. \cref{fig:snfh-et-zoom} shows why on one representative
-case: the T2w-trained model's real-fill prediction on SNFH collapses to a
-thin band near the ventricle relative to its own noise-fill prediction on
-the same case, while its ET prediction looks essentially unchanged between
-the two rungs.
+The worsening is concentrated in SNFH (oedema). SNFH has the largest gap
+between directions ($+19.9$ Dice) and is the only label whose fill-swap effect
+reverses sign significantly: $+14.7$ when trained on T1n, $-8.8$ when trained
+on T2w. RC shows the same reversal at a smaller size. NCR shows no significant
+effect in either direction, and ET improves only in the T1n$\to$T2w direction.
+\cref{fig:snfh-et-zoom} shows this on one case: with real fill, the
+T2w-trained model's SNFH prediction shrinks to a thin band near the ventricle,
+while its ET prediction is almost unchanged.
 
 \begin{figure}[h]
 \centering

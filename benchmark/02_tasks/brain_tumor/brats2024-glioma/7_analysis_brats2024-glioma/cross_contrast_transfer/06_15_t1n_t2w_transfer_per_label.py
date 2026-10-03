@@ -36,6 +36,7 @@ DATASET_ROOT = Path(__file__).resolve().parents[2]   # benchmark/02_tasks/brain_
 REPO_ROOT = DATASET_ROOT.parent.parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "benchmark/00_commun_scripts/00_00_utils"))
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
+from eval_folds import filter_fold_dirs  # noqa: E402  (3-fold policy cap, same as every shared loader)
 
 METRICS_ROOT = DATASET_ROOT / "8_results_brats2024-glioma/02_metrics/brats2024_glioma_model"
 OUT_DIR = METRICS_ROOT / "ablations" / "t1n_t2w_transfer_per_label"
@@ -58,7 +59,10 @@ DIRECTIONS = [
 def load_per_label(metrics_root: Path, contrast: str) -> dict:
     """label -> {case: mean dice over folds} for one eval contrast."""
     per = defaultdict(lambda: defaultdict(list))
-    for fold_dir in sorted(metrics_root.glob("fold*")):
+    # Capped to folds 0-2 (2026-10-03). The legacy T2w real-fill run still has a
+    # fold3 dir from before the 3-fold policy; the uncapped glob averaged it in,
+    # the same contamination the ladder engine was fixed for on 2026-10-01.
+    for fold_dir in filter_fold_dirs(sorted(metrics_root.glob("fold*"))):
         csv_path = fold_dir / "eval_all.csv"
         if not csv_path.exists():
             continue

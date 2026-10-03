@@ -4,24 +4,34 @@ task's test split, including the training contrast itself; training and
 validation subjects never appear in any reported number.
 
 \paragraph{ON-Harmony} \cite{warrington2025onharmony} --- 31-region healthy-brain
-segmentation. Reference labels are \emph{silver standard}: they were produced
-automatically with FreeSurfer~\cite{fischl2012freesurfer} on the T1w volume of
-each subject and then registered to that subject's other contrasts, which are
-acquired in the same session. They are therefore not manual annotations, and
-absolute Dice on this task should be read as agreement with an automated
-reference rather than with a human rater; the comparison between methods, which
-all use the identical reference, is unaffected.
+segmentation. Reference labels are \emph{silver standard}: SynthSeg
+parcellations~\cite{billot2023synthseg} of each session's T1w (FreeSurfer label
+set~\cite{fischl2012freesurfer}, grouped into 31 regions), rigidly registered
+with ANTs into the native space of the same session's other contrasts. They are
+not manual annotations, so absolute Dice here is agreement with an automated
+reference; every method is scored against the same reference. The test set is
+eight sessions of four subjects, each scanned at two sites.
 
 \paragraph{Open-MS} \cite{lesjak2018openms} --- MS-lesion segmentation with
 manual consensus annotations, evaluated across FLAIR, T1w and T2w.
 
 \paragraph{Brats2024-GLI} \cite{deverdier2024brats2024} --- post-treatment
-glioma sub-region segmentation, evaluated across T1n, T1c, T2w and T2-FLAIR.
+glioma sub-region segmentation (necrotic core, surrounding FLAIR hyperintensity,
+enhancing tumor, resection cavity) on a 700-case subset of the 2024 training
+release, trained on each of T1n, T1c, T2w and T2-FLAIR and evaluated on all
+four.
 
 \paragraph{CHAOS} \cite{kavur2021chaos} --- abdominal organ segmentation (liver,
-spleen, both kidneys), evaluated across the CHAOS MR contrasts and, as a
-cross-modality transfer, on held-out CT from AMOS~\cite{ji2022amos} and
-SLIVER07~\cite{heimann2009comparison}.
+spleen, both kidneys), evaluated on the CHAOS MR contrasts (four held-out MR
+patients) and CT (20 held-out patients), and on two external cohorts: CT and
+T2w MRI from AMOS~\cite{ji2022amos} and liver-only CT from
+SLIVER07~\cite{heimann2009comparison}. In the pooled CT group, liver comes from
+CHAOS, AMOS and SLIVER07 and spleen and kidneys from CHAOS and AMOS. CHAOS
+images a restricted axial field of view, so on the full-torso external volumes
+we score only the CHAOS-equivalent axial slab (median CHAOS margins around the
+kidneys for AMOS and the liver for SLIVER07). The network still sees the whole
+volume; only the scoring is restricted, and predictions and references outside
+the slab are both discarded.
 
 \paragraph{ToothFairy2, HaN-Seg and PDDCA}
 \cite{bolelli2025toothfairy2,podobnik2023hanseg,raudaschl2017pddca} ---
@@ -29,9 +39,10 @@ mandible segmentation, trained on dental cone-beam CT, the one non-CT, non-MRI
 training modality here. ToothFairy2's annotation coverage is
 cohort-dependent, so every column of this task is scored on the mandible alone
 (teeth excluded, matching the external references), which keeps the numbers
-being averaged commensurable. ToothFairy2 acquires CBCT only, so its held-out
-evidence is entirely cross-dataset: HaN-Seg head-and-neck CT and MR-T1 and the
-PDDCA CT, the two CT sources pooled as one contrast group. ToothFairy2's volumes
+being averaged commensurable. ToothFairy2 acquires CBCT only, so apart from its
+own 71 CBCT test cases its held-out contrasts all come from other datasets:
+HaN-Seg CT and MR-T1 (42 cases each) and PDDCA CT (40 cases), the two CT sources
+pooled as one contrast group. ToothFairy2's volumes
 are stored superior-inferior inverted relative to the external cohorts --- an
 inversion invisible to the image header, found by checking anatomy directly ---
 so the external test volumes are flipped into ToothFairy2's convention before
@@ -69,7 +80,7 @@ pipeline's \texttt{global\_bin} metrics). No SRCSM arm was run, so Spine
 is absent from every SRCSM comparison.
 
 \paragraph{Pelvis} \cite{wasserthal2023totalseg,dantonoli2025totalsegmri} ---
-ten pelvic and hip musculoskeletal structures (both hips, sacrum, and the
+eleven pelvic and hip musculoskeletal structures (both hips, sacrum, and the
 gluteus maximus, medius and minimus and iliopsoas on each side), from the
 TotalSegmentator CT (CC BY 4.0) and MRI (CC BY-NC-SA 2.0) releases. The two are
 unpaired cohorts, and the MRI release mixes sequences by design, so its MRI
@@ -85,7 +96,7 @@ subsampled to 200 cases to keep training time comparable with the other tasks.
 Task & Train & Test \\
 \midrule
 CHAOS          & 16  & 24 \\
-ON-Harmony     & 84  & 8  \\
+ON-Harmony     & 84$^a$ & 8  \\
 Open-MS        & 22  & 8  \\
 Brats2024-GLI  & 630 & 70 \\
 ToothFairy2    & 408 & 71 \\
@@ -97,10 +108,11 @@ Pelvis (CT / MRI) & 170 / 156 & 30 / 27 \\
 folds used throughout ($\pm 1$ between folds). ON-Harmony counts are scan
 sessions; the eight test sessions are four subjects, each scanned at two sites. External cohorts are
 test-only and counted separately: AMOS and SLIVER07 (CHAOS), HaN-Seg and PDDCA
-(Mandible), Duke-Breast-MRI (291), I-SPY1 (167) and ACRIN-6698 (371) for
+(Mandible), Duke-Breast-MRI (291), I-SPY1 (167, after excluding three bilateral
+cancers and one implant by a rule fixed before prediction) and ACRIN-6698 (371) for
 Breast, and SPIDER (171 T1w, 219 T2w) for Spine, whose own CT/Dixon test split
 has 27--29 cases per contrast. I-SPY2 counts are patients; one held-out
 patient can yield more than one T2w image (both field-of-view variants).
-Pelvis MRI keeps 183 of the 298 released cases.}
+Pelvis MRI keeps 183 of the 298 released cases. $^a$76 for the T2w-trained models.}
 \label{tab:suppl-datasets}
 \end{table}
