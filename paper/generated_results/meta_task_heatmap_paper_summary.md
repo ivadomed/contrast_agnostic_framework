@@ -1,6 +1,6 @@
 # Cross-dataset — task-level heatmap (7-method suite, paper's 8 tasks)
 
-Generated: 2026-10-02 16:54  |  Methods: 7  |  Tasks: brats2024-glioma, chaos, on-harmony, open-ms, toothfairy2, ispy2, healthy-spine-tum, totalseg-pelvic
+Generated: 2026-10-03 10:38  |  Methods: 7  |  Tasks: brats2024-glioma, chaos, on-harmony, open-ms, toothfairy2, ispy2, healthy-spine-tum, totalseg-pelvic
 
 Each task column = that dataset's own `all` value (already averaged over its tested contrasts AND its two training modalities — see its `combined_contrasts/01_results_summary.md`). `overall` = equal-weight average across the 8 tasks that have data for that method (a task missing for a given method — e.g. no HD95, or a method not run on that dataset — is excluded, not counted as 0). **Bold** = best per column. `sig. vs ref` = Holm-corrected one-sided (ref better) macroΔ p-value of `auglabAug_v26_6_2_train050_val000 (Ours)` vs that row, equal weight per TASK (blank on the ref's own row); **bold** = p < 0.05.
 
@@ -8,22 +8,22 @@ Each task column = that dataset's own `all` value (already averaged over its tes
 
 | method | brats2024-glioma | chaos | on-harmony | open-ms | toothfairy2 | ispy2 | healthy-spine-tum | totalseg-pelvic | overall | sig. vs ref |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **baseline** | 23.4 | 29.3 | 35.0 | 21.0 | 59.2 | 35.0 | 48.5 | 29.8 | 35.1 | **9.7e-75** |
-| **synthseg_noEM** | 8.8 | 59.6 | 64.8 | 4.3 | 53.6 | 16.5 | 47.5 | 15.0 | 33.8 | **2.4e-86** |
-| **synthseg_EM** | 43.1 | 83.0 | 66.3 | 33.9 | 76.3 | 39.6 | 80.6 | 62.5 | 60.7 | **1.4e-34** |
-| **auglab_default** | 44.8 | 83.3 | 66.1 | 34.3 | 78.3 | 40.1 | 80.9 | 64.3 | 61.5 | **1.0e-13** |
-| **srcsm** | 41.5 | 83.9 | **66.6** | 33.0 | **79.0** | 16.4 | — | 65.3 | 55.1 | **2.3e-86** |
-| **auglabAug**_**v26_6_2**_train050_val000 **(Ours)** | 45.9 | 85.0 | 66.5 | **38.5** | 77.7 | **41.2** | **82.3** | **65.6** | **62.8** | — |
-| **auglabAug**_**v26_6_2**_train050_val100 **(Ours)** | **46.6** | **85.2** | 66.6 | 37.9 | — | — | — | — | 59.1 | 0.6922 |
+| **baseline** | 23.4 | 29.5 | 35.0 | 21.0 | 59.2 | 35.0 | 48.5 | 29.8 | 35.2 | **2.6e-75** |
+| **synthseg_noEM** | 8.8 | 60.9 | 64.8 | 4.3 | 53.6 | 16.5 | 47.5 | 15.0 | 33.9 | **3.8e-86** |
+| **synthseg_EM** | 43.1 | 84.0 | 66.3 | 33.9 | 76.3 | 39.6 | 80.6 | 62.5 | 60.8 | **1.7e-34** |
+| **auglab_default** | 44.8 | 84.6 | 66.1 | 34.3 | 78.3 | 40.1 | 80.9 | 64.3 | 61.7 | **1.5e-12** |
+| **srcsm** | 41.5 | 84.6 | **66.6** | 33.0 | **79.0** | 16.4 | — | 65.3 | 55.2 | **2.3e-87** |
+| **auglabAug**_**v26_6_2**_train050_val000 **(Ours)** | 45.9 | 85.9 | 66.5 | **38.5** | 77.7 | **41.2** | **82.3** | **65.6** | **62.9** | — |
+| **auglabAug**_**v26_6_2**_train050_val100 **(Ours)** | **46.6** | **86.0** | 66.6 | 37.9 | — | — | — | — | 59.3 | 0.6326 |
 
 ## HD95 mm ↓
 
 | method | brats2024-glioma | chaos | on-harmony | open-ms | toothfairy2 | ispy2 | healthy-spine-tum | totalseg-pelvic | overall | sig. vs ref |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **baseline** | 44.8 | 124.4 | 24.0 | 35.2 | 21.7 | 58.5 | 49.9 | 149.3 | 63.5 | **4.8e-46** |
-| **synthseg_noEM** | 78.0 | 89.9 | 6.7 | 41.9 | 32.9 | 101.1 | 111.8 | 261.8 | 90.5 | **1.8e-58** |
-| **synthseg_EM** | 17.9 | 31.8 | 4.7 | 24.7 | 24.9 | 60.9 | 4.0 | 34.0 | 25.4 | **1.3e-06** |
-| **auglab_default** | 16.1 | 39.3 | 4.7 | 26.5 | 22.1 | **57.1** | 4.7 | 35.6 | 25.8 | **8.9e-07** |
-| **srcsm** | 17.5 | **26.7** | 5.3 | 24.6 | **19.3** | 91.8 | — | 33.9 | 31.3 | **3.0e-23** |
-| **auglabAug**_**v26_6_2**_train050_val000 **(Ours)** | 15.6 | 30.6 | 4.3 | 24.3 | 23.5 | 57.7 | **3.5** | **29.0** | 23.6 | — |
-| **auglabAug**_**v26_6_2**_train050_val100 **(Ours)** | **15.1** | 28.7 | **4.3** | **24.2** | — | — | — | — | **18.1** | 0.9124 |
+| **baseline** | 44.8 | 122.1 | 24.0 | 35.2 | 21.7 | 58.5 | 49.9 | 149.3 | 63.2 | **5.9e-48** |
+| **synthseg_noEM** | 78.0 | 80.6 | 6.7 | 41.9 | 32.9 | 101.1 | 111.8 | 261.8 | 89.3 | **3.5e-58** |
+| **synthseg_EM** | 17.9 | 23.7 | 4.7 | 24.7 | 24.9 | 60.9 | 4.0 | 34.0 | 24.4 | **2.6e-06** |
+| **auglab_default** | 16.1 | 27.8 | 4.7 | 26.5 | 22.1 | **57.1** | 4.7 | 35.6 | 24.3 | **0.0003** |
+| **srcsm** | 17.5 | 24.4 | 5.3 | 24.6 | **19.3** | 91.8 | — | 33.9 | 31.0 | **2.6e-34** |
+| **auglabAug**_**v26_6_2**_train050_val000 **(Ours)** | 15.6 | 22.7 | 4.3 | 24.3 | 23.5 | 57.7 | **3.5** | **29.0** | 22.6 | — |
+| **auglabAug**_**v26_6_2**_train050_val100 **(Ours)** | **15.1** | **20.6** | **4.3** | **24.2** | — | — | — | — | **16.0** | 0.9520 |

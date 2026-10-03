@@ -43,8 +43,8 @@ SPIDER~\cite{vandergraaf2024spider}. Pelvis is built from the TotalSegmentator C
 releases~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}, two unpaired
 cohorts. ON-Harmony~\cite{warrington2025onharmony} reference labels are
 silver-standard FreeSurfer~\cite{fischl2012freesurfer} parcellations of the
-T1w, registered to the other contrasts. On external CT for CHAOS we score only the
-axial slab matching CHAOS's restricted field of view (\cref{sec:suppl-data}).
+T1w, registered to the other contrasts. External CHAOS volumes are cropped to
+CHAOS's restricted field of view before prediction (\cref{sec:suppl-data}).
 % TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
 % in the imported results) -- no citable source for it exists in the repo.
 
@@ -85,15 +85,15 @@ add-one-component test isolating the contribution of the PALETTE-Aug transform.
 \toprule
  & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Spine & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 23.4 & 29.3 & 35.0 & 21.0 & 59.2 & 35.0 & 48.5 & 29.8 & $<\!10^{-10}$ \\
-SynthSeg-noEM   &  8.8 & 59.6 & 64.8 &  4.3 & 53.6 & 16.5 & 47.5 & 15.0 & $<\!10^{-10}$ \\
-SynthSeg-EM     & 43.1 & 83.0 & 66.3 & 33.9 & 76.3 & 39.6 & 80.6 & 62.5 & $<\!10^{-10}$ \\
-SRCSM           & 41.5 & 83.9 & \textbf{66.6} & 33.0 & \textbf{79.0} & 16.4 & --- & 65.3 & $<\!10^{-10}$ \\
-Auglab          & 44.8 & 83.3 & 66.1 & 34.3 & 78.3 & 40.1 & 80.9 & 64.3 & $<\!10^{-10}$ \\
-\textbf{PALETTE-Aug (ours)} & \textbf{45.9} & \textbf{85.0} & 66.5 & \textbf{38.5} & 77.7 & \textbf{41.2} & \textbf{82.3} & \textbf{65.6} & --- \\
+Baseline        & 23.4 & 29.5 & 35.0 & 21.0 & 59.2 & 35.0 & 48.5 & 29.8 & $<\!10^{-10}$ \\
+SynthSeg-noEM   &  8.8 & 60.9 & 64.8 &  4.3 & 53.6 & 16.5 & 47.5 & 15.0 & $<\!10^{-10}$ \\
+SynthSeg-EM     & 43.1 & 84.0 & 66.3 & 33.9 & 76.3 & 39.6 & 80.6 & 62.5 & $<\!10^{-10}$ \\
+SRCSM           & 41.5 & 84.6 & \textbf{66.6} & 33.0 & \textbf{79.0} & 16.4 & --- & 65.3 & $<\!10^{-10}$ \\
+Auglab          & 44.8 & 84.6 & 66.1 & 34.3 & 78.3 & 40.1 & 80.9 & 64.3 & $<\!10^{-10}$ \\
+\textbf{PALETTE-Aug (ours)} & \textbf{45.9} & \textbf{85.9} & 66.5 & \textbf{38.5} & 77.7 & \textbf{41.2} & \textbf{82.3} & \textbf{65.6} & --- \\
 \midrule
 \multicolumn{1}{r}{\footnotesize competitors beaten ($p<0.05$)} &
-5/5 & 4/5 & 2/5 & 5/5 & 3/5 & 5/5 & 4/4 & 3/5 & \\
+5/5 & 5/5 & 2/5 & 5/5 & 3/5 & 5/5 & 4/4 & 3/5 & \\
 \bottomrule
 \end{tabular}
 \caption{Task-level Dice (\%). Each column pools that task's held-out
@@ -114,8 +114,8 @@ the same test run within that task alone. Spine has no SRCSM run
 \paragraph{PALETTE-Aug is the best method overall.} It has the best Dice on six
 of the eight tasks. Across tasks it is significantly better than every
 competitor ($p<10^{-10}$ each, \cref{tab:meta}). Within single tasks it
-significantly outperforms every competitor on four tasks (Brats-GLI, Open-MS,
-Breast, Spine), three or four of five on CHAOS, Mandible and Pelvis, and two
+significantly outperforms every competitor on five tasks (Brats-GLI, CHAOS,
+Open-MS, Breast, Spine), three of five on Mandible and Pelvis, and two
 of five on ON-Harmony. The cross-task test
 treats our eight tasks as fixed. Treating each task as one unit instead, which
 is the question of how a method fares on a new task, PALETTE-Aug beats Auglab on
@@ -129,8 +129,8 @@ task labels, closes most of that gap. SRCSM also falls below the baseline on
 Breast.
 
 \paragraph{No competitor is reliably second.} The best competitor alternates
-between Auglab (Brats-GLI, Open-MS, Breast, Spine) and SRCSM (CHAOS,
-ON-Harmony, Mandible, Pelvis), and SRCSM fails on Breast ($16.4$ Dice).
+between Auglab (Brats-GLI, Open-MS, Breast, Spine) and SRCSM (ON-Harmony,
+Mandible, Pelvis), the two tie on CHAOS, and SRCSM fails on Breast ($16.4$ Dice).
 Picking the right one would require knowing the answer in advance.
 PALETTE-Aug is first or second on every task but one.
 
@@ -145,10 +145,9 @@ and the drop coincides with adding the Auglab pipeline on top
 (\cref{tab:ladder-full}).
 
 \paragraph{Boundary distance.} HD95 is reported in the supplement
-(\cref{tab:meta-hd95}). PALETTE-Aug has the lowest HD95 on five of the eight
-tasks (Brats-GLI, ON-Harmony, Open-MS, Spine, Pelvis) and is significantly
-better than every competitor across tasks. It ties Auglab on Breast, trails
-SRCSM on CHAOS without a significant gap, and is significantly behind SRCSM,
+(\cref{tab:meta-hd95}). PALETTE-Aug has the lowest HD95 on six of the eight
+tasks (Brats-GLI, CHAOS, ON-Harmony, Open-MS, Spine, Pelvis) and is significantly
+better than every competitor across tasks. It ties Auglab on Breast and is significantly behind SRCSM,
 Auglab and the baseline on Mandible.
 
 \subsection{Causal ablation: when does texture matter?}
