@@ -167,11 +167,11 @@ Dice is a warning sign rather than evidence of competitiveness.
 \toprule
  & Brats-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Spine & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 44.8 & 122.1 & 24.0 & 35.2 & 21.7 & 58.5 & 49.9 & 149.3 & 5.9e-48 \\
-SynthSeg-noEM   & 78.0 &  80.6 &  6.7 & 41.9 & 32.9 & 101.1 & 111.8 & 261.8 & 3.5e-58 \\
-SynthSeg-EM     & 17.9 &  23.7 &  4.7 & 24.7 & 24.9 & 60.9 & 4.0 & 34.0 & 2.6e-6 \\
-SRCSM           & 17.5 & 24.4 &  5.3 & 24.6 & \textbf{19.3} & 91.8 & --- & 33.9 & 2.6e-34 \\
-Auglab          & 16.1 & 27.8 &  4.7 & 26.5 & 22.1 & \textbf{57.1} & 4.7 & 35.6 & 3.0e-4 \\
+Baseline        & 44.8 & 122.1 & 24.0 & 35.2 & 21.7 & 58.5 & 49.9 & 149.3 & 4.7e-48 \\
+SynthSeg-noEM   & 78.0 &  80.6 &  6.7 & 41.9 & 32.9 & 101.1 & 111.8 & 261.8 & 2.9e-58 \\
+SynthSeg-EM     & 17.9 &  23.7 &  4.7 & 24.7 & 24.9 & 60.9 & 4.0 & 34.0 & 1.8e-6 \\
+SRCSM           & 17.5 & 24.4 &  5.3 & 24.6 & \textbf{19.3} & 91.8 & --- & 33.9 & 2.0e-34 \\
+Auglab          & 16.1 & 27.8 &  4.7 & 26.5 & 22.1 & \textbf{57.1} & 4.7 & 35.6 & 1.0e-4 \\
 \textbf{PALETTE-Aug (ours)} & \textbf{15.6} & \textbf{22.7} & \textbf{4.3} & \textbf{24.3} & 23.5 & 57.7 & \textbf{3.5} & \textbf{29.0} & --- \\
 \bottomrule
 \end{tabular}
@@ -188,8 +188,8 @@ per-dataset panels, same boundary-type grouping, same fill-swap rung and
 same visual scheme (per-curve color only on the real-fill segment; bold
 black panel average; one panel-pooled $p$-value per panel), reported on
 HD95 instead of Dice (\emph{improvement} means the fill-swap step lowers
-HD95). Brats-GLI and Breast improve significantly at panel level and
-ON-Harmony worsens; CHAOS, Open-MS and ToothFairy2 do not move significantly.
+HD95). Brats-GLI, CHAOS and Breast improve significantly at panel level and
+ON-Harmony worsens; Open-MS and ToothFairy2 do not move significantly.
 Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
 \end{figure*}
@@ -202,31 +202,30 @@ Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
 \toprule
 Task & boundary type & $\Delta$ HD95 (mm) & $p$ \\
 \midrule
-CHAOS T1in       & interface & $-2.95$ & 0.035 \\
-CHAOS T2spir     & interface & $+2.64$ & 0.88 \\
+CHAOS T1in       & interface & $-1.36$ & 0.80 \\
+CHAOS T2spir     & interface & $-18.47$ & 3.4e-12 \\
 ON-Harmony T1w   & interface & $+6.82$ & 0.062 \\
 ON-Harmony T2w   & interface & $+0.38$ & 0.062 \\
 ON-Harmony DWI   & interface & $-0.05$ & 0.75 \\
 ToothFairy2 CBCT & interface & $-0.20$ & 0.37 \\
 \midrule
 Open-MS FLAIR    & no interface & $-3.02$ & 0.14 \\
-Open-MS T1w      & no interface & $+3.94$ & 0.88 \\
-Brats-GLI T1n    & no interface & $-4.59$ & 6.8e-10 \\
-Brats-GLI T1c    & no interface & $-9.91$ & 4.5e-11 \\
-Brats-GLI T2w    & no interface & $-1.95$ & 0.014 \\
+Open-MS T1w      & no interface & $+3.94$ & 0.80 \\
+Brats-GLI T1n    & no interface & $-4.59$ & 6.3e-10 \\
+Brats-GLI T1c    & no interface & $-9.91$ & 4.2e-11 \\
+Brats-GLI T2w    & no interface & $-1.95$ & 0.013 \\
 Brats-GLI FLAIR  & no interface & $-1.71$ & 0.21 \\
-I-SPY2 T1-CE     & no interface & $-3.21$ & 9.5e-5 \\
-I-SPY2 T2w       & no interface & $-1.82$ & 0.0026 \\
+I-SPY2 T1-CE     & no interface & $-3.21$ & 8.8e-5 \\
+I-SPY2 T2w       & no interface & $-1.82$ & 0.0024 \\
 \bottomrule
 \end{tabular}
 \caption{Same fill-swap step as \cref{tab:dissociation} (main paper), on HD95
 (negative is better), with $p$ Holm-corrected across the fourteen rows. Five of
 the six significant improvements are on no-tissue-interface targets, including
-both Breast rows, whose Dice does not move; the sixth is CHAOS T1in. HD95
-therefore leans the same way as the main paper's one-directional Dice result,
-but its sign is less consistent within a task (it flips between the two
-modalities of Open-MS and of CHAOS), so we state the claim on Dice and report
-HD95 here rather than as confirmation of it.}
+both Breast rows, whose Dice does not move; the sixth, and the largest in
+millimetres, is CHAOS T2spir. HD95 is less consistent than Dice within a task
+(its sign flips between the two modalities of Open-MS), so we state the claim
+on Dice and report HD95 here rather than as confirmation of it.}
 \label{tab:dissociation-hd95}
 \end{table}
 
@@ -235,16 +234,16 @@ paper) shows the rung sequence visually; \cref{tab:ladder-full} gives the
 underlying out-of-domain Dice at every rung of all fourteen ladders, with
 significance for each step against the rung immediately before it
 (Holm-corrected paired Wilcoxon on patients, within each ladder's family of
-steps). Most steps that add an ingredient help, as expected. Six cells are
+steps). Most steps that add an ingredient help, as expected. Eight cells are
 significant \emph{decreases} (marked $\downarrow$). Two are the fill-swap step
-on ON-Harmony T1w and T2w, consistent with its tissue-interface grouping. One
-is the Voronoi sub-parcellation step on Brats-GLI T1n, which the real-fill
-step then more than recovers. The other three are the final $+$Auglab rung
---- on ON-Harmony DWI and twice on Mandible, the task where the complete
-method places third (\cref{subsec:e-main}). There PALETTE-Aug alone (the $+$real
-rung, $69.5$) is the ladder's maximum and adding the Auglab recipe takes it
-back down, which places the Mandible shortfall in the wrapper rather than in
-the transform this paper argues for. We have not diagnosed which Auglab
+on ON-Harmony T1w and T2w. Two are the Voronoi sub-parcellation step, on
+Brats-GLI T1n and CHAOS T1in, which the real-fill step then more than
+recovers. The other four are the $+$Auglab rung --- on ON-Harmony DWI, on
+CHAOS T1in, and twice on Mandible, the task where the complete method places
+third (\cref{subsec:e-main}). There PALETTE-Aug alone (the $+$real rung,
+$69.5$) is the ladder's maximum and adding the Auglab recipe takes it back
+down, which places the Mandible shortfall in the wrapper rather than in the
+transform this paper argues for. Both CHAOS ladders peak at the same rung. We have not diagnosed which Auglab
 operator is responsible.
 
 We likewise do not hide that Voronoi's own marginal contribution is
@@ -269,13 +268,13 @@ pipeline is positive even though one internal component is not.
 Rung & Open-MS & Open-MS & Brats-GLI & Brats-GLI & Brats-GLI & Brats-GLI & CHAOS \\
      & FLAIR & T1w & T1n & T1c & T2w & FLAIR & T1in \\
 \midrule
-base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 21.4 \\
-+km        & $11.2^{*}$ & $9.8^{*}$ & $38.4^{***}$ & $29.6^{***}$ & $38.6^{***}$ & $26.1^{***}$ & $84.2^{***}$ \\
-+lbl       & $17.5^{*}$ & $22.4^{*}$ & $41.8^{***}$ & 30.3 & $40.2^{**}$ & 26.4 & $87.7^{***}$ \\
-+vor       & 19.6 & $34.1^{*}$ & $39.8^{***}{\downarrow}$ & 30.5 & 41.0 & $31.9^{***}$ & 87.2 \\
-+real      & $27.3^{*}$ & 34.9 & $47.0^{***}$ & $43.7^{***}$ & 41.8 & 31.7 & $88.2^{***}$ \\
-+AL(v000)  & 30.6 & 36.4 & 46.9 & 44.2 & $46.8^{***}$ & $40.9^{***}$ & 87.7 \\
-+AL(v100)  & 31.3 & 34.7 & $47.6^{*}$ & $46.5^{***}$ & 46.9 & 41.2 & 87.3 \\
+base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 17.0 \\
++km        & $11.2^{*}$ & $9.8^{*}$ & $38.4^{***}$ & $29.6^{***}$ & $38.6^{***}$ & $26.1^{***}$ & $82.2^{***}$ \\
++lbl       & $17.5^{*}$ & $22.4^{*}$ & $41.8^{***}$ & 30.3 & $40.2^{**}$ & 26.4 & $86.1^{***}$ \\
++vor       & 19.6 & $34.1^{*}$ & $39.8^{***}{\downarrow}$ & 30.5 & 41.0 & $31.9^{***}$ & $85.7^{**}{\downarrow}$ \\
++real      & $27.3^{*}$ & 34.9 & $47.0^{***}$ & $43.7^{***}$ & 41.8 & 31.7 & $87.1^{***}$ \\
++AL(v000)  & 30.6 & 36.4 & 46.9 & 44.2 & $46.8^{***}$ & $40.9^{***}$ & $86.4^{***}{\downarrow}$ \\
++AL(v100)  & 31.3 & 34.7 & $47.6^{*}$ & $46.5^{***}$ & 46.9 & 41.2 & 86.1 \\
 \bottomrule
 \end{tabular}%
 }
@@ -287,13 +286,13 @@ base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 21.4 \\
 Rung & CHAOS & ON-Harm. & ON-Harm. & ON-Harm. & Mandible & Breast & Breast \\
      & T2spir & T1w & T2w & DWI & CBCT & T1-CE & T2w \\
 \midrule
-base       & 18.3 & 14.8 & 24.5 & 36.1 & 39.4 & 23.7 & 33.5 \\
-+km        & $79.0^{***}$ & $62.5^{*}$ & $63.5^{*}$ & $60.4^{*}$ & $64.6^{***}$ & $28.8^{***}$ & $37.0^{***}$ \\
-+lbl       & $83.4^{***}$ & 62.9 & 63.6 & $64.5^{*}$ & $65.6^{***}$ & 28.5 & $38.8^{***}$ \\
-+vor       & 82.7 & 63.2 & $64.2^{*}$ & 64.6 & $68.1^{***}$ & $30.8^{***}$ & $39.8^{**}$ \\
-+real      & 81.8 & $58.0^{*}{\downarrow}$ & $62.6^{*}{\downarrow}$ & $65.4^{*}$ & $69.5^{***}$ & 29.9 & $40.3^{*}$ \\
-+AL(v000)  & 86.3 & 64.2 & 63.9 & $60.9^{*}{\downarrow}$ & $67.6^{***}{\downarrow}$ & $34.7^{***}$ & $41.9^{***}$ \\
-+AL(v100)  & 87.1 & 64.2 & $64.4^{*}$ & 60.9 & $67.5^{***}{\downarrow}$ & --- & --- \\
+base       & 19.7 & 14.8 & 24.5 & 36.1 & 39.4 & 23.7 & 33.5 \\
++km        & $77.4^{***}$ & $62.5^{*}$ & $63.5^{*}$ & $60.4^{*}$ & $64.6^{***}$ & $28.8^{***}$ & $37.0^{***}$ \\
++lbl       & $81.4^{***}$ & 62.9 & 63.6 & $64.5^{*}$ & $65.6^{***}$ & 28.5 & $38.8^{***}$ \\
++vor       & $82.0^{***}$ & 63.2 & $64.2^{*}$ & 64.6 & $68.1^{***}$ & $30.8^{***}$ & $39.8^{**}$ \\
++real      & $87.1^{***}$ & $58.0^{*}{\downarrow}$ & $62.6^{*}{\downarrow}$ & $65.4^{*}$ & $69.5^{***}$ & 29.9 & $40.3^{*}$ \\
++AL(v000)  & 85.4 & 64.2 & 63.9 & $60.9^{*}{\downarrow}$ & $67.6^{***}{\downarrow}$ & $34.7^{***}$ & $41.9^{***}$ \\
++AL(v100)  & 85.9 & 64.2 & $64.4^{*}$ & 60.9 & $67.5^{***}{\downarrow}$ & --- & --- \\
 \bottomrule
 \end{tabular}%
 }

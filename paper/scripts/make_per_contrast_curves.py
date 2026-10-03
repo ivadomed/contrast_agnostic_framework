@@ -349,27 +349,15 @@ def build(metric, ylabel, out_name, higher_is_better):
             ("improves *" if dl >= 0 else "worsens *")
         ann = f"panel-pooled: {word}\np={fmt_p(p)}"
         if metric == "dice":
-            # Real-fill's Δ as a % of this panel's TOTAL pipeline gain (floor ->
-            # final rung), not of remaining headroom-to-100 -- added 2026-10-01,
-            # replacing an earlier headroom-based version the same day. Headroom
-            # (100 - Dice before this step) answers "how much of what was still
-            # achievable did this step close", but that conflates a task already
-            # solved by OTHER ingredients (CHAOS: boundary cues alone get it to
-            # ~85%, so its small headroom inflates texture's apparent share) with
-            # texture actually mattering. Dividing by the pipeline's own total
-            # climb instead answers the actually-wanted question -- "how much of
-            # the improvement we engineered is specifically attributable to
-            # preserving real texture" -- and reproduces the project's existing
-            # texture-vs-boundary narrative cleanly (CHAOS +1%, Open-MS/BraTS-GLI
-            # +11-13%) rather than making CHAOS look comparable to BraTS-GLI.
-            # Guarded the same way: a near-zero total climb makes the ratio
-            # undefined, so it's dropped rather than shown.
-            total_climb = avg[-1] - avg[0]
-            if np.isfinite(total_climb) and abs(total_climb) > 2.0:
-                pct_total = dl / total_climb * 100.0
-                ann += f"\n{dl:+.2f}pt ({pct_total:+.0f}% of total gain)"
+            # Real-fill's Δ RELATIVE to the Dice the step starts from (Paul, 2026-10-03):
+            # +3 points at 84% is a boost to a nearly solved task, +5 at 36% is a large
+            # share of what the model can do. Replaces the 2026-10-01 "% of total
+            # pipeline gain" ratio. Denominator = the panel-average noise-fill rung.
+            before = avg[FILL - 1]
+            if np.isfinite(before) and before > 1.0:
+                ann += f"\n{dl:+.2f} pt ({dl / before * 100.0:+.1f}% relative)"
             else:
-                ann += f"\n{dl:+.2f}pt (total gain <2pt, ratio omitted)"
+                ann += f"\n{dl:+.2f} pt"
         ax.text(FILL - 0.5, top - 0.02 * (top - ax.get_ylim()[0]),
                 ann, ha="center", va="top",
                 fontsize=7.6, fontweight="bold", color=seg)
@@ -413,8 +401,8 @@ def build(metric, ylabel, out_name, higher_is_better):
                handletextpad=0.5, columnspacing=1.4)
     if metric == "dice":
         fig.text(0.5, 0.008,
-                  "% of total gain = Δ Dice (real-fill step) ÷ (final rung − baseline Dice) "
-                  "— share of this panel's whole pipeline improvement attributable to texture",
+                  "relative = Δ Dice at the real-fill step ÷ the panel's noise-fill Dice "
+                  "(the level the step starts from)",
                   ha="center", va="bottom", fontsize=8, color="#555555", style="italic")
 
     out = OUT / out_name

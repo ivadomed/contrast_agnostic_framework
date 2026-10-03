@@ -101,7 +101,12 @@ def read(rel: str, metric: str = "dice"):
     if len(series) <= FILL or not sig:
         return None
     return {
+        "before": series[FILL - 1],
         "delta": series[FILL] - series[FILL - 1],
+        # Relative to where this step starts (Paul, 2026-10-03): +3 points at 80% Dice
+        # is a small boost to a nearly solved task, +5 at 40% is a large share of the
+        # model's competence. The table and text lead with this, absolute delta beside it.
+        "rel": 100.0 * (series[FILL] - series[FILL - 1]) / series[FILL - 1],
         "p_raw": sig["pooled_p"],
         "n": sig.get("n_cases"),
         "per_contrast": sig.get("per_contrast", {}),
@@ -116,7 +121,11 @@ def fmt_p(p):
 
 
 def main():
-    got = [(label, btype, read(rel)) for label, btype, rel in ROWS]
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--metric", default="dice", choices=("dice", "hd95"))
+    metric = ap.parse_args().metric
+    got = [(label, btype, read(rel, metric)) for label, btype, rel in ROWS]
     missing = [l for l, _, r in got if r is None]
     rows = [(l, b, r) for l, b, r in got if r is not None]
     if missing:
@@ -124,23 +133,31 @@ def main():
 
     adj = holm([r["p_raw"] for _, _, r in rows])
 
-    print(f"Fill-swap step, Holm-corrected across {len(rows)} ladders (dice)\n")
-    print(f"{'task':<20} {'boundary':<32} {'dDice':>7} {'p_raw':>10} {'p_holm':>10} {'n':>5}")
+    print(f"Fill-swap step, Holm-corrected across {len(rows)} ladders ({metric})\n")
+    print(f"{'task':<20} {'boundary':<32} {'before':>7} {'delta':>7} {'rel%':>7} {'p_raw':>10} {'p_holm':>10} {'n':>5}")
     for (label, btype, r), pa in zip(rows, adj):
         plain = btype.replace(r"$^\dagger$", "+").replace(r"$^\ddagger$", "*")
-        print(f"{label:<20} {plain:<32} {r['delta']:+7.2f} {r['p_raw']:10.3g} "
-              f"{pa:10.3g} {r['n'] or '-':>5}")
+        print(f"{label:<20} {plain:<32} {r['before']:7.1f} {r['delta']:+7.2f} {r['rel']:+7.1f} "
+              f"{r['p_raw']:10.3g} {pa:10.3g} {r['n'] or '-':>5}")
 
-    print("\n--- LaTeX rows for tab:dissociation ---")
+    print(f"\n--- LaTeX rows for tab:dissociation ({metric}) ---")
+    # Columns: task (boundary-type footnote marks moved onto the label) & level before
+    # the step & absolute delta & relative delta (%) & Holm p. Group header rows replace
+    # the old boundary-type column. Bold = relative gain >= 15% (Dice only).
     prev = None
     for (label, btype, r), pa in zip(rows, adj):
-        if prev is not None and btype.startswith("no") != prev.startswith("no"):
-            print(r"\midrule")
-        bold = abs(r["delta"]) >= 4.0          # match existing convention: bold the LARGE effects
-        d = f"{r['delta']:+.2f}"
-        d = rf"$\mathbf{{{d}}}$" if bold else f"${d}$"
-        print(f"{label:<20}& {btype} & {d} & {fmt_p(pa)} \\\\")
-        prev = btype
+        group = "no" if btype.startswith("no") else "if"
+        if group != prev:
+            if prev is not None:
+                print(r"\midrule")
+            title = "No tissue interface" if group == "no" else "Tissue interface"
+            print(rf"\multicolumn{{5}}{{l}}{{\emph{{{title}}}}} \\")
+        mark = btype[btype.index("$"):] if "$" in btype else ""
+        d, rel = f"{r['delta']:+.2f}", f"{r['rel']:+.1f}"
+        if metric == "dice" and r["rel"] >= 15.0:
+            rel = rf"\mathbf{{{rel}}}"
+        print(f"{label + mark:<36}& {r['before']:.1f} & ${d}$ & ${rel}$ & {fmt_p(pa)} \\\\")
+        prev = group
 
     print("\n--- supplementary (external-cohort breast confirmation, not in tab:dissociation) ---")
     sup = [(l, read(rel)) for l, rel in SUPPLEMENTARY]

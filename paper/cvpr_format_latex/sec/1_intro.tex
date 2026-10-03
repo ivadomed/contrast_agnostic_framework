@@ -35,10 +35,9 @@ survives; texture does not.
 
 We ask whether discarding texture is necessary for contrast robustness, or
 only convenient once a dense label map is assumed. Our central finding is that
-the answer depends on the \emph{task}: large gains from preserving real
-intensity structure occur only where the target is defined by tissue
-appearance, not where an anatomical interface separates it from its
-surroundings. Prior work shows that texture carries diagnostic signal in such
+the answer depends on the \emph{task}: preserving real intensity structure
+helps most where the target is defined by tissue appearance, and much less
+where an anatomical interface separates it from its surroundings. Prior work shows that texture carries diagnostic signal in such
 tasks: texture features separate MS lesions from normal-appearing white
 matter~\cite{zhang2008mstexture}, and diffuse glioma infiltrates beyond every
 margin visible on conventional MRI~\cite{gliomamargins2025,flairectomy2022}.
@@ -58,10 +57,11 @@ segmentation dataset already has.
 
 We test the mechanism by intervention. Keeping the partition and the
 region target means, we replace only the real-intensity remap with
-SynthSeg-style noise fill, in fourteen training settings. Every large effect
-of that swap is on a target without a tissue interface ($+13.3$ and $+7.2$ Dice
-on brain tumor, $+7.7$ on MS lesions, the last for all eight test patients),
-and no interface-bounded target gains more than $1.4$. The converse does not
+SynthSeg-style noise fill, in fourteen training settings, and measure the
+change relative to the Dice the swap starts from. The largest relative effects
+are all on targets without a tissue interface ($+44\%$ and $+18\%$ on brain
+tumor, $+39\%$ on MS lesions, the last for all eight test patients), and no
+interface-bounded setting gains more than $6\%$. The converse does not
 hold: several appearance-defined settings, breast lesions among them, show no
 effect, so we state the result in one direction only
 (\S\ref{subsec:e-ablation}). A segmentation-free gradient measurement confirms
@@ -84,13 +84,14 @@ PALETTE-Aug stays at or near the top throughout.
 In summary, we make the following contributions:
 \begin{itemize}
     \item \textbf{A task-level account of when texture preservation matters.}
-    Large gains from preserving real intensity structure occur only where the
-    segmentation target has no anatomical interface separating it from its
-    surroundings. We test this with a controlled intervention rather than
+    Preserving real intensity structure helps most, relative to the model's
+    starting point, where the segmentation target has no anatomical interface
+    separating it from its surroundings. We test this with a controlled intervention rather than
     asserting it post hoc, and report where it does not extend.
     \item \textbf{A causal ablation isolating texture.} Swapping only the
-    real-intensity remap for noise fill, with the partition fixed, confines
-    every large effect to no-interface targets in fourteen training settings. A
+    real-intensity remap for noise fill, with the partition fixed, places the
+    largest relative effects on no-interface targets in fourteen training
+    settings. A
     segmentation-free gradient measurement confirms that the swap changes
     texture as intended.
     \item \textbf{PALETTE-Aug}, the single-source contrast augmentation that

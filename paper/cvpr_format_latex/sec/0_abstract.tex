@@ -14,11 +14,11 @@ Each method trains on one modality and is evaluated in-domain and
 out-of-domain. An ablation isolates the effect of texture preservation.
 \textbf{Results.} PALETTE-Aug achieves the highest Dice on six of the eight
 tasks and significantly outperforms every competing method overall. In the
-ablation (six tasks), isolating texture preservation yields $+5.3$ and $+4.2$
-Dice on two interface-free targets (brain tumor, multiple sclerosis), versus at
-most $+1.4$ on interface-bounded ones (healthy brain: $-1.9$); breast lesions,
-also interface-free, show no Dice gain.
-\textbf{Conclusion.} Large gains from texture preservation arise only where the
-target lacks an anatomical interface, and PALETTE-Aug generalizes best
+ablation (six tasks), isolating texture preservation raises out-of-domain Dice
+by $15\%$ and $16\%$ relative on two interface-free targets (brain tumor,
+multiple sclerosis), versus at most $4\%$ on interface-bounded ones (healthy
+brain: $-3\%$); breast lesions, also interface-free, show no Dice gain.
+\textbf{Conclusion.} Texture preservation helps most where the target lacks an
+anatomical interface, and PALETTE-Aug generalizes best
 overall across eight segmentation tasks.
 \end{abstract}
