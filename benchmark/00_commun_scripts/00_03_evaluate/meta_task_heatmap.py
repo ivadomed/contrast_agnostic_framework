@@ -185,6 +185,28 @@ def task_design_entries(modalities: list, ref_key: str, comp_key: str, metric: s
     return [(tidx, (tidx, leaf), (tidx, unit), c / K) for _, leaf, unit, c in entries]
 
 
+def _per_task_sig(tasks, ref_key, competitors, metric, higher_better):
+    """{competitor: [(verdict, p_win, p_lose) per task]} -- each task is its own single
+    stratum (same design/patient-level units as the cross-task test), Holm across the
+    competitors within the task, separately per direction."""
+    out = {c: [] for c in competitors}
+    for i, t in enumerate(tasks):
+        pw, pl = [], []
+        for comp in competitors:
+            ents = task_design_entries(t["modalities"], ref_key, comp, metric,
+                                       t["contrast_groups"], 0)
+            if ents:
+                pw.append(macro_perm_design(ents, 1, higher_better)[2])
+                pl.append(macro_perm_design(ents, 1, not higher_better)[2])
+            else:
+                pw.append(float("nan")); pl.append(float("nan"))
+        hw, hl = holm(pw), holm(pl)
+        for comp, a, b in zip(competitors, hw, hl):
+            v = "win" if a < 0.05 else "lose" if b < 0.05 else "ns"
+            out[comp].append((v, a, b))
+    return out
+
+
 def main():
     import argparse
     ap = argparse.ArgumentParser(description=__doc__,
@@ -216,6 +238,12 @@ def main():
     if ref_key not in method_order:
         sys.exit(f"`ref: {ref_key}` is not among the method keys: {method_order}")
 
+    # Reference-only rows (val100 mirror): shown, but excluded from bold/best, Holm,
+    # significance and any count -- they are not part of the analysis.
+    ref_only = [k for k in method_order if "val100" in k]
+    method_order = [k for k in method_order if k not in ref_only] + ref_only
+    n_analysis = len(method_order) - len(ref_only)
+
     task_names = [t["name"] for t in tasks]
     cols = task_names + ["overall"]
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -231,11 +259,16 @@ def main():
         "for a given method — e.g. no HD95, or a method not run on that dataset — is "
         "excluded, not counted as 0). **Bold** = best per column. `sig. vs ref` = Holm-corrected "
         f"one-sided (ref better) macroΔ p-value of `{_agg._display_key(ref_key)}` vs that "
-        "row, equal weight per TASK (blank on the ref's own row); **bold** = p < 0.05.", "",
+        "row, equal weight per TASK (blank on the ref's own row); **bold** = p < 0.05. "
+        "**Per task:** ★ = Ours significantly better than that row *within that task* "
+        "(Holm over the competitors, one-sided p<0.05), ▼ = significantly worse, none = n.s.; "
+        "last row counts the ★. The val100 mirror is listed last for reference only — "
+        "excluded from bold, `overall` ranking, significance and counts.", "",
     ]
 
     matrices = {}
     sig_by_metric = {}
+    task_sig = {}
     for metric, heading, prec in (("dice", "Dice ↑", 4), ("hd95", "HD95 mm ↓", 2)):
         mat = np.full((len(method_order), len(cols)), np.nan)
         for i, key in enumerate(method_order):
@@ -248,7 +281,8 @@ def main():
         matrices[metric] = mat
 
         higher_better = metric == "dice"
-        competitors = [k for k in method_order if k != ref_key]
+        competitors = [k for k in method_order[:n_analysis] if k != ref_key]
+        task_sig[metric] = _per_task_sig(tasks, ref_key, competitors, metric, higher_better)
         p1s = []
         for comp in competitors:
             per_task = [task_design_entries(t["modalities"], ref_key, comp, metric,
@@ -264,8 +298,9 @@ def main():
         hp = holm(p1s)
         sig_by_metric[metric] = {ref_key: float("nan"), **dict(zip(competitors, hp))}
 
-        best = _agg._best_per_col(mat, metric)
+        best = _agg._best_per_col(mat[:n_analysis], metric)
         sig = sig_by_metric[metric]
+        ts = task_sig[metric]
         lines += [
             f"## {heading}", "",
             "| method | " + " | ".join(cols) + " | sig. vs ref |",
@@ -277,10 +312,15 @@ def main():
                 s = _agg._fmt_val(mat[i, j], prec)
                 if s != "—" and best[j] == i:
                     s = f"**{s}**"
+                if j < len(task_names) and key != ref_key and key not in ref_only:
+                    s += {"win": " ★", "lose": " ▼"}.get(ts[key][j][0], "")
                 cells.append(s)
-            sig_cell = "—" if key == ref_key else _agg._fmt_sig(sig.get(key, float("nan")))
+            sig_cell = "(ref only)" if key in ref_only else "—" if key == ref_key else _agg._fmt_sig(sig.get(key, float("nan")))
             lines.append(f"| {_agg._format_label_md(_agg._display_key(key))} | "
                          + " | ".join(cells) + f" | {sig_cell} |")
+        wins = [sum(ts[k][j][0] == "win" for k in competitors) for j in range(len(task_names))]
+        lines.append("| **Ours sig. wins** | " + " | ".join(f"{w}/{len(competitors)}" for w in wins)
+                     + " | | |")
         lines.append("")
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -290,11 +330,11 @@ def main():
     print(f"\n→ {md_path}")
 
     _save_heatmaps(matrices, method_order, sig_by_metric, ref_key, cols, out_dir,
-                   output_prefix, title)
+                   output_prefix, title, task_sig, n_analysis)
 
 
 def _save_heatmaps(matrices, method_order, sig_by_metric, ref_key, cols, out_dir: Path,
-                   prefix: str, title: str):
+                   prefix: str, title: str, task_sig=None, n_analysis=None):
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -311,7 +351,8 @@ def _save_heatmaps(matrices, method_order, sig_by_metric, ref_key, cols, out_dir
         if mat is None:
             continue
         sig = sig_by_metric[metric]
-        best = _agg._best_per_col(mat, metric)
+        best = _agg._best_per_col(mat[:n_analysis], metric)
+        ts = task_sig[metric]
 
         n_rows, n_data_cols = mat.shape
         n_cols = n_data_cols + 1
@@ -339,11 +380,14 @@ def _save_heatmaps(matrices, method_order, sig_by_metric, ref_key, cols, out_dir
                     r, g, b, _ = im.cmap(im.norm(v))
                     lum = 0.299 * r + 0.587 * g + 0.114 * b
                     fw = "bold" if best[j] == i else "normal"
+                    key = method_order[i]
+                    if j < n_data_cols - 1 and key in ts:
+                        txt += {"win": " ★", "lose": " ▼"}.get(ts[key][j][0], "")
                     ax.text(j, i, txt, ha="center", va="center", fontsize=9,
                            color="white" if lum < 0.5 else "black", fontweight=fw)
 
         for i, key in enumerate(method_order):
-            if key == ref_key:
+            if key == ref_key or i >= n_analysis:
                 continue
             p = sig.get(key, float("nan"))
             if not np.isfinite(p):
@@ -353,11 +397,19 @@ def _save_heatmaps(matrices, method_order, sig_by_metric, ref_key, cols, out_dir
             ax.text(n_data_cols, i, txt, ha="center", va="center", fontsize=9,
                    color="crimson" if starred else "gray",
                    fontweight="bold" if starred else "normal")
+        if n_analysis < n_rows:
+            ax.axhline(n_analysis - 0.5, color="black", linewidth=1.6)
+            ax.text(n_data_cols, n_analysis, "ref only", ha="center", va="center",
+                    fontsize=8, color="gray", style="italic")
         ax.axvline(n_data_cols - 0.5, color="black", linewidth=0.8)
         ax.axvline(n_data_cols - 1.5, color="black", linewidth=0.6, linestyle="--")
 
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-        ax.set_xlabel("task (dataset)  |  significance vs ref")
+        wins = [sum(ts[k][j][0] == "win" for k in ts) for j in range(n_data_cols - 1)]
+        ax.set_xlabel("task (dataset)  |  significance vs ref\n★/▼ = Ours sig. better/worse "
+                      "within task (Holm, p<0.05).  Ours sig. wins per task: "
+                      + ", ".join(f"{w}/{len(ts)}" for w in wins)
+                      + "\nrows below the thick line (val100) are reference only — not in the analysis")
         ax.set_ylabel("method")
         fig.tight_layout()
 
