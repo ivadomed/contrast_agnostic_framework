@@ -3,6 +3,55 @@ is trained on a single source contrast and evaluated on every contrast of that
 task's test split, including the training contrast itself; training and
 validation subjects never appear in any reported number.
 
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llll}
+\toprule
+Task & Dataset & Train modalities & Test modalities \\
+\midrule
+\multirow{3}{*}{Multi-Organ}
+ & CHAOS      & T1-in, T2-SPIR & T1-in, T1-out, T2-SPIR, CT \\
+ & AMOS       & --             & CT, MRI \\
+ & SLIVER07   & --             & CT \\
+\midrule
+Brain Glioma  & Brats2024-GLI & T1n, T1c, T2w, FLAIR & T1n, T1c, T2w, FLAIR \\
+\midrule
+Brain MS      & Open-MS       & FLAIR, T1w  & FLAIR, T1w, T2w \\
+\midrule
+Healthy Brain & ON-Harmony    & T1w, T2w, DWI & T1w, T2w, BOLD, DWI, EPI, GRE \\
+\midrule
+\multirow{3}{*}{Mandible}
+ & ToothFairy2     & CBCT        & CBCT \\
+ & HaN-Seg         & --          & CT, MR-T1 \\
+ & PDDCA           & --          & CT \\
+\midrule
+\multirow{4}{*}{Breast}
+ & I-SPY2          & T1-CE, T2w  & T1-CE, T2w \\
+ & Duke-Breast-MRI & --          & T1-CE, pre-contrast \\
+ & I-SPY1          & --          & T1-CE, pre-contrast \\
+ & ACRIN-6698      & --          & DWI \\
+\midrule
+\multirow{2}{*}{Spine$^\S$}
+ & CT/Dixon cohort & CT, Dixon in & CT, Dixon fat/in/water \\
+ & SPIDER          & --          & T1w, T2w \\
+\midrule
+Pelvis        & TotalSegmentator & CT, MRI & CT, MRI \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Per-task dataset roster. Rows marked ``--'' are cross-dataset
+transfer targets only, never trained on; their contrasts are extra held-out
+test columns of the task they sit under, not tasks of their own. Mandible's
+non-CBCT test contrasts all come from other datasets, since ToothFairy2
+acquires CBCT alone. Pelvis's CT and MRI come from different patients. $^\S$Spine results
+were computed on a separate pipeline with the same method suite except SRCSM (\cref{sec:suppl-data}).
+Counts are in \cref{tab:suppl-datasets}.}
+\label{tab:datasets}
+\end{table}
+
 \paragraph{ON-Harmony} \cite{warrington2025onharmony} --- 31-region healthy-brain
 segmentation. Reference labels are \emph{silver standard}: SynthSeg
 parcellations~\cite{billot2023synthseg} of each session's T1w (FreeSurfer label

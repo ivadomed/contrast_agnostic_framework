@@ -447,5 +447,38 @@ extends to model selection and is not confined to the gradient updates.
 
 \input{sec/_suppl_mechanism}
 
-% The NGF texture-fidelity analysis (fig:ngf-dose, tab:ngf) moved to the main
-% text, Sec. 4.3, on 2026-10-02 (Paul). sec/_suppl_ngf.tex is no longer input.
+\section{Texture fidelity per method}
+\label{sec:suppl-ngf}
+
+The noise-versus-real NGF analysis is in the main paper (\cref{fig:ngf-dose});
+\cref{tab:ngf} gives the per-method values it cites.
+
+\paragraph{Why Auglab is the closest competitor.} Auglab is the strongest
+competitor on the cross-task test, and NGF suggests why: it keeps most of the
+source texture, only modestly less than PALETTE-Aug and far more than the
+label-style methods (\cref{tab:ngf}). The large margins appear against the
+methods that discard texture.
+
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcc}
+\toprule
+Method & FLAIR & T1w \\
+\midrule
+\textbf{PALETTE-Aug} & \textbf{0.809} & \textbf{0.894} \\
+Auglab           & 0.768 & 0.777 \\
+SynthSeg-EM      & 0.462 & 0.422 \\
+noise fill       & 0.457 & 0.401 \\
+SynthSeg-noEM    & 0.330 & 0.319 \\
+\bottomrule
+\end{tabular}
+\caption{Texture fidelity: NGF similarity to the source scan (mean over
+$n{=}30$ Open-MS scans; $\approx\!1/3$ = isotropic-noise floor). The
+PALETTE-Aug row is the transform alone (the real-fill rung), without the Auglab
+pipeline.}
+\label{tab:ngf}
+\end{table}
+

@@ -91,31 +91,9 @@ Our operator
 instead partitions the foreground into intensity classes and Voronoi
 sub-regions and applies a signed \emph{affine} remap of the real intensities
 within each, invertible and gradient-preserving by construction. The
-closest peer is SRCSM~\cite{thaler2025semrandconv} (semantic-aware random
-convolution with source matching), which also localizes its perturbation
-region-wise in true 3-D and, like PALETTE-Aug, layers exactly one
-label-consuming component over an otherwise label-free step: at training
-time it draws a fresh untrained convolution per anatomical class from the
-ground-truth map (needing a Gaussian smoothing pass to control the
-boundary-contrast artifacts this introduces), and at test time applies a
-label-free histogram matching onto the source distribution. The difference
-from PALETTE-Aug is not label use versus none, but \emph{how} that step
-transforms the signal: an untrained nonlinear convolution versus a
-deterministic affine remap that leaves relative intensity structure inside
-each region intact.
-
-\subsection{Cross-contrast evaluation protocol}
-\label{subsec:gap}
-
-We evaluate a model trained on a single real input modality on every
-held-out modality of the \emph{same} segmentation task, including the training
-modality itself, across eight tasks spanning brain, abdominal, dental, breast,
-spine and pelvic anatomy in MRI, CT and CBCT. This
-single-sequence-in, every-sequence-out design is not unprecedented -- Auglab's
-own evaluation follows the identical protocol for spine
-segmentation~\cite{molinier2026auglab} -- and our contribution is breadth
-(eight tasks, not one) and a further axis: wherever an external cohort exists,
-it is pooled into its task as additional held-out contrasts from other sites,
-so the training dataset's own test set is one point among several rather than
-the only held-out evidence. For mandible, which is acquired as CBCT only, that
-cross-dataset transfer is the entire held-out axis.
+closest peer is SRCSM~\cite{thaler2025semrandconv}. Like PALETTE-Aug it
+perturbs region-wise in 3-D with one label-consuming step: it applies a fresh
+untrained convolution per anatomical class, smooths the resulting boundary
+artifacts, and histogram-matches test images to the source. The two differ in
+the transform: a random nonlinear convolution in SRCSM, an affine remap that
+keeps the relative intensity structure inside each region in PALETTE-Aug.

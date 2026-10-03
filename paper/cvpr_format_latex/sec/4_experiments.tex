@@ -4,32 +4,21 @@
 \subsection{Setup}
 \label{subsec:e-setup}
 
-\paragraph{Protocol.} We train a single real-intensity source modality per
-dataset and evaluate on held-out modalities of the \emph{same} segmentation
-task, using one fixed nnU-Net~\cite{isensee2021nnunet} configuration across
-all settings. No target-domain data, of any modality, is seen during
-training. Our full method, denoted \textbf{Ours} throughout, is PALETTE-Aug
-applied as one additional contrast-augmentation operator inside the Auglab
-pipeline~\cite{molinier2026auglab}; the \emph{Auglab} baseline is the same
-pipeline with the PALETTE-Aug operator removed, so the two differ by exactly the
-PALETTE-Aug transform. Every method is trained with the identical nnU-Net
-schedule --- SGD with Nesterov momentum ($0.99$), the nnU-Net
-\texttt{polyLR} decay from an initial rate of $10^{-2}$, $250$ mini-batches
-per epoch, and the combined Dice-plus-cross-entropy loss --- and differs only
-in the augmentation applied at the input. The epoch budget is fixed per
-dataset and shared by every method on that dataset ($2500$ for Brats-GLI,
-$2000$ for ON-Harmony and Open-MS, $1000$ for ToothFairy2 and I-SPY2, $200$
-for CHAOS and Pelvis; the Spine models were trained on a separate pipeline with the same method
-suite, \cref{sec:suppl-data}), and
-each method is trained as three models on three train/validation folds and
-all three are scored on the same held-out test set. All significance tests are
-paired, use the patient as the unit, and are Holm-corrected~\cite{holm1979}; full test construction, configuration
-details, and per-dataset descriptions (subject counts, acquisition
-protocols, and label provenance) are given in
-\cref{sec:suppl-persetting,sec:suppl-config,sec:suppl-data}.
+\paragraph{Protocol.} Each model trains on one real source modality and is
+tested on every modality of the same task, the protocol Auglab uses for
+spine~\cite{molinier2026auglab}, here over eight tasks and with external
+cohorts wherever one exists. No target-domain data is seen in training. All
+methods share one nnU-Net~\cite{isensee2021nnunet} configuration and schedule
+and differ only in input augmentation; the epoch budget is fixed per dataset
+(\cref{sec:suppl-config}). \textbf{Ours} is PALETTE-Aug added as one operator
+to the Auglab pipeline~\cite{molinier2026auglab}, so Ours and Auglab differ by
+exactly the PALETTE-Aug transform. Each method is trained on three
+train/validation folds, and all three models are scored on the same held-out
+test set. Significance tests are paired, use the patient as the unit, and are
+Holm-corrected~\cite{holm1979} (\cref{sec:suppl-persetting}).
 
 \paragraph{Datasets.} We evaluate on eight tasks drawn from sixteen datasets
-(\cref{tab:datasets}): abdominal organs, healthy brain, brain tumor, MS
+(full roster in \cref{tab:datasets}): abdominal organs, healthy brain, brain tumor, MS
 lesions, mandible, breast lesions, spine and pelvic musculoskeletal anatomy,
 across MRI, CT and dental CBCT. Brain tumor and MS lesions use
 Brats2024-GLI~\cite{deverdier2024brats2024} and
@@ -59,55 +48,6 @@ axial slab matching CHAOS's restricted field of view (\cref{sec:suppl-data}).
 % TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
 % in the imported results) -- no citable source for it exists in the repo.
 
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{llll}
-\toprule
-Task & Dataset & Train modalities & Test modalities \\
-\midrule
-\multirow{3}{*}{Multi-Organ}
- & CHAOS      & T1-in, T2-SPIR & T1-in, T1-out, T2-SPIR, CT \\
- & AMOS       & --             & CT, MRI \\
- & SLIVER07   & --             & CT \\
-\midrule
-Brain Glioma  & Brats2024-GLI & T1n, T1c, T2w, FLAIR & T1n, T1c, T2w, FLAIR \\
-\midrule
-Brain MS      & Open-MS       & FLAIR, T1w  & FLAIR, T1w, T2w \\
-\midrule
-Healthy Brain & ON-Harmony    & T1w, T2w, DWI & T1w, T2w, BOLD, DWI, EPI, GRE \\
-\midrule
-\multirow{3}{*}{Mandible}
- & ToothFairy2     & CBCT        & CBCT \\
- & HaN-Seg         & --          & CT, MR-T1 \\
- & PDDCA           & --          & CT \\
-\midrule
-\multirow{4}{*}{Breast}
- & I-SPY2          & T1-CE, T2w  & T1-CE, T2w \\
- & Duke-Breast-MRI & --          & T1-CE, pre-contrast \\
- & I-SPY1          & --          & T1-CE, pre-contrast \\
- & ACRIN-6698      & --          & DWI \\
-\midrule
-\multirow{2}{*}{Spine$^\S$}
- & CT/Dixon cohort & CT, Dixon in & CT, Dixon fat/in/water \\
- & SPIDER          & --          & T1w, T2w \\
-\midrule
-Pelvis        & TotalSegmentator & CT, MRI & CT, MRI \\
-\bottomrule
-\end{tabular}%
-}
-\caption{Per-task dataset roster. Rows marked ``--'' are cross-dataset
-transfer targets only, never trained on; their contrasts are extra held-out
-test columns of the task they sit under, not tasks of their own. Mandible's
-non-CBCT test contrasts all come from other datasets, since ToothFairy2
-acquires CBCT alone. Pelvis's CT and MRI come from different patients. $^\S$Spine results
-were computed on a separate pipeline with the same method suite except SRCSM (\cref{sec:suppl-data}).
-Subject counts, acquisition protocols, and label provenance are in
-\cref{sec:suppl-data}.}
-\label{tab:datasets}
-\end{table}
 
 \paragraph{Baselines.} SynthSeg comes in two variants, which we refer to
 throughout by how they obtain their per-class intensity model: \emph{noEM}, the
@@ -326,7 +266,7 @@ FLAIR. The three noise-fill rungs stay at NGF $0.45$--$0.46$, above the noise
 floor because the partition edges survive but far below the source, while their
 Dice rises from $11.2$ to $19.6$. Those gains come from contrast randomization,
 not texture. Only the real-fill swap raises both, NGF to $0.81$ and Dice to
-$27.3$. \Cref{tab:ngf} compares the methods on the same scale. PALETTE-Aug
+$27.3$. On the same scale (\cref{tab:ngf}, supplement), PALETTE-Aug
 (the real-fill rung, without Auglab) keeps significantly more source texture
 than Auglab (paired Wilcoxon over the $30$ scans; FLAIR $p=3.2\times10^{-3}$,
 T1w $p=1.2\times10^{-6}$), and the label-style methods stay near the floor.
@@ -342,33 +282,6 @@ the real-fill swap (shaded) lifts both.}
 \label{fig:ngf-dose}
 \end{figure}
 
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{lcc}
-\toprule
-Method & FLAIR & T1w \\
-\midrule
-\textbf{PALETTE-Aug} & \textbf{0.809} & \textbf{0.894} \\
-Auglab           & 0.768 & 0.777 \\
-SynthSeg-EM      & 0.462 & 0.422 \\
-noise fill       & 0.457 & 0.401 \\
-SynthSeg-noEM    & 0.330 & 0.319 \\
-\bottomrule
-\end{tabular}
-\caption{Texture fidelity: NGF similarity to the source scan (mean over
-$n{=}30$ Open-MS scans; $\approx\!1/3$ = isotropic-noise floor). The
-PALETTE-Aug row is the transform alone (the real-fill rung), without the Auglab
-pipeline.}
-\label{tab:ngf}
-\end{table}
-
-\paragraph{Why Auglab is the closest competitor.} Auglab is the strongest
-competitor on the cross-task test, and NGF suggests why: it keeps most of the
-source texture, only modestly less than PALETTE-Aug and far more than the
-label-style methods (\cref{tab:ngf}). The large margins appear against the
-methods that discard texture.
 
 \paragraph{What the test does and does not show.} It compares two versions of
 one method that differ in one component, so differences in augmentation
@@ -376,8 +289,6 @@ strength, partition granularity or training schedule cannot explain it. It is
 also separate from the benchmark ranking: on Mandible the texture step helps
 while the full method places third (\S\ref{subsec:e-main}).
 
-\paragraph{Supporting analyzes.} The supplement gives a component ablation of
-the $k$-means partition, the Voronoi sub-parcellation and the signed remap
-(\cref{sec:suppl-mechanism}), per-setting results for all eighteen
-source-modality settings, every rung of every ladder, and the HD95 version of
-\cref{tab:dissociation} (\cref{sec:suppl-persetting}).
+\paragraph{Supporting analyses.} The supplement adds a component ablation
+(\cref{sec:suppl-mechanism}), per-setting results, every ladder rung and the
+HD95 ablation (\cref{sec:suppl-persetting}).

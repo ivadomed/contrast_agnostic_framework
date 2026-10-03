@@ -133,13 +133,9 @@ reused unchanged across every dataset and modality in
 \subsection{Causal ablation: isolating texture preservation}
 \label{subsec:m-ablation}
 
-PALETTE-Aug differs from label-generative synthesis (e.g.\ SynthSeg) along two
-axes at once: the partition it perturbs (unsupervised $k$-means $+$ Voronoi
-vs.\ a supplied anatomical label map as the sole generative substrate) and
-the perturbation itself (an affine remap of real intensities vs.\
-resampling from a per-label Gaussian mixture). Comparing PALETTE-Aug to
-SynthSeg directly therefore cannot attribute an advantage to either axis in
-isolation.
+PALETTE-Aug differs from SynthSeg in two ways at once: the partition (unsupervised
+$k$-means and Voronoi vs.\ an anatomical label map) and the fill (remapped real
+intensities vs.\ Gaussian noise). A direct comparison cannot separate them.
 
 We construct a controlled variant, \emph{noise-fill}, with the same
 $k$-means/Voronoi partition and the same random target mean $\mu_R$ for each
