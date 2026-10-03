@@ -35,7 +35,7 @@ SCRIPT = REPO / "benchmark/00_commun_scripts/00_03_evaluate/combined_modality_su
 
 # (task label, dataset, task folder, {modality name in config -> display label})
 TASKS = [
-    ("Brats-GLI",  "brats2024-glioma", "brain_tumor",
+    ("BraTS-GLI",  "brats2024-glioma", "brain_tumor",
      {"t1n": "T1n", "t1c": "T1c", "t2w": "T2w", "t2f": "FLAIR"}),
     ("CHAOS",      "chaos", "abdomen_healthy", {"t1in": "T1in", "t2spir": "T2spir"}),
     ("ON-Harmony", "on-harmony", "brain_healthy", {"T1w": "T1w", "T2w": "T2w", "dwi_ap": "DWI"}),

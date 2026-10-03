@@ -62,11 +62,11 @@ def _load_wrapper(path: Path):
 WRAPPERS = [
     ("CHAOS T1in", "benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py"),
     ("ON-Harmony T1w", "benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"),
-    ("Brats-GLI T1n", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
+    ("BraTS-GLI T1n", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
     ("Open-MS FLAIR", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_14_ladder_summary_ood.py"),
     ("CHAOS T2spir", "benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_33_ladder_summary_t2spir.py"),
     ("ON-Harmony T2w", "benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"),
-    ("Brats-GLI T2w", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
+    ("BraTS-GLI T2w", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
     ("Open-MS T1w", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
     # ATLAS-Liver-HCC REMOVED 2026-09-02 -- dataset excluded from the paper
     # entirely, see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)".
@@ -82,10 +82,10 @@ ALL_LINE = "#1a5276"  # bold navy for the new "ALL, incl. in-domain" panel-avera
 PANELS = [
     ("CHAOS", ["CHAOS T1in", "CHAOS T2spir"]),
     ("ON-Harmony", ["ON-Harmony T1w", "ON-Harmony T2w"]),
-    ("BraTS-GLI", ["Brats-GLI T1n", "Brats-GLI T2w"]),
+    ("BraTS-GLI", ["BraTS-GLI T1n", "BraTS-GLI T2w"]),
     ("Open-MS", ["Open-MS FLAIR", "Open-MS T1w"]),
 ]
-T1_FAMILY = {"Brats-GLI T1n", "Open-MS T1w", "CHAOS T1in", "ON-Harmony T1w"}
+T1_FAMILY = {"BraTS-GLI T1n", "Open-MS T1w", "CHAOS T1in", "ON-Harmony T1w"}
 # Dead since 2026-09-02 (ATLAS-Liver-HCC, the only cross-dataset-ladder task
 # with no single in-domain contrast, was excluded from the paper -- see
 # CLAUDE.md "Atlas-Liver-HCC exclusion"). Left empty rather than removing the
@@ -307,13 +307,13 @@ def build_figure(metric: str, ylabel: str, out_name: str, higher_is_better: bool
 
     draw(axes[0], "CHAOS T1in", "CHAOS")
     draw(axes[1], "ON-Harmony T1w", "ON-Harmony")
-    draw(axes[2], "Brats-GLI T1n", "BraTS-GLI")
+    draw(axes[2], "BraTS-GLI T1n", "BraTS-GLI")
     draw(axes[3], "Open-MS FLAIR", "Open-MS")
     axes[0].set_ylabel(ylabel, fontsize=10.5)
 
     draw(axes[0], "CHAOS T2spir", "CHAOS")
     draw(axes[1], "ON-Harmony T2w", "ON-Harmony")
-    draw(axes[2], "Brats-GLI T2w", "BraTS-GLI")
+    draw(axes[2], "BraTS-GLI T2w", "BraTS-GLI")
     draw(axes[3], "Open-MS T1w", "Open-MS")
 
     for ax, (title, tasks) in zip(axes, PANELS):

@@ -3,7 +3,7 @@
 Breaks the fill-swap step (rung 3 "+voronoi noise fill" -> rung 4 "v26_6_2 real
 fill") down PER individual held-out eval contrast, instead of pooling all OOD
 contrasts into one number as compute_dissociation_pvalues.py does. Motivation:
-Open-MS T1w and Brats-GLI T2w show no significant *pooled* fill-swap effect
+Open-MS T1w and BraTS-GLI T2w show no significant *pooled* fill-swap effect
 (paper/compute_dissociation_pvalues.py) -- this checks whether that is because
 the effect is genuinely flat everywhere, or because it is significant but
 opposite-signed on different held-out contrasts and cancels in the pool.
@@ -39,8 +39,8 @@ def _load_wrapper(path: Path):
 WRAPPERS = [
     ("Open-MS FLAIR", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_14_ladder_summary_ood.py"),
     ("Open-MS T1w", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
-    ("Brats-GLI T1n", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
-    ("Brats-GLI T2w", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
+    ("BraTS-GLI T1n", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py"),
+    ("BraTS-GLI T2w", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
     ("CHAOS T1in", "benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py"),
     ("CHAOS T2spir", "benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_33_ladder_summary_t2spir.py"),
     ("ON-Harmony T1w", "benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"),
