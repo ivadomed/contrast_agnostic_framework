@@ -42,8 +42,8 @@ modality resembles; and Spine (a CT/Dixon cohort) to the T1w and T2w of
 SPIDER~\cite{vandergraaf2024spider}. Pelvis is built from the TotalSegmentator CT and MRI
 releases~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}, two unpaired
 cohorts. ON-Harmony~\cite{warrington2025onharmony} reference labels are
-silver-standard SynthSeg~\cite{billot2023synthseg} parcellations of the T1w,
-registered to the other contrasts. On external CT for CHAOS we score only the
+silver-standard FreeSurfer~\cite{fischl2012freesurfer} parcellations of the
+T1w, registered to the other contrasts. On external CT for CHAOS we score only the
 axial slab matching CHAOS's restricted field of view (\cref{sec:suppl-data}).
 % TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
 % in the imported results) -- no citable source for it exists in the repo.
@@ -252,8 +252,7 @@ cerebellum, brainstem and eight deep grey nuclei. Every one is bounded by a
 tissue-type transition (CSF against tissue, grey against white matter), so we
 group it with CHAOS as an interface task. Its negative effect is larger than
 CHAOS's, perhaps because it labels nearly the whole brain; one densely labeled
-task cannot test this. Its reference labels are SynthSeg output on the T1w, registered to the other
-contrasts, which may also favor some fills over others.
+task cannot test this.
 
 \paragraph{Does the fill swap change texture? Noise versus real fill.}
 The ladder shows that the fill swap changes Dice, not that it changes texture.
