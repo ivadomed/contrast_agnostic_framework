@@ -16,6 +16,12 @@
 3. **Bibliography**: several entries print private annotation notes in the reference list; incomplete author lists from the August additions — see the bibliography audit.
 4. **Reviewer objection to pre-empt (Paul's call)**: relative gain (Δ / noise-fill Dice) favours low-baseline tasks; the remaining-error view (Δ / (100 − noise-fill Dice)) would rank CHAOS (+20%) above BraTS-GLI (+8%). The limitations paragraph states the absolute CHAOS T2spir number; decide whether to say more.
 5. `sec/_suppl_mechanism.tex` has a 103pt overfull box (supplement, pre-existing).
+6. **Spine training cohort is uncited** (`% TODO(Paul)` in 4_experiments.tex Datasets).
+7. **Test-time crops use the reference masks** (CHAOS slab anchored on GT kidneys/liver; breast lesion-side crop extended to contain the lesion) — identical for all methods, but not disclosed as GT-informed. Decide whether to state it.
+8. **Baseline fairness details a reviewer will ask for:** which label map SynthSeg-noEM got on tasks without a dense parcellation; whether SRCSM's test-time histogram matching was on (SRCSM 16.4 on Breast will read as misconfiguration); SynthSeg-EM "described in the original work" attribution not verified against the 2023 MedIA paper.
+9. **ON-Harmony T1w val000 vs val100 ladder rungs are near-identical** (per-case Dice within ~1e-4, though the two checkpoint_best files differ) — suspect both mirrors were predicted from the same checkpoint (checkpoint_final?). Affects tab:ladder-full v100 cells (T1w, DWI) and possibly tab:suppl-val100's ON-Harmony row. Unverified.
+10. Task naming: tables use Mandible/Breast, ladder tables/figure use ToothFairy2/I-SPY2 — left as is.
+11. `sec/_suppl_ngf.tex` is dead (not \input) but duplicates labels with stale numbers — move to toDelete/ when convenient.
 
 ---
 
