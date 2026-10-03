@@ -5,7 +5,11 @@
 #SBATCH --cpus-per-task=48
 #SBATCH --mem=0
 #
-# HARD-CROP FOV variant of the chaos cross-dataset evaluation (TamIA).
+# HARD-CROP FOV evaluation of the chaos cross-dataset evaluation (TamIA).
+# ★ STANDARD since 2026-10-03 (Paul): chaos_combined_01_results.yaml and
+#   cross_dataset_{t1in,t2spir}_01_results.yaml read this script's `fov_crop/` metrics
+#   for amos + sliver07. The masked-at-eval numbers are legacy (see below). A NEW
+#   cross-dataset eval set for chaos-trained models must go through THIS script.
 #
 # The standing pipeline applies the CHAOS FOV slab as a MASK at EVALUATION time
 # (zeroing pred+GT outside the slab) -- the network still *sees* the whole
@@ -27,6 +31,16 @@
 #   EVAL_MODE     generic_labels | label_map | amos
 #   EVAL_LABELS   generic_labels: chaos label name(s), e.g. "liver"
 #   EVAL_LABEL_MAP  label_map: JSON, e.g. '{"spleen": [4, 1]}'
+#   RUNS_FILE     optional: replaces the built-in 8-run headline roster. Lines
+#                 `contrast|category|run_id|trainer|metrics_subdir` (subdir may be empty;
+#                 e.g. `ablations` puts metrics at fov_crop/ablations/<cat>_<rid>, so a
+#                 ladder rung key `ablations/<rid>` resolves exactly like in the own-dataset
+#                 metrics). Used for the causal-ablation ladder rungs.
+#   CROP_REUSE_DIR optional: reuse an EXISTING `_fovcrop/<jobid>` work dir (skip PHASE 1)
+#                 so rungs scored in different jobs all see byte-identical crops.
+#   PHASES        optional, default "1 2 3 4 5". Run predict on the GPU node with
+#                 PHASES="2" (+1 if cropping) and evaluate as a CPU-only job with PHASES="3 4".
+#   SKIP_REPORT   optional: skip PHASE 5 (its masked-vs-crop table is for the headline roster).
 #   EVAL_PARALLEL optional, concurrent eval tasks (default 20). Evaluation is
 #                 CPU-only and the node has 48 cores, so the old default of 6
 #                 (x2 workers = 12 procs) left the node 75% idle: cirrmri's eval
@@ -40,18 +54,30 @@ SCRATCH="${SCRATCH:-/scratch/p/paulh}"
 : "${DATASET:?}" "${ITEMS:?}" "${ANCHOR:?}" "${ANCHOR_IDS:?}" "${CONTRASTS:?}" "${EVAL_MODE:?}"
 
 export NNUNET_PROJECT_ROOT="${PROJECT_ROOT}"
+# The chaos trainer shim installed in the venv (CHAOSTrainers.py) imports `chaos.trainers.*`, which is only
+# importable when the dataset's 5_scripts dir is on PYTHONPATH -- pipeline scripts get that from
+# 00_utils/env.sh (common_env.sh: PYTHONPATH=SCRIPTS_DIR); this driver does not source env.sh. Without it EVERY
+# chaos trainer silently goes missing ("Unable to locate trainer class ..."): the venv shims still carry
+# pre-2026-09-27 `datasets/...` fallback paths, so their own path setup cannot rescue it.
+export PYTHONPATH="${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos:${PYTHONPATH:-}"
 RAW="${SCRATCH}/${DATASET}/2_nnUNet_${DATASET}/raw"
 RES="${SCRATCH}/${DATASET}/8_results_${DATASET}"
 WORK="${SCRATCH}/${DATASET}/_fovcrop/${SLURM_JOB_ID:-manual}"
 FOV_JSON="${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/chaos_fov_margins.json"
 CHAOS_SCRATCH="${SCRATCH}/chaos"
 CHAOS_DATASET_JSON="${CHAOS_SCRATCH}/2_nnUNet_chaos/raw/Dataset060_CHAOS_MR_T1in/dataset.json"
+[ -n "${CROP_REUSE_DIR:-}" ] && WORK="${CROP_REUSE_DIR}"
 mkdir -p "${WORK}"
+PHASES="${PHASES:-1 2 3 4 5}"
+has_phase() { case " ${PHASES} " in *" $1 "*) return 0;; esac; return 1; }
 
 echo "[fov] $(hostname) job=${SLURM_JOB_ID:-?} dataset=${DATASET} items='${ITEMS}' anchor=${ANCHOR}(${ANCHOR_IDS}) contrasts='${CONTRASTS}'"
 
 # ── run roster: the canonical 8 per contrast (the ones feeding the tables) ───
-runs_for() {   # $1 = contrast; emits "category|run_id|trainer" per line
+runs_for() {   # $1 = contrast; emits "category|run_id|trainer[|metrics_subdir]" per line
+  if [ -n "${RUNS_FILE:-}" ]; then
+    awk -F'|' -v c="$1" '$1==c && $0 !~ /^#/ {print $2"|"$3"|"$4"|"$5}' "${RUNS_FILE}"; return
+  fi
   if [ "$1" = t1in ]; then cat <<'EOF'
 nnUNet|chaos_t1in_baseline_20260614_153230|nnUNetTrainerCHAOSBaseline
 auglab|chaos_t1in_auglab_default_20260611_120000|nnUNetTrainerCHAOSAugLabDefault
@@ -77,6 +103,7 @@ EOF
 ds_id_for() { [ "$1" = t1in ] && echo 60 || echo 61; }
 
 # ── PHASE 1: build hard-cropped inputs, per (contrast, item) ─────────────────
+if has_phase 1 && [ -z "${CROP_REUSE_DIR:-}" ]; then
 echo "[fov] ==== PHASE 1: hard-crop volumes to the chaos ${ANCHOR} slab ===="
 "${PROJECT_ROOT}/.venv/bin/python" - "$WORK" "$RAW" "$FOV_JSON" "$ANCHOR" "$ANCHOR_IDS" "$ITEMS" "$CONTRASTS" <<'PYEOF'
 import sys, os, glob, json
@@ -117,15 +144,16 @@ for contrast in CONTRASTS.split():
               f"mean kept-fraction along S-I = {np.mean(ratios) if ratios else float('nan'):.3f}",
               flush=True)
 PYEOF
+else echo "[fov] PHASE 1 skipped (PHASES='${PHASES}' CROP_REUSE_DIR='${CROP_REUSE_DIR:-}') -> using crops in ${WORK}"; fi
 
 # ── PHASE 2: predict on the cropped inputs, bounded 8-way pool (2/GPU) ───────
-echo "[fov] ==== PHASE 2: predict (8 runs x 3 folds x items x contrasts) ===="
+echo "[fov] ==== PHASE 2: predict (runs x 3 folds x items x contrasts) ===="
 JOBS=()
 for contrast in ${CONTRASTS}; do
-  while IFS='|' read -r cat rid tr; do
+  while IFS='|' read -r cat rid tr sub; do
     [ -n "$cat" ] || continue
     for f in 0 1 2; do for it in ${ITEMS}; do
-      JOBS+=("${contrast}|${cat}|${rid}|${tr}|${f}|${it}")
+      JOBS+=("${contrast}|${cat}|${rid}|${tr}|${f}|${it}|${sub:-}")
     done; done
   done < <(runs_for "$contrast")
 done
@@ -134,36 +162,57 @@ N=${#JOBS[@]}; echo "[fov] ${N} predict tasks"
 worker() {
   local slot="$1" idx="$1" gpu=$(( $1 % 4 ))
   while [ "${idx}" -lt "${N}" ]; do
-    IFS='|' read -r contrast cat rid tr f it <<< "${JOBS[$idx]}"
+    IFS='|' read -r contrast cat rid tr f it _sub <<< "${JOBS[$idx]}"
     local out="${RES}/01_predictions/chaos_model/${contrast}/${cat}/${rid}/fold${f}/${it}_fovcrop"
     local inp="${WORK}/${contrast}/imagesTs_${it}"
     mkdir -p "${out}"
-    local t0=$(date +%s)
+    local t0=$(date +%s) rc
     nnUNet_results="${CHAOS_SCRATCH}/8_results_chaos/01_predictions/chaos_model/${contrast}/${cat}/${rid}" \
     CUDA_VISIBLE_DEVICES=${gpu} \
       "${PROJECT_ROOT}/.venv/bin/nnUNetv2_predict" -i "${inp}" -o "${out}" \
       -d "$(ds_id_for "$contrast")" -c 3d_fullres -tr "${tr}" -f "${f}" --disable_tta \
       -chk checkpoint_best.pth -npp 3 -nps 3 \
       > "${WORK}/predict_${contrast}_${rid}_f${f}_${it}.log" 2>&1
-    echo "[fov] slot${slot}(GPU${gpu}) ${contrast}/${rid##*_}/f${f}/${it} rc=$? ($(( $(date +%s) - t0 ))s)"
+    rc=$?
+    echo "[fov] slot${slot}(GPU${gpu}) ${contrast}/${rid##*_}/f${f}/${it} rc=${rc} ($(( $(date +%s) - t0 ))s)"
+    [ "${rc}" -eq 0 ] || echo "${JOBS[$idx]} rc=${rc}" >> "${FAILFILE}"
     idx=$(( idx + 8 ))
   done
 }
+if has_phase 2; then
+# preflight: every trainer class must be resolvable by nnunetv2 BEFORE we start (a missing trainer used to make
+# all tasks die in ~6 s while the job still ended "COMPLETED rc=0", and a dependent eval job then ran on nothing)
+for tr in $(printf '%s\n' "${JOBS[@]}" | awk -F'|' '{print $4}' | sort -u); do
+  "${PROJECT_ROOT}/.venv/bin/python" - "${tr}" >/dev/null 2>&1 <<'PYEOF' || { echo "[fov] FATAL: trainer ${tr} is not resolvable by nnunetv2 (PYTHONPATH=${PYTHONPATH})" >&2; exit 3; }
+import os, sys, nnunetv2
+from nnunetv2.utilities.find_class_by_name import recursive_find_python_class
+folder = os.path.join(nnunetv2.__path__[0], "training", "nnUNetTrainer")
+sys.exit(0 if recursive_find_python_class(folder, sys.argv[1], "nnunetv2.training.nnUNetTrainer") else 1)
+PYEOF
+done
+echo "[fov] preflight OK: all trainers resolvable"
+FAILFILE="${WORK}/FAILED_predict_${SLURM_JOB_ID:-manual}.txt"; : > "${FAILFILE}"
 pids=(); for s in 0 1 2 3 4 5 6 7; do worker "$s" & pids+=($!); done
 for p in "${pids[@]}"; do wait "$p"; done
+if [ -s "${FAILFILE}" ]; then
+  echo "[fov] FAILED: $(wc -l < "${FAILFILE}") of ${N} predict tasks failed -- see ${FAILFILE}" >&2; exit 1
+fi
+echo "[fov] all ${N} predict tasks rc=0"
+fi
 
 # ── PHASE 3: evaluate (NO fov flags -- the volumes are already cropped) ──────
+if has_phase 3; then
 echo "[fov] ==== PHASE 3: evaluate cropped predictions (no FOV masking) ===="
 case "${EVAL_MODE}" in
   amos) EVAL_PY="${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/amos/5_scripts_amos/06_evaluate/06_00_evaluate_amos.py";;
   *)    EVAL_PY="${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_00_evaluate.py";;
 esac
 
-eval_one() {   # contrast cat rid fold item
-  local contrast="$1" cat="$2" rid="$3" f="$4" it="$5"
+eval_one() {   # contrast cat rid fold item [metrics_subdir]
+  local contrast="$1" cat="$2" rid="$3" f="$4" it="$5" sub="${6:--}"; [ "${sub}" = "-" ] && sub=""
   local pred="${RES}/01_predictions/chaos_model/${contrast}/${cat}/${rid}/fold${f}/${it}_fovcrop"
   local gt="${WORK}/${contrast}/labelsTs_${it}"
-  local ed="${RES}/02_metrics/chaos_model/${contrast}/fov_crop/${cat}_${rid}/fold${f}"
+  local ed="${RES}/02_metrics/chaos_model/${contrast}/fov_crop${sub:+/${sub}}/${cat}_${rid}/fold${f}"
   local n; n=$(find "${pred}" -name '*.nii.gz' 2>/dev/null | wc -l)
   [ "${n}" -gt 0 ] || { echo "[fov] SKIP empty ${contrast}/${rid}/f${f}/${it}" >&2; return 1; }
   mkdir -p "${ed}"
@@ -176,18 +225,26 @@ eval_one() {   # contrast cat rid fold item
       --pred_dir "${pred}" --gt_dir "${gt}" --name "${it}" \
       --out_csv "${ed}/${it}_metrics.csv" --workers 2 "${extra[@]}" \
       > "${ed}/${it}_eval.log" 2>&1
-  echo "[fov] eval ${contrast}/${rid}/f${f}/${it}: $(( $(wc -l < "${ed}/${it}_metrics.csv") - 1 ))/${n} rows"
+  # success is conditional on the CSV existing with rows (an OOM'd worker used to be counted done)
+  if [ -s "${ed}/${it}_metrics.csv" ] && [ "$(wc -l < "${ed}/${it}_metrics.csv")" -gt 1 ]; then
+    echo "[fov] eval ${contrast}/${rid}/f${f}/${it}: $(( $(wc -l < "${ed}/${it}_metrics.csv") - 1 )) rows (${n} predictions)"
+  else
+    echo "[fov] EVAL FAILED ${contrast}/${rid}/f${f}/${it} (no/empty ${it}_metrics.csv; see ${ed}/${it}_eval.log)" >&2; return 1
+  fi
 }
 export -f eval_one; export RES WORK PROJECT_ROOT EVAL_PY EVAL_MODE CHAOS_DATASET_JSON
 export EVAL_LABELS="${EVAL_LABELS:-}" EVAL_LABEL_MAP="${EVAL_LABEL_MAP:-}"
-printf '%s\n' "${JOBS[@]}" | awk -F'|' '{print $1,$2,$3,$5,$6}' \
+printf '%s\n' "${JOBS[@]}" | awk -F'|' '{print $1,$2,$3,$5,$6,($7==""?"-":$7)}' \
   | xargs -P "${EVAL_PARALLEL:-20}" -L 1 bash -c 'eval_one "$@"' _
 echo "[fov] evaluate phase done"
+fi
 
 # ── PHASE 4: merge -> eval_all.csv (depth 4: .../<contrast>/fov_crop/<run>) ──
-echo "[fov] ==== PHASE 4: summarize_fold -> eval_all.csv ===="
-find "${RES}/02_metrics" -mindepth 4 -maxdepth 4 -type d -path '*/fov_crop/*' | while read -r rd; do
-  rid="$(basename "${rd}")"; rid="${rid#nnUNet_}"; rid="${rid#auglab_}"
+if has_phase 4; then
+echo "[fov] ==== PHASE 4: summarize_fold -> eval_all.csv (.../<contrast>/fov_crop[/<subdir>]/<run>) ===="
+printf '%s\n' "${JOBS[@]}" | awk -F'|' '{print $1"|"$2"|"$3"|"$7}' | sort -u | while IFS='|' read -r contrast cat rid sub; do
+  rd="${RES}/02_metrics/chaos_model/${contrast}/fov_crop${sub:+/${sub}}/${cat}_${rid}"
+  [ -d "${rd}" ] || { echo "[fov] PHASE 4: missing ${rd}" >&2; continue; }
   for fd in "${rd}"/fold*/; do
     [ -d "${fd}" ] || continue
     have=(); for it in ${ITEMS}; do [ -f "${fd}${it}_metrics.csv" ] && have+=("${it}"); done
@@ -199,8 +256,10 @@ find "${RES}/02_metrics" -mindepth 4 -maxdepth 4 -type d -path '*/fov_crop/*' | 
       --title-suffix " | ${DATASET} | FOV HARD-CROP" --groups "${have[@]}" >/dev/null 2>&1
   done
 done
+fi
 
 # ── PHASE 5: report cropped vs existing masked numbers ──────────────────────
+if has_phase 5 && [ -z "${SKIP_REPORT:-}" ]; then
 echo "[fov] ==== PHASE 5: RESULTS (hard-crop vs masked-eval) ===="
 "${PROJECT_ROOT}/.venv/bin/python" - "${RES}/02_metrics" "${DATASET}" "${CONTRASTS}" "${ITEMS}" <<'PYEOF'
 import sys, os, csv, glob, statistics as st
@@ -233,4 +292,5 @@ for contrast in CONTRASTS.split():
             line += f"{cv:>12}{mv:>12}"
         print(line)
 PYEOF
+fi
 echo "[fov] DONE"

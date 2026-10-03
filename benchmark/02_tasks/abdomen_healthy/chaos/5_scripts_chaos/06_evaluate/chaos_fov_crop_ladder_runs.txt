@@ -1,0 +1,17 @@
+# Causal-ablation-ladder rungs 2-4 (kmeans / +label_remap / +voronoi noise fill) for the CROSS-DATASET
+# crop-before-predict evaluation (amos + sliver07). Roster for fov_crop_predict_evaluate.sh (RUNS_FILE).
+# Format: contrast|category|run_id|trainer|metrics_subdir
+#   metrics_subdir is where the run's metrics land under <contrast>/fov_crop/ -- it MUST mirror how the
+#   ladder script's rung key addresses the run in chaos's own metrics (t1in: flat, t2spir: ablations/).
+# Baseline (rung 1) and +AugLab val000/val100 (rungs 6/7) are already in the headline roster.
+# Rung 5 (v26_6_2 real fill): t1in's run (2026-07-15, AugLab-era: run_config.json + transform_params_gpu_used_for_training.json)
+# is NOT in the 2026-10-03 rung-5 retrain (scope = chaos t2spir, on-harmony T1w, brats t2w), so it is included below.
+# t2spir rung 5 is DELIBERATELY ABSENT: its old run is pre-AugLab and is being retrained. Add the retrained run here
+# only once it exists, then re-run 06_36 before regenerating the t2spir ladder.
+t1in|nnUNet|chaos_t1in_baseline_kmeans_train050_val000_20260715_081839|nnUNetTrainerCHAOSAugLabDualVal|
+t1in|nnUNet|chaos_t1in_baseline_kmeans_label_remap_train050_val000_20260715_081919|nnUNetTrainerCHAOSAugLabDualVal|
+t1in|nnUNet|chaos_t1in_baseline_kmeans_label_remap_voronoi_train050_val000_20260715_081959|nnUNetTrainerCHAOSAugLabDualVal|
+t2spir|nnUNet|baseline_kmeans_train050_val000|nnUNetTrainerCHAOSAugLabDualVal|ablations
+t2spir|nnUNet|baseline_kmeans_label_remap_train050_val000|nnUNetTrainerCHAOSAugLabDualVal|ablations
+t2spir|nnUNet|baseline_kmeans_label_remap_voronoi_train050_val000|nnUNetTrainerCHAOSAugLabDualVal|ablations
+t1in|nnUNet|chaos_t1in_v26_6_2_train050_val000_20260715_082040|nnUNetTrainerCHAOSAugLabDualVal|

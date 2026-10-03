@@ -641,6 +641,40 @@ configs against this standard if revisiting them.
 
 ---
 
+## CHAOS cross-dataset FOV: CROP-before-predict is the standard (Paul, 2026-10-03)
+
+Chaos-trained models are tested on amos (CT+MRI) and sliver07 (CT) full-torso volumes. The CHAOS
+axial-FOV restriction is now applied at the **prediction level**: each test volume is cropped to the
+CHAOS-equivalent slab *before* `nnUNetv2_predict`, so the model only sees that slab. The old way —
+mask pred+GT outside the slab at *scoring* time, network sees everything — is **legacy**.
+- Driver: `benchmark/00_commun_scripts/00_02_predict/fov_crop_predict_evaluate.sh` (env-driven, TamIA;
+  geometry in `00_00_utils/fov.py`; margins `chaos/.../06_evaluate/chaos_fov_margins.json`). Metrics land in
+  `<dataset>/8_results_<dataset>/02_metrics/chaos_model/<contrast>/fov_crop/`.
+- `chaos_combined_01_results.yaml` and `cross_dataset_{t1in,t2spir}_01_results.yaml` read `.../fov_crop`
+  for amos + sliver07 (the ONLY three configs that read those two datasets). Chaos's own contrasts
+  (t1in/t2spir/t1out/own CT) are untouched by cropping.
+- The masked metrics (unprefixed run dirs under `<contrast>/`) are kept as legacy, not read by any
+  roll-up; the amos/sliver07 `06_01_evaluate_run.sh` `FOV=1` path still writes there. Pre-switch outputs:
+  `*.bak_20261003_pre_fovcrop` next to each regenerated table. Don't re-point configs back without a reason.
+- **The chaos ladders are to be CROSS-DATASET too (Paul, 2026-10-03)**: amos + sliver07 (cropped) pooled into
+  the OOD pool by TRUE contrast. `06_34`/`06_35` are wired to amos+sliver07 `fov_crop` sources (commit 8f7bcff,
+  with a guard that refuses to run unless every rung resolves in every source). The crop-before-predict
+  predictions for rungs 2-4 (kmeans/label_remap/voronoi) come from `06_36_fov_crop_ladder_rungs.sh` (roster
+  `chaos_fov_crop_ladder_runs.txt`, shared driver in RUNS_FILE mode; reuses the headline crops via CROP_REUSE_DIR).
+  **DONE 2026-10-03:** both ladders regenerated cross-dataset with every rung present in every source (t1in
+  14:10; t2spir 15:37 via `06_37_run_ladder_summary_t2spir.sh`, with the RETRAINED rung 5
+  `chaos_t2spir_v26_6_2_train050_val100_20261003_123018` — rungs 2-5 now all AugLab GPU synth p=0.5 + flip,
+  verified from each run's `transform_params_gpu_used_for_training.json`; predictions made after training ended).
+  Fill-swap 4→5: t1in +1.43 Dice (p=3e-13), **t2spir +5.11 (p=7.5e-22)** — the old −0.88/−1.14 t2spir value was
+  the pre-AugLab rung-5 implementation confound, not a property of the task. The guard stays: the engine silently
+  skips a source that doesn't resolve for a rung, so a partial set would compare different OOD pools across rungs.
+- Effect (combined table, Dice/HD95): Ours val000 85.0/30.6 → 85.9/22.7; srcsm sig. vs Ours p 0.106 → 0.043.
+  Full per-method before/after in `benchmark/01_commun_results/fov_crop_vs_mask_2026-08-01.md`.
+- Regenerating on TamIA needs a path mirror (healthy-spine-tum's config hardcodes Vulcan's absolute path;
+  rewrite it in the mirror copy or that task's column silently goes blank).
+
+---
+
 ## Cleanup notes (read before deleting anything in the repo root)
 
 **Untracked but load-bearing — do NOT `git clean`:**

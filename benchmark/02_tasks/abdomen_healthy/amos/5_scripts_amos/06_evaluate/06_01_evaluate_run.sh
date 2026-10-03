@@ -63,6 +63,11 @@ METRICS_BASE="${METRICS_ROOT}/${CHAOS_MODEL_TYPE}/${CHAOS_TRAINING_CONTRAST}/${C
 # it, so we score only the CHAOS-equivalent slab of each full-torso AMOS volume,
 # anchored on the kidneys (AMOS GT ids 2,3). Margins from chaos 06_30 (median mm).
 # Disable with FOV=0 for the legacy full-volume eval.
+# ⚠️ LEGACY (2026-10-03): this MASK-at-eval path is no longer the headline. The standard
+# is CROP-before-predict (the model only sees the CHAOS slab) via
+# 00_commun_scripts/00_02_predict/fov_crop_predict_evaluate.sh -> metrics under
+# <contrast>/fov_crop/, which chaos_combined / cross_dataset_* configs now read. Metrics
+# written here land in <contrast>/ (masked) and are NOT consumed by any roll-up.
 FOV="${FOV:-1}"
 FOV_JSON="${CHAOS_DATASET_ROOT}/5_scripts_chaos/06_evaluate/chaos_fov_margins.json"
 fov_flags() {   # $1 = anchor name (kidney/liver), $2 = comma-sep GT anchor ids

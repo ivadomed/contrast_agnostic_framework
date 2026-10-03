@@ -36,14 +36,14 @@ sources:
     column_prefix: "chaos_"
     column_rename:
       ct: chaos_ct_liver     # chaos CT GT only has liver
-  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/amos/8_results_amos/02_metrics/chaos_model/t2spir"
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/amos/8_results_amos/02_metrics/chaos_model/t2spir/fov_crop"
     column_prefix: "amos_"
     # AMOS's "mri" column is one real contrast (T2w, per
     # benchmark/02_tasks/abdomen_healthy/amos/5_scripts_amos/00_utils/00_01_bidsify.py), not a generic
     # modality bucket -- see cross_dataset_t1in_01_results.yaml's fuller note.
     column_rename:
       mri: t2w
-  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/sliver07/8_results_sliver07/02_metrics/chaos_model/t2spir"
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/sliver07/8_results_sliver07/02_metrics/chaos_model/t2spir/fov_crop"
     column_rename:
       ct: sliver07_ct_liver  # sliver07 GT only has liver
   # NOTE: TRUSTED intentionally NOT included here — its US eval is confounded by a
