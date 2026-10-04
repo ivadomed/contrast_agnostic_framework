@@ -23,6 +23,7 @@ contrast at validation time).
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
 Component & CHAOS & Open-MS & BraTS-GLI & ON-Harmony \\
@@ -36,7 +37,8 @@ Base (nnU-Net default)                & 36.1 & 25.2 & 26.0 & 27.5 \\
 \midrule
 \quad + Auglab (\textbf{Ours}, deployed) & 87.4 & 39.5 & 47.5 & 68.6 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Mechanism ablation (top five rows, additive, no Auglab) and
 deployment composability check (bottom row). Each rung adds exactly one
 PALETTE-Aug component on top of the row above. Dice (\%) over all test

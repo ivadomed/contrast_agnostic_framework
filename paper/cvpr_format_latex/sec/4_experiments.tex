@@ -18,49 +18,84 @@ test set. Significance tests are paired, use the patient (for ON-Harmony, the se
 as the unit, and are
 Holm-corrected~\cite{holm1979} (\cref{sec:suppl-persetting}).
 
-\paragraph{Datasets.} We evaluate on eight tasks drawn from sixteen datasets
-(full roster in \cref{tab:datasets}): abdominal organs, healthy brain, brain tumor, MS
-lesions, mandible, breast lesions, spine and pelvic musculoskeletal anatomy,
-across MRI, CT and dental CBCT. Brain tumor and MS lesions use
-BraTS2024-GLI~\cite{deverdier2024brats2024} and
-Open-MS~\cite{lesjak2018openms}. Each (task, training modality) pair is one \emph{setting}, eighteen in all,
-tested on every contrast of its task, the training contrast included;
-\emph{out-of-domain} (OOD) results exclude the training contrast, also in
-external cohorts. External cohorts are pooled into their task as extra held-out test columns,
-not reported as separate tasks. CHAOS~\cite{kavur2021chaos} transfers to the
-CT of AMOS~\cite{ji2022amos} and SLIVER07~\cite{heimann2009comparison}.
-Mandible (ToothFairy2~\cite{bolelli2025toothfairy2}, CBCT only) transfers to
-the CT and MR of HaN-Seg~\cite{podobnik2023hanseg} and the CT of
-PDDCA~\cite{raudaschl2017pddca}, so every held-out contrast but its own CBCT
-comes from another dataset. Breast (I-SPY2~\cite{li2022ispy2}) transfers to
-Duke-Breast-MRI~\cite{saha2018duke,garrucho2025mamamia},
-I-SPY1~\cite{hylton2012ispy1} and ACRIN-6698~\cite{partridge2018acrin6698},
-whose diffusion-weighted MRI resembles neither training modality. Spine (a
-CT/Dixon cohort) transfers to the T1w and T2w of
-SPIDER~\cite{vandergraaf2024spider}. Pelvis is built from the TotalSegmentator CT and MRI
-releases~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}, two unpaired
-cohorts. ON-Harmony~\cite{warrington2025onharmony} reference labels are
-silver-standard FreeSurfer~\cite{fischl2012freesurfer} parcellations of the
-T1w, registered to the other contrasts. External volumes that image more of the body
-than the training cohort are cropped to its field of view before prediction,
-identically for every method (\cref{sec:suppl-data}).
+\paragraph{Datasets.} \Cref{tab:tasks} lists the eight tasks and sixteen
+datasets, across MRI, CT and dental CBCT. Each (task, training modality) pair is
+one \emph{setting}, eighteen in all, tested on every contrast of its task, the
+training contrast included; \emph{out-of-domain} (OOD) results exclude the
+training contrast, also in external cohorts. External cohorts are extra
+held-out test columns of their task, not separate tasks. ON-Harmony reference
+labels are silver-standard FreeSurfer~\cite{fischl2012freesurfer}
+parcellations of the T1w, registered to the other contrasts. External volumes
+that image more of the body than the training cohort are cropped to its field
+of view before prediction, identically for every method
+(\cref{sec:suppl-data}).
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\begin{tabular}{lP{2.0cm}P{4.1cm}P{1.7cm}P{4.3cm}rc}
+\toprule
+Task & Target & Trained on (one modality at a time) & Other test contrasts & External test cohorts & Test cases & Ladder \\
+\midrule
+\multicolumn{7}{l}{\emph{Appearance-defined}} \\
+BraTS-GLI & glioma, 4 sub-regions & BraTS2024-GLI~\cite{deverdier2024brats2024}: T1n, T1c, T2w, FLAIR & -- & -- & 70 & \checkmark \\
+Open-MS & MS lesions & Open-MS~\cite{lesjak2018openms}: FLAIR, T1w & T2w & -- & 8 & \checkmark \\
+Breast & tumor & I-SPY2~\cite{li2022ispy2}: T1-CE, T2w & -- & Duke~\cite{saha2018duke,garrucho2025mamamia}, I-SPY1~\cite{hylton2012ispy1}: T1-CE, pre-contrast; ACRIN-6698~\cite{partridge2018acrin6698}: DWI & 84 + 829 & \checkmark \\
+\midrule
+\multicolumn{7}{l}{\emph{Interface-bounded}} \\
+CHAOS & liver, kidneys, spleen & CHAOS~\cite{kavur2021chaos}: T1in, T2spir & T1out, CT & AMOS~\cite{ji2022amos}: CT, T2w; SLIVER07~\cite{heimann2009comparison}: CT & 24 + 140 & \checkmark \\
+ON-Harm. & 31 brain regions & ON-Harmony~\cite{warrington2025onharmony}: T1w, T2w, DWI & BOLD, EPI, GRE & -- & 8$^a$ & \checkmark \\
+Mandible & mandible & ToothFairy2~\cite{bolelli2025toothfairy2}: CBCT & -- & HaN-Seg~\cite{podobnik2023hanseg}: CT, MR-T1; PDDCA~\cite{raudaschl2017pddca}: CT & 71 + 82 & \checkmark \\
+Spine & vertebrae, discs, canal & CT/Dixon cohort: CT, Dixon in-phase & Dixon fat, water & SPIDER~\cite{vandergraaf2024spider}: T1w, T2w & 29 + 171/219 & -- \\
+Pelvis & 11 bones and muscles & TotalSegmentator~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}: CT, MRI$^b$ & -- & -- & 30/27 & -- \\
+\bottomrule
+\end{tabular}
+\caption{The eight tasks. Test cases: own held-out split + external cohorts;
+$a$/$b$ gives two contrasts' counts where they differ (\cref{tab:suppl-datasets}). Ladder:
+the task has the causal ablation of \cref{subsec:e-ablation}. $^a$Sessions of
+four subjects. $^b$Different patients for CT and MRI.}
+\label{tab:tasks}
+\end{table*}
+
 % TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
 % in the imported results) -- no citable source for it exists in the repo.
 
 
-\paragraph{Baselines.} We compare against five methods. (1) \emph{Baseline},
-nnU-Net with its default augmentation. (2)
-\emph{SynthSeg-noEM}~\cite{billot2023synthseg}, which synthesizes each image
-from the label map alone and ignores the acquired scan; it receives each
-task's training labels, which form a dense parcellation only on ON-Harmony.
-(3) \emph{SynthSeg-EM}, our re-implementation of SynthSeg's EM
-extension~\cite[\S5.4]{billot2023synthseg}, which first subdivides every
-label by expectation-maximization clustering of the image. (4)
-\emph{SRCSM}~\cite{thaler2025semrandconv}, a semantic random-convolution
-augmentation outside both the label-generative and the Auglab families. (5)
-\emph{Auglab}~\cite{molinier2026auglab}, a published GPU augmentation
-pipeline. It is a competitor in its own right, not an ablation of ours; since
-our method adds one operator to it, comparing the two also tests that operator.
+\paragraph{Baselines.} \Cref{tab:methods} compares the five competitors:
+nnU-Net with its default augmentation (\emph{Baseline}),
+SynthSeg~\cite{billot2023synthseg} without and with its EM label-subdivision
+extension~\cite[\S5.4]{billot2023synthseg} (re-implemented), both given each
+task's training labels, which are a dense parcellation only on ON-Harmony;
+SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab}, a
+competitor in its own right. Our method adds one operator to Auglab, so
+comparing the two also tests that operator.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{l>{\raggedright\arraybackslash}p{2.9cm}ccc}
+\toprule
+Method & Training-image intensities & \makecell{No dense\\labels} & \makecell{Real\\texture} & \makecell{Synth.\\iters} \\
+\midrule
+Baseline & real image, nnU-Net aug. & \checkmark & \checkmark & -- \\
+SynthSeg-noEM & random Gaussian per label & $\times$ & $\times$ & 100\% \\
+SynthSeg-EM & random Gaussian per EM sub-region of each label & \checkmark & $\times$ & 100\% \\
+SRCSM & random convolution per labeled region & \checkmark & $\sim$ & 100\% \\
+Auglab & real image, generic intensity and artifact aug. & \checkmark & \checkmark & -- \\
+\textbf{PALETTE-Aug} & real intensities, signed affine remap per unsupervised sub-region & \checkmark & \checkmark & 50\% \\
+\bottomrule
+\end{tabular}
+\caption{What each method trains on. No dense labels: works from the task's
+own labels (SynthSeg-noEM runs on them but then fills everything unlabeled
+with one Gaussian; $\sim$: the real image passes through a random filter).
+Synth.\ iters: share of training iterations with a
+synthetic image, as in each method's original paper; PALETTE-Aug runs inside
+Auglab.}
+\label{tab:methods}
+\end{table}
 
 \subsection{Main comparison}
 \label{subsec:e-main}
