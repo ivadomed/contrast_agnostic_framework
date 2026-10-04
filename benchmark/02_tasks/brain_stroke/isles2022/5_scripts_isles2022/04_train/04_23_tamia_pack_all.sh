@@ -69,6 +69,9 @@ echo "[pack] ${NITEMS} fold-jobs -> ${PACKS} whole-node packs (<=${FOLDS_PER_PAC
 for p in $(seq 1 "${PACKS}"); do
     echo "  pack ${p}: $(awk -F'\t' -v p=$p '$1==p {n++; l+=$3} END {printf "%d folds, load %.1f", n, l}' "${items}.plan")  GPU map: $(awk -F'\t' -v p=$p '$1==p {printf "%s ", $2}' "${items}.plan")"
     awk -F'\t' -v p=$p '$1==p {printf "      GPU%s  %-8s %-42s fold%s (cost %s)\n", $2,$4,$5,$8,$3}' "${items}.plan"
+    # predicted wall: cost = contended s/epoch measured with 3 folds/GPU (probe), i.e. cost/3 s/epoch of SOLO GPU time per fold; a GPU's folds
+    # time-slice, so its wall = EPOCHS x sum(cost)/3. (Estimate only; ladder-rung costs are unmeasured guesses unless COST_* were set.)
+    awk -F'\t' -v p=$p -v E="${NNUNET_NUM_EPOCHS:-2000}" '$1==p {l[$2]+=$3} END {m=0; for (g in l) { h=E*l[g]/3/3600; if (h>m) m=h }; printf "      predicted max GPU wall: %.1f h (limit per job %s)\n", m, "'"${PACK_TIME}"'"}' "${items}.plan"
 done
 [ "${DRY}" = 1 ] && { echo "[pack] dry run: nothing recorded or submitted"; exit 0; }
 

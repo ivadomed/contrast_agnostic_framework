@@ -6,7 +6,7 @@ set -uo pipefail
 PACK="${1:?pack dir}"; TARGET="${2:-2000}"
 PROBE="$(dirname "${PACK}")"
 printf "%-52s %8s %8s %12s %s\n" "run (fold0)" "epochs" "med s/ep" "h per ${TARGET}ep" "status"
-for log in $(ls "${PROBE}"/01_predictions/isles2022_model/*/*/*/*/fold_0/training_log_*.txt 2>/dev/null); do
+for log in $(ls "${PROBE}"/01_predictions/isles2022_model/*/*/*/*/*/fold_0/training_log_*.txt 2>/dev/null); do
     run="$(echo "$log" | sed -E 's#.*/isles2022_model/([^/]+)/[^/]+/([^/]+)/.*#\1/\2#')"
     awk -v run="$run" -v T="$TARGET" '/Epoch time:/ {t[++n]=$(NF-1)} END {
         if (n<4) {printf "%-52s %8d %8s %12s %s\n", run, n, "-", "-", "too few epochs"; exit}
