@@ -20,13 +20,20 @@ This is **not** a dataset — it is skipped by the validator (see `IGNORED_ENTRI
     nnunet_convert_lib.py  # gzip_copy(), run_threaded_conversion(), write_dataset_json()
     eval_metrics.py        # dice_score(), hd95(), run_evaluation()  (label-triple based)
     eval_aggregate.py      # load_run(), cross_fold_stats(), report + heatmap builders
+    roster_lib.sh          # (bash) find a method's trained RUN_ID: pin file, else newest run dir; no timestamps anywhere
   00_01_train/
     train_common.sh        # per-fold nnU-Net training driver (resume, GPU pinning, run_job)
   00_02_predict/
     predict_common.sh      # nnU-Net prediction driver (own-model AND cross-dataset modes)
+    run_all_predict_common.sh  # predict a whole ROSTER of wrappers (RUN_IDs from roster_lib.sh; optional TamIA pack submit)
   00_03_evaluate/
     evaluate.py            # method-agnostic Dice/HD95 evaluator (CLI)
     summarize_fold.py      # merge per-group CSVs → eval_all.csv + eval_summary.md
+    evaluate_run_common.sh # per-RUN evaluate driver (all folds x items; fails on #preds != #GT, stale CSVs, wrong CATEGORY)
+    run_all_evaluate_common.sh # evaluate a whole ROSTER (headline -> <contrast>/, ladder rungs -> <contrast>/ablations/)
+    roster_runs.py         # roster pin-file reader + canonical 7-method / 7-rung definitions
+    write_configs_from_roster.py # GENERATE aggregate / significance / combined YAML configs from the roster (no timestamps)
+    ladder_from_roster.py  # causal-ablation ladder built from the roster (wraps ladder_ood_common.run_ladder)
     aggregate_results.py   # cross-fold/-experiment report + heatmaps
 ```
 

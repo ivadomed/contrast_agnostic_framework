@@ -333,6 +333,12 @@ Models are contrast-agnostic, so evaluation is **cross-contrast**: a model train
 - `00_01_train/train_common.sh` — training driver (fold fan-out via `run_job`; honours optional `TRAIN_FOLDS`, default `"0 1 2 3"`).
 - `00_02_predict/predict_common.sh` — prediction driver (own- and cross-model modes).
 - `00_03_evaluate/` — `evaluate.py` (Dice+HD95), `summarize_fold.py`, `aggregate_results.py`, `aggregate_from_config.py` (per-modality summary table + heatmap; also the home of `load_run_cases`/`paired`/`macro_perm`-based `significance_column` — see below), `significance_from_config.py` (full paired-significance report: OOD/IND/per-contrast breakdowns), `combined_modality_summary.py` (pools a dataset's 2 training modalities into one table), `meta_task_heatmap.py` (pools all 4 datasets into one table — see "Standardized output layout" below for all three), `ladder_ood_common.py` (the causal-ablation ladder engine, `run_ladder()`/`run_ladder_cross_dataset()` — see "The causal-ablation ladder" below; **OOD-only plots as of the 2026-09-07 rework**, `ladder_series.json` carries a `fill_swap_significance` field per source), `ladder_cross_dataset_plot.py` (added 2026-09-08: overlays several already-computed `ladder_series.json` sources' OOD-pooled curves on one comparison figure per training direction, reusing `ladder_ood_common.py`'s own `_write_per_contrast_png` rather than a bespoke plot — see its docstring for the grouping convention).
+- **Roster-driven drivers (added 2026-10-04, first used by isles2022; older datasets still carry their own copies and may migrate):**
+  `00_00_utils/roster_lib.sh` (find a method's RUN_ID from the predict wrappers' `METHOD=`/`CATEGORY=` lines + the trained run dirs, with a
+  hand-editable pin file `01_predictions/<model>/<contrast>/roster_run_ids.tsv`), `00_02_predict/run_all_predict_common.sh`,
+  `00_03_evaluate/evaluate_run_common.sh` (the per-run evaluate body every dataset used to copy-paste; hard-fails on #preds != #GT, wrong CATEGORY,
+  missing eval_all.csv rows), `run_all_evaluate_common.sh`, `write_configs_from_roster.py`, `ladder_from_roster.py`. A new dataset's predict/eval
+  launchers and configs contain NO timestamps. See skill `setup-train-predict-eval-scripts`.
 - `00_04_analysis/` — `texture_advantage.py`, `mechanism_illustration.py`.
 
 ### The 3-tier wrapper pattern — follow it for every new method/dataset
@@ -553,8 +559,11 @@ that written agreement.** BIDS leaf `1_BIDS_isles2022/stroke-brain-isles2022` (n
   04_* wrappers (6 methods x 2 contrasts + ladder rungs 2-5; **no rung-6 PV wrappers yet**), `04_23_tamia_pack_all.sh`,
   `scripts/cluster/tamia_env_isles2022.sh`, orientation QC PNG in `9_tests_isles2022/`.
 - **Still to do:** push (Paul) → pull on TamIA, copy data to `$SCRATCH/isles2022`, install the shim in TamIA's venv,
-  **sizing probe before the pack launch**, decide the epoch count (1000 is a provisional ispy2 copy), then
-  05_predict / 06_evaluate wrappers + configs, ladder scripts, combined table, `meta_task_heatmap.yaml` entry.
+  **sizing probe before the pack launch**, decide the epoch count (1000 is a provisional ispy2 copy). After training:
+  `05_24/05_25_run_all_predict_<contrast>.sh` (TamIA: `05_26_tamia_pack_predict.sh <contrast>`) → `06_06_run_all_eval.sh` →
+  `06_05_write_configs.sh` → `06_07_run_all_aggregation.sh` (all roster-driven, no timestamps; whole chain verified end-to-end on
+  synthetic metrics 2026-10-04, never on real predictions yet). Still missing: rung-6 PV wrappers, `meta_task_heatmap.yaml` entry,
+  open decision on whether ADC counts as an OOD contrast in the ladders (derived from DWI).
   No external same-pathology eval companion exists (ATLAS v2.0 is chronic T1w — not matched).
 
 ---
