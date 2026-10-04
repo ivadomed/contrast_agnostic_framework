@@ -13,14 +13,12 @@ by tissue appearance (brain tumor, multiple sclerosis lesions, breast lesions).
 Each method trains on one modality and is evaluated in-domain and
 out-of-domain. An ablation isolates the effect of texture preservation.
 \textbf{Results.} PALETTE-Aug achieves the highest Dice on six of the eight
-tasks and significantly outperforms every competing method overall. In the
-ablation (six tasks), preserving texture raises out-of-domain Dice, pooled per
-task, by $15\%$ and $16\%$ relative to noise fill on two appearance-defined
-targets (brain tumor, multiple sclerosis lesions) and by at most $4\%$ on
-interface-bounded ones (healthy brain: $-3\%$). Breast lesions, also
+tasks and significantly outperforms every competing method across them. In a six-task ablation, replacing noise fill with real texture raises per-task
+out-of-domain Dice by a relative $15\%$ on brain tumor and $16\%$ on multiple
+sclerosis lesions, both appearance-defined, but by at most $4\%$ on
+interface-bounded tasks (healthy brain: $-3\%$). Breast lesions, also
 appearance-defined, show no Dice gain.
-\textbf{Conclusion.} Texture preservation helps most where the target is
-defined by tissue appearance rather than by an anatomical interface, though not
-on every such target, and PALETTE-Aug generalizes best
-overall across eight segmentation tasks.
+\textbf{Conclusion.} Texture preservation helps most on targets defined by tissue
+appearance rather than an anatomical interface, though not on all of them.
+PALETTE-Aug generalizes best overall across eight segmentation tasks.
 \end{abstract}

@@ -84,7 +84,7 @@ PANELS = [
         ("T2w", _j("on-harmony", "on_harmony_model", "T2w")),
         ("DWI", _j("on-harmony", "on_harmony_model", "dwi_ap")),
     ]),
-    ("ToothFairy2", "interface", [
+    ("Mandible", "interface", [
         ("CBCT", _j("toothfairy2", "toothfairy2_model", "cbct")),
     ]),
     ("BraTS-GLI", "no_interface", [
@@ -97,7 +97,7 @@ PANELS = [
         ("FLAIR", _j("open-ms", "open_ms_model", "flair")),
         ("T1w",   _j("open-ms", "open_ms_model", "t1w")),
     ]),
-    ("I-SPY2", "no_interface", [
+    ("Breast", "no_interface", [
         ("T1WCE", _j("ispy2", "ispy2_model", "t1wce")),
         ("T2w",   _j("ispy2", "ispy2_model", "t2w")),
     ]),

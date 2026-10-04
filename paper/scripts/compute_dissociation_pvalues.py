@@ -68,15 +68,15 @@ ROWS = [
     ("ON-Harmony T1w",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "T1w")),
     ("ON-Harmony T2w",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "T2w")),
     ("ON-Harmony DWI",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "dwi_ap")),
-    ("ToothFairy2 CBCT", r"tissue interface$^\ddagger$", _j("toothfairy2", "toothfairy2_model", "cbct")),
+    ("Mandible CBCT",    r"tissue interface$^\ddagger$", _j("toothfairy2", "toothfairy2_model", "cbct")),
     ("Open-MS FLAIR",    "no tissue interface",         _j("open-ms", "open_ms_model", "flair")),
     ("Open-MS T1w",      "no tissue interface",         _j("open-ms", "open_ms_model", "t1w")),
     ("BraTS-GLI T1n",    "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t1n")),
     ("BraTS-GLI T1c",    "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t1c")),
     ("BraTS-GLI T2w",    "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t2w")),
     ("BraTS-GLI FLAIR",  "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t2f")),
-    ("I-SPY2 T1WCE",     "no tissue interface",         _j("ispy2", "ispy2_model", "t1wce")),
-    ("I-SPY2 T2w",       "no tissue interface",         _j("ispy2", "ispy2_model", "t2w")),
+    ("Breast T1-CE",     "no tissue interface",         _j("ispy2", "ispy2_model", "t1wce")),
+    ("Breast T2w",       "no tissue interface",         _j("ispy2", "ispy2_model", "t2w")),
 ]
 
 # Supplementary: the one Duke arm held OUT of the pooled I-SPY2 rows above,

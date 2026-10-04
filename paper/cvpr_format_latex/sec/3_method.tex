@@ -9,35 +9,23 @@ isolate texture preservation as the source of its effect
 \subsection{The PALETTE-Aug transform}
 \label{subsec:m-transform}
 
-Let $x$ denote the intensity volume of a training scan, min-max normalized
-to $[0,1]$, and $F \subset \Omega$ its foreground voxels (an intensity
-threshold; $x_v > 0.01$ in our implementation). PALETTE-Aug applies four steps
-at every training iteration, illustrated end-to-end in
-\cref{fig:method-pipeline} on one real CHAOS (abdominal MRI) and one real
-ON-Harmony (brain MRI) volume. Panels (b)--(d) show each step's flat target
-values; only (e), the training input, shows the texture the transform
-produces.
+Let $x$ be a training volume min-max normalized to $[0,1]$, and $F$ its
+foreground voxels ($x_v > 0.01$). PALETTE-Aug applies four steps at every
+training iteration (\cref{fig:method-pipeline}).
 
 \paragraph{1. Intensity partition.} We run 1-D $k$-means on the foreground
 intensities $\{x_v : v \in F\}$ with $k$ sampled per iteration from
 $\{2,\dots,6\}$, producing $k$ intensity classes $C_1, \dots, C_k$
-(\cref{fig:method-pipeline}, panel (b)). This partition is unsupervised and
-requires no anatomical label map: it groups voxels by intensity alone, so
-the same operator applies unmodified to any input image regardless of its
-modality or contrast --- CT, T1, T2, FLAIR, or otherwise. This step is
-occasionally skipped in favor of a single global remap (step 3 below, with
-$C=1$); per-step probabilities are set once and never tuned per dataset,
-and are listed in \cref{sec:suppl-config}.
+(\cref{fig:method-pipeline}, panel (b)). This partition groups voxels by intensity alone, with no label map, so it
+applies unchanged to any modality or contrast. Occasionally it is skipped and
+step 3 applies one global remap to the whole foreground; all step
+probabilities are in \cref{sec:suppl-config}.
 
-\paragraph{2. Spatial sub-parcellation.} Each intensity class $C_i$ is
-further subdivided into spatial sub-regions by a Voronoi partition
-seeded with points sampled within $C_i$ (\cref{fig:method-pipeline}, panel (c)
-shows the combined effect of this step and the remap of step 3), giving
-sub-regions $R_{i,1}, \dots, R_{i,m_i}$ that are contiguous in space as
-well as similar in intensity. This second partition breaks the spatial
-correlation of a purely intensity-based grouping: two voxels with the same
-intensity in different parts of the anatomy can land in different
-sub-regions and receive independent contrast perturbations. Each class is
+\paragraph{2. Spatial sub-parcellation.} A Voronoi partition seeded with points sampled within each
+class $C_i$ splits it into sub-regions $R_{i,1}, \dots, R_{i,m_i}$ that are
+spatially localized and similar in intensity (\cref{fig:method-pipeline}c).
+Two voxels of equal intensity in different parts of the anatomy can thus fall
+in different sub-regions and receive independent contrast changes. Each class is
 usually, but not always, sub-split this way (\cref{sec:suppl-config}).
 
 \paragraph{3. Signed affine remap.} For each sub-region $R$, let $\bar{x}_R$
@@ -51,37 +39,23 @@ independently sampled sign). Every voxel $v \in R$ is remapped as
 Because \cref{eq:affine} is a per-region affine function of the
 \emph{real} intensity $x_v$, it preserves the relative structure of the
 signal within each region: edges, gradients, and partial-volume transitions
-between adjacent voxels are scaled, not replaced. Only the region-to-region
-contrast relationship is randomized, and $\alpha_R < 0$ additionally allows
-local contrast inversions that no acquisition protocol produces on its own,
-widening the space of contrasts the network sees beyond what any single
-real sequence could supply. Background voxels are zeroed at this step (and
-remain zero through the rest of the pipeline). The result is occasionally
-Gaussian-blurred, half the time (\cref{sec:suppl-config}).
+between adjacent voxels are scaled, not replaced. Only the contrast between regions is randomized; $\alpha_R < 0$ also inverts
+local contrast, which no acquisition protocol produces. Background voxels are zeroed at this step (and
+remain zero through the rest of the pipeline). Half the time, the result is then Gaussian-blurred
+(\cref{sec:suppl-config}).
 
-\paragraph{4. Anatomical-label affine remap (optional).} Steps 1--3 are
-unsupervised, so the $k$-means/Voronoi partition need not respect a true
-anatomical boundary: when two adjacent tissues share similar intensity,
-step 3 can by chance assign them the same target contrast and erase that
-boundary rather than randomizing it. This step corrects for that: for each
-real anatomical label $\ell$ present, we resample a fresh
-$(\mu_\ell, \alpha_\ell)$ and apply \cref{eq:affine} \emph{again}, restricted
-to $\ell$'s voxels, \textbf{on top of the step-3 output} rather than the
-original voxels (\cref{fig:method-pipeline}, panel (d)) -- so it composes
-with, rather than replaces, the unsupervised remap, and $\ell$'s voxels
-still inherit the internal structure steps 1--3 imposed on them. Because
-label assignment is independent of the unsupervised partition, this
-reintroduces a full-strength contrast discontinuity at the true label
-border regardless of whether step 3 preserved it, sharpening the boundary
-cue available to the network -- not the underlying anatomy. It consumes
-only the labels the segmentation task already requires, so it needs no
-additional annotation, and is optional: disabling it
-(\texttt{label\_remap\_prob}$=0$) degrades PALETTE-Aug gracefully to steps 1--3
-alone, e.g.\ on an unlabelled dataset. A final foreground z-score
-normalization follows an optional second blur pass, giving the training
-input shown in panel (e) of \cref{fig:method-pipeline}. Per-step
-probabilities are set once, never tuned per dataset, and listed in full in
-\cref{sec:suppl-config}.
+\paragraph{4. Anatomical-label affine remap (optional).} The unsupervised partition of steps 1--3 need not
+follow anatomy: two adjacent tissues of similar intensity can, by chance,
+receive the same target contrast, erasing their boundary. Step 4 corrects this:
+for each anatomical label $\ell$, we draw a fresh $(\mu_\ell, \alpha_\ell)$ and
+apply \cref{eq:affine} \emph{again} to $\ell$'s voxels of the step-3 output
+(\cref{fig:method-pipeline}d), so the label remap composes with the
+unsupervised one and keeps its internal structure. Since labels are independent of the unsupervised partition, the label remap
+restores a full-strength contrast step at every true label border, whether or
+not step 3 kept it; the anatomy itself is unchanged. It uses only the task's own labels and is optional:
+without it, PALETTE-Aug reduces to steps 1--3, e.g.\ on unlabeled data. An
+optional second blur and a foreground z-score normalization then give the
+training input (\cref{fig:method-pipeline}e).
 
 \begin{figure*}[t]
   \centering
@@ -107,13 +81,10 @@ probabilities are set once, never tuned per dataset, and listed in full in
   \caption{The PALETTE-Aug pipeline on one real CHAOS T2SPIR volume (top) and
   one real ON-Harmony T1w volume (bottom); every panel is a deterministic
   function of the same real volume (no external model), min--max normalized
-  to $[0,1]$ for display only. Panels (b)--(d) paint each region,
-  sub-region, or label with its precomputed target mean $\mu$ from
-  \cref{eq:affine}, isolating that flat value from the texture applied on
-  top of it; panel (e) is the actual training input, produced by applying
-  the full signed affine remap of \cref{eq:affine} with real texture (not a
-  flat fill) at both the region and, where available, anatomical-label
-  level.}
+  to $[0,1]$ for display only. Panels (b)--(d) paint each region, sub-region or label flat with its target
+mean $\mu$ (\cref{eq:affine}) to show the partition alone; panel (e), the
+actual training input, applies the full signed affine remap, keeping real
+texture, at region and, where available, label level.}
   \label{fig:method-pipeline}
 \end{figure*}
 
@@ -124,11 +95,10 @@ PALETTE-Aug is applied on-the-fly as one contrast-augmentation operator inside
 an existing GPU-accelerated nnU-Net augmentation
 pipeline~\cite{molinier2026auglab,isensee2021nnunet}, alongside that
 pipeline's standard spatial and artifact augmentations; it adds no learned
-parameters and no measurable training-time overhead. A single
-configuration -- the same $k$-range, sub-region count, blur schedule, and
-$\alpha$ range (\cref{sec:suppl-config}) -- is tuned once and
-reused unchanged across every dataset and modality in
-\cref{sec:experiments}; no dataset receives its own hyperparameter sweep.
+parameters and runs on the GPU inside that pipeline. One configuration
+($k$-range, sub-region count, blur schedule, $\alpha$ range;
+\cref{sec:suppl-config}) is set once and reused unchanged for every dataset
+and modality; no dataset gets its own hyperparameter sweep.
 
 \subsection{Causal ablation: isolating texture preservation}
 \label{subsec:m-ablation}
