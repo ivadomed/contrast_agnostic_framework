@@ -1,9 +1,17 @@
 # Rung-6 (PALETTE + boundary partial-volume) branch registry for ladder_ood_common.py.
-# key   = the END of a ladder's ablations_root (its output dir), relative to benchmark/02_tasks
+# key   = the END of a ladder's ablations_root (its output dir)
 # value = the rung-6 run key, resolved under every source the ladder pools, exactly like the
-#         ladder's own rung keys (e.g. "ablations/nnUNet_<RUN_ID>").
+#         ladder's own rung keys (the engine adds the nnUNet_/auglab_ category prefix).
 # A registered ladder is re-run with rungs [baseline .. rung 5, rung 6] into <ablations_root>_pv/.
 # ONLY register a ladder once rung-6 metrics exist in EVERY source it pools (own contrasts AND
 # any cross-dataset source), otherwise rungs 5 and 6 are averaged over different OOD pools.
 # Run table / RUN_IDs: scripts/cluster/tamia_rung6_pv_runs.sh.
-ladders: {}
+ladders:
+  # open-ms (own contrasts only)
+  open_ms_model/flair/ablations: ablations/open-ms_flair_v26_6_2_pv_train050_val000_20261003_111215
+  open_ms_model/t1w/ablations: ablations/open-ms_t1w_v26_6_2_pv_train050_val100_20261003_111215
+  # toothfairy2 CBCT (own cbct + hanseg CT/MR + pddca CT, all mandible-only, S-I-flipped externals)
+  8_results_toothfairy2/02_metrics/toothfairy2_model/cbct/ablations: ablations/toothfairy2_cbct_v26_6_2_pv_train050_val100_20261003_111216
+  # totalseg-pelvic (own ct + mri)
+  totalseg_pelvic_model/ct/ablations: ablations/totalseg-pelvic_ct_v26_6_2_pv_train050_val100_20261003_120315
+  totalseg_pelvic_model/mri/ablations: ablations/totalseg-pelvic_mri_v26_6_2_pv_train050_val100_20261003_120315
