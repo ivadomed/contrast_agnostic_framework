@@ -43,8 +43,9 @@ by expectation-maximization clustering of the image ($2$ sub-regions per
 foreground label, $3$--$10$ for the background, $20$ iterations), where the
 original work precomputes these maps~\cite[\S5.4]{billot2023synthseg}. Each
 sub-region then receives a randomly sampled intensity, as in SynthSeg. Both
-SynthSeg variants and SRCSM synthesize on every training iteration, their
-published setting, against $50\%$ for PALETTE-Aug. SRCSM is a training-time
+SynthSeg variants and SRCSM synthesize on every training iteration because
+their original papers train that way, so we keep that setting when running
+them; PALETTE-Aug synthesizes on $50\%$ of iterations. SRCSM is a training-time
 augmentation only: no test-time intensity matching is applied, and every
 method is predicted with the same nnU-Net predictor, without test-time
 augmentation. SRCSM and Auglab otherwise use their published default
