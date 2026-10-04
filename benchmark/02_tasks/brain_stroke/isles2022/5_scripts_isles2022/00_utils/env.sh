@@ -38,7 +38,10 @@ export RUN_JOB_TIME_DEFAULT="${RUN_JOB_TIME_DEFAULT:-48:00:00}"
 
 source "${DATASET_ROOT}/../../../00_commun_scripts/00_00_utils/common_env.sh"
 
-# Guarded (not unconditional) so env_flair.sh and cluster override files are not clobbered on re-source.
-export nnUNet_results="${nnUNet_results:-${DATASET_ROOT}/8_results_isles2022/01_predictions/isles2022_model/dwi/nnUNet}"
+# nnUNet_results is DERIVED here from PREDICTIONS_ROOT (guarded in common_env.sh, so a cluster override file wins) and TRAINING_CONTRAST,
+# every time this file is sourced. Never export it unconditionally elsewhere (env_flair.sh used to: a wrapper re-sourcing it silently sent
+# nnUNet-category checkpoints to the repo path instead of the TamIA scratch override -- the ambl bug) and never leave a stale value from
+# another contrast: it must always agree with PREDICTIONS_ROOT + MODEL_TYPE + TRAINING_CONTRAST.
+export nnUNet_results="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/nnUNet"
 export CHECKPOINTS_DIR="${CHECKPOINTS_DIR:-${DATASET_ROOT}/6_checkpoints_isles2022}"
 export RESULTS_DIR="${RESULTS_DIR:-${DATASET_ROOT}/8_results_isles2022}"

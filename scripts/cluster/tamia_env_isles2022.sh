@@ -8,8 +8,8 @@ ISLES2022_SCRATCH="$SCRATCH/isles2022"
 
 export nnUNet_raw="$ISLES2022_SCRATCH/2_nnUNet/raw"
 export nnUNet_preprocessed="$ISLES2022_SCRATCH/2_nnUNet/preprocessed"
-export nnUNet_results="$ISLES2022_SCRATCH/8_results/01_predictions/isles2022_model/${TRAINING_CONTRAST:-dwi}/nnUNet"
 export PREDICTIONS_ROOT="$ISLES2022_SCRATCH/8_results/01_predictions"
+export nnUNet_results="$PREDICTIONS_ROOT/isles2022_model/${TRAINING_CONTRAST:-dwi}/nnUNet"   # same derivation as env.sh
 export METRICS_ROOT="$ISLES2022_SCRATCH/8_results/02_metrics"
 export SPLITS_DIR="$ISLES2022_SCRATCH/4_splits"
 
