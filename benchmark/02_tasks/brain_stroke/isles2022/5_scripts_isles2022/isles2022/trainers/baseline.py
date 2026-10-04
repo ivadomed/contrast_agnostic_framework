@@ -7,7 +7,7 @@ standard nnUNet augmentation only. The real-data reference against which the
 domain-randomization methods (v26_6_2 + AugLab) and the SynthSeg-EM contender are
 compared. Two training modalities (like ambl/chaos/brats2024-glioma) — see
 00_utils/env.sh / env_flair.sh: each modality is its own nnU-Net Dataset
-(140=dwi, 141=flair), held-out test patients scored on dwi, adc AND flair for the
+(140=dwi, 141=flair), held-out test patients scored on dwi AND flair for the
 cross-contrast generalization axis.
 
 Inherits split validation from nnUNetTrainerISLES2022Base and seed/epochs/WandB hooks

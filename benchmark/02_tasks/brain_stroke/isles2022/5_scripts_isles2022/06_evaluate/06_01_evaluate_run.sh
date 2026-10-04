@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Evaluate ONE isles2022 prediction run: every fold x every test item (dwi/adc/flair), scoring the `lesion` label against
+# Evaluate ONE isles2022 prediction run: every fold x every test item (dwi/flair), scoring the `lesion` label against
 # labelsTs_<item>. Thin shim over the shared driver benchmark/00_commun_scripts/00_03_evaluate/evaluate_run_common.sh.
 #   bash 06_01_evaluate_run.sh <RUN_ID> <CATEGORY:nnUNet|auglab> [FOLD=all]
 # Which training contrast the run belongs to comes from the environment: TRAINING_CONTRAST=flair (default dwi), exactly as the
@@ -8,7 +8,7 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../00_utils/env.sh"
 
-EVAL_ITEMS="dwi adc flair"
+EVAL_ITEMS="dwi flair"
 EVAL_LABELS="lesion"
 EVAL_JOB_PREFIX="isles2022_eval"
 case "${TRAINING_CONTRAST}" in

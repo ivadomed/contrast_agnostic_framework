@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Predict the whole flair-trained isles2022 roster (6 headline methods + OURS val100 mirror + ladder rungs 2-5) on dwi/adc/flair, all folds.
+# Predict the whole flair-trained isles2022 roster (6 headline methods + OURS val100 mirror + ladder rungs 2-5) on dwi/flair, all folds.
 # RUN_IDs are resolved from the trained run dirs by the shared roster driver (no timestamps here); pins -> roster_run_ids.tsv.
 # Usage: bash 05_25_run_all_predict_flair.sh            ROSTER_SKIP_MISSING=1 ROSTER_ONLY="baseline srcsm" CHECKPOINT=checkpoint_final.pth ... (see run_all_predict_common.sh)
 source "$(dirname "$0")/../00_utils/env_flair.sh"

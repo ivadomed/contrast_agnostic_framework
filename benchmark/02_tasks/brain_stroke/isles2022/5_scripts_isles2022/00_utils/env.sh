@@ -3,11 +3,14 @@
 #   source "$(dirname "$0")/../00_utils/env.sh"   (from a step subdir)
 #
 # isles2022 = ISLES'22 training release (Zenodo 10.5281/zenodo.7153326): 250 acute/subacute
-# ischemic-stroke MRIs, 247 usable (3 empty masks). Two TRAINING contrasts, each its own
-# nnU-Net Dataset, each tested CROSS-CONTRAST on held-out patients' DWI / ADC / FLAIR:
+# ischemic-stroke MRIs, 246 usable (3 empty masks + 1 case whose FLAIR FOV cuts the lesion). Two TRAINING contrasts, each its own
+# nnU-Net Dataset, each tested CROSS-CONTRAST on held-out patients' DWI and FLAIR (each model is trained on one, tested on both):
 #   dwi   (Dataset140_ISLES2022_DWI)    -- b=1000 DWI (the contrast the labels were drawn on)
 #   flair (Dataset141_ISLES2022_FLAIR)  -- FLAIR resampled onto the DWI grid
-# ADC is derived from DWI (not an independent contrast) -> test-only, never a training contrast.
+# <<ref-only
+# ADC (also in the ISLES release, derived from DWI) is deliberately NOT used anywhere in this benchmark (Paul, 2026-10-04): DWI is the
+# contrast the labels were drawn on and ADC is nearly redundant with it. It stays in the BIDS tree only because that is a faithful copy.
+# ref-only>>
 # Standard results layout (same as ispy2/chaos/brats):
 #   8_results_isles2022/01_predictions/isles2022_model/<contrast>/<nnUNet|auglab>/<RUN_ID>/
 #   8_results_isles2022/02_metrics/isles2022_model/<contrast>/

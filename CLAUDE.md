@@ -548,11 +548,14 @@ covered). Source: Zenodo 10.5281/zenodo.7153326 (Sci Data 9:762). Paul approved 
 zip's LICENSE clause "no redistribution without written agreement of the ISLES'22 team" (badge says CC BY 4.0;
 same kind of restriction as LLD-MMRI) → **never upload to git-annex or show its images in public figures without
 that written agreement.** BIDS leaf `1_BIDS_isles2022/stroke-brain-isles2022` (name provisional).
-- **Contrasts:** train `dwi` (Dataset140) and `flair` (Dataset141); every test case scored on dwi / adc / flair
-  (ADC is derived from DWI, so test-only, never a training contrast; FLAIR is the one genuinely independent contrast).
+- **Contrasts:** train `dwi` (Dataset140) and `flair` (Dataset141); every test case scored on dwi and flair. **ADC (in the release, derived
+  from DWI) is deliberately NOT used anywhere** (Paul, 2026-10-04: DWI is the contrast the labels were drawn on, ADC nearly redundant); it stays
+  in the BIDS tree only as a faithful copy. All three contrasts of a subject live together in ONE BIDS tree; the two nnU-Net datasets are views of the
+  same subjects with identical case ids and one shared split (`02_nnunet/02_04_verify_heldout.sh` proves no test subject appears in any train/val
+  fold of either dataset, nor in preprocessing).
 - **Usable N = 246 of 250:** 3 empty masks (0150/0151/0170) + isles2022_0007 (FLAIR FOV holds only 53% of the
   lesion). FLAIR is on its OWN native grid in all 250 raw cases and is resampled onto the DWI grid by
-  `02_nnunet/02_01_convert.py`; DWI/ADC/mask share one LAS grid. Partition: 47 test (volume-stratified) + 199 pool,
+  `02_nnunet/02_01_convert.py`; DWI/mask share one LAS grid. Partition: 47 test (volume-stratified) + 199 pool,
   3 folds (`01_create_splits/01_01_create_splits.py`). Case ids `isles2022_<NNNN>` carry no contrast suffix.
 - **Built:** BIDS, nnU-Net raw + preprocessed (3d_fullres, patch 80x96x80 @2mm, batch 6), splits, trainer package
   `isles2022/trainers` + `02_nnunet/ISLES2022Trainers.py` shim (installed in Vulcan's venv; discovery verified),
@@ -562,8 +565,8 @@ that written agreement.** BIDS leaf `1_BIDS_isles2022/stroke-brain-isles2022` (n
   **sizing probe before the pack launch**, decide the epoch count (2000, Paul 2026-10-04). After training:
   `05_24/05_25_run_all_predict_<contrast>.sh` (TamIA: `05_26_tamia_pack_predict.sh <contrast>`) → `06_06_run_all_eval.sh` →
   `06_05_write_configs.sh` → `06_07_run_all_aggregation.sh` (all roster-driven, no timestamps; whole chain verified end-to-end on
-  synthetic metrics 2026-10-04, never on real predictions yet). Still missing: rung-6 PV wrappers, `meta_task_heatmap.yaml` entry,
-  open decision on whether ADC counts as an OOD contrast in the ladders (derived from DWI).
+  synthetic metrics 2026-10-04, never on real predictions yet). Still missing: `meta_task_heatmap.yaml` entry (rung-6 PV wrappers: Paul says no need).
+  Ladders: OOD = the other training contrast (dwi-trained -> flair, flair-trained -> dwi).
   No external same-pathology eval companion exists (ATLAS v2.0 is chronic T1w — not matched).
 
 ---

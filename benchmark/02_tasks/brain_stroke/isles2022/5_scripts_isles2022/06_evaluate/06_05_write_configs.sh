@@ -10,4 +10,4 @@ mkdir -p "${RESULTS_DIR}/_logs"
 run_job --name isles2022_write_configs --gpus 0 --cpus 1 --mem 4G --time 00:10:00 \
     --log "${RESULTS_DIR}/_logs/write_configs_$(date +%Y%m%d_%H%M%S).log" --wait -- \
     .venv/bin/python benchmark/00_commun_scripts/00_03_evaluate/write_configs_from_roster.py \
-    --dataset-root "${DATASET_ROOT}" --model-type "${MODEL_TYPE}" --contrasts dwi flair --items dwi adc flair "$@"
+    --dataset-root "${DATASET_ROOT}" --model-type "${MODEL_TYPE}" --contrasts dwi flair --items dwi flair "$@"
