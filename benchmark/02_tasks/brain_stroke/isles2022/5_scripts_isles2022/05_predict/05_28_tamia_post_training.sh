@@ -37,7 +37,7 @@ for C in dwi flair; do
           done
           printf '%s\t%s\t%s\n' "${W_METHOD}" "${W_CATEGORY}" "${rid}" >> "${pin}.new"
       done
-      [ "${bad}" = 0 ] && mv "${pin}.new" "${pin}" && echo "  [${C}] all runs complete; pinned $(wc -l < "${pin}") methods -> ${pin}"
+      if [ "${bad}" = 0 ]; then mv "${pin}.new" "${pin}"; echo "  [${C}] all runs complete; pinned $(wc -l < "${pin}") methods -> ${pin}"; else rm -f "${pin}.new"; fi
       exit "${bad}" ) 2>&1 | tee -a "${STATUS}"
     rc=${PIPESTATUS[0]}; missing=$((missing + rc))
 done
