@@ -559,7 +559,7 @@ that written agreement.** BIDS leaf `1_BIDS_isles2022/stroke-brain-isles2022` (n
   04_* wrappers (6 methods x 2 contrasts + ladder rungs 2-5; **no rung-6 PV wrappers yet**), `04_23_tamia_pack_all.sh`,
   `scripts/cluster/tamia_env_isles2022.sh`, orientation QC PNG in `9_tests_isles2022/`.
 - **Still to do:** push (Paul) → pull on TamIA, copy data to `$SCRATCH/isles2022`, install the shim in TamIA's venv,
-  **sizing probe before the pack launch**, decide the epoch count (1000 is a provisional ispy2 copy). After training:
+  **sizing probe before the pack launch**, decide the epoch count (2000, Paul 2026-10-04). After training:
   `05_24/05_25_run_all_predict_<contrast>.sh` (TamIA: `05_26_tamia_pack_predict.sh <contrast>`) → `06_06_run_all_eval.sh` →
   `06_05_write_configs.sh` → `06_07_run_all_aggregation.sh` (all roster-driven, no timestamps; whole chain verified end-to-end on
   synthetic metrics 2026-10-04, never on real predictions yet). Still missing: rung-6 PV wrappers, `meta_task_heatmap.yaml` entry,

@@ -5,7 +5,7 @@
 # ⚠️ Same naming trap as 04_19: METHOD is "v26_6_2_train050_val100" — NO
 # "auglabAug_" prefix. Always pass a RUN_ID matching METHOD exactly.
 #
-# 3 folds (0 1 2), 1 GPU/fold, 1000 epochs.
+# 3 folds (0 1 2), 1 GPU/fold, 2000 epochs.
 source "$(dirname "$0")/../00_utils/env_flair.sh"
 
 METHOD="v26_6_2_train050_val100"
@@ -14,7 +14,7 @@ DATASET_ID="${DATASET_ID_FLAIR}"
 DA_WORKERS=0
 LOG_DIR="${RESULTS_DIR}/_logs/nnunet_isles2022_flair_v26_6_2_train050_val100"
 export nnUNet_compile=0
-export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-1000}"
+export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 
 AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../../../sub-workspaces/auglab_workspace/AugLab/auglab/configs" && pwd)"
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_v26_6_2_synth_spatialDA_train050.json"

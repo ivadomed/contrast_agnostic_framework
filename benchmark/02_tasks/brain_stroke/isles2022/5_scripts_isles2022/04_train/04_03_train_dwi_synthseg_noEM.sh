@@ -2,7 +2,7 @@
 # Train SynthSeg-noEM (AugLab + SynthSeg WITHOUT EM background completion) on isles2022
 # DWI — the weaker SynthSeg variant in the standard 6-method suite. Same AugLab
 # trainer as auglab_default, AUGLAB_PARAMS_GPU_JSON -> the noEM config.
-# 3 folds, 1 GPU/fold, 1000 epochs.
+# 3 folds, 1 GPU/fold, 2000 epochs.
 #
 # Usage:
 #   bash 04_03_train_dwi_synthseg_noEM.sh                              # auto RUN_ID
@@ -15,7 +15,7 @@ DATASET_ID="${DATASET_ID_DWI}"
 DA_WORKERS=8
 LOG_DIR="${RESULTS_DIR}/_logs/nnunet_isles2022_dwi_synthseg_noEM"
 export nnUNet_compile=1
-export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-1000}"
+export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 
 AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../../../sub-workspaces/auglab_workspace/AugLab/auglab/configs" && pwd)"
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_default01-23_Synthseg.json"

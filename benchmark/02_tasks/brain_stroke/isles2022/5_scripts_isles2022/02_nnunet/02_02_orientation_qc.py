@@ -30,11 +30,14 @@ for r, cid in enumerate(pick):
             vols[k.upper()] = np.asanyarray(nib.load(str(RAW / f"imagesTs_{k}" / f"{cid}_0000.nii.gz")).dataobj)
     else:
         f = RAW.parent / "Dataset141_ISLES2022_FLAIR" / "imagesTr" / f"{cid}_0000.nii.gz"
-        vols["FLAIR"] = np.asanyarray(nib.load(str(f)).dataobj); vols["ADC"] = vols["DWI"] * 0
+        vols["FLAIR"] = np.asanyarray(nib.load(str(f)).dataobj)
+        sub = "sub-strokecase" + cid.split("_")[1]
+        adc = DS / "1_BIDS_isles2022" / "stroke-brain-isles2022" / "derivatives" / "adc" / sub / "ses-0001" / "dwi" / f"{sub}_ses-0001_desc-adc_dwi.nii.gz"
+        vols["ADC"] = np.asanyarray(nib.load(str(adc)).dataobj)
     c = np.round(np.argwhere(m).mean(0)).astype(int)
     for j, k in enumerate(("DWI", "ADC", "FLAIR")):
         v = vols[k]
         for i, (sl, ms, name) in enumerate(((v[:, :, c[2]], m[:, :, c[2]], "axial"), (v[:, c[1], :], m[:, c[1], :], "sag/cor"))):
-            a = ax[r * 2 + i, j]; a.imshow(np.rot90(sl), cmap="gray"); a.contour(np.rot90(ms), [0.5], colors="r", linewidths=0.6)
+            a = ax[r * 2 + i, j]; nz = v[v != 0]; lo, hi = (np.percentile(nz, 1), np.percentile(nz, 99.5)) if nz.size else (0, 1); a.imshow(np.rot90(sl), cmap="gray", vmin=lo, vmax=hi); a.contour(np.rot90(ms), [0.5], colors="r", linewidths=0.6)
             a.set_title(f"{cid} {k} {name}", fontsize=7); a.axis("off")
 fig.tight_layout(); out = DS / "9_tests_isles2022" / "orientation_qc.png"; fig.savefig(out, dpi=70); print("wrote", out, pick)

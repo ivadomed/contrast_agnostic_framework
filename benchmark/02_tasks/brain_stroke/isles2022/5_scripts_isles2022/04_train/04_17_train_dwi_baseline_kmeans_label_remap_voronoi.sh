@@ -2,7 +2,7 @@
 # BASELINE-ANCHORED CAUSAL LADDER (isles2022 DWI), rung 4 -- + Voronoi
 # sub-parcellation with NOISE fill on top of rung 3. This is the "noise-fill"
 # half of the key rung 4->5 one-variable test (texture-preservation causal claim)
-# — see 04_19 for rung 5 (real-fill). 3 folds (0 1 2), 1 GPU/fold, 1000 epochs.
+# — see 04_19 for rung 5 (real-fill). 3 folds (0 1 2), 1 GPU/fold, 2000 epochs.
 #
 # Usage: bash 04_18_train_dwi_baseline_kmeans_label_remap_voronoi.sh [RUN_ID]
 source "$(dirname "$0")/../00_utils/env.sh"
@@ -13,7 +13,7 @@ DATASET_ID="${DATASET_ID_DWI}"
 DA_WORKERS=8
 LOG_DIR="${RESULTS_DIR}/_logs/nnunet_isles2022_dwi_baseline_kmeans_label_remap_voronoi"
 export nnUNet_compile=1
-export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-1000}"
+export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 
 AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../../../sub-workspaces/auglab_workspace/AugLab/auglab/configs" && pwd)"
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_baseline_kmeans_label_remap_voronoi_spatialDA_train050.json"

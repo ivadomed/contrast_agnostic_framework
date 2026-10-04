@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Train OURS (auglabAug_v26_6_2, train050, DualVal trainer) on isles2022 DWI — ONE
 # training run producing BOTH val000 and val100 checkpoint mirrors (see
-# isles2022/trainers/auglab_dualval.py). 3 folds, 1 GPU/fold, 1000 epochs.
+# isles2022/trainers/auglab_dualval.py). 3 folds, 1 GPU/fold, 2000 epochs.
 #
 # ⚠️ RUN_ID passed to this script MUST contain "_val000_" exactly once — the
 # DualVal trainer's on_train_end() materializes the "_val100_" sibling directory
@@ -18,7 +18,7 @@ DATASET_ID="${DATASET_ID_DWI}"
 DA_WORKERS=0
 LOG_DIR="${RESULTS_DIR}/_logs/nnunet_isles2022_dwi_auglabAug_v26_6_2_train050_dualval"
 export nnUNet_compile=0
-export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-1000}"
+export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 
 AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../../../sub-workspaces/auglab_workspace/AugLab/auglab/configs" && pwd)"
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_default01-23_auglabAug_ImageContrastV26_6_2GPUTransform_train050.json"

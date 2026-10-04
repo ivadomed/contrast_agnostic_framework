@@ -5,7 +5,7 @@
 # epoch time for the heaviest (OURS DualVal) and slowest (srcsm?) methods, N folds sharing one GPU, on a real
 # H100 node with a throwaway results base -- this dataset's volumes are small (~112x112x73), so more folds per
 # GPU than ispy2 is likely, and PACK_GPU_MAP may be needed if srcsm is slower here (measure, don't assume 3x).
-# Also decide the epoch count (04_00_common.sh: 1000, provisional).
+# Also decide the epoch count (04_00_common.sh: 2000, set by Paul 2026-10-04; re-time via the probe).
 # REQUIRES (on TamIA): source .../00_utils/env.sh and scripts/cluster/tamia_env_isles2022.sh first, in THIS shell,
 # and RUN_JOB_CPUS_PER_GPU=12 RUN_JOB_MEM_PER_GPU=115G (GiB, not MB).
 #   bash 04_23_tamia_pack_all.sh      PACK_DIR=<existing> bash 04_23_...   # resume/extend

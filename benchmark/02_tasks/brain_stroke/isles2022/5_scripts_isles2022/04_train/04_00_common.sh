@@ -9,9 +9,8 @@ cd "${PROJECT_ROOT}"
 
 DATASET_ID_DEFAULT="${DATASET_ID_DWI}"   # real wrappers always pass DATASET_ID explicitly
 
-# EPOCH POLICY: 1000 (provisional, matches ispy2). Cohort is small (~132 train cases/fold, 3D volumes
-# ~112x112x73) so overfitting is the risk, not under-training. NOT yet confirmed by Paul and NOT timed:
-# re-decide after a TamIA sizing probe (per-epoch cost + VRAM, N folds sharing one GPU).
-NNUNET_NUM_EPOCHS_DEFAULT="1000"
+# EPOCH POLICY: 2000 (Paul, 2026-10-04: "probably best for brain pathology", same as on-harmony/open-ms). Small cohort (~132 train cases/fold,
+# 3D volumes ~112x112x73): re-time on a TamIA sizing probe before trusting RUN_JOB_TIME_DEFAULT / pack chain length.
+NNUNET_NUM_EPOCHS_DEFAULT="2000"
 
 source "${PROJECT_ROOT}/benchmark/00_commun_scripts/00_01_train/train_common.sh" "$@"

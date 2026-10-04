@@ -2,7 +2,7 @@
 # Train SynthSeg-EM (AugLab + SynthSeg-EM GPU augmentation) on isles2022 DWI — the
 # MAIN CONTENDER. AugLab trainer (nnUNetTrainerISLES2022AugLabDefault) with
 # AUGLAB_PARAMS_GPU_JSON pointing at the shared SynthSeg-EM config (label-driven GMM
-# synthesis with EM background completion). 3 folds, 1 GPU/fold, 1000 epochs.
+# synthesis with EM background completion). 3 folds, 1 GPU/fold, 2000 epochs.
 #
 # Usage:
 #   bash 04_04_train_dwi_synthseg_EM.sh                                  # auto RUN_ID
@@ -15,7 +15,7 @@ DATASET_ID="${DATASET_ID_DWI}"
 DA_WORKERS=8
 LOG_DIR="${RESULTS_DIR}/_logs/nnunet_isles2022_dwi_synthseg_EM"
 export nnUNet_compile=1
-export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-1000}"
+export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 
 AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../../../sub-workspaces/auglab_workspace/AugLab/auglab/configs" && pwd)"
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_default01-23_Synthseg_EM.json"

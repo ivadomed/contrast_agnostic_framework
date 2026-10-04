@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Train srcsm (SRCSM SemRandConv-3D, Thaler et al. 2025) on isles2022 DWI — an added
 # comparison arm (AugLab-category, reuses the auglab_default trainer).
-# 3 folds (0 1 2), 1 GPU/fold, 1000 epochs.
+# 3 folds (0 1 2), 1 GPU/fold, 2000 epochs.
 #
 # NOTE: measure the srcsm-vs-others per-epoch cost ratio on THIS dataset before
 # assuming ambl's figure transfers (CLAUDE.md TamIA section: brats/on-harmony saw
@@ -19,7 +19,7 @@ DATASET_ID="${DATASET_ID_DWI}"
 DA_WORKERS=8
 LOG_DIR="${RESULTS_DIR}/_logs/nnunet_isles2022_dwi_srcsm"
 export nnUNet_compile=1
-export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-1000}"
+export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 
 AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../../../sub-workspaces/auglab_workspace/AugLab/auglab/configs" && pwd)"
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_srcsm_semrandconv.json"

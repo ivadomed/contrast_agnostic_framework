@@ -16,7 +16,7 @@
 # rung 6/7's DualVal run selects as ITS val100 checkpoint, so this standalone rung
 # is selection-equivalent to that mirror rather than an approximation of it.
 #
-# 3 folds (0 1 2), 1 GPU/fold, 1000 epochs.
+# 3 folds (0 1 2), 1 GPU/fold, 2000 epochs.
 #
 # Usage: bash 04_19_train_dwi_v26_6_2_train050_val100.sh [RUN_ID]
 source "$(dirname "$0")/../00_utils/env.sh"
@@ -27,7 +27,7 @@ DATASET_ID="${DATASET_ID_DWI}"
 DA_WORKERS=0
 LOG_DIR="${RESULTS_DIR}/_logs/nnunet_isles2022_dwi_v26_6_2_train050_val100"
 export nnUNet_compile=0
-export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-1000}"
+export NNUNET_NUM_EPOCHS="${NNUNET_NUM_EPOCHS:-2000}"
 
 AUGLAB_CONFIGS_DIR="$(cd "$(dirname "$0")/../../../../../../sub-workspaces/auglab_workspace/AugLab/auglab/configs" && pwd)"
 export AUGLAB_PARAMS_GPU_JSON="${AUGLAB_CONFIGS_DIR}/transform_params_gpu_v26_6_2_synth_spatialDA_train050.json"
