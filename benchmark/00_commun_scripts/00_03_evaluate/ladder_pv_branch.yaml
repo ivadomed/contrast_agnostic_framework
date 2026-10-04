@@ -1,0 +1,9 @@
+# Rung-6 (PALETTE + boundary partial-volume) branch registry for ladder_ood_common.py.
+# key   = the END of a ladder's ablations_root (its output dir), relative to benchmark/02_tasks
+# value = the rung-6 run key, resolved under every source the ladder pools, exactly like the
+#         ladder's own rung keys (e.g. "ablations/nnUNet_<RUN_ID>").
+# A registered ladder is re-run with rungs [baseline .. rung 5, rung 6] into <ablations_root>_pv/.
+# ONLY register a ladder once rung-6 metrics exist in EVERY source it pools (own contrasts AND
+# any cross-dataset source), otherwise rungs 5 and 6 are averaged over different OOD pools.
+# Run table / RUN_IDs: scripts/cluster/tamia_rung6_pv_runs.sh.
+ladders: {}

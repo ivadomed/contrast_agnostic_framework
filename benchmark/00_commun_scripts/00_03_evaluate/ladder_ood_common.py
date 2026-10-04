@@ -35,6 +35,7 @@ no new evaluation, just a focused, code-shared presentation.
 from __future__ import annotations
 
 import csv
+import functools
 import json
 import re
 import sys
@@ -141,6 +142,62 @@ def _find_fill_swap_idx(rungs):
         if FILL_SWAP_LABEL_HINT in label.lower():
             return i if i > 0 else None
     return None
+
+
+# ── Rung-6 "boundary PV" branch (opt-in per ladder via ladder_pv_branch.yaml) ─────────────────
+# PALETTE + boundary partial-volume (rung 6) is a BRANCH off rung 5, not a step on the main line:
+# the +AugLab rungs don't contain PV, so inserting it before them would turn the +AugLab step
+# into a two-variable comparison (and _rung_step_significance tests every adjacent step). A
+# registered ladder is therefore re-run once more with rungs = [..., rung 5, rung 6] into a
+# sibling `<ablations_root>_pv/` dir; the main ladder's outputs are untouched. Register a ladder
+# only once rung-6 metrics exist in EVERY source it pools, or rungs 5 and 6 would be averaged
+# over different OOD pools.
+PV_BRANCH_REGISTRY = Path(__file__).with_name("ladder_pv_branch.yaml")
+PV_BRANCH_LABEL = "+ boundary PV (rung 6)"
+PV_BRANCH_INGREDIENT = ("PALETTE alone + boundary partial-volume simulation (K-means thresholds "
+                        "softened in intensity space; Voronoi cuts + label-remap edges in a spatial band)")
+_LADDER_DEPTH = 0
+
+
+def _pv_branch_key(ablations_root):
+    """Rung-6 run key registered for this ladder (matched on the END of its output dir), or None."""
+    if ablations_root is None or not PV_BRANCH_REGISTRY.exists():
+        return None
+    import yaml
+    reg = (yaml.safe_load(PV_BRANCH_REGISTRY.read_text()) or {}).get("ladders") or {}
+    s = str(Path(ablations_root)).rstrip("/")
+    hits = [v for k, v in reg.items() if s.endswith(str(k).rstrip("/"))]
+    if len(hits) > 1:
+        raise ValueError(f"ladder_pv_branch.yaml: {len(hits)} entries match {s}")
+    return hits[0] if hits else None
+
+
+def _with_pv_branch(fn):
+    @functools.wraps(fn)
+    def wrapper(**kw):
+        global _LADDER_DEPTH
+        _LADDER_DEPTH += 1
+        try:
+            dump = fn(**kw)
+        finally:
+            _LADDER_DEPTH -= 1
+        key = _pv_branch_key(kw.get("ablations_root")) if _LADDER_DEPTH == 0 else None
+        if key:
+            rungs = list(kw["rungs"])
+            fi = _find_fill_swap_idx(rungs)
+            if fi is None:
+                raise ValueError("PV branch: ladder has no real-fill rung to branch from")
+            out = Path(kw["ablations_root"]).with_name(Path(kw["ablations_root"]).name + "_pv")
+            out.mkdir(parents=True, exist_ok=True)
+            print(f"[pv-branch] {fn.__name__}: rungs 0..{fi} + rung 6 ({key}) -> {out}")
+            _LADDER_DEPTH += 1
+            try:
+                fn(**{**kw, "rungs": rungs[:fi + 1] + [(PV_BRANCH_LABEL, PV_BRANCH_INGREDIENT, key)],
+                      "ablations_root": out})
+            finally:
+                _LADDER_DEPTH -= 1
+        return dump
+    return wrapper
 
 
 def _paired_cases(cases_prev: dict, cases_cur: dict, ns: str = ""):
@@ -376,6 +433,7 @@ def _per_contrast_table_md(rungs, contrast_labels, per_contrast) -> list[str]:
     return lines
 
 
+@_with_pv_branch
 def run_ladder(*, task_name, contrast_label, metrics_root, ablations_root,
               in_domain, ood_contrasts, rungs, combined_png=True, extra_ood_sources=None,
               ood_groups=None):
@@ -697,6 +755,7 @@ def _per_contrast_rung_means_cross_dataset(ood_sources, run_key, metric, contras
     return {c: per_source.get(c, float("nan")) for c in contrast_labels}
 
 
+@_with_pv_branch
 def run_ladder_cross_dataset(*, task_name, contrast_label, ood_sources, ablations_root,
                               rungs, in_domain_source=None, combined_png=True,
                               contrast_groups=None, prefixed_sources=None, in_domain_group=None,
@@ -986,6 +1045,7 @@ def _labelled_case_values(metrics_root, ood_contrasts, extra_ood_sources, run_ke
     return out
 
 
+@_with_pv_branch
 def run_ladder_grouped(*, task_name, contrast_label, metrics_root, ablations_root,
                        ood_contrasts, rungs, extra_ood_sources, ood_groups):
     """GROUPED-mode ladder (see run_ladder's ood_groups). Per rung and metric:

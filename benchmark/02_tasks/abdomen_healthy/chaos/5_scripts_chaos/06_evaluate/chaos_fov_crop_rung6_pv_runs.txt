@@ -1,0 +1,10 @@
+# Ladder RUNG 6 (PALETTE + boundary partial-volume) for the CROSS-DATASET crop-before-predict evaluation
+# (amos + sliver07). Roster for fov_crop_predict_evaluate.sh (RUNS_FILE), run through 06_36:
+#   RUNS_FILE=<this file> sbatch ... 06_36_fov_crop_ladder_rungs.sh predict|eval
+# Format: contrast|category|run_id|trainer|metrics_subdir
+# Both rows -> ablations/, matching where the rung-6 runs' OWN chaos metrics are written
+# (scripts/cluster/tamia_rung6_pv_eval_job.sh, METRICS_SUBDIR=ablations), so the PV-branch key
+# "ablations/nnUNet_<run>" resolves identically in all three ladder sources.
+# Trainers = the rung-5 runs' (t1in: DualVal, read as its val000 mirror; t2spir: CHAOSV26_6_2_p50).
+t1in|nnUNet|chaos_t1in_v26_6_2_pv_train050_val000_20261003_111217|nnUNetTrainerCHAOSAugLabDualVal|ablations
+t2spir|nnUNet|chaos_t2spir_v26_6_2_pv_train050_val100_20261003_111218|nnUNetTrainerCHAOSV26_6_2_p50|ablations

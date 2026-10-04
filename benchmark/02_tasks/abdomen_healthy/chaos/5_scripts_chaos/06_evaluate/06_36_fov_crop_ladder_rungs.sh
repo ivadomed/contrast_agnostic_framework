@@ -24,7 +24,8 @@ MODE="${1:?usage: $0 predict|eval}"
 DRIVER_ROOT="${DRIVER_ROOT:-/project/aip-jcohen/paulh/mri_synthesis_project}"
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
 DRIVER="${DRIVER_ROOT}/benchmark/00_commun_scripts/00_02_predict/fov_crop_predict_evaluate.sh"
-export RUNS_FILE="${DRIVER_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/chaos_fov_crop_ladder_runs.txt"
+# RUNS_FILE overridable (e.g. chaos_fov_crop_rung6_pv_runs.txt for the rung-6 PV branch); default = the ladder-rung roster
+export RUNS_FILE="${RUNS_FILE:-${DRIVER_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/chaos_fov_crop_ladder_runs.txt}"
 export CONTRASTS="t1in t2spir" SKIP_REPORT=1
 case "${MODE}" in
   predict) export PHASES="2";;
