@@ -47,3 +47,18 @@ roster_pin() {
     awk -F'\t' -v m="$1" -v c="$2" '!($1==m && $2==c)' "$pin" > "${pin}.tmp" && mv "${pin}.tmp" "$pin"
     printf '%s\t%s\t%s\n' "$1" "$2" "$3" >> "$pin"
 }
+
+# ── Cross-dataset (EVAL-ONLY COMPANION) helpers ─────────────────────────────────────────────────────────────────────
+# A companion dataset predicts with ANOTHER task's trained models. Its env.sh exports the source block <PREFIX>_{DATASET_ROOT,PREDICTIONS_ROOT,
+# NNUNET_RAW,NNUNET_PREPROCESSED,DATASET_ID,MODEL_TYPE,TRAINING_CONTRAST,DATASET_JSON} (see predict_common.sh cross mode). The roster is the SOURCE's
+# pin file; the trainer class and dataset id are read from the SOURCE RUN DIR itself, so no per-method wrapper and no trainer-name mapping is needed.
+roster_src() { local n="${1}_${2}"; echo "${!n}"; }                  # roster_src ISPY2 PREDICTIONS_ROOT
+roster_src_pin_file() { echo "$(roster_src "$1" PREDICTIONS_ROOT)/$(roster_src "$1" MODEL_TYPE)/$2/roster_run_ids.tsv"; }   # <PREFIX> <training contrast>
+roster_src_run_dir() { echo "$(roster_src "$1" PREDICTIONS_ROOT)/$(roster_src "$1" MODEL_TYPE)/$2/$3/$4"; }                   # <PREFIX> <contrast> <category> <run id>
+# roster_run_trainer_id <run dir> -> sets RUN_TRAINER (e.g. nnUNetTrainerISPY2Baseline) and RUN_DATASET_ID (e.g. 100); returns 1 if no trained model there
+roster_run_trainer_id() {
+    local td; td="$(ls -d "$1"/Dataset*/*__nnUNetPlans__3d_fullres 2>/dev/null | head -1)"
+    [ -n "$td" ] || return 1
+    RUN_TRAINER="$(basename "$td" | sed 's/__nnUNetPlans__3d_fullres$//')"
+    RUN_DATASET_ID="$(basename "$(dirname "$td")" | sed -E 's/^Dataset0*([0-9]+)_.*/\1/')"
+}

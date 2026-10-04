@@ -31,3 +31,20 @@ def run(*, dataset_root, model_type, contrast, ood_contrasts, task_name, **extra
     return run_ladder(task_name=task_name, contrast_label=contrast, metrics_root=metrics_root,
                       ablations_root=metrics_root / "ablations", in_domain=contrast,
                       ood_contrasts=list(ood_contrasts), rungs=rungs, **extra)
+
+
+def run_companion(*, companion_root, source_root, model_type, contrast, item, task_name, **extra):
+    """Ladder for an EVAL-ONLY COMPANION item scored with the SOURCE task's `contrast`-trained models (companion metrics layout:
+    <metrics>/<model_type>/<contrast>/[ablations/]<item>/<category>_<RUN_ID>). Rungs come from the SOURCE roster pins. The item doubles as its own (single) OOD entry.
+    NOTE: an item in the SAME contrast as the source's training contrast is cross-DATASET evidence only: report it as supplementary, never pool it into an OOD bucket."""
+    croot = Path(companion_root).resolve(); cname = croot.name; sroot = Path(source_root).resolve()
+    pins = read_pins(pin_path(sroot, sroot.name, model_type, contrast))
+    rungs = []
+    for label, ingredient, method, in_ablations in LADDER:
+        if method not in pins:
+            raise SystemExit(f"companion ladder: source has no pinned run for {method}")
+        rid = pins[method][1]
+        rungs.append((label, ingredient, f"ablations/{item}/{rid}" if in_ablations else f"{item}/{rid}"))
+    metrics_root = croot / f"8_results_{cname}" / "02_metrics" / model_type / contrast
+    return run_ladder(task_name=task_name, contrast_label=item, metrics_root=metrics_root, ablations_root=metrics_root / "ablations" / item,
+                      in_domain=item, ood_contrasts=[item], rungs=rungs, **extra)

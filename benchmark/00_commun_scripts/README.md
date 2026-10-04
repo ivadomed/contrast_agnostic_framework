@@ -20,12 +20,16 @@ This is **not** a dataset — it is skipped by the validator (see `IGNORED_ENTRI
     nnunet_convert_lib.py  # gzip_copy(), run_threaded_conversion(), write_dataset_json()
     eval_metrics.py        # dice_score(), hd95(), run_evaluation()  (label-triple based)
     eval_aggregate.py      # load_run(), cross_fold_stats(), report + heatmap builders
-    roster_lib.sh          # (bash) find a method's trained RUN_ID: pin file, else newest run dir; no timestamps anywhere
+    roster_lib.sh          # (bash) find a method's trained RUN_ID: pin file, else newest run dir; no timestamps anywhere; cross-dataset helpers
+    verify_heldout.py      # prove a training task's test set is completely held out (all contrast datasets)
+    fov_audit.py           # test-vs-training FOV/spacing audit (decides whether a companion needs a crop)
+    bootstrap_source_pins.py  # create a source task's roster pins from its existing run dirs/headline config (pre-roster sources)
   00_01_train/
     train_common.sh        # per-fold nnU-Net training driver (resume, GPU pinning, run_job)
   00_02_predict/
     predict_common.sh      # nnU-Net prediction driver (own-model AND cross-dataset modes)
     run_all_predict_common.sh  # predict a whole ROSTER of wrappers (RUN_IDs from roster_lib.sh; optional TamIA pack submit)
+    run_all_predict_cross_common.sh  # companions: predict the SOURCE's pinned roster (trainer + dataset id read from the source run dirs)
   00_03_evaluate/
     evaluate.py            # method-agnostic Dice/HD95 evaluator (CLI)
     summarize_fold.py      # merge per-group CSVs → eval_all.csv + eval_summary.md
@@ -34,6 +38,9 @@ This is **not** a dataset — it is skipped by the validator (see `IGNORED_ENTRI
     roster_runs.py         # roster pin-file reader + canonical 7-method / 7-rung definitions
     write_configs_from_roster.py # GENERATE aggregate / significance / combined YAML configs from the roster (no timestamps)
     ladder_from_roster.py  # causal-ablation ladder built from the roster (wraps ladder_ood_common.run_ladder)
+    evaluate_companion_run_common.sh / run_all_evaluate_cross_common.sh   # EVAL-ONLY COMPANIONS: per-item layout, roster = the SOURCE task's pins
+    write_companion_configs_from_roster.py   # companion aggregate + combined configs from the source pins; ladder_from_roster.run_companion for ladders
+    selftest_roster_pipeline.py / selftest_companion_pipeline.py   # synthetic end-to-end self-tests (training task / eval-only companion)
     aggregate_results.py   # cross-fold/-experiment report + heatmaps
 ```
 

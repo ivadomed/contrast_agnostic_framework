@@ -19,6 +19,33 @@ If a named session ever seems to have vanished, check `tmux -L <name> ls` (each 
 
 **Separately: session transcripts themselves also expire** — Claude Code stores them under `~/.claude/projects/` and deletes anything older than `cleanupPeriodDays` (default 30 days), independent of the tmux/systemd issue above; past that, `claude --resume` fails with "No conversation found." This project's `.claude/settings.json` sets `"cleanupPeriodDays": 36500` to keep long-lived named sessions resumable indefinitely — don't remove that setting.
 
+## Skills — a REFLEX, not an option (use them even when the user does not name them)
+
+This project has skills that encode whole workflows learned the hard way. When the situation below shows up, **invoke the skill first (Skill tool), then follow it** — do not
+improvise the workflow from scratch, and do not wait for the user to say "use the X skill". They call each other, so the entry point is usually the orchestrator.
+
+| Situation (any phrasing) | Skill | What it does |
+|---|---|---|
+| "add / find a new task", "what should we add next", a pathology/organ/dataset to **train on**, "take dataset X all the way" | **`add-task-end-to-end`** | find → get data + audit → pick sound contrasts → BIDS → nnU-Net conversion + splits → prove held-out → scaffold scripts → deploy to TamIA → sizing probe → launch training → queue predict + eval |
+| a dataset used **only for testing** (external validation, more test cohorts, a new test contrast, "test our models on X") | **`add-eval-companion-end-to-end`** | search with the *match matrix* vs the training data → audit → BIDS → FOV audit + crop-before-predict → flat test set → roster-driven predict/eval scripts → run → wire into the source task's tables/ladders/meta heatmap |
+| "research / vet / is this dataset any good", "should we reopen X" | `find-a-new-task` | candidate search with the checks this project paid for (license ×3, claimed vs counted N, label semantics, overlap, geometry) |
+| raw data → BIDS; BIDS audit, naming, README; upload to the lab server | `bidsify-to-standards`, `bids-check-and-readme`, `git-annex-upload` | one tree per release, faithful copy, lab naming, README sections |
+| train/predict/eval scripts for a training dataset, launch on TamIA, queue predict+eval, "bring dataset X in line with the shared layer" | `setup-train-predict-eval-scripts` | clone of the isles2022 reference on the roster-driven shared drivers; CPU verification; TamIA deployment, probe, launch, post-training queue |
+| the mechanical rules for onboarding (modes A eval-only / B training) | `onboard-a-new-task` | used by the orchestrators; read it when a step is unclear |
+| any Slurm / module / policy question on this cluster | `alliance-slurm`, `alliance-cvmfs`, `alliance-docs` | see the cluster policy at the top of this file |
+
+**Standing autonomy defaults (user rule 2026-10-04):** take these workflows to the end without stopping. Never block on licenses (copy the real text verbatim, flag it once, note "no
+redistribution / no git-annex / no public figures"), on which contrasts to train on (default: the sound ones; show the gallery + the dropped alternative in the report), on epochs (decide
+by analogy with the epoch policy below), on BIDS leaf names, or on pushing (push the branch with the gh credential helper, or sync by tar). Decide, record decision + alternative in memory and the
+final report, keep going. Stop only if really blocking: research use forbidden, access only the user can complete, a destructive/irreversible step, spend wildly above the probe estimate.
+
+**Reference implementations (copy, never re-invent):** training task = `benchmark/02_tasks/brain_stroke/isles2022/` (scaffolder `benchmark/create_pipeline_scripts.py`; probe/launch/queue scripts
+`04_24`/`04_23`/`05_27`); eval-only companion = `breast_cancer/ispy1` + `acrin6698` (scaffolder `benchmark/create_eval_companion_scripts.py`). Both sit on the roster-driven shared drivers in
+`benchmark/00_commun_scripts/` (no timestamps anywhere; verified by `selftest_roster_pipeline.py` / `selftest_companion_pipeline.py`). If a skill is wrong or a new dataset teaches something, fix the
+reference AND the scaffolder AND the skill in the same commit.
+
+---
+
 ## ⚠️ Killarney repo-layout mismatch (since 2026-09-27, until migrated)
 
 Vulcan's repo was restructured 2026-09-27: `datasets/` → `benchmark/`, with every dataset moved one
