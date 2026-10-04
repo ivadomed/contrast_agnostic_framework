@@ -185,6 +185,7 @@ convention. Current roster:
 | `brain_tumor` | brats2024-glioma |
 | `brain_ms` | open-ms |
 | `brain_healthy` | on-harmony |
+| `brain_stroke` | isles2022 (trains; ISLES'22 acute/subacute ischemic stroke — onboarding in progress, see section below) |
 | `mandible_healthy` | toothfairy2, hanseg, pddca |
 | `abdomen_healthy` | chaos, amos, sliver07 |
 | `pelvis_healthy` | totalseg-pelvic |
@@ -531,6 +532,30 @@ table, dataset roster, causal-ablation dissociation table + its now-retracted `+
 row, val000-vs-val100 table, and every paragraph of Liver-HCC-specific prose — all removed or
 renumbered for 4 tasks); PDF rebuilt clean (17 pages, was 18). `scripts/cluster/tamia_env_*` for
 the 4 archived datasets were left in place (harmless, orphaned).
+
+---
+
+## Stroke task: ISLES 2022 (`brain_stroke/isles2022`) — onboarded to preprocessed, NOT yet trained (2026-10-04)
+
+Chosen by a `find-a-new-task` pass for "pathology, intra-tissue (texture-defined)" (brain MS + glioma already
+covered). Source: Zenodo 10.5281/zenodo.7153326 (Sci Data 9:762). Paul approved use 2026-10-04 **despite** the
+zip's LICENSE clause "no redistribution without written agreement of the ISLES'22 team" (badge says CC BY 4.0;
+same kind of restriction as LLD-MMRI) → **never upload to git-annex or show its images in public figures without
+that written agreement.** BIDS leaf `1_BIDS_isles2022/stroke-brain-isles2022` (name provisional).
+- **Contrasts:** train `dwi` (Dataset140) and `flair` (Dataset141); every test case scored on dwi / adc / flair
+  (ADC is derived from DWI, so test-only, never a training contrast; FLAIR is the one genuinely independent contrast).
+- **Usable N = 246 of 250:** 3 empty masks (0150/0151/0170) + isles2022_0007 (FLAIR FOV holds only 53% of the
+  lesion). FLAIR is on its OWN native grid in all 250 raw cases and is resampled onto the DWI grid by
+  `02_nnunet/02_01_convert.py`; DWI/ADC/mask share one LAS grid. Partition: 47 test (volume-stratified) + 199 pool,
+  3 folds (`01_create_splits/01_01_create_splits.py`). Case ids `isles2022_<NNNN>` carry no contrast suffix.
+- **Built:** BIDS, nnU-Net raw + preprocessed (3d_fullres, patch 80x96x80 @2mm, batch 6), splits, trainer package
+  `isles2022/trainers` + `02_nnunet/ISLES2022Trainers.py` shim (installed in Vulcan's venv; discovery verified),
+  04_* wrappers (6 methods x 2 contrasts + ladder rungs 2-5; **no rung-6 PV wrappers yet**), `04_23_tamia_pack_all.sh`,
+  `scripts/cluster/tamia_env_isles2022.sh`, orientation QC PNG in `9_tests_isles2022/`.
+- **Still to do:** push (Paul) → pull on TamIA, copy data to `$SCRATCH/isles2022`, install the shim in TamIA's venv,
+  **sizing probe before the pack launch**, decide the epoch count (1000 is a provisional ispy2 copy), then
+  05_predict / 06_evaluate wrappers + configs, ladder scripts, combined table, `meta_task_heatmap.yaml` entry.
+  No external same-pathology eval companion exists (ATLAS v2.0 is chronic T1w — not matched).
 
 ---
 
