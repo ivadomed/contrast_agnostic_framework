@@ -561,14 +561,13 @@ that written agreement.** BIDS leaf `1_BIDS_isles2022/stroke-brain-isles2022` (n
   `isles2022/trainers` + `02_nnunet/ISLES2022Trainers.py` shim (installed in Vulcan's venv; discovery verified),
   04_* wrappers (6 methods x 2 contrasts + ladder rungs 2-5; **no rung-6 PV wrappers yet**), `04_23_tamia_pack_all.sh`,
   `scripts/cluster/tamia_env_isles2022.sh`, orientation QC PNG in `9_tests_isles2022/`.
-- **Still to do:** push (Paul) → pull on TamIA, copy data to `$SCRATCH/isles2022`, install the shim in TamIA's venv,
-  **sizing probe before the pack launch**, decide the epoch count (2000, Paul 2026-10-04). After training:
-  `05_24/05_25_run_all_predict_<contrast>.sh` (TamIA: `05_26_tamia_pack_predict.sh <contrast>`) → `06_06_run_all_eval.sh` →
-  `06_05_write_configs.sh` → `06_07_run_all_aggregation.sh` (all roster-driven, no timestamps; whole chain verified end-to-end on
-  synthetic metrics 2026-10-04, never on real predictions yet). Still missing: `meta_task_heatmap.yaml` entry (rung-6 PV wrappers: Paul says no need).
-  Ladders: OOD = the other training contrast (dwi-trained -> flair, flair-trained -> dwi).
-  No external same-pathology eval companion exists (ATLAS v2.0 is chronic T1w — not matched).
-
+- **Training LAUNCHED 2026-10-04 on TamIA** (2000 epochs): 6 whole-node pack chains, jobs 504872-504884, 60 fold-jobs (10 runs/contrast: 6 headline methods
+  [OURS DualVal also yields the val100 mirror] + ladder rungs 2-5; folds 0 1 2). Sizing probe (contended s/epoch at 3 folds/GPU): baseline 16.4,
+  auglab_default 19.6, synthseg_noEM 28.8, srcsm 32.5, synthseg_EM 42, DualVal ~85; predicted max GPU wall 18.8 h/pack. RUN_IDs in
+  `$SCRATCH/isles2022/_packruns/RUN_IDS.tsv` (TamIA). **Predict + eval are queued with Slurm dependencies** (`05_predict/05_27_tamia_queue_predict_eval.sh`
+  → controller job `05_28` → predict packs → `06_evaluate/06_08` eval job; status in `$SCRATCH/isles2022/post_training_status.txt`, `DONE_eval.txt`).
+  Manual tail afterwards: fetch metrics to Vulcan → `06_05_write_configs.sh` → `06_07_run_all_aggregation.sh` → `meta_task_heatmap.yaml` entry.
+  Whole path as a skill: `setup-train-predict-eval-scripts`. TamIA has unpushed hand-copied files (see memory `project_isles2022_training_launch_20261004`).
 ---
 
 ## Breast task: I-SPY2 (training) + duke-breast-mri (eval) — AMBL archived (2026-09-13)
