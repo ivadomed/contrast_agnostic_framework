@@ -23,5 +23,5 @@ bad=$(grep -l "/isles2022_model/${other}/" "${RUN_JOB_PACK_DIR}"/*.sh 2>/dev/nul
 [ -z "${bad}" ] || { echo "ERROR: recorded cmds reference the ${other} models: ${bad}" >&2; exit 1; }
 miss=$(grep -L "/isles2022_model/${C}/" "${RUN_JOB_PACK_DIR}"/*.sh 2>/dev/null | grep -v "index" || true)
 [ -z "${miss}" ] || echo "[pack] WARN: cmd files without the ${C} model path (check): ${miss}"
-PACK_GPU_TYPE=h100 PACK_NODE_GPUS=4 PACK_TIME="${PACK_TIME:-01:30:00}" PACK_CHAIN=1 PACK_JOB_NAME="isles2022_predict_${C}" \
+PACK_GPU_TYPE=h100 PACK_NODE_GPUS=4 PACK_TIME="${PACK_TIME:-02:00:00}" PACK_CHAIN=1 PACK_JOB_NAME="isles2022_predict_${C}" \
     bash "${PROJECT_ROOT}/scripts/job_runner/run_job_pack_submit.sh" "${RUN_JOB_PACK_DIR}"

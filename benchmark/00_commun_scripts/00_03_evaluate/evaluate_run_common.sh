@@ -9,7 +9,7 @@
 #   EVAL_LABELS           label name(s) from dataset.json to score (e.g. "lesion")
 #   EVAL_JOB_PREFIX       slurm job-name prefix
 #   EVAL_DATASET_ID       nnU-Net Dataset id that provides labelsTs_* + dataset.json (default: $DATASET_ID)
-# Optional env: CKPT_TAG (best|final; non-best reads fold{F}/<tag>/<item> and writes a sibling <CATEGORY>_<RUN_ID>_<tag> dir),
+# Optional env: EVAL_INLINE=1 (run in the current shell instead of a run_job CPU job), CKPT_TAG (best|final; non-best reads fold{F}/<tag>/<item> and writes a sibling <CATEGORY>_<RUN_ID>_<tag> dir),
 #   METRICS_SUBDIR (e.g. ablations -> .../<contrast>/ablations/...), EVAL_TIME, EVAL_MEM, EVAL_FOLDS (default "0 1 2").
 #
 # Safety nets this adds over the old per-dataset copies (each one bit this project before):
@@ -39,8 +39,7 @@ if [ "${FOLD_ARG}" = "all" ]; then FOLDS="${EVAL_FOLDS:-0 1 2}"; else FOLDS="${F
 EVAL_PY="benchmark/00_commun_scripts/00_03_evaluate/evaluate.py"
 
 mkdir -p "${OUT_BASE}/_logs"
-run_job --name "${EVAL_JOB_PREFIX}_${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}" --gpus 0 --cpus 8 --mem "${EVAL_MEM:-16G}" --time "${EVAL_TIME:-1:00:00}" \
-    --log "${OUT_BASE}/_logs/eval_${RUN_ID}${_OUT_SUFFIX}.log" --wait -- bash -c "
+_EVAL_BODY="
 set -euo pipefail
 cd '${PROJECT_ROOT}'
 for F in ${FOLDS}; do
@@ -68,3 +67,9 @@ for F in ${FOLDS}; do
 done
 echo '→ ${OUT_BASE}'
 "
+# EVAL_INLINE=1: run in THIS shell (use when already inside a compute allocation, e.g. a TamIA post-training eval job: no nested run_job).
+if [ "${EVAL_INLINE:-0}" = "1" ]; then
+    bash -c "${_EVAL_BODY}" 2>&1 | tee "${OUT_BASE}/_logs/eval_${RUN_ID}${_OUT_SUFFIX}.log"; exit "${PIPESTATUS[0]}"
+fi
+run_job --name "${EVAL_JOB_PREFIX}_${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}" --gpus 0 --cpus 8 --mem "${EVAL_MEM:-16G}" --time "${EVAL_TIME:-1:00:00}" \
+    --log "${OUT_BASE}/_logs/eval_${RUN_ID}${_OUT_SUFFIX}.log" --wait -- bash -c "${_EVAL_BODY}"
