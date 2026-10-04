@@ -34,12 +34,20 @@ split, matching every competing method and keeping model selection
 like-for-like. \emph{val100} applies PALETTE-Aug to the entire validation split;
 it is reported in \cref{sec:suppl-val100}.
 
-\paragraph{Baseline configurations.} SynthSeg-noEM uses the authors' released
-generator with its default priors. SynthSeg-EM is our re-implementation of
-the variant described but not released in the original work; it estimates a
-per-class intensity model from the sparse task labels available in each
-dataset via expectation-maximization, and is otherwise identical in its
-sampling procedure. SRCSM and Auglab use their published default
+\paragraph{Baseline configurations.} Both SynthSeg variants run through
+Auglab's GPU implementation of the SynthSeg generator, with uniform intensity
+priors and with the generator's own spatial and flip steps disabled (the
+pipeline's spatial augmentation is shared by all methods). They receive each
+task's training label map; SynthSeg-EM additionally subdivides it on the fly
+by expectation-maximization clustering of the image ($2$ sub-regions per
+foreground label, $3$--$10$ for the background, $20$ iterations), where the
+original work precomputes these maps~\cite[\S5.4]{billot2023synthseg}. Each
+sub-region then receives a randomly sampled intensity, as in SynthSeg. Both
+SynthSeg variants and SRCSM synthesize on every training iteration, their
+published setting, against $50\%$ for PALETTE-Aug. SRCSM is a training-time
+augmentation only: no test-time intensity matching is applied, and every
+method is predicted with the same nnU-Net predictor, without test-time
+augmentation. SRCSM and Auglab otherwise use their published default
 configurations. No competing method was re-tuned in our favor, and all use
 the same folds, schedule and epoch budget as above.
 

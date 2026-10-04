@@ -118,6 +118,27 @@ dominated by the thorax. I-SPY2's DCE series are acquired unilaterally at some
 sites and bilaterally at others; both field-of-view variants are kept per
 patient, and the significance tests treat them as one patient.
 
+\paragraph{Field-of-view matching.} A model tested on a field of view it never
+saw in training can fail for reasons that have nothing to do with contrast or
+modality. Where an external cohort images more of the body than the training
+cohort, we therefore crop its volumes before prediction, so that the shift
+left between training and test is, as far as possible, the contrast or
+modality alone. CHAOS (AMOS, SLIVER07): the axial slab CHAOS covers, placed
+with the median CHAOS margins around the kidneys (AMOS) or the liver
+(SLIVER07). Mandible (HaN-Seg, PDDCA): a $144\times128\times80$\,mm box centred
+on the mandible, close to the 90th percentile of ToothFairy2's training
+extent, enlarged (at most to $154\times154\times89$\,mm) only when needed to
+contain the whole mandible. Breast (Duke-Breast-MRI, ACRIN-6698): the lesion-side
+half of bilateral volumes, then, for full-thorax acquisitions, an
+anterior-posterior window from $27$\,mm in front of the skin to $147$\,mm
+behind it, the measured geometry of I-SPY2's unilateral acquisitions, extended
+if needed to contain the lesion; I-SPY1 is natively unilateral and is not
+cropped. The network sees, and is scored on, only the cropped volume. Each crop
+is placed using the reference annotation (organ, mandible or lesion position).
+This reveals the target's position, not its extent, and is identical for every
+method, so it does not favour any method; but absolute Dice and HD95 are better
+than a pipeline that had to localize the target first would obtain.
+
 \paragraph{Spine} \cite{vandergraaf2024spider} --- vertebrae, intervertebral
 discs and spinal canal. Results for this task were computed on a separate pipeline with the same
 method suite except SRCSM, trained on CT

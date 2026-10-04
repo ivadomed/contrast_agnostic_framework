@@ -44,20 +44,21 @@ SPIDER~\cite{vandergraaf2024spider}. Pelvis is built from the TotalSegmentator C
 releases~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}, two unpaired
 cohorts. ON-Harmony~\cite{warrington2025onharmony} reference labels are
 silver-standard FreeSurfer~\cite{fischl2012freesurfer} parcellations of the
-T1w, registered to the other contrasts. AMOS and SLIVER07 volumes are cropped
-to CHAOS's field of view before prediction (\cref{sec:suppl-data}).
+T1w, registered to the other contrasts. External volumes that image more of the body
+than the training cohort are cropped to its field of view before prediction,
+identically for every method (\cref{sec:suppl-data}).
 % TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
 % in the imported results) -- no citable source for it exists in the repo.
 
 
 \paragraph{Baselines.} We compare against five methods. (1) \emph{Baseline},
 nnU-Net with its default augmentation. (2)
-\emph{SynthSeg-noEM}~\cite{billot2023synthseg}, the released variant, which
-synthesizes each image from a dense anatomical label map and ignores the
-acquired scan. (3) \emph{SynthSeg-EM}, our re-implementation of the unreleased
-variant described in the original work, which estimates its per-class
-intensity model from the image by expectation-maximization over the sparse
-task labels and so needs no dense parcellation. (4)
+\emph{SynthSeg-noEM}~\cite{billot2023synthseg}, which synthesizes each image
+from the label map alone and ignores the acquired scan; it receives each
+task's training labels, which form a dense parcellation only on ON-Harmony.
+(3) \emph{SynthSeg-EM}, our re-implementation of SynthSeg's EM
+extension~\cite[\S5.4]{billot2023synthseg}, which first subdivides every
+label by expectation-maximization clustering of the image. (4)
 \emph{SRCSM}~\cite{thaler2025semrandconv}, a semantic random-convolution
 augmentation outside both the label-generative and the Auglab families. (5)
 \emph{Auglab}~\cite{molinier2026auglab}, a published GPU augmentation
@@ -113,9 +114,10 @@ also treat each task as one unit: PALETTE-Aug then beats Auglab on seven of
 eight tasks (one-sided sign test $p=0.035$) and SRCSM on five of the
 seven tasks where SRCSM was run ($p=0.23$).
 
-SynthSeg-noEM needs a dense anatomical label map and falls below the baseline
-on six of the eight tasks; SynthSeg-EM, which estimates its intensity model
-from the task labels, closes most of that gap.
+Given sparse labels, SynthSeg-noEM paints one Gaussian background around the
+labeled structures and falls below the baseline on six of the eight tasks,
+every one with sparse labels; SynthSeg-EM, which subdivides the labels by
+clustering the image, closes most of that gap.
 
 \paragraph{No competitor is reliably second.} The best competitor alternates
 between Auglab (BraTS-GLI, Open-MS, Breast, Spine) and SRCSM (ON-Harmony,

@@ -69,8 +69,8 @@ We train one nnU-Net~\cite{isensee2021nnunet} configuration, varying only the
 epoch budget per dataset, and evaluate cross-contrast, cross-modality and
 cross-dataset transfer on eight tasks: healthy brain, MS lesion, brain tumor,
 abdominal organ, mandible, breast lesion, spine and pelvis. We compare against
-nnU-Net with its default augmentation, two variants of SynthSeg (the released
-dense-label variant and our re-implementation of the unreleased EM variant),
+nnU-Net with its default augmentation, two variants of SynthSeg (the original and our
+re-implementation of its EM label-subdivision extension),
 SRCSM~\cite{thaler2025semrandconv}, and Auglab~\cite{molinier2026auglab}, a
 published cross-modality augmentation pipeline. PALETTE-Aug is the best method
 overall: it has the best Dice on six of the eight tasks and is significantly

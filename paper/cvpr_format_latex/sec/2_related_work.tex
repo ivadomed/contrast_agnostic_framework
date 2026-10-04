@@ -37,13 +37,12 @@ noise, retaining layout but not texture. The lineage has been specialized to
 white-matter and MS lesions and to atlas-based
 expectation-maximization~\cite{laso2024wmhsynthseg,caselles2026timelesseg,cerri2021samseg}.
 Among SynthSeg's own variants we take the
-original (\emph{noEM}), which resamples intensities from a dense anatomical
-label map and never looks at the acquired scan, and the \emph{EM} variant,
-which instead fits its per-class intensity model to the real image by
-expectation-maximization and so needs only the sparse task labels a
-segmentation dataset already provides, not a dense parcellation. The EM
-variant has no released implementation; ours follows the mechanism described
-in the original paper~\cite{billot2023synthseg}.
+original (\emph{noEM}), which synthesizes from the label map alone and never
+looks at the acquired scan, and the \emph{EM} extension, which first splits
+every label, background included, into intensity-coherent sub-regions by
+expectation-maximization clustering of the real image, so that sparse task
+labels yield a richer map to synthesize from. The original work introduced it
+for cardiac MRI~\cite[\S5.4]{billot2023synthseg}; we re-implement it.
 
 \subsection{Texture as a segmentation signal}
 \label{subsec:texture}
