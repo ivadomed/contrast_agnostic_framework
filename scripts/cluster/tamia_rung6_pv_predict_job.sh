@@ -71,6 +71,19 @@ for j in "${!PIDS[@]}"; do
   if wait "${PIDS[$j]}"; then echo "[predict-job] OK   '${NAMES[$j]}'"; else echo "[predict-job] FAIL '${NAMES[$j]}'"; rc_all=1; fi
 done
 
+# (3b) on-harmony ONLY: its predict wrapper (05_01_predict_common.sh) resamples the RAS-space predictions back
+# to native geometry right after the shared driver returns. In pack-record mode that line runs BEFORE any
+# prediction exists, so replay it here, after the packed predictions, with the dataset's own 05_02 script.
+for r in "${rows[@]}"; do IFS='|' read -r name pack dir envf tenv tc wrapper args run pexp ekind eexp <<<"$r"
+  [ "${ekind}" = onh ] || continue
+  ( envsetup "$dir" "$envf" "$tenv" "$tc"
+    for k in 0 1 2; do for it in ${pexp}; do item="${it%:*}"
+      .venv/bin/python "$T/$dir/05_predict/05_02_resample_predictions_to_native.py" \
+        "${PREDICTIONS_ROOT}/${MODEL_TYPE}/${tc}/nnUNet/${run}/fold${k}/final/${item}" \
+        "${PREDICTIONS_ROOT}/${MODEL_TYPE}/_test_set/${item}/images_native" || exit 1
+    done; done ) || { echo "[predict-job] ERROR: resample-to-native failed for ${name}"; rc_all=1; }
+done
+
 # (4) audit (checkpoint_final predictions land under fold{k}/final/ -- on-harmony's default)
 audit_fail=0
 for r in "${rows[@]}"; do IFS='|' read -r name pack dir envf tenv tc wrapper args run pexp ekind eexp <<<"$r"

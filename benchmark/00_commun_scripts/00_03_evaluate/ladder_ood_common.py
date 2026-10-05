@@ -161,6 +161,11 @@ _LADDER_DEPTH = 0
 
 def _pv_branch_key(ablations_root):
     """Rung-6 run key registered for this ladder (matched on the END of its output dir), or None."""
+    # OPT-IN: rung 6 is NOT part of the ladders by default (Paul, 2026-10-05). Set LADDER_PV_BRANCH=1 to
+    # also emit the <ablations_root>_pv/ branch (used to read the rung 5 -> 6 difference).
+    import os
+    if os.environ.get("LADDER_PV_BRANCH") != "1":
+        return None
     if ablations_root is None or not PV_BRANCH_REGISTRY.exists():
         return None
     import yaml

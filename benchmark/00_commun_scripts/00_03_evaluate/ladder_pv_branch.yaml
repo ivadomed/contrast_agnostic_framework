@@ -1,4 +1,6 @@
 # Rung-6 (PALETTE + boundary partial-volume) branch registry for ladder_ood_common.py.
+# OPT-IN: nothing here affects any ladder unless the environment has LADDER_PV_BRANCH=1 (rung 6 is
+# deliberately NOT part of the ladders -- Paul, 2026-10-05; read the difference with run_rung56_diff.sh).
 # key   = the END of a ladder's ablations_root (its output dir)
 # value = the rung-6 run key, resolved under every source the ladder pools, exactly like the
 #         ladder's own rung keys (the engine adds the nnUNet_/auglab_ category prefix).
@@ -15,3 +17,14 @@ ladders:
   # totalseg-pelvic (own ct + mri)
   totalseg_pelvic_model/ct/ablations: ablations/totalseg-pelvic_ct_v26_6_2_pv_train050_val100_20261003_120315
   totalseg_pelvic_model/mri/ablations: ablations/totalseg-pelvic_mri_v26_6_2_pv_train050_val100_20261003_120315
+  # brats (own 4 contrasts)
+  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1n/ablations: ablations/brats2024-glioma_t1n_v26_6_2_pv_train050_val100_20261003_111212
+  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations: ablations/brats2024-glioma_t2w_v26_6_2_pv_train050_val100_20261003_111212
+  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2f/ablations: ablations/brats2024-glioma_t2f_v26_6_2_pv_train050_val100_20261003_111213
+  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1c/ablations: ablations/brats2024-glioma_t1c_v26_6_2_pv_train050_val100_20261003_111213
+  # chaos (own + amos/sliver07 crop-before-predict, all under .../ablations)
+  8_results_chaos/02_metrics/chaos_model/t1in/ablations: ablations/chaos_t1in_v26_6_2_pv_train050_val000_20261003_111217
+  8_results_chaos/02_metrics/chaos_model/t2spir/ablations: ablations/chaos_t2spir_v26_6_2_pv_train050_val100_20261003_111218
+  # ispy2 headline ladders (own + duke/ispy1/acrin6698 pooled by true contrast)
+  8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations: ablations/ispy2_t1wce_v26_6_2_pv_train050_val100_20261003_111216
+  8_results_ispy2/02_metrics/ispy2_model/t2w/ablations: ablations/ispy2_t2w_v26_6_2_pv_train050_val100_20261003_111217
