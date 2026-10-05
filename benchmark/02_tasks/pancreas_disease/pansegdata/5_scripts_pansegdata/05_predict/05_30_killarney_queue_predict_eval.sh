@@ -14,6 +14,6 @@ echo "[queue] training fold jobs in the queue: ${n} (expect 60)"
 [ "${n}" = 60 ] || { [ "${FORCE:-0}" = 1 ] || { echo "ERROR: expected 60 pansegdata fold jobs, found ${n} (FORCE=1 to override)" >&2; exit 1; }; }
 [ "${1:-}" = "--check" ] && { echo "[queue] would wait for: ${ids}"; exit 0; }
 mkdir -p "${RESULTS_DIR}/post_training"
-RUN_JOB_DEPENDENCY="afterany:${ids}" run_job --name pansegdata_post_training --gpus 0 --cpus 2 --mem 8G --time 02:00:00 \
+RUN_JOB_DEPENDENCY="afterany:${ids}" run_job --name pansegdata_post_training --gpus 0 --cpus 2 --mem 8G --time 06:00:00 \
     --log "${RESULTS_DIR}/post_training/controller.log" -- bash "${HERE}/05_29_killarney_post_training.sh"
 echo "[queue] controller queued behind ${n} training jobs; log ${RESULTS_DIR}/post_training/controller.log ; status file ${RESULTS_DIR}/post_training/post_training_status.txt"

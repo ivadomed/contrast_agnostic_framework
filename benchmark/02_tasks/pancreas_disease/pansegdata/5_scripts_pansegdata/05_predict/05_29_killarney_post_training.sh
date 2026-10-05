@@ -39,14 +39,21 @@ if [ "${missing}" != 0 ]; then say "INCOMPLETE TRAINING: ${missing} problems abo
 say "training complete for both contrasts; pins written"
 [ "${1:-}" = "--check" ] && exit 0
 
+# NB: the predict wrappers BLOCK until their GPU jobs finish (run_job --wait), so the 11 runs of a contrast go one after another (~3-5 min each, plus queue wait);
+# the two contrasts run in PARALLEL here, and this controller job is queued with a 6 h limit (05_30), not the 2 h of a quick job.
+pids=()
+for C in t1wce t2w; do
+    ( if [ "${C}" = t2w ]; then source "${HERE}/../00_utils/env_t2w.sh"; else source "${HERE}/../00_utils/env.sh"; fi
+      if [ "${C}" = t1wce ]; then bash "${HERE}/05_24_run_all_predict_t1wce.sh"; else bash "${HERE}/05_25_run_all_predict_t2w.sh"; fi ) > "${OUTD}/predict_${C}.out" 2>&1 &
+    pids+=($!)
+done
+prc=0; for p in "${pids[@]}"; do wait "$p" || prc=$((prc+1)); done
 ids=""
 for C in t1wce t2w; do
-    out="$( if [ "${C}" = t2w ]; then source "${HERE}/../00_utils/env_t2w.sh"; else source "${HERE}/../00_utils/env.sh"; fi
-            if [ "${C}" = t1wce ]; then bash "${HERE}/05_24_run_all_predict_t1wce.sh" 2>&1; else bash "${HERE}/05_25_run_all_predict_t2w.sh" 2>&1; fi )"; rc=$?
-    echo "${out}" | tail -5 | tee -a "${STATUS}"
-    [ "${rc}" = 0 ] || { say "ERROR: predict submission for ${C} failed (rc=${rc})"; exit 3; }
-    ids="${ids}:$(echo "${out}" | grep -o 'Submitted batch job [0-9]*' | awk '{print $4}' | paste -sd: -)"
+    tail -5 "${OUTD}/predict_${C}.out" | tee -a "${STATUS}"
+    ids="${ids}:$(grep -o 'Submitted batch job [0-9]*' "${OUTD}/predict_${C}.out" | awk '{print $4}' | paste -sd: -)"
 done
+[ "${prc}" = 0 ] || { say "ERROR: ${prc} predict launcher(s) failed (see ${OUTD}/predict_*.out); eval NOT queued"; exit 3; }
 ids="${ids#:}"; ids="${ids//::/:}"; n_ids=$(echo "${ids}" | tr ':' '\n' | grep -c .)
 say "predict jobs submitted: ${n_ids} (${ids})"
 [ "${n_ids}" -ge 22 ] || { say "ERROR: expected >= 22 predict jobs (11 runs x 2 contrasts), got ${n_ids}; not queueing eval"; exit 3; }
