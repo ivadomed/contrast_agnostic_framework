@@ -190,7 +190,7 @@ same visual scheme (per-curve color only on the real-fill segment; bold
 black panel average; one panel-pooled $p$-value per panel), reported on
 HD95 instead of Dice (\emph{improvement} means the fill-swap step lowers
 HD95). BraTS-GLI, CHAOS and Breast improve significantly at panel level and
-ON-Harmony worsens; Open-MS and ToothFairy2 do not move significantly.
+ON-Harmony worsens; Open-MS, Mandible and Pelvis do not move significantly.
 Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
 \end{figure*}
@@ -204,37 +204,39 @@ Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
 Task & $\Delta$ HD95 (mm) & $p$ \\
 \midrule
 \multicolumn{3}{l}{\emph{Interface-bounded}} \\
-CHAOS T1in        & $-1.36$ & 0.80 \\
-CHAOS T2spir      & $-18.47$ & 3.4e-12 \\
-ON-Harmony T1w    & $+6.82$ & 0.062 \\
-ON-Harmony T2w    & $+0.38$ & 0.062 \\
-ON-Harmony DWI    & $-0.05$ & 0.75 \\
-Mandible CBCT     & $-0.20$ & 0.37 \\
+CHAOS T1in        & $-1.36$ & 1.0 \\
+CHAOS T2spir      & $-18.47$ & 3.8e-12 \\
+ON-Harmony T1w    & $+1.38$ & 0.078 \\
+ON-Harmony T2w    & $+0.38$ & 0.078 \\
+ON-Harmony DWI    & $-0.05$ & 1.0 \\
+Mandible CBCT     & $-0.20$ & 0.56 \\
+Pelvis CT         & $+4.19$ & 1.0 \\
+Pelvis MRI        & $-0.49$ & 1.0 \\
 \midrule
 \multicolumn{3}{l}{\emph{Appearance-defined}} \\
-Open-MS FLAIR     & $-3.02$ & 0.14 \\
-Open-MS T1w       & $+3.94$ & 0.80 \\
-BraTS-GLI T1n     & $-4.59$ & 6.3e-10 \\
-BraTS-GLI T1c     & $-9.91$ & 4.2e-11 \\
-BraTS-GLI T2w     & $-1.95$ & 0.013 \\
-BraTS-GLI FLAIR   & $-1.71$ & 0.21 \\
-Breast T1-CE      & $-3.21$ & 8.8e-5 \\
-Breast T2w        & $-1.82$ & 0.0024 \\
+Open-MS FLAIR     & $-3.02$ & 0.19 \\
+Open-MS T1w       & $+3.94$ & 1.0 \\
+BraTS-GLI T1n     & $-4.59$ & 7.4e-10 \\
+BraTS-GLI T1c     & $-9.91$ & 4.9e-11 \\
+BraTS-GLI T2w     & $-1.86$ & 0.010 \\
+BraTS-GLI FLAIR   & $-1.71$ & 0.29 \\
+Breast T1-CE      & $-3.21$ & 1.0e-4 \\
+Breast T2w        & $-1.82$ & 0.0029 \\
 \bottomrule
 \end{tabular}
 \caption{Same fill-swap step as \cref{tab:dissociation} (main paper), on HD95
-(negative is better), with $p$ Holm-corrected across the fourteen rows. Five of
+(negative is better), with $p$ Holm-corrected across the sixteen rows. Five of
 the six significant improvements are on appearance-defined targets, including
 both Breast rows, whose Dice does not move; the sixth, and the largest in
 millimetres, is CHAOS T2spir. HD95 is less consistent than Dice within a task
-(its sign flips between the two modalities of Open-MS), so we state the claim
+(its sign flips between the two modalities of Open-MS and of Pelvis), so we state the claim
 on Dice and report HD95 here rather than as confirmation of it.}
 \label{tab:dissociation-hd95}
 \end{table}
 
 \paragraph{Full ladder: numbers and significance.} \cref{fig:ladder} (main
 paper) shows the rung sequence visually; \cref{tab:ladder-full} gives the
-underlying out-of-domain Dice at every rung of all fourteen ladders, with
+underlying out-of-domain Dice at every rung of all sixteen ladders, with
 significance for each step against the rung immediately before it
 (Holm-corrected paired Wilcoxon on patients, within each ladder's family of
 steps). Most steps that add an ingredient help, as expected. Eight cells are
@@ -268,36 +270,36 @@ pipeline is positive even though one internal component is not.
 \scriptsize
 \setlength{\tabcolsep}{2.4pt}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lccccccc}
+\begin{tabular}{lcccccccc}
 \toprule
-Rung & Open-MS & Open-MS & BraTS-GLI & BraTS-GLI & BraTS-GLI & BraTS-GLI & CHAOS \\
-     & FLAIR & T1w & T1n & T1c & T2w & FLAIR & T1in \\
+Rung & Open-MS & Open-MS & BraTS-GLI & BraTS-GLI & BraTS-GLI & BraTS-GLI & CHAOS & CHAOS \\
+     & FLAIR & T1w & T1n & T1c & T2w & FLAIR & T1in & T2spir \\
 \midrule
-base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 17.0 \\
-+km        & $11.2^{*}$ & $9.8^{*}$ & $38.4^{***}$ & $29.6^{***}$ & $38.6^{***}$ & $26.1^{***}$ & $82.2^{***}$ \\
-+lbl       & $17.5^{*}$ & $22.4^{*}$ & $41.8^{***}$ & 30.3 & $40.2^{**}$ & 26.4 & $86.1^{***}$ \\
-+vor       & 19.6 & $34.1^{*}$ & $39.8^{***}{\downarrow}$ & 30.5 & 41.0 & $31.9^{***}$ & $85.7^{**}{\downarrow}$ \\
-+real      & $27.3^{*}$ & 34.9 & $47.0^{***}$ & $43.7^{***}$ & 41.8 & 31.7 & $87.1^{***}$ \\
-+AL(v000)  & 30.6 & 36.4 & 46.9 & 44.2 & $46.8^{***}$ & $40.9^{***}$ & $86.4^{***}{\downarrow}$ \\
-+AL(v100)  & 31.3 & 34.7 & $47.6^{*}$ & $46.5^{***}$ & 46.9 & 41.2 & 86.1 \\
+base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 17.0 & 19.7 \\
++km        & $11.2^{*}$ & $9.8^{*}$ & $38.4^{***}$ & $29.6^{***}$ & $38.6^{***}$ & $26.1^{***}$ & $82.2^{***}$ & $77.4^{***}$ \\
++lbl       & $17.5^{*}$ & $22.4^{*}$ & $41.8^{***}$ & 30.3 & $40.2^{**}$ & 26.4 & $86.1^{***}$ & $81.4^{***}$ \\
++vor       & 19.6 & $34.1^{*}$ & $39.8^{***}{\downarrow}$ & 30.5 & 41.0 & $31.9^{***}$ & $85.7^{**}{\downarrow}$ & $82.0^{***}$ \\
++real      & $27.3^{*}$ & 34.9 & $47.0^{***}$ & $43.7^{***}$ & 41.6 & 31.7 & $87.1^{***}$ & $87.1^{***}$ \\
++AL(v000)  & 30.6 & 36.4 & 46.9 & 44.2 & $46.8^{***}$ & $40.9^{***}$ & $86.4^{***}{\downarrow}$ & 85.4 \\
++AL(v100)  & 31.3 & 34.7 & $47.6^{*}$ & $46.5^{***}$ & 46.9 & 41.2 & 86.1 & 85.9 \\
 \bottomrule
 \end{tabular}%
 }
 
 \vspace{0.6em}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lccccccc}
+\begin{tabular}{lcccccccc}
 \toprule
-Rung & CHAOS & ON-Harm. & ON-Harm. & ON-Harm. & Mandible & Breast & Breast \\
-     & T2spir & T1w & T2w & DWI & CBCT & T1-CE & T2w \\
+Rung & ON-Harm. & ON-Harm. & ON-Harm. & Mandible & Breast & Breast & Pelvis & Pelvis \\
+     & T1w & T2w & DWI & CBCT & T1-CE & T2w & CT & MRI \\
 \midrule
-base       & 19.7 & 14.8 & 24.5 & 36.1 & 39.4 & 23.7 & 33.5 \\
-+km        & $77.4^{***}$ & $62.5^{*}$ & $63.5^{*}$ & $60.4^{*}$ & $64.6^{***}$ & $28.8^{***}$ & $37.0^{***}$ \\
-+lbl       & $81.4^{***}$ & 62.9 & 63.6 & $64.5^{*}$ & $65.6^{***}$ & 28.5 & $38.8^{***}$ \\
-+vor       & $82.0^{***}$ & 63.2 & $64.2^{*}$ & 64.6 & $68.1^{***}$ & $30.8^{***}$ & $39.8^{**}$ \\
-+real      & $87.1^{***}$ & $58.0^{*}{\downarrow}$ & $62.6^{*}{\downarrow}$ & $65.4^{*}$ & $69.5^{***}$ & 29.9 & $40.3^{*}$ \\
-+AL(v000)  & 85.4 & 64.2 & 63.9 & $60.9^{*}{\downarrow}$ & $67.6^{***}{\downarrow}$ & $34.7^{***}$ & $41.9^{***}$ \\
-+AL(v100)  & 85.9 & 64.2 & $64.4^{*}$ & 60.9 & $67.5^{***}{\downarrow}$ & --- & --- \\
+base       & 14.8 & 24.5 & 36.1 & 39.4 & 23.7 & 33.5 & 0.7 & 10.0 \\
++km        & $62.5^{*}$ & $63.5^{*}$ & $60.4^{*}$ & $64.6^{***}$ & $28.8^{***}$ & $37.0^{***}$ & $22.6^{***}$ & $55.9^{***}$ \\
++lbl       & 62.9 & 63.6 & $64.5^{*}$ & $65.6^{***}$ & 28.5 & $38.8^{***}$ & $30.0^{***}$ & $63.3^{***}$ \\
++vor       & 63.2 & $64.2^{*}$ & 64.6 & $68.1^{***}$ & $30.8^{***}$ & $39.8^{**}$ & $35.3^{*}$ & 63.1 \\
++real      & $61.9^{*}{\downarrow}$ & $62.6^{*}{\downarrow}$ & $65.4^{*}$ & $69.5^{***}$ & 29.9 & $40.3^{*}$ & 38.3 & $67.2^{***}$ \\
++AL(v000)  & 64.2 & 63.9 & $60.9^{*}{\downarrow}$ & $67.6^{***}{\downarrow}$ & $34.7^{***}$ & $41.9^{***}$ & $46.3^{*}$ & 67.2 \\
++AL(v100)  & 64.2 & $64.4^{*}$ & 60.9 & $67.5^{***}{\downarrow}$ & --- & --- & --- & --- \\
 \bottomrule
 \end{tabular}%
 }
@@ -308,7 +310,7 @@ Wilcoxon on patients, within each ladder); $\downarrow$ marks a significant
 \emph{decrease}. Rungs: base(line), $+k$-means, $+$label-remap, $+$Voronoi
 (noise fill), $+$real-intensity fill (PALETTE-Aug alone), $+$Auglab
 (val000/val100). Open-MS and ON-Harmony have eight test units each, so their
-smallest attainable $p$ after correction is just under $0.05$. I-SPY2 has no
+smallest attainable $p$ after correction is just under $0.05$. Breast and Pelvis have no
 val100 arm. Mandible's held-out axis is cross-dataset.}
 \label{tab:ladder-full}
 \end{table}

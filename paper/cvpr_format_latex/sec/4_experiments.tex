@@ -30,34 +30,33 @@ that image more of the body than the training cohort are cropped to its field
 of view before prediction, identically for every method
 (\cref{sec:suppl-data}).
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
 \footnotesize
-\setlength{\tabcolsep}{3pt}
-\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
-\begin{tabular}{lP{2.0cm}P{4.1cm}P{1.7cm}P{4.3cm}rc}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{1.75cm}>{\raggedright\arraybackslash}p{2.75cm}>{\raggedright\arraybackslash}p{1.75cm}@{}}
 \toprule
-Task & Target & Trained on (one modality at a time) & Other test contrasts & External test cohorts & Test cases & Ladder \\
+Task & Target & Trained on & External tests \\
 \midrule
-\multicolumn{7}{l}{\emph{Appearance-defined}} \\
-BraTS-GLI & glioma, 4 sub-regions & BraTS2024-GLI~\cite{deverdier2024brats2024}: T1n, T1c, T2w, FLAIR & -- & -- & 70 & \checkmark \\
-Open-MS & MS lesions & Open-MS~\cite{lesjak2018openms}: FLAIR, T1w & T2w & -- & 8 & \checkmark \\
-Breast & tumor & I-SPY2~\cite{li2022ispy2}: T1-CE, T2w & -- & Duke~\cite{saha2018duke,garrucho2025mamamia}, I-SPY1~\cite{hylton2012ispy1}: T1-CE, pre-contrast; ACRIN-6698~\cite{partridge2018acrin6698}: DWI & 84 + 829 & \checkmark \\
+\multicolumn{4}{@{}l}{\emph{Appearance-defined}} \\
+BraTS-GLI & glioma, 4 regions & BraTS2024-GLI~\cite{deverdier2024brats2024}: T1n, T1c, T2w, FLAIR & -- \\
+Open-MS & MS lesions & Open-MS~\cite{lesjak2018openms}: FLAIR, T1w & -- \\
+Breast & tumor & I-SPY2~\cite{li2022ispy2}: T1-CE, T2w & Duke, I-SPY1, ACRIN-6698 \\
 \midrule
-\multicolumn{7}{l}{\emph{Interface-bounded}} \\
-CHAOS & liver, kidneys, spleen & CHAOS~\cite{kavur2021chaos}: T1in, T2spir & T1out, CT & AMOS~\cite{ji2022amos}: CT, T2w; SLIVER07~\cite{heimann2009comparison}: CT & 24 + 140 & \checkmark \\
-ON-Harm. & 31 brain regions & ON-Harmony~\cite{warrington2025onharmony}: T1w, T2w, DWI & BOLD, EPI, GRE & -- & 8$^a$ & \checkmark \\
-Mandible & mandible & ToothFairy2~\cite{bolelli2025toothfairy2}: CBCT & -- & HaN-Seg~\cite{podobnik2023hanseg}: CT, MR-T1; PDDCA~\cite{raudaschl2017pddca}: CT & 71 + 82 & \checkmark \\
-Spine & vertebrae, discs, canal & CT/Dixon cohort: CT, Dixon in-phase & Dixon fat, water & SPIDER~\cite{vandergraaf2024spider}: T1w, T2w & 29 + 171/219 & -- \\
-Pelvis & 11 bones and muscles & TotalSegmentator~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}: CT, MRI$^b$ & -- & -- & 30/27 & -- \\
+\multicolumn{4}{@{}l}{\emph{Interface-bounded}} \\
+CHAOS & liver, kidneys, spleen & CHAOS~\cite{kavur2021chaos}: T1in, T2spir & AMOS, SLIVER07 \\
+ON-Harm. & 31 brain regions & ON-Harmony~\cite{warrington2025onharmony}: T1w, T2w, DWI & -- \\
+Mandible & mandible & ToothFairy2~\cite{bolelli2025toothfairy2}: CBCT & HaN-Seg, PDDCA \\
+Spine & vertebrae, discs, canal & CT/Dixon cohort: CT, Dixon & SPIDER \\
+Pelvis & bones, muscles & TotalSegmentator~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}: CT, MRI & -- \\
 \bottomrule
 \end{tabular}
-\caption{The eight tasks. Test cases: own held-out split + external cohorts;
-$a$/$b$ gives two contrasts' counts where they differ (\cref{tab:suppl-datasets}). Ladder:
-the task has the causal ablation of \cref{subsec:e-ablation}. $^a$Sessions of
-four subjects. $^b$Different patients for CT and MRI.}
+\caption{The eight tasks. Each model trains on one modality at a time and is
+tested on every contrast of its task, external cohorts included. All tasks but
+Spine have an ablation ladder. Test contrasts, external-cohort citations and
+case counts: \cref{tab:datasets}.}
 \label{tab:tasks}
-\end{table*}
+\end{table}
 
 % TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
 % in the imported results) -- no citable source for it exists in the repo.
@@ -76,24 +75,23 @@ comparing the two also tests that operator.
 \centering
 \footnotesize
 \setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{l>{\raggedright\arraybackslash}p{2.9cm}ccc}
+\begin{tabular}{l>{\raggedright\arraybackslash}p{2.65cm}ccc}
 \toprule
-Method & Training-image intensities & \makecell{No dense\\labels} & \makecell{Real\\texture} & \makecell{Synth.\\iters} \\
+Method & Training-image intensities & \makecell{No dense\\labels} & \makecell{Real\\texture} & \makecell{Synthetic\\images} \\
 \midrule
-Baseline & real image, nnU-Net aug. & \checkmark & \checkmark & -- \\
-SynthSeg-noEM & random Gaussian per label & $\times$ & $\times$ & 100\% \\
-SynthSeg-EM & random Gaussian per EM sub-region of each label & \checkmark & $\times$ & 100\% \\
-SRCSM & random convolution per labeled region & \checkmark & $\sim$ & 100\% \\
-Auglab & real image, generic intensity and artifact aug. & \checkmark & \checkmark & -- \\
-\textbf{PALETTE-Aug} & real intensities, signed affine remap per unsupervised sub-region & \checkmark & \checkmark & 50\% \\
+Baseline & real image, nnU-Net aug. & \checkmark & \checkmark & none \\
+SynthSeg-noEM & random Gaussian per label & $\times$ & $\times$ & always \\
+SynthSeg-EM & random Gaussian per EM sub-region of each label & \checkmark & $\times$ & always \\
+SRCSM & random convolution per labeled region & \checkmark & $\sim$ & always \\
+Auglab & real image, generic intensity and artifact aug. & \checkmark & \checkmark & none \\
+\textbf{PALETTE-Aug} & real intensities, signed affine remap per unsupervised sub-region & \checkmark & \checkmark & half \\
 \bottomrule
 \end{tabular}
 \caption{What each method trains on. No dense labels: works from the task's
 own labels (SynthSeg-noEM runs on them but then fills everything unlabeled
 with one Gaussian; $\sim$: the real image passes through a random filter).
-Synth.\ iters: share of training iterations with a
-synthetic image, as in each method's original paper; PALETTE-Aug runs inside
-Auglab.}
+Synthetic images: share of training iterations that use a synthetic
+image, as in each method's original paper; PALETTE-Aug runs inside Auglab.}
 \label{tab:methods}
 \end{table}
 
@@ -193,10 +191,11 @@ cohorts included; only its real-fill segment (shaded band) is colored, by that
 pair's significance: teal improves, red worsens, grey is not significant. The bold black line is the panel average, colored by the panel test annotated
 above it: one paired Wilcoxon test on \emph{patients} (each counted once across
 contrasts and models) pooling all training modalities, Holm-corrected across
-the six panels. rel.\ = panel gain / mean noise-fill Dice. Two of the three appearance-defined panels improve
-significantly and strongly (BraTS-GLI $+14.8\%$, $p=2.0\times10^{-11}$;
+the seven panels. rel.\ = panel gain / mean noise-fill Dice. Two of the three appearance-defined panels improve
+significantly and strongly (BraTS-GLI $+14.7\%$, $p=3.6\times10^{-11}$;
 Open-MS $+15.8\%$, $p=0.023$) and Breast does not move. The interface-bounded
-panels move much less in relative terms: CHAOS ($+3.9\%$) and Mandible ($+2.0\%$) gain, and ON-Harmony worsens ($-3.0\%$; significant with its
+panels move much less in relative terms: Pelvis ($+7.3\%$), CHAOS ($+3.9\%$) and Mandible ($+2.0\%$) gain, and
+ON-Harmony worsens ($-1.0\%$; significant with its
 eight sessions as units, which come from four subjects). Solid/dashed = trained on a T1-weighted vs.\ other contrast; marker
 = held-out contrast. Per-row numbers in \cref{tab:dissociation}; HD95 in
 \cref{fig:ladder-hd95,tab:dissociation-hd95}.}
@@ -212,22 +211,24 @@ eight sessions as units, which come from four subjects). Solid/dashed = trained 
 Task & noise & $\Delta$ & rel.\ (\%) & $p$ \\
 \midrule
 \multicolumn{5}{l}{\emph{Interface-bounded}} \\
-CHAOS T1in                 & 85.7 & $+1.43$ & $+1.7$ & 4.0e-12 \\
-CHAOS T2spir               & 82.0 & $+5.11$ & $+6.2$ & 1.0e-20 \\
-ON-Harmony T1w             & 63.2 & $-5.18$ & $-8.2$ & 0.070$^*$ \\
-ON-Harmony T2w             & 64.2 & $-1.55$ & $-2.4$ & 0.070$^*$ \\
-ON-Harmony DWI             & 64.6 & $+0.78$ & $+1.2$ & 0.094$^*$ \\
-Mandible CBCT$^\ddagger$ & 68.1 & $+1.36$ & $+2.0$ & 4.9e-6 \\
+CHAOS T1in & 85.7 & $+1.43$ & $+1.7$ & 4.6e-12 \\
+CHAOS T2spir & 82.0 & $+5.11$ & $+6.2$ & 1.2e-20 \\
+ON-Harmony T1w & 63.2 & $-1.34$ & $-2.1$ & 0.078$^*$ \\
+ON-Harmony T2w & 64.2 & $-1.55$ & $-2.4$ & 0.078$^*$ \\
+ON-Harmony DWI & 64.6 & $+0.78$ & $+1.2$ & 0.11$^*$ \\
+Mandible CBCT$^\ddagger$ & 68.1 & $+1.36$ & $+2.0$ & 5.3e-6 \\
+Pelvis CT & 35.3 & $+3.08$ & $+8.7$ & 0.33 \\
+Pelvis MRI & 63.1 & $+4.12$ & $+6.5$ & 2.0e-6 \\
 \midrule
 \multicolumn{5}{l}{\emph{Appearance-defined}} \\
-Open-MS FLAIR              & 19.6 & $+7.69$ & $\mathbf{+39.3}$ & 0.070$^*$ \\
-Open-MS T1w                & 34.1 & $+0.79$ & $+2.3$ & 1.0$^*$ \\
-BraTS-GLI T1n              & 39.8 & $+7.22$ & $\mathbf{+18.1}$ & 2.8e-11 \\
-BraTS-GLI T1c              & 30.5 & $+13.27$ & $\mathbf{+43.6}$ & 4.3e-12 \\
-BraTS-GLI T2w              & 41.0 & $+0.87$ & $+2.1$ & 0.38 \\
-BraTS-GLI FLAIR            & 31.9 & $-0.19$ & $-0.6$ & 1.0 \\
-Breast T1-CE                & 30.8 & $-0.85$ & $-2.8$ & 0.26 \\
-Breast T2w                  & 39.8 & $+0.50$ & $+1.3$ & 0.094 \\
+Open-MS FLAIR & 19.6 & $+7.69$ & $\mathbf{+39.3}$ & 0.078$^*$ \\
+Open-MS T1w & 34.1 & $+0.79$ & $+2.3$ & 1.0$^*$ \\
+BraTS-GLI T1n & 39.8 & $+7.22$ & $\mathbf{+18.1}$ & 3.3e-11 \\
+BraTS-GLI T1c & 30.5 & $+13.27$ & $\mathbf{+43.6}$ & 5.0e-12 \\
+BraTS-GLI T2w & 41.0 & $+0.69$ & $+1.7$ & 0.61 \\
+BraTS-GLI FLAIR & 31.9 & $-0.19$ & $-0.6$ & 1.0 \\
+Breast T1-CE & 30.8 & $-0.85$ & $-2.8$ & 0.33 \\
+Breast T2w & 39.8 & $+0.50$ & $+1.3$ & 0.11 \\
 \bottomrule
 \end{tabular}
 \caption{Replacing SynthSeg-style noise fill with the real-intensity remap,
@@ -235,8 +236,7 @@ Breast T2w                  & 39.8 & $+0.50$ & $+1.3$ & 0.094 \\
 training modality of every task with a ladder. noise: out-of-domain Dice with
 noise fill; $\Delta$: Dice change at the swap; rel.: $\Delta$ relative to the
 noise-fill Dice (bold: above $15\%$). $p$: two-sided paired Wilcoxon on
-patients, pooled over the row's held-out contrasts, Holm-corrected across all
-fourteen rows. $^*$With eight test patients (Open-MS) or eight sessions of four subjects,
+patients, pooled over the row's held-out contrasts, Holm-corrected across all sixteen rows. $^*$With eight test patients (Open-MS) or eight sessions of four subjects,
 two sites each (ON-Harmony), no row reaches $p<0.05$ after correction even
 when all eight move together: Open-MS FLAIR ($8/8$ improve), ON-Harmony T1w
 and T2w ($8/8$ worsen).
@@ -252,13 +252,13 @@ noise-fill Dice, because the same few points are a small share of a high
 starting Dice and a large share of a low one (\cref{sec:discussion} notes the
 alternative); the three largest gains are the same relative or absolute.
 They are BraTS-GLI T1c ($+43.6\%$, $+13.3$ Dice) and T1n ($+18.1\%$, $+7.2$),
-both significant after correction over the fourteen rows, and Open-MS FLAIR
+both significant after correction over the sixteen rows, and Open-MS FLAIR
 ($+39.3\%$, $+7.7$), which improves for all eight test patients but is not
-significant after that correction. No interface-bounded row gains more than
-$6.2\%$; the largest, CHAOS T2spir, adds $5.1$ points from a noise-fill Dice of
-$82.0$. Pooled per task (\cref{fig:ladder}), the step is worth $+14.8\%$ on
-BraTS-GLI and $+15.8\%$ on Open-MS, against $+3.9\%$ on CHAOS, $+2.0\%$ on
-Mandible and $-3.0\%$ on ON-Harmony. Not every appearance-defined setting
+significant after that correction. No interface-bounded row gains more than $8.7\%$ (Pelvis CT, not significant
+after correction); the largest absolute interface gain, CHAOS T2spir, is $5.1$
+points from a noise-fill Dice of $82.0$. Pooled per task (\cref{fig:ladder}), the step is worth $+14.7\%$ on BraTS-GLI and $+15.8\%$ on Open-MS, against
+$+7.3\%$ on Pelvis, $+3.9\%$ on CHAOS, $+2.0\%$ on Mandible and $-1.0\%$ on
+ON-Harmony. Not every appearance-defined setting
 gains: Open-MS T1w, BraTS-GLI T2w and FLAIR, and both Breast rows ($-2.8\%$
 and $+1.3\%$, four cohorts pooled by contrast) show no Dice gain.
 

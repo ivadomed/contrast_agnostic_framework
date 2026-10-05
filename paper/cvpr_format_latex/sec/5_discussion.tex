@@ -27,11 +27,13 @@ samples.
 
 \paragraph{Limitations.} We assign each target to a group by its anatomy, not
 by a measured boundary statistic. Target type is confounded with difficulty:
-every interface-bounded row starts above $63\%$ noise-fill Dice and every
-appearance-defined row below $42\%$, so dividing by the starting Dice favors
-the latter; as a share of the remaining error, CHAOS T2spir would rank first.
-The between-group comparison is descriptive: with three ladder tasks per group, no test
-of it can reach $p<0.05$. Open-MS has eight test patients and ON-Harmony eight
+all interface-bounded rows but one start above $63\%$ noise-fill Dice and
+every appearance-defined row below $42\%$, so dividing by the starting Dice
+favors the latter; as a share of the remaining error, CHAOS T2spir would rank
+first. The exception, Pelvis CT, starts at $35\%$ and gains $+8.7\%$, below the
+large appearance-defined gains.
+The between-group comparison is descriptive: a permutation test on the
+seven per-task gains gives $p=0.2$. Open-MS has eight test patients and ON-Harmony eight
 sessions of four subjects, so their single-setting effects can be consistent
 without reaching significance, and
 ON-Harmony's session-level tests are optimistic. Spine was run on a separate
@@ -48,10 +50,10 @@ We asked when preserving real image texture matters for contrast-robust
 segmentation. Relative to the noise-fill Dice, preserving texture helps most
 where the target is defined by tissue appearance rather than an anatomical
 interface: $+15\%$ on brain tumor and $+16\%$ on MS lesions per task, against
-at most $4\%$ on interface-bounded tasks. Not every appearance-defined target
+at most $7\%$ on interface-bounded tasks. Not every appearance-defined target
 gains. PALETTE-Aug, which
-preserves texture and needs no dense label map, is the best method overall
-across eight tasks and sixteen datasets. The task-level account makes a
+preserves texture and needs no dense label map, wins the eight-task benchmark overall and significantly beats every
+competitor on five tasks. The task-level account makes a
 testable prediction for new tasks: a large relative gain from texture
 preservation should not be expected where the target has an anatomical
 interface.

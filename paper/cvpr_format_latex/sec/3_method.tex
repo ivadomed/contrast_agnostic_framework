@@ -61,8 +61,10 @@ training input (\cref{fig:method-pipeline}e).
   \centering
   \footnotesize
   \setlength{\tabcolsep}{2pt}
-  \newcommand{\methodrowlabel}[1]{\rotatebox{90}{\parbox{2.1cm}{\centering #1}}}
-  \newcommand{\methodpanel}[1]{\includegraphics[width=3.3cm]{figures/method_panels/#1}}
+  % Row labels and panels are both centred on the text axis, so each label sits
+  % at the vertical middle of its row whatever the row's image height.
+  \newcommand{\methodrowlabel}[1]{\raisebox{-0.5\height}{\rotatebox{90}{\parbox{2.1cm}{\centering #1}}}}
+  \newcommand{\methodpanel}[1]{\raisebox{-0.5\height}{\includegraphics[width=3.3cm]{figures/method_panels/#1}}}
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{c ccccc}
     & (a) Input

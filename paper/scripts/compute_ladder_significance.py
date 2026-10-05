@@ -36,7 +36,7 @@ M = ("benchmark/02_tasks/{task}/{ds}/8_results_{ds}/02_metrics/{model}/{contrast
      "/ablations/ladder_series.json")
 # Same mapping as make_per_contrast_curves.py; the template lacked the
 # 2026-09-27 task folder, so every ladder silently resolved to a missing file.
-TASK_OF = {"chaos": "abdomen_healthy", "on-harmony": "brain_healthy",
+TASK_OF = {"totalseg-pelvic": "pelvis_healthy", "chaos": "abdomen_healthy", "on-harmony": "brain_healthy",
            "toothfairy2": "mandible_healthy", "brats2024-glioma": "brain_tumor",
            "open-ms": "brain_ms", "ispy2": "breast_cancer"}
 
@@ -61,6 +61,8 @@ LADDERS = [
     ("ToothFairy2 CBCT", _j("toothfairy2", "toothfairy2_model", "cbct")),
     ("I-SPY2 T1-CE",     _j("ispy2", "ispy2_model", "t1wce")),
     ("I-SPY2 T2w",       _j("ispy2", "ispy2_model", "t2w")),
+    ("Pelvis CT",        _j("totalseg-pelvic", "totalseg_pelvic_model", "ct")),
+    ("Pelvis MRI",       _j("totalseg-pelvic", "totalseg_pelvic_model", "mri")),
 ]
 
 STARS = [(0.001, "***"), (0.01, "**"), (0.05, "*")]

@@ -64,7 +64,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 COMMUN = REPO / "benchmark" / "01_commun_results"   # was datasets/... before the 2026-09-27 restructuring
 
 M = "benchmark/02_tasks/{task}/{ds}/8_results_{ds}/02_metrics/{model}/{contrast}/ablations/ladder_series.json"
-TASK_OF = {"chaos": "abdomen_healthy", "on-harmony": "brain_healthy", "toothfairy2": "mandible_healthy",
+TASK_OF = {"totalseg-pelvic": "pelvis_healthy", "chaos": "abdomen_healthy", "on-harmony": "brain_healthy", "toothfairy2": "mandible_healthy",
            "brats2024-glioma": "brain_tumor", "open-ms": "brain_ms", "ispy2": "breast_cancer"}
 
 
@@ -86,6 +86,10 @@ PANELS = [
     ]),
     ("Mandible", "interface", [
         ("CBCT", _j("toothfairy2", "toothfairy2_model", "cbct")),
+    ]),
+    ("Pelvis", "interface", [
+        ("CT",  _j("totalseg-pelvic", "totalseg_pelvic_model", "ct")),
+        ("MRI", _j("totalseg-pelvic", "totalseg_pelvic_model", "mri")),
     ]),
     ("BraTS-GLI", "no_interface", [
         ("T1n", _j("brats2024-glioma", "brats2024_glioma_model", "t1n")),
@@ -252,6 +256,56 @@ def _panel_pooled_grouped(ladders, metric, higher_is_better):
     return wilcoxon_p(x, y), delta * (1 if higher_is_better else -1)
 
 
+THUMBS = REPO / "paper" / "cvpr_format_latex" / "figures" / "task_thumbs"   # make_task_thumbnails.py
+
+
+def _place_thumbnail(ax, title, width=0.26):
+    """Draw the task's example image (THUMBS/<title>.png) in the emptiest corner of
+    the panel: candidate boxes in axes coordinates are scored by how many plotted
+    points (line vertices plus segment samples) fall inside them; the top-centre
+    band is never used (the panel annotation lives there)."""
+    import matplotlib.image as mpimg
+    f = THUMBS / f"{title}.png"
+    if not f.exists():
+        return
+    img = mpimg.imread(f)
+    bb = ax.get_window_extent()
+    h = width * (img.shape[0] / img.shape[1]) * (bb.width / bb.height)
+    h = min(h, 0.36)
+    w = h / ((img.shape[0] / img.shape[1]) * (bb.width / bb.height))
+    to_axes = ax.transData + ax.transAxes.inverted()
+    pts = []
+    for ln in ax.get_lines():
+        xy = np.column_stack([ln.get_xdata(), ln.get_ydata()]).astype(float)
+        xy = xy[np.isfinite(xy).all(axis=1)]
+        if len(xy) == 0:
+            continue
+        for a0, a1 in zip(xy[:-1], xy[1:]):
+            pts.extend(a0 + (a1 - a0) * t for t in np.linspace(0, 1, 12))
+        pts.extend(xy)
+    pts = to_axes.transform(np.asarray(pts)) if pts else np.zeros((0, 2))
+    # Grid search over the whole panel; the annotation block (top ~22%, middle
+    # third) is off limits. Score = plotted points inside the box (+ small margin);
+    # ties go to the lowest, then rightmost box.
+    def score(x0, y0):
+        pad = 0.015
+        inside = ((pts[:, 0] > x0 - pad) & (pts[:, 0] < x0 + w + pad) &
+                  (pts[:, 1] > y0 - pad) & (pts[:, 1] < y0 + h + pad))
+        return int(inside.sum())
+    cands = []
+    for x0 in np.arange(0.01, 1 - w - 0.005, 0.02):
+        for y0 in np.arange(0.01, 1 - h - 0.005, 0.02):
+            if y0 + h > 0.78 and x0 < 0.80 and x0 + w > 0.35:
+                continue
+            cands.append((score(x0, y0), round(y0, 3), -round(x0, 3), x0, y0))
+    _, _, _, x0, y0 = min(cands)
+    iax = ax.inset_axes([x0, y0, w, h])
+    iax.imshow(img, interpolation="lanczos")
+    iax.set_xticks([]); iax.set_yticks([])
+    for sp in iax.spines.values():
+        sp.set_edgecolor("#9a9a9a"); sp.set_linewidth(0.6)
+
+
 def sig_color(p, delta, light=False):
     if not (np.isfinite(p) and p < 0.05):
         return FLAT
@@ -358,6 +412,7 @@ def build(metric, ylabel, out_name, higher_is_better):
                 ann += f"\n{dl:+.2f} pt ({dl / before * 100.0:+.1f}% relative)"
             else:
                 ann += f"\n{dl:+.2f} pt"
+        _place_thumbnail(ax, title)
         ax.text(FILL - 0.5, top - 0.02 * (top - ax.get_ylim()[0]),
                 ann, ha="center", va="top",
                 fontsize=7.6, fontweight="bold", color=seg)

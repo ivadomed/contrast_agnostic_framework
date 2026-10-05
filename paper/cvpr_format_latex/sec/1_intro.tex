@@ -49,10 +49,10 @@ An optional last step uses labels, and only the sparse task labels that any
 segmentation dataset already has.
 
 We test the mechanism by intervention. Keeping the partition and the region
-target means fixed, we replace SynthSeg-style noise fill with the real-intensity remap in fourteen training settings and measure the Dice change relative to the
+target means fixed, we replace SynthSeg-style noise fill with the real-intensity remap in sixteen training settings and measure the Dice change relative to the
 noise-fill Dice. Pooled per task, the gain is largest on the appearance-defined
 targets, brain tumor ($+15\%$) and MS lesions ($+16\%$), against at most
-$4\%$ on interface-bounded tasks. The converse does not hold: several
+$7\%$ on interface-bounded tasks. The converse does not hold: several
 appearance-defined settings, breast lesions among them, show no Dice gain, so
 we state the result in one direction only (\S\ref{subsec:e-ablation}). A
 segmentation-free gradient measurement confirms that the swap changes texture:
@@ -66,9 +66,9 @@ abdominal organ, mandible, breast lesion, spine and pelvis. We compare against
 nnU-Net with its default augmentation, two variants of SynthSeg (the original and our
 re-implementation of its EM label-subdivision extension),
 SRCSM~\cite{thaler2025semrandconv}, and Auglab~\cite{molinier2026auglab}, a
-published cross-modality augmentation pipeline. PALETTE-Aug is the best method
-overall: it has the best Dice on six of the eight tasks and is significantly
-better than every competitor across tasks, on both Dice and boundary distance.
+published cross-modality augmentation pipeline. PALETTE-Aug wins the benchmark overall: it has the best Dice on six of the
+eight tasks, significantly beats every competitor on five of them, and is
+ahead of each competitor across tasks on both Dice and boundary distance.
 
 In summary, we make the following contributions:
 \begin{itemize}
@@ -83,7 +83,7 @@ In summary, we make the following contributions:
     tests it alone.
     \item \textbf{Breadth evidence.} Across cross-contrast, cross-modality and
     cross-dataset transfer on eight tasks and sixteen datasets, with one
-    configuration reused throughout, PALETTE-Aug is best on six tasks and
-    significantly better than every competitor across tasks; where it does not
-    win, we test whether the leader is truly ahead.
+    configuration reused throughout, PALETTE-Aug wins the benchmark overall: it is best on six tasks and
+    significantly beats every competitor on five; where it does not win, we
+    test whether the leader is truly ahead.
 \end{itemize}

@@ -3,54 +3,35 @@ is trained on a single source contrast and evaluated on every contrast of that
 task's test split, including the training contrast itself; training and
 validation subjects never appear in any reported number.
 
-\begin{table}[h]
+\begin{table*}[t]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{llll}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\begin{tabular}{lP{2.0cm}P{4.1cm}P{1.7cm}P{4.3cm}rc}
 \toprule
-Task & Dataset & Train modalities & Test modalities \\
+Task & Target & Trained on (one modality at a time) & Other test contrasts & External test cohorts & Test cases & Ladder \\
 \midrule
-\multirow{3}{*}{Multi-Organ}
- & CHAOS      & T1-in, T2-SPIR & T1-in, T1-out, T2-SPIR, CT \\
- & AMOS       & --             & CT, MRI \\
- & SLIVER07   & --             & CT \\
+\multicolumn{7}{l}{\emph{Appearance-defined}} \\
+BraTS-GLI & glioma, 4 sub-regions & BraTS2024-GLI~\cite{deverdier2024brats2024}: T1n, T1c, T2w, FLAIR & -- & -- & 70 & \checkmark \\
+Open-MS & MS lesions & Open-MS~\cite{lesjak2018openms}: FLAIR, T1w & T2w & -- & 8 & \checkmark \\
+Breast & tumor & I-SPY2~\cite{li2022ispy2}: T1-CE, T2w & -- & Duke~\cite{saha2018duke,garrucho2025mamamia}, I-SPY1~\cite{hylton2012ispy1}: T1-CE, pre-contrast; ACRIN-6698~\cite{partridge2018acrin6698}: DWI & 84 + 829 & \checkmark \\
 \midrule
-Brain Glioma  & BraTS2024-GLI & T1n, T1c, T2w, FLAIR & T1n, T1c, T2w, FLAIR \\
-\midrule
-Brain MS      & Open-MS       & FLAIR, T1w  & FLAIR, T1w, T2w \\
-\midrule
-Healthy Brain & ON-Harmony    & T1w, T2w, DWI & T1w, T2w, BOLD, DWI, EPI, GRE \\
-\midrule
-\multirow{3}{*}{Mandible}
- & ToothFairy2     & CBCT        & CBCT \\
- & HaN-Seg         & --          & CT, MR-T1 \\
- & PDDCA           & --          & CT \\
-\midrule
-\multirow{4}{*}{Breast}
- & I-SPY2          & T1-CE, T2w  & T1-CE, T2w \\
- & Duke-Breast-MRI & --          & T1-CE, pre-contrast \\
- & I-SPY1          & --          & T1-CE, pre-contrast \\
- & ACRIN-6698      & --          & DWI \\
-\midrule
-\multirow{2}{*}{Spine$^\S$}
- & CT/Dixon cohort & CT, Dixon in & CT, Dixon fat/in/water \\
- & SPIDER          & --          & T1w, T2w \\
-\midrule
-Pelvis        & TotalSegmentator & CT, MRI & CT, MRI \\
+\multicolumn{7}{l}{\emph{Interface-bounded}} \\
+CHAOS & liver, kidneys, spleen & CHAOS~\cite{kavur2021chaos}: T1in, T2spir & T1out, CT & AMOS~\cite{ji2022amos}: CT, T2w; SLIVER07~\cite{heimann2009comparison}: CT & 24 + 140 & \checkmark \\
+ON-Harm. & 31 brain regions & ON-Harmony~\cite{warrington2025onharmony}: T1w, T2w, DWI & BOLD, EPI, GRE & -- & 8$^a$ & \checkmark \\
+Mandible & mandible & ToothFairy2~\cite{bolelli2025toothfairy2}: CBCT & -- & HaN-Seg~\cite{podobnik2023hanseg}: CT, MR-T1; PDDCA~\cite{raudaschl2017pddca}: CT & 71 + 82 & \checkmark \\
+Spine & vertebrae, discs, canal & CT/Dixon cohort: CT, Dixon in-phase & Dixon fat, water & SPIDER~\cite{vandergraaf2024spider}: T1w, T2w & 29 + 171/219 & -- \\
+Pelvis & 11 bones and muscles & TotalSegmentator~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}: CT, MRI$^b$ & -- & -- & 30/27 & \checkmark \\
 \bottomrule
-\end{tabular}%
-}
-\caption{Per-task dataset roster. Rows marked ``--'' are cross-dataset
-transfer targets only, never trained on; their contrasts are extra held-out
-test columns of the task they sit under, not tasks of their own. Mandible's
-non-CBCT test contrasts all come from other datasets, since ToothFairy2
-acquires CBCT alone. Pelvis's CT and MRI come from different patients. $^\S$Spine results
-were computed on a separate pipeline with the same method suite except SRCSM (\cref{sec:suppl-data}).
-Counts are in \cref{tab:suppl-datasets}.}
+\end{tabular}
+\caption{Per-task dataset roster (summary in \cref{tab:tasks}, main paper). Test
+cases: own held-out split + external cohorts;
+$a$/$b$ gives two contrasts' counts where they differ (\cref{tab:suppl-datasets}). Ladder:
+the task has the causal ablation of \cref{subsec:e-ablation}. $^a$Sessions of
+four subjects. $^b$Different patients for CT and MRI.}
 \label{tab:datasets}
-\end{table}
+\end{table*}
 
 \paragraph{ON-Harmony} \cite{warrington2025onharmony} --- 31-region healthy-brain
 segmentation. Reference labels are \emph{silver standard}: FreeSurfer

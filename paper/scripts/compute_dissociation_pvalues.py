@@ -41,7 +41,7 @@ M = ("benchmark/02_tasks/{task}/{ds}/8_results_{ds}/02_metrics/{model}/{contrast
 # Same mapping as make_per_contrast_curves.py's TASK_OF. Before this existed the
 # template lacked the 2026-09-27 task folder, so EVERY row silently resolved to
 # a missing file and the script printed an empty table with only a warning.
-TASK_OF = {"chaos": "abdomen_healthy", "on-harmony": "brain_healthy",
+TASK_OF = {"totalseg-pelvic": "pelvis_healthy", "chaos": "abdomen_healthy", "on-harmony": "brain_healthy",
            "toothfairy2": "mandible_healthy", "brats2024-glioma": "brain_tumor",
            "open-ms": "brain_ms", "ispy2": "breast_cancer"}
 
@@ -65,10 +65,12 @@ def _j(ds, model, contrast):
 ROWS = [
     ("CHAOS T1in",       "tissue interface",            _j("chaos", "chaos_model", "t1in")),
     ("CHAOS T2spir",     "tissue interface",            _j("chaos", "chaos_model", "t2spir")),
-    ("ON-Harmony T1w",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "T1w")),
-    ("ON-Harmony T2w",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "T2w")),
-    ("ON-Harmony DWI",   r"tissue interface$^\dagger$", _j("on-harmony", "on_harmony_model", "dwi_ap")),
+    ("ON-Harmony T1w",   "tissue interface",            _j("on-harmony", "on_harmony_model", "T1w")),
+    ("ON-Harmony T2w",   "tissue interface",            _j("on-harmony", "on_harmony_model", "T2w")),
+    ("ON-Harmony DWI",   "tissue interface",            _j("on-harmony", "on_harmony_model", "dwi_ap")),
     ("Mandible CBCT",    r"tissue interface$^\ddagger$", _j("toothfairy2", "toothfairy2_model", "cbct")),
+    ("Pelvis CT",        "tissue interface",            _j("totalseg-pelvic", "totalseg_pelvic_model", "ct")),
+    ("Pelvis MRI",       "tissue interface",            _j("totalseg-pelvic", "totalseg_pelvic_model", "mri")),
     ("Open-MS FLAIR",    "no tissue interface",         _j("open-ms", "open_ms_model", "flair")),
     ("Open-MS T1w",      "no tissue interface",         _j("open-ms", "open_ms_model", "t1w")),
     ("BraTS-GLI T1n",    "no tissue interface",         _j("brats2024-glioma", "brats2024_glioma_model", "t1n")),
