@@ -48,6 +48,12 @@ reference AND the scaffolder AND the skill in the same commit.
 
 ## ⚠️ Killarney repo-layout mismatch (since 2026-09-27, until migrated)
 
+**UPDATE 2026-10-04 (verified for the repo checkout, not for older staged data): Killarney's checkout is CURRENT** — same commit as Vulcan, `benchmark/` layout (kept in sync with `git bundle` →
+`git fetch <bundle>` → `git reset --mixed`, which updates git without touching files). Its `$SCRATCH` (/scratch/paulh, 500 GiB, 1M files, not durable) was empty of the old `datasets/` data, so new work stages
+its data into the repo's dataset dirs (project space) by rsync. Killarney = per-GPU allocation: GPU nodes `l40s:4` (kn001-168) and `h100:8` (kn169-178), partition tiers b1 ≤3 h / b2 ≤12 h / b3 ≤24 h / b4 ≤3 d / b5 ≤7 d
+(fewer nodes at longer tiers), nested `sbatch` from compute nodes works, helper `scripts/cluster/killarney_run.sh`. Per-GPU launch/probe/queue scripts: see the pancreas section and skill `setup-train-predict-eval-scripts` §4-K.
+Never `git pull` or move/replace files in a Killarney checkout while jobs are pending: trainers are imported from its working tree at job start. The paragraph below is the original (2026-09-27) warning, kept for the history.
+
 Vulcan's repo was restructured 2026-09-27: `datasets/` → `benchmark/`, with every dataset moved one
 level deeper into `benchmark/02_tasks/<task>/<dataset>/` (see "Dataset structure" below for the
 full mapping). **TamIA was migrated 2026-09-27/30 and is now current** (physical `mv` of its

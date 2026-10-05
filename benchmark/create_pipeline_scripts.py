@@ -30,6 +30,10 @@ PROJECT = HERE.parent
 REF_TASK, REF_DS, REF_NAME = "brain_stroke", "isles2022", "ISLES2022"
 REF_C = ("dwi", "flair"); REF_IDS = ("140", "141")
 REF_LABEL = "lesion"; REF_DESC = "ischemic stroke lesion"
+# The reference's epoch comment credits a decision to the user ("Paul, 2026-10-04: ...") and quotes isles2022's cohort size: never copy it to another dataset.
+EPOCH_TODO = ("# PROJECT_TODO EPOCH POLICY: decide by analogy with the project's epoch table (brats 2500; on-harmony / open-ms / isles2022 2000; ispy2 1000; chaos 200),\n"
+              "# write the number + the real rationale (cohort size, cost) here as YOUR decision (unless the user gave a number), and never attribute it to the user.\n"
+              "# Re-time RUN_JOB_TIME_DEFAULT / job limits from a sizing probe on the target cluster before trusting them.\n")
 SKIP_DIRS = {"__pycache__", "logs", "configs", "toDelete"}
 TODO_BANNER = ("# >>> SCAFFOLDED from the isles2022 reference by benchmark/create_pipeline_scripts.py. REVIEW BEFORE USE: dataset ids, BIDS leaf,\n"
                "# >>> epoch policy, RUN_JOB_* resources and ALL descriptive comments below still describe the reference, not this dataset.\n")
@@ -124,6 +128,8 @@ def main():
         if src.name == "06_01_evaluate_run.sh":
             text = text.replace(f'EVAL_LABELS="{REF_LABEL}"', f'EVAL_LABELS="{a.labels}"')
             text = text.replace(f"scoring the `{REF_LABEL}` label", f"scoring the `{a.labels}` label")
+        if src.name == "04_00_common.sh":
+            text = re.sub(r"# EPOCH POLICY:.*?(?=NNUNET_NUM_EPOCHS_DEFAULT)", lambda m: EPOCH_TODO, text, count=1, flags=re.S)
         if src.name.startswith("06_00_evaluate"):
             text = text.replace(f"background 0, {REF_LABEL} 1 -> score `--labels {REF_LABEL}`", f"background 0, {a.labels} 1 -> score `--labels {a.labels}`")
         if dst.exists() and not a.force:
