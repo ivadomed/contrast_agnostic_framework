@@ -46,6 +46,12 @@ RUNG6_ROWS=(
 "pelvic_ct|E_pelvic|$P|env.sh|tamia_env_totalseg-pelvic.sh|ct|05_12_predict_ct_ladder_v26_6_2_train050_val100.sh||totalseg-pelvic_ct_v26_6_2_pv_train050_val100_20261003_120315|$PV|pelvic|$PV"
 "pelvic_mri|E_pelvic|$P|env_mri.sh|tamia_env_totalseg-pelvic.sh|mri|05_23_predict_mri_ladder_v26_6_2_train050_val100.sh||totalseg-pelvic_mri_v26_6_2_pv_train050_val100_20261003_120315|$PV|pelvic|$PV"
 )
+# Generic names read by the shared predict/eval job scripts (tamia_rung6_pv_{predict,eval}_job.sh). Another roster
+# (e.g. tamia_rung7_runs.sh) overrides these after sourcing this file. RUNG_CAT = nnUNet-results category dir,
+# RUNG_MSUB = metrics sub-dir ("ablations" for ladder-exclusive runs, "" = flat headline layout),
+# rung_resolve_run <pack> <run field> = turn a run-id PREFIX into the real run id (identity here: ids are literal).
+RUNG_ROWS=("${RUNG6_ROWS[@]}"); RUNG_CAT=nnUNet; RUNG_MSUB=ablations
+rung_resolve_run() { echo "$2"; }
 # Exported BEFORE a row's env files are sourced, for eval (common_env.sh keeps an already-exported
 # METRICS_ROOT; brats' tamia_env.sh does not override it and the default is the file-count-limited /project).
 rung6_eval_pre_env() {

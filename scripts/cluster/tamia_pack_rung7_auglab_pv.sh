@@ -8,7 +8,7 @@
 # validation config all come from the wrapper. Results land in the same `auglab/` category as the OURS runs.
 #   bash scripts/cluster/tamia_pack_rung7_auglab_pv.sh record [PACK...]   # record + verify, no submit
 #   bash scripts/cluster/tamia_pack_rung7_auglab_pv.sh submit [PACK...]   # submit chains (resume-safe)
-# A pack whose index.tsv already exists is never re-recorded. Predict/eval: not queued here.
+# A pack whose index.tsv already exists is never re-recorded. Predict/eval: `postcheck` / `queue-post` (below).
 # PROBE=1 (any mode): rehearsal of the exact same recorded commands with 2 epochs, results under
 #   ${SCRATCH}/_rung7_probe (throwaway), separate state file, 45 min x 1 job per pack -- to check startup, config,
 #   placement and GPU memory BEFORE the real launch.
@@ -113,6 +113,47 @@ PY
     printf '   %-40s %s  %s\n' "$s" "$w" "$ta"
   done
   [ "$bad" = 0 ] && echo "VERIFY PASSED" || echo "VERIFY FAILED"; exit 0
+fi
+
+# ---- post-training: predict + evaluate (run table: scripts/cluster/tamia_rung7_runs.sh; jobs: tamia_rung6_pv_{predict,eval}_job.sh) ----
+#   bash scripts/cluster/tamia_pack_rung7_auglab_pv.sh postcheck            # verify every row's wrapper/trainer/run id, no submit
+#   bash scripts/cluster/tamia_pack_rung7_auglab_pv.sh queue-post [PACK...]  # predict job per pack + eval job per row, behind the training chains
+if [ "${MODE}" = postcheck ] || [ "${MODE}" = queue-post ]; then
+    source scripts/cluster/tamia_rung7_runs.sh
+    bad=0
+    for r in "${RUNG_ROWS[@]}"; do IFS='|' read -r name pack dir envf tenv tc wrapper args prefix pexp ekind eexp <<<"$r"
+        [[ " ${SEL} " == *" ${pack} "* ]] || continue
+        run="$(rung_resolve_run "${pack}" "${prefix}")" || { echo "FAIL  ${name}: cannot resolve run id for ${prefix}"; bad=1; continue; }
+        w="$T/$dir/05_predict/${wrapper}"; ok=OK
+        [ -f "$w" ] || ok="NO_PREDICT_WRAPPER"
+        wt=$(grep -o '^TRAINER="[^"]*"' "$w" 2>/dev/null | cut -d'"' -f2); wc=$(grep -o '^CATEGORY="[^"]*"' "$w" 2>/dev/null | cut -d'"' -f2)
+        tt=$(sed -e 's/\\n/\n/g' "${PACKS_ROOT}/${pack}/fold0_${run}.sh" | grep -o '\-tr [A-Za-z0-9_]*' | head -1 | cut -d' ' -f2)
+        [ "$wt" = "$tt" ] || ok="${ok},TRAINER_MISMATCH(predict=${wt} train=${tt})"
+        [ "$wc" = "auglab" ] || ok="${ok},CATEGORY(${wc})"
+        [ "$ok" = OK ] || bad=1
+        printf '%-6s %-13s %-14s %s\n         predict=%s trainer=%s run=%s\n' "${ok%%,*}" "$name" "$ekind" "" "$wrapper" "$wt" "$run"
+        [ "$ok" = OK ] || echo "         PROBLEMS: ${ok}"
+    done
+    [ "${MODE}" = postcheck ] && { [ "$bad" = 0 ] && echo "POSTCHECK PASSED" || echo "POSTCHECK FAILED"; exit 0; }
+    [ "$bad" = 0 ] || { echo "postcheck failed -- not queueing"; exit 1; }
+    cpu_submit() { local out; if out="$(sbatch --parsable "$@" 2>/dev/null)"; then echo "${out}"; return 0; fi
+                   echo "  (bare sbatch failed -- retrying with --partition=cpubase_bynode_b1)" >&2
+                   sbatch --parsable --partition=cpubase_bynode_b1 "$@"; }
+    for p in ${SEL}; do
+        last="$(squeue -u "${USER}" -h -n "rung7pv_${p}" -o %i | sort -n | tail -1)"
+        dep=(); [ -n "${last}" ] && dep=(--dependency=afterany:"${last}")
+        OUT="${PACKS_ROOT}/post_${p}"; mkdir -p "${OUT}"
+        PJ="$(sbatch --parsable "${dep[@]}" --job-name="rung7pv_predict_${p}" --time=06:00:00 \
+              --output="${OUT}/predict_job_%j.out" --export="ALL,ROSTER=scripts/cluster/tamia_rung7_runs.sh,PACK=${p},OUT=${OUT}" scripts/cluster/tamia_rung6_pv_predict_job.sh)"
+        echo "${PJ}" > "${OUT}/PREDICT_JOB"; echo "[queue-post] ${p}: predict job ${PJ} (after training job ${last:-none, already finished})"
+        for r in "${RUNG_ROWS[@]}"; do IFS='|' read -r name pack _ <<<"$r"; [ "$pack" = "$p" ] || continue
+            EJ="$(cpu_submit --dependency=afterany:"${PJ}" --job-name="rung7pv_eval_${name}" --time=05:00:00 --cpus-per-task=16 \
+                  --mem=96G --account=aip-jcohen --output="${OUT}/eval_${name}_%j.out" \
+                  --export="ALL,ROSTER=scripts/cluster/tamia_rung7_runs.sh,ROW=${name},OUT=${OUT}" scripts/cluster/tamia_rung6_pv_eval_job.sh)"
+            echo "${EJ}" >> "${OUT}/EVAL_JOBS"; echo "[queue-post]   eval ${name}: job ${EJ}"; sleep 2
+        done
+    done
+    exit 0
 fi
 
 [ "${MODE}" = submit ] || { echo "unknown mode ${MODE}"; exit 2; }

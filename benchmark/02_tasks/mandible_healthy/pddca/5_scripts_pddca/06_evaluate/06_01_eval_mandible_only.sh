@@ -50,7 +50,7 @@ for CAT in nnUNet auglab; do
     # Ladder rungs -> ablations/, matching the toothfairy2/hanseg layout. Pattern-based
     # because a brand-new dataset has no existing metrics tree to mirror.
     case "${RID}" in
-      *baseline_kmeans*|*_v26_6_2_train050_val100_*|*_v26_6_2_pv_train050_*) SUB="/ablations" ;;
+      *baseline_kmeans*|*_v26_6_2_train050_val100_*|toothfairy2_cbct_v26_6_2_pv_train050_*) SUB="/ablations" ;;
       *) SUB="" ;;
     esac
     # auglabAug_v26_6_2_* is the HEADLINE method, not a ladder rung — don't let the

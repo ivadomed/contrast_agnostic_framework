@@ -13,10 +13,11 @@ set -uo pipefail
 : "${ROW:?}" "${OUT:?}"
 cd /project/aip-jcohen/paulh/mri_synthesis_project
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
-source scripts/cluster/tamia_rung6_pv_runs.sh
+source "${ROSTER:-scripts/cluster/tamia_rung6_pv_runs.sh}"   # run table (default: rung 6)
 T=benchmark/02_tasks
 export RUN_JOB_INLINE=1
-row=""; for r in "${RUNG6_ROWS[@]}"; do IFS='|' read -r name _ <<<"$r"; [ "$name" = "$ROW" ] && row="$r"; done
+row=""; for r in "${RUNG_ROWS[@]}"; do IFS='|' read -r name pack f3 f4 f5 f6 f7 f8 run rest <<<"$r"
+  [ "$name" = "$ROW" ] && row="${name}|${pack}|${f3}|${f4}|${f5}|${f6}|${f7}|${f8}|$(rung_resolve_run "${pack}" "${run}")|${rest}"; done
 [ -n "$row" ] || { echo "[eval-job] ERROR: no row ${ROW}" >&2; exit 2; }
 IFS='|' read -r name pack dir envf tenv tc wrapper args run pexp ekind eexp <<<"$row"
 S="$T/$dir/06_evaluate"
@@ -25,12 +26,12 @@ echo "[eval-job] ${name} run=${run} kind=${ekind} host=$(hostname) job=${SLURM_J
 envsetup() { export TRAINING_CONTRAST="$tc"; source "$T/$dir/00_utils/$envf"; source "scripts/cluster/$tenv"; export TRAINING_CONTRAST="$tc"; }
 
 audit() {   # audit <metrics dir to search> <run_id> "item:n ..."  (exactly one nnUNet_<run>/fold{k}/eval_all.csv per fold)
-.venv/bin/python - "$1" "$2" $3 <<'PY'
+.venv/bin/python - "$1" "$2" "${RUNG_CAT}" $3 <<'PY'
 import csv, glob, sys, collections
-root, run, exp = sys.argv[1], sys.argv[2], dict(x.rsplit(":", 1) for x in sys.argv[3:])
+root, run, cat, exp = sys.argv[1], sys.argv[2], sys.argv[3], dict(x.rsplit(":", 1) for x in sys.argv[4:])
 bad = 0
 for k in (0, 1, 2):
-    ps = glob.glob(f"{root}/**/nnUNet_{run}/fold{k}/eval_all.csv", recursive=True)
+    ps = glob.glob(f"{root}/**/{cat}_{run}/fold{k}/eval_all.csv", recursive=True)
     if len(ps) != 1:
         print(f"AUDIT FAIL fold{k}: {len(ps)} eval_all.csv found {ps}"); bad = 1; continue
     print(f"fold{k}: {ps[0]}")
@@ -47,31 +48,31 @@ PY
 rc=0
 case "${ekind}" in
   brats:*)   # in-process, folds sequential (3 folds x 4 contrasts at once OOM-killed a 64G job before)
-    rung6_eval_pre_env "${ekind}"; envsetup; export DATASET_ID="${ekind#brats:}" EVAL_INLINE=1 CATEGORY=nnUNet METRICS_SUBDIR=ablations
+    rung6_eval_pre_env "${ekind}"; envsetup; export DATASET_ID="${ekind#brats:}" EVAL_INLINE=1 CATEGORY="${RUNG_CAT}" METRICS_SUBDIR="${RUNG_MSUB}"
     for F in 0 1 2; do bash "$S/06_01_evaluate_run.sh" "${run}" "${F}" || rc=1; done ;;
   onh)       # WORKER mode, one fold at a time (default CHECKPOINT=checkpoint_final, as for its rung 5)
     envsetup
     for F in 0 1 2; do bash "$S/06_01_evaluate_testset.sh" "${run}" "${F}" || rc=1; done ;;
   chaos:*)   # DATASET_ID explicit: the non-primary contrast scores against the wrong GT otherwise
-    envsetup; export DATASET_ID="${ekind#chaos:}" CATEGORY=nnUNet METRICS_SUBDIR=ablations
+    envsetup; export DATASET_ID="${ekind#chaos:}" CATEGORY="${RUNG_CAT}" METRICS_SUBDIR="${RUNG_MSUB}"
     bash "$S/06_01_evaluate_run.sh" "${run}" || rc=1 ;;
   openms_flair)
-    envsetup; export METRICS_SUBDIR=ablations
-    bash "$S/06_01_evaluate_run.sh" "${run}" nnUNet || rc=1 ;;
+    envsetup; export METRICS_SUBDIR="${RUNG_MSUB}"
+    bash "$S/06_01_evaluate_run.sh" "${run}" "${RUNG_CAT}" || rc=1 ;;
   openms_t1w)
-    envsetup; export METRICS_SUBDIR=ablations
-    bash "$S/06_13_evaluate_t1w.sh" "${run}" nnUNet || rc=1 ;;
+    envsetup; export METRICS_SUBDIR="${RUNG_MSUB}"
+    bash "$S/06_13_evaluate_t1w.sh" "${run}" "${RUNG_CAT}" || rc=1 ;;
   ispy2:*)
-    envsetup; export METRICS_SUBDIR=ablations
-    bash "$S/06_01_evaluate_own_run.sh" "${run}" nnUNet "${ekind#ispy2:}" all || rc=1 ;;
+    envsetup; export METRICS_SUBDIR="${RUNG_MSUB}"
+    bash "$S/06_01_evaluate_own_run.sh" "${run}" "${RUNG_CAT}" "${ekind#ispy2:}" all || rc=1 ;;
   pelvic)
-    envsetup; export METRICS_SUBDIR=ablations
-    bash "$S/06_01_evaluate_run.sh" "${run}" nnUNet || rc=1 ;;
+    envsetup; export METRICS_SUBDIR="${RUNG_MSUB}"
+    bash "$S/06_01_evaluate_run.sh" "${run}" "${RUNG_CAT}" || rc=1 ;;
   tf2)       # mandible-only in-domain; mirrors the run's 3-class metrics location -> seed it under ablations/
-    mkdir -p "${SCRATCH}/toothfairy2/8_results/02_metrics/toothfairy2_model/cbct/ablations/nnUNet_${run}"
+    [ -z "${RUNG_MSUB}" ] || mkdir -p "${SCRATCH}/toothfairy2/8_results/02_metrics/toothfairy2_model/cbct/${RUNG_MSUB}/${RUNG_CAT}_${run}"
     ONLY_RUN="${run}" bash "$S/06_08_evaluate_cbct.sh" || rc=1 ;;
   hanseg)    # flipped arm: same settings as its rung 5 (fold{k}/sif/<item>, sif GT, mandible_only_sif tree)
-    mkdir -p "${SCRATCH}/hanseg/8_results/02_metrics/toothfairy2_model/cbct/ablations/nnUNet_${run}"
+    [ -z "${RUNG_MSUB}" ] || mkdir -p "${SCRATCH}/hanseg/8_results/02_metrics/toothfairy2_model/cbct/${RUNG_MSUB}/${RUNG_CAT}_${run}"
     ONLY_RUN="${run}" PRED_SUBDIR=sif GT_OVERRIDE="${SCRATCH}/hanseg/2_nnUNet/raw/labelsTs_ct_sif" MO_DIR=mandible_only_sif \
       bash "$S/06_03_eval_mandible_only.sh" || rc=1 ;;
   pddca)

@@ -14,14 +14,15 @@ set -uo pipefail
 : "${PACK:?}" "${OUT:?}"
 cd /project/aip-jcohen/paulh/mri_synthesis_project
 export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
-source scripts/cluster/tamia_rung6_pv_runs.sh
+source "${ROSTER:-scripts/cluster/tamia_rung6_pv_runs.sh}"   # run table (default: rung 6)
 T=benchmark/02_tasks
 echo "[predict-job] pack=${PACK} host=$(hostname) job=${SLURM_JOB_ID:-?} OUT=${OUT}"
 
 envsetup() {   # <dir> <envfile> <tamia env> <tc>  (call inside a subshell)
     export TRAINING_CONTRAST="$4"; source "$T/$1/00_utils/$2"; source "scripts/cluster/$3"; export TRAINING_CONTRAST="$4"
 }
-rows=(); for r in "${RUNG6_ROWS[@]}"; do IFS='|' read -r name pack _ <<<"$r"; [ "$pack" = "$PACK" ] && rows+=("$r"); done
+rows=(); for r in "${RUNG_ROWS[@]}"; do IFS='|' read -r name pack f3 f4 f5 f6 f7 f8 run rest <<<"$r"; [ "$pack" = "$PACK" ] || continue
+  rows+=("${name}|${pack}|${f3}|${f4}|${f5}|${f6}|${f7}|${f8}|$(rung_resolve_run "${pack}" "${run}")|${rest}"); done
 [ ${#rows[@]} -gt 0 ] || { echo "[predict-job] ERROR: no rows for pack ${PACK}" >&2; exit 2; }
 
 # (1) checkpoints (the flipped mandible arms reuse the toothfairy2 model -- checked by its own row)
@@ -29,7 +30,7 @@ missing=0
 for r in "${rows[@]}"; do IFS='|' read -r name pack dir envf tenv tc wrapper args run pexp ekind eexp <<<"$r"
   case "$name" in *_sif) continue ;; esac
   ( envsetup "$dir" "$envf" "$tenv" "$tc"
-    base="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${tc}/nnUNet/${run}"
+    base="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${tc}/${RUNG_CAT}/${run}"
     for k in 0 1 2; do for ck in checkpoint_final checkpoint_best; do
       ls "${base}"/Dataset*/*/fold_${k}/${ck}.pth >/dev/null 2>&1 || { echo "[predict-job] MISSING ${ck} ${name} fold${k} (${base})" >&2; exit 1; }
     done; done ) || missing=1
@@ -79,7 +80,7 @@ for r in "${rows[@]}"; do IFS='|' read -r name pack dir envf tenv tc wrapper arg
   ( envsetup "$dir" "$envf" "$tenv" "$tc"
     for k in 0 1 2; do for it in ${pexp}; do item="${it%:*}"
       .venv/bin/python "$T/$dir/05_predict/05_02_resample_predictions_to_native.py" \
-        "${PREDICTIONS_ROOT}/${MODEL_TYPE}/${tc}/nnUNet/${run}/fold${k}/final/${item}" \
+        "${PREDICTIONS_ROOT}/${MODEL_TYPE}/${tc}/${RUNG_CAT}/${run}/fold${k}/final/${item}" \
         "${PREDICTIONS_ROOT}/${MODEL_TYPE}/_test_set/${item}/images_native" || exit 1
     done; done ) || { echo "[predict-job] ERROR: resample-to-native failed for ${name}"; rc_all=1; }
 done
@@ -89,7 +90,7 @@ audit_fail=0
 for r in "${rows[@]}"; do IFS='|' read -r name pack dir envf tenv tc wrapper args run pexp ekind eexp <<<"$r"
   ( envsetup "$dir" "$envf" "$tenv" "$tc"
     # cross-dataset (mandible) envs name the source model's type TF2_MODEL_TYPE
-    base="${PREDICTIONS_ROOT}/${MODEL_TYPE:-${TF2_MODEL_TYPE}}/${tc}/nnUNet/${run}"
+    base="${PREDICTIONS_ROOT}/${MODEL_TYPE:-${TF2_MODEL_TYPE}}/${tc}/${RUNG_CAT}/${run}"
     bad=0
     for k in 0 1 2; do for it in ${pexp}; do item="${it%:*}"; want="${it##*:}"
       n=$(ls "${base}"/fold${k}/${item}/*.nii.gz "${base}"/fold${k}/final/${item}/*.nii.gz 2>/dev/null | wc -l)
