@@ -1,0 +1,11 @@
+#!/bin/bash
+# Build the orientation-fix table (MCF 180-degree defect) from the CNN output (02_09) + S-I / pair checks + QC PNG, via run_job (CPU).  bash 02_10_orientation_fix.sh
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
+mkdir -p "${HERE}/logs"
+source "${REPO_ROOT}/scripts/job_runner/run_job.sh"
+LOG="${HERE}/logs/orientation_fix_$(date +%Y%m%d_%H%M%S).log"
+run_job --name pansegdata_orient_fix --gpus 0 --cpus 2 --mem 16G --time 01:00:00 --log "${LOG}" --wait -- \
+    "${REPO_ROOT}/.venv/bin/python" "${HERE}/02_10_orientation_fix.py"
+tail -14 "${LOG}"
