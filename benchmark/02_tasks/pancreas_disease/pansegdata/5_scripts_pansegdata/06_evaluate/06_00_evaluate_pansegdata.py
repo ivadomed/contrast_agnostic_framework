@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-"""
-pansegdata evaluator -- thin shim over the shared, method-agnostic evaluator at
-benchmark/00_commun_scripts/00_03_evaluate/evaluate.py (Dice / HD95 per case per
-label). Same CLI; see that header.
-
-TODO: describe this dataset's label set here (ids, any --label_map remap needed
-for cross-dataset evaluation, etc.) -- see toothfairy2's or totalseg-pelvic's
-06_00_evaluate.py for real examples of this docstring.
-"""
+"""pansegdata evaluator -- thin shim over the shared, method-agnostic evaluator at
+benchmark/00_commun_scripts/00_03_evaluate/evaluate.py (Dice / HD95 per case per label). Same CLI; see that header.
+Label set (dataset.json of Dataset150/151): background 0, pancreas 1 -> score `--labels pancreas`; pred ids == GT ids, so no
+--label_map is needed. The shared evaluate_run_common.sh calls the commun evaluate.py directly; this shim exists for
+ad-hoc use and for the canonical 06_00 slot."""
 import os
 import sys
 from pathlib import Path

@@ -3,8 +3,10 @@
 #   source "$(dirname "$0")/../00_utils/env.sh"   (from a step subdir)
 #
 # pansegdata = MRI part of PanSegData (OSF kysnj; Zhang et al., Med Image Anal 99:103382): pancreas MRI from 5 centers, venous-phase T1W + T2W,
-# manual pancreas masks (cohort referred for pancreatic cystic lesions / suspected PDAC). 405 subjects in BIDS; 362 have BOTH contrasts (the
-# usable set; the 43 single-contrast subjects are excluded so every contrast dataset has the same case ids). Two TRAINING contrasts, each its own
+# manual pancreas masks (cohort referred for pancreatic cystic lesions / suspected PDAC). 405 subjects in BIDS; 362 have BOTH contrasts; the
+# 150 of them from center MCF are excluded (unreliable orientation / mask registration), so the usable set is 212 subjects (NYU 161, NWU 19,
+# AHN 17, MCA 15: pool 170 + 42 held-out test); the single-contrast subjects are excluded so every contrast dataset has the same case ids.
+# Two TRAINING contrasts, each its own
 # nnU-Net Dataset, each tested CROSS-CONTRAST on held-out patients' T1WCE and T2W (each model trained on one, tested on both):
 #   t1wce (Dataset150_PanSegData_T1WCE) -- venous-phase contrast-enhanced T1 (mask drawn on this scan)
 #   t2w   (Dataset151_PanSegData_T2W)   -- T2 (own mask drawn on this scan)

@@ -123,6 +123,9 @@ def main():
             text = text.replace("#!/usr/bin/env bash\n", "#!/usr/bin/env bash\n" + TODO_BANNER, 1)
         if src.name == "06_01_evaluate_run.sh":
             text = text.replace(f'EVAL_LABELS="{REF_LABEL}"', f'EVAL_LABELS="{a.labels}"')
+            text = text.replace(f"scoring the `{REF_LABEL}` label", f"scoring the `{a.labels}` label")
+        if src.name.startswith("06_00_evaluate"):
+            text = text.replace(f"background 0, {REF_LABEL} 1 -> score `--labels {REF_LABEL}`", f"background 0, {a.labels} 1 -> score `--labels {a.labels}`")
         if dst.exists() and not a.force:
             print("EXISTS (skipped):", dst); n_skip += 1; continue
         print(("would write " if a.dry_run else "write "), dst)

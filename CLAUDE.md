@@ -217,6 +217,7 @@ convention. Current roster:
 | `abdomen_healthy` | chaos, amos, sliver07 |
 | `pelvis_healthy` | totalseg-pelvic |
 | `spine_healthy` | healthy-spine-tum |
+| `pancreas_disease` | pansegdata (trains; pancreas MRI T1WCE+T2W, 212 subjects after excluding center MCF — see its section below) |
 
 `benchmark/03_archive/<name>` (17 excluded/superseded datasets) stays flat, untouched by the
 task taxonomy — archived datasets don't need it, and archival status is orthogonal to anatomy/
@@ -595,6 +596,31 @@ that written agreement.** BIDS leaf `1_BIDS_isles2022/stroke-brain-isles2022` (n
   → controller job `05_28` → predict packs → `06_evaluate/06_08` eval job; status in `$SCRATCH/isles2022/post_training_status.txt`, `DONE_eval.txt`).
   Manual tail afterwards: fetch metrics to Vulcan → `06_05_write_configs.sh` → `06_07_run_all_aggregation.sh` → `meta_task_heatmap.yaml` entry.
   Whole path as a skill: `setup-train-predict-eval-scripts`. TamIA has unpushed hand-copied files (see memory `project_isles2022_training_launch_20261004`).
+---
+
+## Pancreas task: PanSegData (`pancreas_disease/pansegdata`) — training launched on KILLARNEY, NOT yet evaluated (2026-10-04)
+
+Found by a `find-a-new-task` pass for "boundary-defined, easy (joints/bones/muscles → widened)": SPIDER (lumbar spine) was dropped by Paul (spine already covered by healthy-spine-tum — avoid
+spine/cord), knee/muscle/cardiac candidates failed on access/size/labels. Source: OSF kysnj (Zhang et al., Med Image Anal 99:103382, doi:10.1016/j.media.2024.103382), MRI part only.
+**License CC BY-NC 4.0** (non-commercial; verified on the OSF page, bundled LICENSE.txt and the paper) → needs its own NC tag if ever put in the CC-BY git-annex upload. Cohort = patients referred for pancreatic
+cystic lesions / suspected PDAC (not healthy); inter-observer kappa only 0.62-0.64; the source does not say whether lesions are inside the mask (cysts appear inside it). Honest caveat: **not the clean "easy" boundary task asked for.**
+- **Contrasts:** `t1wce` (venous-phase contrast-enhanced T1, Dataset150) and `t2w` (Dataset151); each scan has its OWN mask → each test item is scored against its own mask. 385 T1 + 382 T2 scans, 405 subjects, 362 with both.
+  T1<->T2 pairing is by original case name (the zips' anonymised ids are independent numberings), supported by a same-site null test (non-MCF clearly the same patient).
+- **EXCLUDED: all of center MCF (Mayo Florida, 150 paired subjects) + the 43 single-contrast subjects.** MCF defect (source data): venous-T1 arrays stored rotated 180° in-plane vs their headers (and many also S-I
+  reversed); the 66 mismatching label headers (RAI/RAS vs LPS) show the same rotation; even after a CNN-detected 180° fix, 3/3 MCF subjects inspected at full size had the mask over the vertebra/paraspinal muscles. A rescue could
+  not be verified. Alternative for Paul: rescue by registration/manual curation (≈41% of the paired data). Evidence trail: `5_scripts_pansegdata/02_nnunet/02_05..02_11`, `0_raw_pansegdata/orientation_fix.tsv` (unused), README of the BIDS leaf.
+- **Usable N = 212** (NYU 161, NWU 19, AHN 17, MCA 15): test 42 (proportional by center, volume-stratified) / pool 170 / 3 folds (113-114 train, 56-57 val). All kept scans share source orientation LPI. Case ids `pansegdata_<site><NNNN>`.
+  Held-out proof `02_04_verify_heldout.sh`: ALL CHECKS PASSED. Questionable but kept: ahn0011 (T1+T2), ahn0001 T2 — judge by CV Dice outliers.
+- **Epochs 2000** (my decision by policy analogy: disease cohort, ≤~300 training cases; not a number Paul gave). Sizing probe on Killarney (2000-epoch single-fold wall, H100 / L40S h): baseline 4.9/12.6, auglab_default 6.2-7.6/14.5,
+  srcsm 6.4-6.8/13.8, synthseg_noEM 6.6-7.4/14.7, synthseg_EM 8.0-8.2/17.8, OURS DualVal 16.8-17.1/29-31. Ladder rungs 2-5 were NOT probed (16 h/23.5 h limits are guesses).
+- **Compute: ALL on Killarney (Paul, 2026-10-04, exceptional).** Per-GPU `run_job` fold jobs through the shared wrappers (no whole-node packs; the scaffolded TamIA scripts 04_23-25 / 05_26-28 / 06_08 /
+  `scripts/cluster/tamia_env_pansegdata.sh` are unused). `04_26_killarney_sizing_probe.sh` + `04_27_probe_report.sh`; `04_28_killarney_launch_all.sh` (H100, per-method time limits) launched 60 fold jobs 2026-10-04 21:38-21:49
+  (RUN_IDs `8_results_pansegdata/_launch/RUN_IDS_killarney_launch1.tsv`); `04_29_killarney_status.sh [--problems]` = real progress from `fold_N/training_log_*.txt`. A job that hits its limit resumes by re-running its wrapper with the SAME RUN_ID.
+  **Predict + eval are queued:** `05_predict/05_30_killarney_queue_predict_eval.sh` → controller job 5942062 (`afterany` all 60 training jobs) → `05_29` (refuses on incomplete training, pins RUN_IDs, submits predicts via the roster drivers, queues
+  `06_evaluate/06_09_killarney_eval_stage.sh`; status in `8_results_pansegdata/post_training/`). Manual tail afterwards: `06_05_write_configs.sh` → `06_07_run_all_aggregation.sh` → `scripts/evaluate/meta_task_heatmap.yaml` entry → rsync data to Vulcan for durability.
+- Two probe jobs once died at startup on node kn001 (not reproducible; same code ran fine on rerun): after any launch confirm EVERY fold's log reaches epoch ≥1 (`04_29 --problems`) and resubmit dead folds early.
+- Scaffolder fixed this session: it now also rewrites the label name in 06_00/06_01 comments (was leaving `lesion`).
+
 ---
 
 ## Breast task: I-SPY2 (training) + duke-breast-mri (eval) — AMBL archived (2026-09-13)
