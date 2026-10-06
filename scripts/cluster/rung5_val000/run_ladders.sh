@@ -19,6 +19,11 @@ for k in "$@"; do
     pelvis_mri)     .venv/bin/python $T/pelvis_healthy/totalseg-pelvic/5_scripts_totalseg-pelvic/06_evaluate/06_11_ladder_summary_mri.py ;;
     breast_t1wce)   .venv/bin/python $T/breast_cancer/ispy2/5_scripts_ispy2/06_evaluate/06_10_ladder_summary_t1wce.py ;;
     breast_t2w)     .venv/bin/python $T/breast_cancer/ispy2/5_scripts_ispy2/06_evaluate/06_11_ladder_summary_t2w.py ;;
+    glioma_t1n)     .venv/bin/python $T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_13_ladder_summary.py ;;
+    glioma_t2w)     .venv/bin/python $T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py ;;
+    glioma_t2f)     .venv/bin/python $T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_16_ladder_summary_t2f.py ;;
+    glioma_t1c)     .venv/bin/python $T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_33_ladder_summary_t1c.py ;;
+    ms_t1w)         .venv/bin/python $T/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py ;;
     *) echo "unknown ladder key $k"; false ;;
   esac || { echo "!!! ${k} FAILED"; rc=1; }
 done
