@@ -7,16 +7,17 @@
 # A registered ladder is re-run with rungs [baseline .. rung 5, rung 6] into <ablations_root>_pv/.
 # ONLY register a ladder once rung-6 metrics exist in EVERY source it pools (own contrasts AND
 # any cross-dataset source), otherwise rungs 5 and 6 are averaged over different OOD pools.
-# Run table / RUN_IDs: scripts/cluster/tamia_rung6_pv_runs.sh.
+# Run table / RUN_IDs: scripts/cluster/tamia_rung6_pv_runs.sh (val100, 2026-10-03); val000 retrain 2026-10-05:
+# $SCRATCH/rung5_val000/run_ids.txt (scripts/cluster/rung5_val000/). An entry still on a *_val100_* run is NOT yet re-pointed.
 ladders:
   # open-ms (own contrasts only)
   open_ms_model/flair/ablations: ablations/open-ms_flair_v26_6_2_pv_train050_val000_20261003_111215
   open_ms_model/t1w/ablations: ablations/open-ms_t1w_v26_6_2_pv_train050_val100_20261003_111215
   # toothfairy2 CBCT (own cbct + hanseg CT/MR + pddca CT, all mandible-only, S-I-flipped externals)
-  8_results_toothfairy2/02_metrics/toothfairy2_model/cbct/ablations: ablations/toothfairy2_cbct_v26_6_2_pv_train050_val100_20261003_111216
+  8_results_toothfairy2/02_metrics/toothfairy2_model/cbct/ablations: ablations/toothfairy2_cbct_v26_6_2_pv_train050_val000_20261005_223853
   # totalseg-pelvic (own ct + mri)
-  totalseg_pelvic_model/ct/ablations: ablations/totalseg-pelvic_ct_v26_6_2_pv_train050_val100_20261003_120315
-  totalseg_pelvic_model/mri/ablations: ablations/totalseg-pelvic_mri_v26_6_2_pv_train050_val100_20261003_120315
+  totalseg_pelvic_model/ct/ablations: ablations/totalseg-pelvic_ct_v26_6_2_pv_train050_val000_20261005_224032
+  totalseg_pelvic_model/mri/ablations: ablations/totalseg-pelvic_mri_v26_6_2_pv_train050_val000_20261005_224105
   # brats (own 4 contrasts)
   8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1n/ablations: ablations/brats2024-glioma_t1n_v26_6_2_pv_train050_val100_20261003_111212
   8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations:
@@ -26,7 +27,7 @@ ladders:
   8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1c/ablations: ablations/brats2024-glioma_t1c_v26_6_2_pv_train050_val100_20261003_111213
   # chaos (own + amos/sliver07 crop-before-predict, all under .../ablations)
   8_results_chaos/02_metrics/chaos_model/t1in/ablations: ablations/chaos_t1in_v26_6_2_pv_train050_val000_20261003_111217
-  8_results_chaos/02_metrics/chaos_model/t2spir/ablations: ablations/chaos_t2spir_v26_6_2_pv_train050_val100_20261003_111218
+  8_results_chaos/02_metrics/chaos_model/t2spir/ablations: ablations/chaos_t2spir_v26_6_2_pv_train050_val000_20261005_223819
   # on-harmony (own contrasts; its metrics are flat, like its rung 5). T1w additionally uses the RETRAINED rung 5
   # (rung5 override; the T1w ladder script still points at the old pre-AugLab run).
   8_results_on-harmony/02_metrics/on_harmony_model/T1w/ablations:
@@ -35,5 +36,5 @@ ladders:
   8_results_on-harmony/02_metrics/on_harmony_model/T2w/ablations: on-harmony_T2w_v26_6_2_pv_train050_val100_20261003_111214
   8_results_on-harmony/02_metrics/on_harmony_model/dwi_ap/ablations: on-harmony_dwi_ap_v26_6_2_pv_train050_val100_20261003_111214
   # ispy2 headline ladders (own + duke/ispy1/acrin6698 pooled by true contrast)
-  8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations: ablations/ispy2_t1wce_v26_6_2_pv_train050_val100_20261003_111216
-  8_results_ispy2/02_metrics/ispy2_model/t2w/ablations: ablations/ispy2_t2w_v26_6_2_pv_train050_val100_20261003_111217
+  8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations: ablations/ispy2_t1wce_v26_6_2_pv_train050_val000_20261005_223926
+  8_results_ispy2/02_metrics/ispy2_model/t2w/ablations: ablations/ispy2_t2w_v26_6_2_pv_train050_val000_20261005_223959
