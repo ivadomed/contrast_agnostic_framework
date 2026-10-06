@@ -49,8 +49,10 @@ for every method (\cref{sec:suppl-data}).
 
 \paragraph{Baselines.} \Cref{tab:methods} compares the five competitors:
 nnU-Net with its default augmentation (\emph{Baseline}),
-SynthSeg~\cite{billot2023synthseg} without and with its EM label-subdivision
-extension~\cite[\S5.4]{billot2023synthseg} (re-implemented), both given each
+SynthSeg~\cite{billot2023synthseg} as released, developed for the brain
+(\emph{SynthSeg-noEM}), and its EM label-subdivision variant, developed for
+cardiac MRI~\cite[\S5.4]{billot2023synthseg} and re-implemented here since its
+code was not released (\emph{SynthSeg-EM}), both given each
 task's training labels, which are a dense parcellation only on Brain;
 SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab}, a
 competitor in its own right. Each competitor is run as its authors propose:
@@ -192,7 +194,7 @@ numbers: \cref{tab:dissociation}; HD95: \cref{fig:ladder-hd95}.}
 \end{figure}
 
 
-% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated.
+% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated. [Breast numbers are already post-retrain, final.]
 In our data every large relative gain from real fill is on an
 appearance-defined target, but not every appearance-defined target shows one
 (\cref{fig:ladder,tab:dissociation}). We report each gain relative to its
@@ -206,9 +208,10 @@ significant after that correction. No interface-bounded row gains more than $8.7
 after correction); the largest absolute interface gain, Abdomen T2spir, is $5.1$
 points from a noise-fill Dice of $82.0$. Pooled per task (\cref{fig:ladder}), the step is worth $+14.7\%$ on Glioma and $+15.8\%$ on MS, against
 $+7.3\%$ on Pelvis, $+3.9\%$ on Abdomen, $+2.0\%$ on Mandible and $-1.0\%$ on
-Brain. Not every appearance-defined setting
-gains: MS T1w, Glioma T2w and FLAIR, and both Breast rows ($-2.8\%$
-and $+1.3\%$, four cohorts pooled by contrast) show no Dice gain.
+Brain. Breast gains significantly but only slightly ($+1.4\%$; four cohorts
+pooled by contrast), and only from T2w training ($+5.3\%$): its T1-CE setting
+loses ($-3.8\%$, significant). MS T1w, Glioma T2w and Glioma FLAIR show no Dice
+gain.
 
 ON-Harmony labels 31 brain regions in the FreeSurfer label
 set~\cite{fischl2012freesurfer}: ventricles, cortex, white matter,

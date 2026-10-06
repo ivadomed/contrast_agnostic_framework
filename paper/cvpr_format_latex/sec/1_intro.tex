@@ -56,17 +56,19 @@ as inverted intensities, because it is not tied to a specific target contrast.
 An optional step also re-randomizes each labeled structure; it uses whatever
 labels exist, a dense label map or just the task's own segmentation labels.
 
-% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated.
+% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated. [Breast numbers are already post-retrain, final.]
 We then test when texture matters, with a controlled ablation in sixteen
 training settings. We keep PALETTE-Aug's partition and region target means and
-change only how each region is filled: with its real intensities, which keeps
-the texture, or with Gaussian noise, which removes it. We report the Dice of
+change only what fills each region: the region's own image content, affinely
+remapped so that its gradients and fine structure survive (texture kept), or
+Gaussian noise (texture removed). We report the Dice of
 real fill relative to that of noise fill. Pooled per task, the relative gain is
 largest on the appearance-defined
 targets, brain tumor ($+15\%$) and MS lesions ($+16\%$), against at most
-$7\%$ on interface-bounded tasks. The converse does not hold: several
-appearance-defined settings, breast lesions among them, show no Dice gain, so
-we state the result in one direction only (\S\ref{subsec:e-ablation}). A
+$7\%$ on interface-bounded tasks. The converse does not hold: breast lesions,
+also appearance-defined, gain only $1.4\%$, and several appearance-defined
+settings show no gain, so we state the result in one direction only
+(\S\ref{subsec:e-ablation}). A
 segmentation-free gradient measurement confirms that the swap changes texture:
 noise fill keeps only the partition edges, and real fill recovers most of the
 source texture.
@@ -75,11 +77,13 @@ We train one nnU-Net~\cite{isensee2021nnunet} configuration, varying only the
 epoch budget per dataset, and evaluate cross-contrast and cross-modality
 transfer on eight tasks: healthy brain, MS lesion, brain tumor,
 abdominal organ, mandible, breast lesion, spine and pelvis. We compare against
-nnU-Net with its default augmentation; two variants of SynthSeg, the original
-and one that first subdivides each label into sub-regions by
-expectation-maximization (EM) clustering of the image intensities, an extension
-described in the SynthSeg paper~\cite[\S5.4]{billot2023synthseg} whose code was
-not released when this work was done, so we re-implemented it;
+nnU-Net with its default augmentation; two variants of SynthSeg: SynthSeg-noEM,
+the released SynthSeg, which its authors developed and tested on the brain, and
+SynthSeg-EM, which first subdivides each label into sub-regions by
+expectation-maximization (EM) clustering of the image intensities, a variant
+the same authors developed and tested on cardiac
+MRI~\cite[\S5.4]{billot2023synthseg} but whose code was not released when this
+work was done, so we re-implemented it;
 SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab}, a
 published cross-modality augmentation pipeline. PALETTE-Aug wins the benchmark
 overall: it has the best Dice on six of the eight tasks and significantly beats
