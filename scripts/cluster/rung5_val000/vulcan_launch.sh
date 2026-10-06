@@ -34,8 +34,6 @@ ROWS=(
 "breast_cancer/ispy2|t2w|30:00:00|34:00:00"
 "pelvis_healthy/totalseg-pelvic|ct|10:00:00|12:00:00"
 "pelvis_healthy/totalseg-pelvic|mri|10:00:00|12:00:00"
-"brain_stroke/isles2022|dwi|40:00:00|-"
-"brain_stroke/isles2022|flair|40:00:00|-"
 "pancreas_disease/pansegdata|t1wce|34:00:00|-"
 "pancreas_disease/pansegdata|t2w|34:00:00|-"
 )
@@ -44,7 +42,9 @@ if [ "${MODE}" = --record ]; then
   # job name = fold<k>_<RUN_ID> (train_common.sh); RUN_ID ends in _<YYYYMMDD>_<HHMMSS>
   squeue -u "$USER" -h -o '%i|%j|%T' | awk -F'|' '$2 ~ /^fold[0-9]_.*_v26_6_2(_pv)?_train050_val000_[0-9]+_[0-9]+$/ && $2 !~ /auglabAug/' \
     | sort -t'|' -k2 > "${OUT}/jobs.tsv"
-  cut -d'|' -f2 "${OUT}/jobs.tsv" | sed -E 's/^fold[0-9]_//' | sort -u > "${OUT}/run_ids.txt"
+  # MERGE: finished runs leave the queue but must stay in the list
+  { cut -d'|' -f2 "${OUT}/jobs.tsv" | sed -E 's/^fold[0-9]_//'; cat "${OUT}/run_ids.txt" 2>/dev/null; } | sort -u > "${OUT}/run_ids.new" \
+    && mv "${OUT}/run_ids.new" "${OUT}/run_ids.txt"
   echo "[record] $(wc -l < "${OUT}/jobs.tsv") fold jobs, $(wc -l < "${OUT}/run_ids.txt") runs -> ${OUT}/{jobs.tsv,run_ids.txt}"
   exit 0
 fi

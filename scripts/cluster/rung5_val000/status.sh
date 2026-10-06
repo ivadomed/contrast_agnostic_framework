@@ -7,7 +7,8 @@ cd /project/aip-jcohen/paulh/mri_synthesis_project
 RUNS="${SCRATCH:?}/rung5_val000/run_ids.txt"
 [ -f "${RUNS}" ] || { echo "no ${RUNS}: run vulcan_launch.sh --record first" >&2; exit 1; }
 while read -r rid; do
-  d=$(ls -d benchmark/02_tasks/*/*/8_results_*/01_predictions/*/*/*/"${rid}" 2>/dev/null | head -1)
+  d=""; for c in benchmark/02_tasks/*/*/8_results_*/01_predictions/*/*/*/"${rid}"; do   # the TRAINING dir (has Dataset*/), not a prediction dir of the same name
+    ls -d "$c"/Dataset*/*/fold_0 >/dev/null 2>&1 && { d="$c"; break; }; done
   [ -n "$d" ] || { echo "MISSING-DIR ${rid}"; continue; }
   for k in 0 1 2; do
     f=$(ls -d "$d"/Dataset*/*/fold_${k} 2>/dev/null | head -1)

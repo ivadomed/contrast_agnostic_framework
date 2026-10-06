@@ -48,8 +48,6 @@ SETTINGS = [
     ("breast_cancer", "ispy2", "t2w", "04_23_train_t2w_baseline_kmeans_label_remap_voronoi.sh"),
     ("pelvis_healthy", "totalseg-pelvic", "ct", "04_17_train_ct_baseline_kmeans_label_remap_voronoi.sh"),
     ("pelvis_healthy", "totalseg-pelvic", "mri", "04_21_train_mri_baseline_kmeans_label_remap_voronoi.sh"),
-    ("brain_stroke", "isles2022", "dwi", "04_17_train_dwi_baseline_kmeans_label_remap_voronoi.sh"),
-    ("brain_stroke", "isles2022", "flair", "04_21_train_flair_baseline_kmeans_label_remap_voronoi.sh"),
     ("pancreas_disease", "pansegdata", "t1wce", "04_17_train_t1wce_baseline_kmeans_label_remap_voronoi.sh"),
     ("pancreas_disease", "pansegdata", "t2w", "04_21_train_t2w_baseline_kmeans_label_remap_voronoi.sh"),
 ]
@@ -59,7 +57,7 @@ VARIANTS = {  # name -> (method, train config)
 }
 
 # no ladder rung 6 (PV branch) for these; their pinned AugLab (pansegdata: 7b761b5) predates PV
-NO_PV = {"isles2022", "pansegdata"}
+NO_PV = {"pansegdata"}   # isles2022 archived 2026-10-06 (dropped from this tooling)
 
 
 def code_lines(text):
