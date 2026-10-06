@@ -10,7 +10,9 @@
   real image. (b)--(d) paint each region flat with its target mean $\mu$
   (\cref{eq:affine}) to show the partition alone: $k$-means regions (b); the
   label remap (c), an affine re-remap inside each anatomical label that keeps the
-  structure already there; Voronoi sub-regions under the same label remap (d).
+  structure already there (its straight edges are label boundaries, \eg between
+  the two hemispheres; no Voronoi yet); Voronoi sub-regions under the same label
+  remap (d).
   (e), the actual training input, applies the signed affine remap of
   \cref{eq:affine} to the same partition, which keeps the real texture inside
   every region.}

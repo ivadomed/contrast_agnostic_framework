@@ -459,11 +459,11 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
     if layout == "column":
         style_h = [
             Line2D([0], [0], color="black", label="task average", linewidth=2.6),
-            Line2D([0], [0], color=NEUTRAL, label="trained on one contrast,\ntested on another\n(e.g. T1n → T2w)", linewidth=1.3),
+            Line2D([0], [0], color=NEUTRAL, label="pair of train–test contrasts\n(e.g. trained on T1n,\ntested on T2w)", linewidth=1.3),
+            Line2D([], [], linestyle="none", label="values per pair:\nsupplementary tables"),
             Line2D([0], [0], color=IMPROVE_LIGHT, label="that pair at the swap:\nsignificant gain", linewidth=2.2),
             Line2D([0], [0], color=WORSEN_LIGHT, label="significant loss", linewidth=2.2),
             Line2D([0], [0], color=FLAT, label="not significant", linewidth=1.5),
-            Line2D([], [], linestyle="none", label="values per pair:\nsupplementary tables"),
         ]
         single = [i for i, r in enumerate(rows) if len(r) == 1]
         if single:   # a row with one panel: the legend fills its empty cell
@@ -477,7 +477,7 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
     else:
         style_h = [
             Line2D([0], [0], color="black", label="task average", linewidth=2.6),
-            Line2D([0], [0], color=NEUTRAL, label="trained on one contrast, tested on another (e.g. T1n → T2w)", linewidth=1.3),
+            Line2D([0], [0], color=NEUTRAL, label="pair of train–test contrasts (e.g. trained on T1n, tested on T2w)", linewidth=1.3),
             Line2D([0], [0], color=IMPROVE_LIGHT, label="that pair at the swap: significant gain", linewidth=2.2),
             Line2D([0], [0], color=WORSEN_LIGHT, label="significant loss", linewidth=2.2),
             Line2D([0], [0], color=FLAT, label="not significant", linewidth=1.5),
