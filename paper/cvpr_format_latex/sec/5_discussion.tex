@@ -13,9 +13,9 @@ texture features separate them from normal-appearing white
 matter~\cite{zhang2008mstexture}. This account interprets the intervention of
 \cref{subsec:e-ablation}; it is not independent evidence.
 
-\paragraph{Not every appearance-defined target gains.} Open-MS T1w, BraTS-GLI
+\paragraph{Not every appearance-defined target gains.} MS T1w, Glioma
 T2w and FLAIR, and both Breast rows show no Dice gain. We have two hypotheses. First, the effect depends sharply on the
-training contrast (BraTS-GLI: $+13.3$ from T1c, $+7.2$ from T1n, about zero
+training contrast (Glioma: $+13.3$ from T1c, $+7.2$ from T1n, about zero
 from T2w and FLAIR), so whether its texture transfers may matter as much as the
 target; with T2w training, real fill helps some labels and hurts others
 (\cref{par:per-label}). Second, Breast pools four cohorts from different
@@ -29,14 +29,14 @@ samples.
 by a measured boundary statistic. Target type is confounded with difficulty:
 all interface-bounded rows but one start above $63\%$ noise-fill Dice and
 every appearance-defined row below $42\%$, so dividing by the starting Dice
-favors the latter; as a share of the remaining error, CHAOS T2spir would rank
+favors the latter; as a share of the remaining error, Abdomen T2spir would rank
 first. The exception, Pelvis CT, starts at $35\%$ and gains $+8.7\%$, below the
 large appearance-defined gains.
 The between-group comparison is descriptive: a permutation test on the
-seven per-task gains gives $p=0.2$. Open-MS has eight test patients and ON-Harmony eight
+seven per-task gains gives $p=0.2$. MS has eight test patients and Brain eight
 sessions of four subjects, so their single-setting effects can be consistent
 without reaching significance, and
-ON-Harmony's session-level tests are optimistic. Spine was run on a separate
+Brain's session-level tests are optimistic. Spine was run on a separate
 pipeline and has no SRCSM arm. The cross-task test covers new patients, not new tasks; with the task as the
 unit, the advantage over SRCSM is not significant.
 PALETTE-Aug targets the single-source setting and is complementary to

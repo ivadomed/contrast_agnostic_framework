@@ -35,11 +35,11 @@ SCRIPT = REPO / "benchmark/00_commun_scripts/00_03_evaluate/combined_modality_su
 
 # (task label, dataset, task folder, {modality name in config -> display label})
 TASKS = [
-    ("BraTS-GLI",  "brats2024-glioma", "brain_tumor",
+    ("Glioma",  "brats2024-glioma", "brain_tumor",
      {"t1n": "T1n", "t1c": "T1c", "t2w": "T2w", "t2f": "FLAIR"}),
-    ("CHAOS",      "chaos", "abdomen_healthy", {"t1in": "T1in", "t2spir": "T2spir"}),
-    ("ON-Harmony", "on-harmony", "brain_healthy", {"T1w": "T1w", "T2w": "T2w", "dwi_ap": "DWI"}),
-    ("Open-MS",    "open-ms", "brain_ms", {"flair": "FLAIR", "t1w": "T1w"}),
+    ("Abdomen",      "chaos", "abdomen_healthy", {"t1in": "T1in", "t2spir": "T2spir"}),
+    ("Brain", "on-harmony", "brain_healthy", {"T1w": "T1w", "T2w": "T2w", "dwi_ap": "DWI"}),
+    ("MS",    "open-ms", "brain_ms", {"flair": "FLAIR", "t1w": "T1w"}),
     ("Mandible",   "toothfairy2", "mandible_healthy", {"cbct": "CBCT"}),
     ("Breast",     "ispy2", "breast_cancer", {"t1wce": "T1-CE", "t2w": "T2w"}),
     ("Spine",      "healthy-spine-tum", "spine_healthy", {"ct": "CT", "inphase": "Dixon in"}),

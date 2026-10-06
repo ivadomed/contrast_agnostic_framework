@@ -7,8 +7,7 @@ momentum $0.99$, initial learning rate $10^{-2}$ with the nnU-Net
 cross-entropy loss, deep supervision on. Patch size, spacing and batch size
 are whatever the nnU-Net planner selects for that dataset, identically for
 every method. The epoch budget is fixed per dataset and shared by all methods
-on it: $2500$ (BraTS-GLI), $2000$ (ON-Harmony, Open-MS), $1000$ (ToothFairy2,
-I-SPY2) and $200$ (CHAOS, Pelvis); Spine was trained on a separate pipeline.
+on it: $2500$ (Glioma), $2000$ (Brain, MS), $1000$ (Mandible, Breast) and $200$ (Abdomen, Pelvis); Spine was trained on a separate pipeline.
 Each method is trained as three models on three train/validation folds, all
 scored on the same held-out test set; folds are the same across methods.
 
@@ -45,15 +44,59 @@ original work precomputes these maps~\cite[\S5.4]{billot2023synthseg}. Each
 sub-region then receives a randomly sampled intensity, as in SynthSeg. Both
 SynthSeg variants and SRCSM synthesize on every training iteration because
 their original papers train that way, so we keep that setting when running
-them; PALETTE-Aug synthesizes on $50\%$ of iterations. SRCSM is a training-time
+them; PALETTE-Aug synthesizes on $50\%$ of iterations
+(\cref{tab:suppl-aug-probs} lists every augmentation's probability). SRCSM is a training-time
 augmentation only: no test-time intensity matching is applied, and every
 method is predicted with the same nnU-Net predictor, without test-time
 augmentation. SRCSM and Auglab otherwise use their published default
 configurations. No competing method was re-tuned in our favor, and all use
 the same folds, schedule and epoch budget as above.
 
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llcccccc}
+\toprule
+ & Transform & Baseline & SynthSeg-noEM & SynthSeg-EM & SRCSM & Auglab & PALETTE-Aug \\
+\midrule
+Synthesis & SynthSeg generator & -- & 1.0 & 1.0 & -- & -- & -- \\
+ & semantic random convolution & -- & -- & -- & 1.0 & -- & -- \\
+ & PALETTE transform & -- & -- & -- & -- & -- & 0.5 \\
+\midrule
+Intensity & Gaussian noise & 0.1 & 0.1 & 0.1 & -- & 0.1 & 0.1 \\
+ & Gaussian blur & 0.2 & 0.2 & 0.2 & -- & 0.2 & 0.2 \\
+ & brightness & 0.15 & 0.15 & 0.15 & -- & 0.15 & 0.15 \\
+ & contrast & 0.15 & 0.15 & 0.15 & -- & 0.15 & 0.15 \\
+ & gamma / inverted gamma & 0.3 / 0.1 & 0.3 / 0.1 & 0.3 / 0.1 & -- & 0.3 / 0.1 & 0.3 / 0.1 \\
+ & simulated low resolution & 0.25 & 0.25 & 0.25 & -- & 0.25 & 0.25 \\
+ & bias field & -- & 0.15 & 0.15 & -- & 0.15 & 0.15 \\
+ & random intensity function & -- & 0.1 & 0.1 & -- & 0.1 & 0.1 \\
+ & Scharr / unsharp mask & -- & -- & -- & -- & 0.25 / 0.25 & 0.25 / 0.25 \\
+ & random convolution & -- & -- & -- & -- & 0.2 & 0.2 \\
+ & label-wise intensity redistribution & -- & -- & -- & -- & 0.4 & 0.4 \\
+ & intensity inversion & -- & -- & -- & -- & 0.25 & 0.25 \\
+ & histogram equalization & -- & -- & -- & -- & 0.25 & 0.25 \\
+\midrule
+Spatial & rotation / scaling & 0.2 / 0.2 & 0.2 / 0.2 & 0.2 / 0.2 & -- & 0.2 / 0.2 & 0.2 / 0.2 \\
+ & affine + elastic deformation & -- & -- & -- & 1.0 & -- & -- \\
+ & flip & 0.5$^a$ & 0.5 & 0.5 & -- & 0.5 & 0.5 \\
+\bottomrule
+\end{tabular}
+\caption{Per-iteration probability of each augmentation, per method (--: not
+applied). The synthesis rows are each method's own contrast step: the SynthSeg
+variants and SRCSM synthesize on every iteration, as in their original papers,
+PALETTE-Aug on half of them. The remaining rows are the method's generic
+augmentation pipeline: nnU-Net's defaults for the baseline, Auglab's for the
+Auglab-based methods (the SynthSeg variants switch off Auglab's
+appearance-randomizing operators, which would otherwise act on top of the
+synthetic image), and SRCSM's own spatial recipe. $^a$nnU-Net mirroring, each
+axis independently.}
+\label{tab:suppl-aug-probs}
+\end{table*}
+
 \paragraph{Compute.} Training was performed on NVIDIA L40S and H100 GPUs. A
-single fold costs from under an hour (CHAOS, $200$ epochs) to roughly three
-days (BraTS-GLI, $2500$ epochs); the full study is dominated by the six
+single fold costs from under an hour (Abdomen, $200$ epochs) to roughly three
+days (Glioma, $2500$ epochs); the full study is dominated by the six
 methods $\times$ eighteen settings $\times$ three folds of the main comparison,
 plus the sixteen ablation ladders of \cref{subsec:e-ablation}.

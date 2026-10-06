@@ -29,11 +29,11 @@ the same patient is scored in several held-out contrasts, or by the models of
 several training modalities, those scores move together as one unit under the
 null. Treating them as separate samples would be pseudo-replication and would
 inflate the effective sample size --- a real risk here, since several tasks
-test a handful of patients under many contrasts (ON-Harmony: eight sessions
-of four subjects, six contrasts). For ON-Harmony the unit is the session, since
+test a handful of patients under many contrasts (Brain: eight sessions
+of four subjects, six contrasts). For Brain the unit is the session, since
 its four subjects leave a test that could never reach significance; two
 sessions of one subject are not fully independent, so its $p$-values are, if
-anything, optimistic, and we do not rest any claim on ON-Harmony alone. Per-setting comparisons (below) use the same test within each setting; the
+anything, optimistic, and we do not rest any claim on Brain alone. Per-setting comparisons (below) use the same test within each setting; the
 ablation ladders use the paired
 Wilcoxon signed-rank test~\cite{wilcoxon1945}, since there each setting is
 judged on its own. All tests are Holm-corrected~\cite{holm1979} for multiple
@@ -57,7 +57,7 @@ the \emph{all} column of every table reports, so the test and the table
 measure the same thing. Equal weighting is not cosmetic here. The claim
 under test is cross-contrast generalization, and a contrast's held-out case
 count reflects how large a public cohort happens to be, not how much that
-contrast should say about generalizing. CHAOS is the extreme case: its
+contrast should say about generalizing. Abdomen is the extreme case: its
 held-out CT evidence includes an external cohort of $100$ patients, while
 each of its three MR contrasts has $4$ (cases counted once per training
 modality: $200$ against $8$). Weighting by case
@@ -106,7 +106,7 @@ a Gaussian term with their exact null variance; with twenty patients or fewer
 the test is therefore exact. A plain normal approximation to the whole null,
 which an earlier version of this analysis used, is badly conservative in
 exactly the designs we have, where a few patients spanning several contrasts
-carry most of the null variance: on the CHAOS table it returned $p=0.013$ for
+carry most of the null variance: on the Abdomen table it returned $p=0.013$ for
 a comparison that a $200{,}000$-draw Monte-Carlo test places below
 $5\times10^{-6}$. The enumerated tail is deterministic and reaches far tails
 without the $1/B$ floor of resampling. Its corollary is a hard floor for small
@@ -119,7 +119,7 @@ Wilcoxon $p$ for each contrast individually, and the ablation ladders use the
 paired Wilcoxon throughout. The standard test is reported; it is simply not the
 one the pooled headline numbers rest on.
 
-\paragraph{Contrast-group pooling.} For CHAOS, the same tested modality is
+\paragraph{Contrast-group pooling.} For Abdomen, the same tested modality is
 sometimes evidenced by more than one source: CHAOS's CT evidence comes from
 its own held-out CT split plus AMOS and SLIVER07. Averaging every raw
 column with equal weight -- the natural first implementation -- silently
@@ -128,7 +128,7 @@ both the displayed \emph{all} average and the significance test, since it
 then supplies more of the equally-weighted columns being averaged. We
 instead pool disjoint sources of the \emph{same} modality by concatenating
 their cases into one group before any averaging happens, then average
-modality groups with equal weight -- for CHAOS this additionally means
+modality groups with equal weight -- for Abdomen this additionally means
 averaging equal-weight across liver/spleen/kidney \emph{within} the pooled
 CT evidence, since AMOS's own CT column already blends all three organs
 into one number before it reaches this step. The same pooling applies to
@@ -143,14 +143,14 @@ contrast evidenced by more than one source.
 \cref{tab:meta} into its training modalities. Where a margin is not
 significant in a single setting, the honest reading is that one setting
 cannot separate the methods, not that they are equivalent: several settings
-have few test units (eight patients on Open-MS, eight sessions on ON-Harmony),
+have few test units (eight patients on MS, eight sessions on Brain),
 which is why the
 main claims rest on the task- and cross-task-level tests.
 
 \paragraph{Boundary distance at task level.} \cref{tab:meta-hd95} gives the
 HD95 counterpart of \cref{tab:meta}. Across tasks PALETTE-Aug is significantly
 better than every competitor, Auglab included. Per task it has the lowest HD95
-on BraTS-GLI, CHAOS, ON-Harmony, Open-MS, Spine and Pelvis (on CHAOS the gap to
+on Glioma, Abdomen, Brain, MS, Spine and Pelvis (on Abdomen the gap to
 SRCSM is not significant); it ties Auglab on Breast without a significant gap; and on Mandible it
 is significantly behind SRCSM, Auglab and the baseline, the
 one task where the baseline beats PALETTE-Aug. When HD95 disagrees with Dice for a
@@ -166,7 +166,7 @@ Dice is a warning sign rather than evidence of competitiveness.
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccccccc|c}
 \toprule
- & BraTS-GLI & CHAOS & ON-Harm. & Open-MS & Mandible & Breast & Spine & Pelvis & $p$ vs ours \\
+ & Glioma & Abdomen & Brain & MS & Mandible & Breast & Spine & Pelvis & $p$ vs ours \\
 \midrule
 Baseline        & 44.8 & 122.1 & 24.0 & 35.2 & 21.7 & 58.5 & 49.9 & 149.3 & 4.7e-48 \\
 SynthSeg-noEM   & 78.0 &  80.6 &  6.7 & 41.9 & 32.9 & 101.1 & 111.8 & 261.8 & 2.9e-58 \\
@@ -184,16 +184,56 @@ Auglab          & 16.1 & 27.8 &  4.7 & 26.5 & 22.1 & \textbf{57.1} & 4.7 & 35.6 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_hd95}
-\caption{The causal-ablation ladder of \cref{fig:ladder} (main paper), same
-per-dataset panels, same boundary-type grouping, same fill-swap rung and
-same visual scheme (per-curve color only on the real-fill segment; bold
-black panel average; one panel-pooled $p$-value per panel), reported on
-HD95 instead of Dice (\emph{improvement} means the fill-swap step lowers
-HD95). BraTS-GLI, CHAOS and Breast improve significantly at panel level and
-ON-Harmony worsens; Open-MS, Mandible and Pelvis do not move significantly.
-Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
+\caption{\Cref{fig:ladder} (main paper) on HD95 instead of Dice: same tasks,
+grouping and visual scheme. Annotation: the task's HD95 change at the fill swap
+in mm (negative is better); $^*$: significant. Glioma, Abdomen and Breast
+improve significantly and Brain worsens; MS, Mandible and Pelvis do not move
+significantly. Per-row numbers: \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
 \end{figure*}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+Task & noise & $\Delta$ & rel.\ (\%) & $p$ \\
+\midrule
+\multicolumn{5}{l}{\emph{Interface-bounded}} \\
+Abdomen T1in & 85.7 & $+1.43$ & $+1.7$ & 4.6e-12 \\
+Abdomen T2spir & 82.0 & $+5.11$ & $+6.2$ & 1.2e-20 \\
+Brain T1w & 63.2 & $-1.34$ & $-2.1$ & 0.078$^*$ \\
+Brain T2w & 64.2 & $-1.55$ & $-2.4$ & 0.078$^*$ \\
+Brain DWI & 64.6 & $+0.78$ & $+1.2$ & 0.11$^*$ \\
+Mandible CBCT$^\ddagger$ & 68.1 & $+1.36$ & $+2.0$ & 5.3e-6 \\
+Pelvis CT & 35.3 & $+3.08$ & $+8.7$ & 0.33 \\
+Pelvis MRI & 63.1 & $+4.12$ & $+6.5$ & 2.0e-6 \\
+\midrule
+\multicolumn{5}{l}{\emph{Appearance-defined}} \\
+MS FLAIR & 19.6 & $+7.69$ & $\mathbf{+39.3}$ & 0.078$^*$ \\
+MS T1w & 34.1 & $+0.79$ & $+2.3$ & 1.0$^*$ \\
+Glioma T1n & 39.8 & $+7.22$ & $\mathbf{+18.1}$ & 3.3e-11 \\
+Glioma T1c & 30.5 & $+13.27$ & $\mathbf{+43.6}$ & 5.0e-12 \\
+Glioma T2w & 41.0 & $+0.69$ & $+1.7$ & 0.61 \\
+Glioma FLAIR & 31.9 & $-0.19$ & $-0.6$ & 1.0 \\
+Breast T1-CE & 30.8 & $-0.85$ & $-2.8$ & 0.33 \\
+Breast T2w & 39.8 & $+0.50$ & $+1.3$ & 0.11 \\
+\bottomrule
+\end{tabular}
+\caption{Replacing SynthSeg-style noise fill with the real-intensity remap,
+\emph{with the partition and region target means unchanged}, for every
+training modality of every task with a ladder. noise: out-of-domain Dice with
+noise fill; $\Delta$: Dice change at the swap; rel.: $\Delta$ relative to the
+noise-fill Dice (bold: above $15\%$). $p$: two-sided paired Wilcoxon on
+patients, pooled over the row's held-out contrasts, Holm-corrected across all sixteen rows. $^*$With eight test patients (MS) or eight sessions of four subjects,
+two sites each (Brain), no row reaches $p<0.05$ after correction even
+when all eight move together: MS FLAIR ($8/8$ improve), Brain T1w
+and T2w ($8/8$ worsen).
+$^\ddagger$Held-out contrasts are cross-dataset (HaN-Seg, PDDCA), since
+ToothFairy2 is CBCT only. Per-task summary: \cref{fig:ladder} (main paper); HD95: \cref{tab:dissociation-hd95}.}
+\label{tab:dissociation}
+\end{table}
 
 \begin{table}[t]
 \centering
@@ -204,22 +244,22 @@ Underlying per-row deltas in \cref{tab:dissociation-hd95}.}
 Task & $\Delta$ HD95 (mm) & $p$ \\
 \midrule
 \multicolumn{3}{l}{\emph{Interface-bounded}} \\
-CHAOS T1in        & $-1.36$ & 1.0 \\
-CHAOS T2spir      & $-18.47$ & 3.8e-12 \\
-ON-Harmony T1w    & $+1.38$ & 0.078 \\
-ON-Harmony T2w    & $+0.38$ & 0.078 \\
-ON-Harmony DWI    & $-0.05$ & 1.0 \\
+Abdomen T1in        & $-1.36$ & 1.0 \\
+Abdomen T2spir      & $-18.47$ & 3.8e-12 \\
+Brain T1w    & $+1.38$ & 0.078 \\
+Brain T2w    & $+0.38$ & 0.078 \\
+Brain DWI    & $-0.05$ & 1.0 \\
 Mandible CBCT     & $-0.20$ & 0.56 \\
 Pelvis CT         & $+4.19$ & 1.0 \\
 Pelvis MRI        & $-0.49$ & 1.0 \\
 \midrule
 \multicolumn{3}{l}{\emph{Appearance-defined}} \\
-Open-MS FLAIR     & $-3.02$ & 0.19 \\
-Open-MS T1w       & $+3.94$ & 1.0 \\
-BraTS-GLI T1n     & $-4.59$ & 7.4e-10 \\
-BraTS-GLI T1c     & $-9.91$ & 4.9e-11 \\
-BraTS-GLI T2w     & $-1.86$ & 0.010 \\
-BraTS-GLI FLAIR   & $-1.71$ & 0.29 \\
+MS FLAIR     & $-3.02$ & 0.19 \\
+MS T1w       & $+3.94$ & 1.0 \\
+Glioma T1n     & $-4.59$ & 7.4e-10 \\
+Glioma T1c     & $-9.91$ & 4.9e-11 \\
+Glioma T2w     & $-1.86$ & 0.010 \\
+Glioma FLAIR   & $-1.71$ & 0.29 \\
 Breast T1-CE      & $-3.21$ & 1.0e-4 \\
 Breast T2w        & $-1.82$ & 0.0029 \\
 \bottomrule
@@ -228,8 +268,8 @@ Breast T2w        & $-1.82$ & 0.0029 \\
 (negative is better), with $p$ Holm-corrected across the sixteen rows. Five of
 the six significant improvements are on appearance-defined targets, including
 both Breast rows, whose Dice does not move; the sixth, and the largest in
-millimetres, is CHAOS T2spir. HD95 is less consistent than Dice within a task
-(its sign flips between the two modalities of Open-MS and of Pelvis), so we state the claim
+millimetres, is Abdomen T2spir. HD95 is less consistent than Dice within a task
+(its sign flips between the two modalities of MS and of Pelvis), so we state the claim
 on Dice and report HD95 here rather than as confirmation of it.}
 \label{tab:dissociation-hd95}
 \end{table}
@@ -241,26 +281,26 @@ significance for each step against the rung immediately before it
 (Holm-corrected paired Wilcoxon on patients, within each ladder's family of
 steps). Most steps that add an ingredient help, as expected. Eight cells are
 significant \emph{decreases} (marked $\downarrow$). Two are the fill-swap step
-on ON-Harmony T1w and T2w. Two are the Voronoi sub-parcellation step, on
-BraTS-GLI T1n and CHAOS T1in, which the real-fill step then more than
-recovers. Three are the $+$Auglab rung --- on ON-Harmony DWI, CHAOS T1in and
+on Brain T1w and T2w. Two are the Voronoi sub-parcellation step, on
+Glioma T1n and Abdomen T1in, which the real-fill step then more than
+recovers. Three are the $+$Auglab rung --- on Brain DWI, Abdomen T1in and
 Mandible, the task where the complete method places third
 (\cref{subsec:e-main}) --- and one is Mandible's val000$\to$val100 step. There PALETTE-Aug alone (the $+$real rung,
 $69.5$) is the ladder's maximum and adding the Auglab recipe takes it back
 down; adding PALETTE-Aug to Auglab also lowers Mandible Dice
 (\cref{tab:meta}), so the two components interact negatively there and we
-cannot attribute the shortfall to either. Both CHAOS ladders peak at the same rung. We have not diagnosed which Auglab
+cannot attribute the shortfall to either. Both Abdomen ladders peak at the same rung. We have not diagnosed which Auglab
 operator is responsible.
 
 We likewise do not hide that Voronoi's own marginal contribution is
 task-dependent rather than uniformly positive -- a separate paired
 significance check on all-contrast Dice (the estimand of \cref{tab:mechanism},
 not the OOD slice above) shows: Voronoi
-significantly \emph{helps} Open-MS FLAIR and (by a small margin) ON-Harmony
-T1w, is flat on CHAOS T1in (its OOD step above is a small significant
-decrease), and significantly \emph{hurts} BraTS-GLI T1n
+significantly \emph{helps} MS FLAIR and (by a small margin) Brain
+T1w, is flat on Abdomen T1in (its OOD step above is a small significant
+decrease), and significantly \emph{hurts} Glioma T1n
 under the real-fill deployed configuration as well, not only here under
-noise fill. The full method is still best on BraTS-GLI T1n
+noise fill. The full method is still best on Glioma T1n
 (\cref{tab:suppl-dice}; not significantly ahead of Auglab): whatever Voronoi costs there is more than recovered by
 the subsequent real-intensity fill step, so the net effect of the complete
 pipeline is positive even though one internal component is not.
@@ -272,7 +312,7 @@ pipeline is positive even though one internal component is not.
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccccccc}
 \toprule
-Rung & Open-MS & Open-MS & BraTS-GLI & BraTS-GLI & BraTS-GLI & BraTS-GLI & CHAOS & CHAOS \\
+Rung & MS & MS & Glioma & Glioma & Glioma & Glioma & Abdomen & Abdomen \\
      & FLAIR & T1w & T1n & T1c & T2w & FLAIR & T1in & T2spir \\
 \midrule
 base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 17.0 & 19.7 \\
@@ -290,7 +330,7 @@ base       & 2.4 & 1.1 & 16.5 & 15.9 & 6.0 & 11.0 & 17.0 & 19.7 \\
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccccccc}
 \toprule
-Rung & ON-Harm. & ON-Harm. & ON-Harm. & Mandible & Breast & Breast & Pelvis & Pelvis \\
+Rung & Brain & Brain & Brain & Mandible & Breast & Breast & Pelvis & Pelvis \\
      & T1w & T2w & DWI & CBCT & T1-CE & T2w & CT & MRI \\
 \midrule
 base       & 14.8 & 24.5 & 36.1 & 39.4 & 23.7 & 33.5 & 0.7 & 10.0 \\
@@ -309,7 +349,7 @@ it (val100 against val000): $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$ (Holm-c
 Wilcoxon on patients, within each ladder); $\downarrow$ marks a significant
 \emph{decrease}. Rungs: base(line), $+k$-means, $+$label-remap, $+$Voronoi
 (noise fill), $+$real-intensity fill (PALETTE-Aug alone), $+$Auglab
-(val000/val100). Open-MS and ON-Harmony have eight test units each, so their
+(val000/val100). MS and Brain have eight test units each, so their
 smallest attainable $p$ after correction is just under $0.05$. Breast and Pelvis have no
 val100 arm. Mandible's held-out axis is cross-dataset.}
 \label{tab:ladder-full}
@@ -318,12 +358,12 @@ val100 arm. Mandible's held-out axis is cross-dataset.}
 % Regenerated 2026-10-03 with folds capped to 0-2 (06_15_t1n_t2w_transfer_per_label.py).
 \paragraph{Per-label breakdown: is the fill-swap effect uniform within a task?}
 \label{par:per-label}
-BraTS-GLI T2w's pooled fill-swap effect is small and not significant
+Glioma T2w's pooled fill-swap effect is small and not significant
 (\cref{tab:dissociation}), with one significantly negative held-out contrast
 inside it (T2w$\to$T1n, $-4.1$ Dice). This raises a further question: within that one
 (training, eval) pair, does the fill-swap step affect every anatomical
 sub-region equally, or is the worsening itself concentrated in specific
-labels? We break BraTS-GLI T2w$\to$T1n down by its four labels -- necrotic
+labels? We break Glioma T2w$\to$T1n down by its four labels -- necrotic
 core (NCR), oedema (SNFH), enhancing tumor (ET), resection cavity (RC);
 $n=70$ test cases for SNFH and ET, present in essentially every case
 (NCR $n=51$, RC $n=67$, since not every tumor has a necrotic core or a
@@ -424,10 +464,10 @@ contrast as well (\emph{train050/val100}).
  & \multicolumn{2}{c|}{Dice $\uparrow$} & \multicolumn{2}{c}{HD95 (mm) $\downarrow$} \\
 Task & val000 & val100 & val000 & val100 \\
 \midrule
-BraTS-GLI    & 45.9 & \textbf{46.6} & 15.6 & \textbf{15.1} \\
-CHAOS        & 85.9 & \textbf{86.0} & 22.7 & \textbf{20.6} \\
-ON-Harmony   & 66.5 & \textbf{66.6} &  4.3 &  4.3 \\
-Open-MS      & \textbf{38.5} & 37.9 & 24.3 & \textbf{24.2} \\
+Glioma    & 45.9 & \textbf{46.6} & 15.6 & \textbf{15.1} \\
+Abdomen        & 85.9 & \textbf{86.0} & 22.7 & \textbf{20.6} \\
+Brain   & 66.5 & \textbf{66.6} &  4.3 &  4.3 \\
+MS      & \textbf{38.5} & 37.9 & 24.3 & \textbf{24.2} \\
 \bottomrule
 \end{tabular}
 \caption{Applying PALETTE-Aug at validation time as well as at training time, on
@@ -436,15 +476,15 @@ val100 arm is scored only in its ladder, \cref{tab:ladder-full}; the Breast, Spi
 Pelvis arms were not trained). Across these tasks the two show no significant difference in either
 direction (same cross-task test as
 \cref{tab:meta}; two-sided Dice $p=0.74$, HD95 $p=0.096$), though val100 is
-significantly ahead within BraTS-GLI and ON-Harmony individually. We report
+significantly ahead within Glioma and Brain individually. We report
 the like-for-like val000 configuration throughout the main paper.}
 \label{tab:suppl-val100}
 \end{table}
 
 Validation-time randomization improves most tasks on both metrics
-(\cref{tab:suppl-val100}), most visibly on boundary distance for CHAOS
+(\cref{tab:suppl-val100}), most visibly on boundary distance for Abdomen
 ($22.7 \rightarrow 20.6$~mm). The effect is not significant across tasks, and
-Open-MS Dice moves slightly the other way, so we do
+MS Dice moves slightly the other way, so we do
 not claim it as a separate contribution; we report it because it costs
 nothing and because it indicates that the benefit of contrast randomization
 extends to model selection and is not confined to the gradient updates.
@@ -483,7 +523,7 @@ SynthSeg-noEM    & 0.330 & 0.319 \\
 \bottomrule
 \end{tabular}
 \caption{Texture fidelity: NGF similarity to the source scan (mean over
-$n{=}30$ Open-MS scans; $\approx\!1/3$ = isotropic-noise floor). The
+$n{=}30$ MS scans; $\approx\!1/3$ = isotropic-noise floor). The
 PALETTE-Aug row is the transform alone (the real-fill rung), without the Auglab
 pipeline.}
 \label{tab:ngf}

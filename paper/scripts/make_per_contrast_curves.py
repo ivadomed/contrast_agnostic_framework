@@ -75,11 +75,11 @@ def _j(ds, model, contrast):
 # panel title -> list of (line label, ladder json path). A panel with two
 # entries is a dataset trained twice, once per training modality.
 PANELS = [
-    ("CHAOS", "interface", [
+    ("Abdomen", "interface", [
         ("T1in",  _j("chaos", "chaos_model", "t1in")),
         ("T2spir", _j("chaos", "chaos_model", "t2spir")),
     ]),
-    ("ON-Harmony", "interface", [
+    ("Brain", "interface", [
         ("T1w", _j("on-harmony", "on_harmony_model", "T1w")),
         ("T2w", _j("on-harmony", "on_harmony_model", "T2w")),
         ("DWI", _j("on-harmony", "on_harmony_model", "dwi_ap")),
@@ -91,13 +91,13 @@ PANELS = [
         ("CT",  _j("totalseg-pelvic", "totalseg_pelvic_model", "ct")),
         ("MRI", _j("totalseg-pelvic", "totalseg_pelvic_model", "mri")),
     ]),
-    ("BraTS-GLI", "no_interface", [
+    ("Glioma", "no_interface", [
         ("T1n", _j("brats2024-glioma", "brats2024_glioma_model", "t1n")),
         ("T1c", _j("brats2024-glioma", "brats2024_glioma_model", "t1c")),
         ("T2w", _j("brats2024-glioma", "brats2024_glioma_model", "t2w")),
         ("FLAIR", _j("brats2024-glioma", "brats2024_glioma_model", "t2f")),
     ]),
-    ("Open-MS", "no_interface", [
+    ("MS", "no_interface", [
         ("FLAIR", _j("open-ms", "open_ms_model", "flair")),
         ("T1w",   _j("open-ms", "open_ms_model", "t1w")),
     ]),
@@ -314,7 +314,10 @@ def sig_color(p, delta, light=False):
     return WORSEN_LIGHT if light else WORSEN
 
 
-def build(metric, ylabel, out_name, higher_is_better):
+SHOW_THUMBS = False   # example-slice insets (make_task_thumbnails.py); off for now (Paul, 2026-10-05)
+
+
+def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
     loaded = [(title, grp, [(lab, load(rel)) for lab, rel in items])
               for title, grp, items in PANELS]
     loaded = [(t, g, [(l, d) for l, d in items if d is not None]) for t, g, items in loaded]
@@ -337,14 +340,24 @@ def build(metric, ylabel, out_name, higher_is_better):
     # would be ~1.2in each once scaled to a CVPR full-width figure -- too small
     # to read -- and this layout also makes the grouping structural rather than
     # something the reader has to track from a header span.
-    rows = [[(t, g, it) for t, g, it in loaded if g == grp_key]
-            for grp_key in ("interface", "no_interface")]
-    rows = [r for r in rows if r]
-    ncol = max(len(r) for r in rows)
-    nrow = len(rows)
-    fig = plt.figure(figsize=(4.3 * ncol, 4.15 * nrow))
-    gs = fig.add_gridspec(nrow, ncol, wspace=0.30, hspace=0.62,
-                          left=0.055, right=0.99, top=0.90, bottom=0.225)
+    groups = [[(t, g, it) for t, g, it in loaded if g == grp_key]
+              for grp_key in ("interface", "no_interface")]
+    groups = [r for r in groups if r]
+    if layout == "column":
+        # One paper column: each group wraps onto rows of 2 panels.
+        rows = [grp[i:i + 2] for grp in groups for i in range(0, len(grp), 2)]
+        ncol, nrow = 2, len(rows)
+        odd = len(rows[-1]) == 1
+        fig = plt.figure(figsize=(6.6, 2.75 * nrow + (0.6 if odd else 1.3)))
+        gs = fig.add_gridspec(nrow, ncol, wspace=0.28, hspace=0.75,
+                              left=0.11, right=0.99, top=0.94, bottom=0.05 if odd else 0.10)
+    else:
+        rows = groups
+        ncol = max(len(r) for r in rows)
+        nrow = len(rows)
+        fig = plt.figure(figsize=(4.3 * ncol, 4.15 * nrow))
+        gs = fig.add_gridspec(nrow, ncol, wspace=0.30, hspace=0.62,
+                              left=0.055, right=0.99, top=0.90, bottom=0.225)
     axes, row_axes = [], []
     for ri, row in enumerate(rows):
         this = [fig.add_subplot(gs[ri, ci]) for ci in range(len(row))]
@@ -389,43 +402,47 @@ def build(metric, ylabel, out_name, higher_is_better):
 
         ax.axvspan(FILL - 1, FILL, color=FILLSWAP_BAND, alpha=0.28, zorder=0, linewidth=0)
         ax.set_xticks(range(N_RUNGS))
-        ax.set_xticklabels(RUNG_SHORT, fontsize=8, rotation=32, ha="right")
-        ax.set_title(title, fontsize=12, pad=8, fontweight="medium")
+        ax.set_xticklabels(RUNG_SHORT, fontsize=11 if layout == "column" else 8, rotation=32, ha="right")
+        ax.set_title(title, fontsize=14 if layout == "column" else 12, pad=8, fontweight="medium")
         ax.grid(alpha=0.15, linewidth=0.6)
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
-        ax.tick_params(axis="both", labelsize=9, length=3)
+        ax.tick_params(axis="both", labelsize=11 if layout == "column" else 9, length=3)
 
         lo, hi = ax.get_ylim()
-        ax.set_ylim(lo, hi + 0.16 * (hi - lo))
+        ax.set_ylim(lo, hi + 0.12 * (hi - lo))
         top = ax.get_ylim()[1]
-        word = "ns" if not (np.isfinite(p) and p < 0.05) else \
-            ("improves *" if dl >= 0 else "worsens *")
-        ann = f"panel-pooled: {word}\np={fmt_p(p)}"
+        star = "*" if (np.isfinite(p) and p < 0.05) else ""
         if metric == "dice":
-            # Real-fill's Δ RELATIVE to the Dice the step starts from (Paul, 2026-10-03):
-            # +3 points at 84% is a boost to a nearly solved task, +5 at 36% is a large
-            # share of what the model can do. Replaces the 2026-10-01 "% of total
-            # pipeline gain" ratio. Denominator = the panel-average noise-fill rung.
+            # Relative gain at the fill swap (Paul, 2026-10-03): panel delta divided by
+            # the panel-average noise-fill Dice; * = panel-pooled test significant.
             before = avg[FILL - 1]
-            if np.isfinite(before) and before > 1.0:
-                ann += f"\n{dl:+.2f} pt ({dl / before * 100.0:+.1f}% relative)"
-            else:
-                ann += f"\n{dl:+.2f} pt"
-        _place_thumbnail(ax, title)
-        ax.text(FILL - 0.5, top - 0.02 * (top - ax.get_ylim()[0]),
+            ann = (f"{dl / before * 100.0:+.1f}%{star}" if np.isfinite(before) and before > 1.0
+                   else f"{dl:+.1f}{star}")
+        else:
+            ann = f"{-dl:+.1f} mm{star}"   # dl is the improvement; print the HD95 change itself
+        if SHOW_THUMBS:
+            _place_thumbnail(ax, title)
+        ax.text(FILL - 0.5, top - 0.01 * (top - ax.get_ylim()[0]),
                 ann, ha="center", va="top",
-                fontsize=7.6, fontweight="bold", color=seg)
+                fontsize=14 if layout == "column" else 10, fontweight="bold", color=seg)
 
     for this in row_axes:
-        this[0].set_ylabel(ylabel, fontsize=10.5)
+        this[0].set_ylabel(ylabel, fontsize=13 if layout == "column" else 10.5)
     fig.canvas.draw()
 
     # One header per ROW, spanning that row's panels -- the row IS the group.
     GROUP_TITLE = {"interface": "Interface-bounded", "no_interface": "Appearance-defined"}
+    seen = set()
     for row, this in zip(rows, row_axes):
+        if row[0][1] in seen:
+            continue
+        seen.add(row[0][1])
         p0, p1 = this[0].get_position(), this[-1].get_position()
-        y = p0.y1 + 0.038
+        if layout == "column":
+            p1 = this[0].get_position() if len(this) == 1 else p1
+            p1 = type(p1)([[p1.x0, p1.y0], [row_axes[0][-1].get_position().x1, p1.y1]])
+        y = p0.y1 + (0.030 if layout == "column" else 0.038)
         fig.text((p0.x0 + p1.x1) / 2, y + 0.008, GROUP_TITLE[row[0][1]], ha="center",
                  va="bottom", fontsize=13.5, fontweight="semibold", color="#2a2a2a")
         fig.add_artist(plt.Line2D([p0.x0, p1.x1], [y, y], transform=fig.transFigure,
@@ -434,31 +451,49 @@ def build(metric, ylabel, out_name, higher_is_better):
             fig.add_artist(plt.Line2D([x, x], [y - 0.009, y], transform=fig.transFigure,
                                       color="#2a2a2a", linewidth=1.3))
 
-    style_h = [
-        Line2D([0], [0], color="#2a2a2a", linestyle="-", label="trained on T1-weighted", linewidth=1.8),
-        Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on another contrast", linewidth=1.8),
-        Line2D([0], [0], color="black", label="panel average, other rungs", linewidth=2.6),
-        Line2D([0], [0], color=NEUTRAL, label="per-curve, other rungs", linewidth=1.1),
-    ]
-    sig_h = [
-        Line2D([0], [0], color=IMPROVE_LIGHT, marker="o", label="per curve: significant improvement", linewidth=2.0, markersize=7),
-        Line2D([0], [0], color=WORSEN_LIGHT, marker="o", label="per curve: significant worsening", linewidth=2.0, markersize=7),
-        Line2D([0], [0], color=FLAT, marker="o", label="per curve: not significant", linewidth=1.3, alpha=0.7, markersize=6),
-        Line2D([0], [0], color=IMPROVE, marker="o", label="panel average: matches header", linewidth=3.0, markersize=7.5),
-    ]
-    fig.add_artist(fig.legend(handles=style_h + sig_h, loc="center", ncol=4, fontsize=9,
-                              frameon=False, bbox_to_anchor=(0.5, 0.116),
-                              handlelength=2.2, columnspacing=1.6))
-    fig.legend(handles=[Line2D([0], [0], color="#666666", marker=marker_of[c], linestyle="none",
-                               markersize=7.5, label=c) for c in all_c],
-               loc="center", ncol=12, fontsize=8.5, frameon=False, bbox_to_anchor=(0.5, 0.052),
-               title="eval contrast (marker)", title_fontsize=9,
-               handletextpad=0.5, columnspacing=1.4)
-    if metric == "dice":
-        fig.text(0.5, 0.008,
-                  "relative = Δ Dice at the real-fill step ÷ the panel's noise-fill Dice "
-                  "(the level the step starts from)",
-                  ha="center", va="bottom", fontsize=8, color="#555555", style="italic")
+    if layout == "column":
+        style_h = [
+            Line2D([0], [0], color="black", label="task average", linewidth=2.6),
+            Line2D([0], [0], color=NEUTRAL, label="one contrast pair", linewidth=1.3),
+            Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on non-T1", linewidth=1.5),
+            Line2D([0], [0], color=IMPROVE_LIGHT, marker="o", label="pair: sig. gain", linewidth=2.0, markersize=6),
+            Line2D([0], [0], color=WORSEN_LIGHT, marker="o", label="pair: sig. loss", linewidth=2.0, markersize=6),
+            Line2D([0], [0], color=FLAT, marker="o", label="pair: n.s.", linewidth=1.3, markersize=5),
+        ]
+        if len(rows[-1]) == 1:   # odd panel count: the legend fills the empty last cell
+            cell = gs[nrow - 1, 1].get_position(fig)
+            fig.legend(handles=style_h, loc="center", ncol=1, fontsize=11.5, frameon=False,
+                       bbox_to_anchor=((cell.x0 + cell.x1) / 2, (cell.y0 + cell.y1) / 2),
+                       handlelength=2.0)
+        else:
+            fig.legend(handles=style_h, loc="center", ncol=2, fontsize=9.5, frameon=False,
+                       bbox_to_anchor=(0.53, 0.045), handlelength=2.0, columnspacing=1.2)
+    else:
+        style_h = [
+            Line2D([0], [0], color="#2a2a2a", linestyle="-", label="trained on T1-weighted", linewidth=1.8),
+            Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on another contrast", linewidth=1.8),
+            Line2D([0], [0], color="black", label="panel average, other rungs", linewidth=2.6),
+            Line2D([0], [0], color=NEUTRAL, label="per-curve, other rungs", linewidth=1.1),
+        ]
+        sig_h = [
+            Line2D([0], [0], color=IMPROVE_LIGHT, marker="o", label="per curve: significant improvement", linewidth=2.0, markersize=7),
+            Line2D([0], [0], color=WORSEN_LIGHT, marker="o", label="per curve: significant worsening", linewidth=2.0, markersize=7),
+            Line2D([0], [0], color=FLAT, marker="o", label="per curve: not significant", linewidth=1.3, alpha=0.7, markersize=6),
+            Line2D([0], [0], color=IMPROVE, marker="o", label="panel average: matches header", linewidth=3.0, markersize=7.5),
+        ]
+        fig.add_artist(fig.legend(handles=style_h + sig_h, loc="center", ncol=4, fontsize=9,
+                                  frameon=False, bbox_to_anchor=(0.5, 0.116),
+                                  handlelength=2.2, columnspacing=1.6))
+        fig.legend(handles=[Line2D([0], [0], color="#666666", marker=marker_of[c], linestyle="none",
+                                   markersize=7.5, label=c) for c in all_c],
+                   loc="center", ncol=12, fontsize=8.5, frameon=False, bbox_to_anchor=(0.5, 0.052),
+                   title="eval contrast (marker)", title_fontsize=9,
+                   handletextpad=0.5, columnspacing=1.4)
+        if metric == "dice":
+            fig.text(0.5, 0.008,
+                      "relative = Δ Dice at the real-fill step ÷ the panel's noise-fill Dice "
+                      "(the level the step starts from)",
+                      ha="center", va="bottom", fontsize=8, color="#555555", style="italic")
 
     out = OUT / out_name
     fig.savefig(out, dpi=300)
@@ -478,3 +513,5 @@ def build(metric, ylabel, out_name, higher_is_better):
 if __name__ == "__main__":
     build("dice", "Eval-contrast Dice (%)", "fill_swap_per_contrast.pdf", True)
     build("hd95", "Eval-contrast HD95 (mm)", "fill_swap_per_contrast_hd95.pdf", False)
+    build("dice", "OOD Dice (%)", "fill_swap_per_contrast_column.pdf", True, layout="column")
+    build("hd95", "OOD HD95 (mm)", "fill_swap_per_contrast_hd95_column.pdf", False, layout="column")

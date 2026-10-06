@@ -13,13 +13,13 @@ validation subjects never appear in any reported number.
 Task & Target & Trained on (one modality at a time) & Other test contrasts & External test cohorts & Test cases & Ladder \\
 \midrule
 \multicolumn{7}{l}{\emph{Appearance-defined}} \\
-BraTS-GLI & glioma, 4 sub-regions & BraTS2024-GLI~\cite{deverdier2024brats2024}: T1n, T1c, T2w, FLAIR & -- & -- & 70 & \checkmark \\
-Open-MS & MS lesions & Open-MS~\cite{lesjak2018openms}: FLAIR, T1w & T2w & -- & 8 & \checkmark \\
+Glioma & glioma, 4 sub-regions & BraTS2024-GLI~\cite{deverdier2024brats2024}: T1n, T1c, T2w, FLAIR & -- & -- & 70 & \checkmark \\
+MS & MS lesions & Open-MS~\cite{lesjak2018openms}: FLAIR, T1w & T2w & -- & 8 & \checkmark \\
 Breast & tumor & I-SPY2~\cite{li2022ispy2}: T1-CE, T2w & -- & Duke~\cite{saha2018duke,garrucho2025mamamia}, I-SPY1~\cite{hylton2012ispy1}: T1-CE, pre-contrast; ACRIN-6698~\cite{partridge2018acrin6698}: DWI & 84 + 829 & \checkmark \\
 \midrule
 \multicolumn{7}{l}{\emph{Interface-bounded}} \\
-CHAOS & liver, kidneys, spleen & CHAOS~\cite{kavur2021chaos}: T1in, T2spir & T1out, CT & AMOS~\cite{ji2022amos}: CT, T2w; SLIVER07~\cite{heimann2009comparison}: CT & 24 + 140 & \checkmark \\
-ON-Harm. & 31 brain regions & ON-Harmony~\cite{warrington2025onharmony}: T1w, T2w, DWI & BOLD, EPI, GRE & -- & 8$^a$ & \checkmark \\
+Abdomen & liver, kidneys, spleen & CHAOS~\cite{kavur2021chaos}: T1in, T2spir & T1out, CT & AMOS~\cite{ji2022amos}: CT, T2w; SLIVER07~\cite{heimann2009comparison}: CT & 24 + 140 & \checkmark \\
+Brain & 31 brain regions & ON-Harmony~\cite{warrington2025onharmony}: T1w, T2w, DWI & BOLD, EPI, GRE & -- & 8$^a$ & \checkmark \\
 Mandible & mandible & ToothFairy2~\cite{bolelli2025toothfairy2}: CBCT & -- & HaN-Seg~\cite{podobnik2023hanseg}: CT, MR-T1; PDDCA~\cite{raudaschl2017pddca}: CT & 71 + 82 & \checkmark \\
 Spine & vertebrae, discs, canal & CT/Dixon cohort: CT, Dixon in-phase & Dixon fat, water & SPIDER~\cite{vandergraaf2024spider}: T1w, T2w & 29 + 171/219 & -- \\
 Pelvis & 11 bones and muscles & TotalSegmentator~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}: CT, MRI$^b$ & -- & -- & 30/27 & \checkmark \\

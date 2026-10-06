@@ -26,7 +26,7 @@ contrast at validation time).
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
-Component & CHAOS & Open-MS & BraTS-GLI & ON-Harmony \\
+Component & Abdomen & MS & Glioma & Brain \\
           & T1in  & FLAIR   & T1n       & T1w \\
 \midrule
 Base (nnU-Net default)                & 36.1 & 25.2 & 26.0 & 27.5 \\
@@ -44,7 +44,7 @@ deployment composability check (bottom row). Each rung adds exactly one
 PALETTE-Aug component on top of the row above. Dice (\%) over all test
 contrasts of the setting, the training contrast included, with equal weight per
 contrast (the all-contrast series of the same ladders as
-\cref{tab:ladder-full}, which reports the held-out contrasts only). CHAOS T1in:
+\cref{tab:ladder-full}, which reports the held-out contrasts only). Abdomen T1in:
 CHAOS's own test contrasts only, without the external cohorts.}
 \label{tab:mechanism}
 \end{table}
