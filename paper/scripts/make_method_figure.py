@@ -21,8 +21,8 @@ FIG = Path(__file__).resolve().parent.parent / "cvpr_format_latex/figures"
 PANELS = FIG / "method_panels"
 OUT = FIG / "method_pipeline"
 LETTERS = "abcde"
-HEADERS = ["(a) Input", "(b) $k$-means regions,\nflat fill", "(c) + Voronoi sub-regions,\nflat fill",
-           "(d) + labels,\nflat fill", "(e) Output: real texture,\naffine remap"]
+HEADERS = ["(a) Input", "(b) + $k$-means regions\n(flat fill)", "(c) + label remap\n(flat fill)",
+           "(d) + Voronoi sub-regions\n(flat fill)", "(e) Real fill:\nPALETTE output"]
 # slug, row label, raw-array -> radiological display (array axes from nib.aff2axcodes of the source volume)
 ROWS = [("chaos", "Abdomen\nCHAOS T2SPIR", lambda a: a.T),                 # LPS: rows=x(L), cols=y(P)
         ("onharmony", "Brain\nON-Harmony T1w", lambda a: a.T[::-1, ::-1])]  # RAS: rows=x(R), cols=y(A)

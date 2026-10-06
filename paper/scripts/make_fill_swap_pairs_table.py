@@ -67,7 +67,7 @@ def main():
                     continue
                 p = pc.get(c, float("nan"))
                 sig = np.isfinite(p) and p < 0.05
-                delta = f"$\\mathbf{{{b - a:+.1f}}}$" if sig else f"${b - a:+.1f}$"
+                delta = f"${b - a:+.1f}^{{*}}$" if sig else f"${b - a:+.1f}$"
                 lines.append(f"{task if first else ''} & {TRAIN.get(lab, lab)} $\\to$ {NAME.get(c, c)} & "
                              f"{a:.1f} & {b:.1f} & {delta} & ${(b - a) / a * 100:+.1f}$ & {fmt_p(p)} \\\\")
                 first = False
@@ -76,7 +76,7 @@ def main():
               "\\caption{The fill swap for each training $\\to$ test contrast pair: out-of-domain Dice (\\%) "
               "of the noise-fill rung and of the real-fill rung (PALETTE alone), their difference, the "
               "difference relative to the noise-fill Dice, and the pair's paired Wilcoxon test on patients, "
-              "Holm-corrected across the held-out contrasts of its setting (bold: $p<0.05$, the pairs "
+              "Holm-corrected across the held-out contrasts of its setting ($^*$: $p<0.05$, the pairs "
               "colored in \\cref{fig:ladder}; \\cref{tab:dissociation} tests each setting as a whole). "
               "External cohorts are pooled with the training cohort by contrast, except Mandible, whose "
               "held-out contrasts all come from external cohorts and are listed per cohort. "

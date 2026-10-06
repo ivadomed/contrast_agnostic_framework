@@ -22,10 +22,10 @@ Panels:
   (b) k-means flat remap: each cluster painted with its DOMINANT (largest)
       sub-region's target mean mu -- a flat preview before Voronoi splitting
       is visually applied.
-  (c) + Voronoi sub-parcellation flat remap: each sub-region painted with its
-      own mu (no texture).
-  (d) + label flat remap: real anatomical labels additionally painted with
-      their own mu, overwriting (c) on each label's footprint.
+  (c) + label remap on the k-means regions (flat): each label re-remapped
+      affinely, so the k-means structure inside it survives.
+  (d) + Voronoi sub-parcellation (flat): each sub-region painted with its own
+      mu, then the same label re-remap (sub-regions survive inside labels).
   (e) final output: the real signed-affine remap of Eq. (1) with texture
       (not a flat fill), at both the region and label level, matching
       v26_6_2_synthesis.py's actual per-label re-remap formula.
@@ -138,11 +138,17 @@ def run_pipeline(img_slice: np.ndarray, lbl_slice: np.ndarray, device="cpu"):
     # panel (c): full sub-region flat fill (no texture)
     panel_c = mu_c[rid] * flat_m
 
-    # ---- Step 4: per-label flat preview + real per-label texture remap ----
+    # ---- Step 4: per-label affine re-remap, shown in the ablation-ladder order ----
+    # The label step (v26_6_2_synthesis.py) is an AFFINE re-remap of the current synthetic
+    # image inside each label, new = mu_l + alpha_l * (x - mean_l): it keeps whatever
+    # structure (k-means regions, Voronoi sub-regions, real texture) is already there.
+    # The SAME draw (mu_l, alpha_l) is applied to every preview so the panels differ only
+    # in what the label step acts on. Draw order is unchanged, so panel (e) is too.
     unique_labels = [int(x) for x in torch.unique(lbl_flat) if x > 0]
-    panel_d = panel_c.clone()
     step3_texture = (mu_c[rid] + alpha_c[rid] * (flat - mean_c[rid])).clamp(0, 1) * flat_m
-    panel_e = step3_texture.clone()
+    km_lbl = panel_b.clone()            # (c) k-means regions + labels, flat
+    vor_lbl = panel_c.clone()           # (d) + Voronoi sub-regions, flat
+    panel_e = step3_texture.clone()     # (e) same partition, real texture
     for ell in unique_labels:
         ell_mask = (lbl_flat == ell).float()
         if ell_mask.sum() < 4:
@@ -151,13 +157,14 @@ def run_pipeline(img_slice: np.ndarray, lbl_slice: np.ndarray, device="cpu"):
         mag_ell = torch.rand(1).item() * 1.5 + 0.5
         sign_ell = 1.0 if torch.rand(1).item() > 0.5 else -1.0
         alpha_ell = mag_ell * sign_ell
-        panel_d = torch.where(ell_mask.bool(), torch.full_like(panel_d, mu_ell), panel_d)
-        mean_ell_in_step3 = (step3_texture * ell_mask).sum() / ell_mask.sum().clamp(min=eps)
-        remapped = (mu_ell + alpha_ell * (step3_texture - mean_ell_in_step3)).clamp(0, 1)
-        panel_e = torch.where(ell_mask.bool(), remapped, panel_e)
+        m = ell_mask.bool()
+        for buf in (km_lbl, vor_lbl, panel_e):
+            mean_ell = (buf * ell_mask).sum() / ell_mask.sum().clamp(min=eps)
+            buf.copy_(torch.where(m, (mu_ell + alpha_ell * (buf - mean_ell)).clamp(0, 1), buf))
 
+    # ablation-ladder order: input, +k-means, +label remap, +Voronoi (flat), real fill
     panels = {
-        "a": flat, "b": panel_b, "c": panel_c, "d": panel_d, "e": panel_e.clamp(0, 1),
+        "a": flat, "b": panel_b, "c": km_lbl, "d": vor_lbl, "e": panel_e.clamp(0, 1),
     }
     return {k: v.reshape(H, W).numpy() for k, v in panels.items()}
 

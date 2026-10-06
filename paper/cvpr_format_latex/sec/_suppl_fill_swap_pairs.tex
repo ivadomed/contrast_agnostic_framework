@@ -9,25 +9,25 @@
 Task & Train $\to$ test & Noise & Real & $\Delta$ & Rel.\ (\%) & $p$ \\
 \midrule
 \multicolumn{7}{@{}l}{\emph{Appearance-defined}} \\
-Glioma & T1n $\to$ T1c & 49.8 & 51.8 & $\mathbf{+2.0}$ & $+4.0$ & $1\!\times\!10^{-3}$ \\
- & T1n $\to$ T2w & 39.2 & 46.4 & $\mathbf{+7.1}$ & $+18.2$ & $2\!\times\!10^{-11}$ \\
- & T1n $\to$ FLAIR & 30.4 & 42.9 & $\mathbf{+12.5}$ & $+41.2$ & $2\!\times\!10^{-12}$ \\
- & T1c $\to$ T1n & 40.7 & 44.1 & $\mathbf{+3.4}$ & $+8.4$ & $4\!\times\!10^{-3}$ \\
- & T1c $\to$ T2w & 25.4 & 44.4 & $\mathbf{+19.0}$ & $+74.8$ & $1\!\times\!10^{-12}$ \\
- & T1c $\to$ FLAIR & 25.3 & 42.7 & $\mathbf{+17.4}$ & $+68.9$ & $1\!\times\!10^{-12}$ \\
- & T2w $\to$ T1n & 41.8 & 36.3 & $\mathbf{-5.5}$ & $-13.1$ & $1\!\times\!10^{-4}$ \\
- & T2w $\to$ T1c & 37.9 & 41.1 & $\mathbf{+3.3}$ & $+8.7$ & $3\!\times\!10^{-4}$ \\
- & T2w $\to$ FLAIR & 43.2 & 47.5 & $\mathbf{+4.3}$ & $+9.9$ & $1\!\times\!10^{-5}$ \\
+Glioma & T1n $\to$ T1c & 49.8 & 51.8 & $+2.0^{*}$ & $+4.0$ & $1\!\times\!10^{-3}$ \\
+ & T1n $\to$ T2w & 39.2 & 46.4 & $+7.1^{*}$ & $+18.2$ & $2\!\times\!10^{-11}$ \\
+ & T1n $\to$ FLAIR & 30.4 & 42.9 & $+12.5^{*}$ & $+41.2$ & $2\!\times\!10^{-12}$ \\
+ & T1c $\to$ T1n & 40.7 & 44.1 & $+3.4^{*}$ & $+8.4$ & $4\!\times\!10^{-3}$ \\
+ & T1c $\to$ T2w & 25.4 & 44.4 & $+19.0^{*}$ & $+74.8$ & $1\!\times\!10^{-12}$ \\
+ & T1c $\to$ FLAIR & 25.3 & 42.7 & $+17.4^{*}$ & $+68.9$ & $1\!\times\!10^{-12}$ \\
+ & T2w $\to$ T1n & 41.8 & 36.3 & $-5.5^{*}$ & $-13.1$ & $1\!\times\!10^{-4}$ \\
+ & T2w $\to$ T1c & 37.9 & 41.1 & $+3.3^{*}$ & $+8.7$ & $3\!\times\!10^{-4}$ \\
+ & T2w $\to$ FLAIR & 43.2 & 47.5 & $+4.3^{*}$ & $+9.9$ & $1\!\times\!10^{-5}$ \\
  & FLAIR $\to$ T1n & 26.0 & 23.8 & $-2.3$ & $-8.7$ & 0.12 \\
  & FLAIR $\to$ T1c & 32.5 & 32.1 & $-0.4$ & $-1.1$ & 0.94 \\
- & FLAIR $\to$ T2w & 37.2 & 39.3 & $\mathbf{+2.1}$ & $+5.6$ & 0.01 \\
-MS & FLAIR $\to$ T1w & 15.6 & 21.8 & $\mathbf{+6.2}$ & $+39.5$ & 0.02 \\
- & FLAIR $\to$ T2w & 23.5 & 32.8 & $\mathbf{+9.2}$ & $+39.2$ & 0.02 \\
+ & FLAIR $\to$ T2w & 37.2 & 39.3 & $+2.1^{*}$ & $+5.6$ & 0.01 \\
+MS & FLAIR $\to$ T1w & 15.6 & 21.8 & $+6.2^{*}$ & $+39.5$ & 0.02 \\
+ & FLAIR $\to$ T2w & 23.5 & 32.8 & $+9.2^{*}$ & $+39.2$ & 0.02 \\
  & T1w $\to$ FLAIR & 38.3 & 34.5 & $-3.8$ & $-9.9$ & 0.25 \\
- & T1w $\to$ T2w & 29.9 & 35.2 & $\mathbf{+5.3}$ & $+17.9$ & 0.02 \\
-Breast & T1-CE $\to$ T2w & 21.9 & 22.9 & $\mathbf{+0.9}$ & $+4.2$ & 0.01 \\
- & T1-CE $\to$ pre-contrast & 35.7 & 31.6 & $\mathbf{-4.1}$ & $-11.6$ & $1\!\times\!10^{-6}$ \\
- & T1-CE $\to$ DWI & 34.7 & 35.4 & $\mathbf{+0.7}$ & $+1.9$ & 0.01 \\
+ & T1w $\to$ T2w & 29.9 & 35.2 & $+5.3^{*}$ & $+17.9$ & 0.02 \\
+Breast & T1-CE $\to$ T2w & 21.9 & 22.9 & $+0.9^{*}$ & $+4.2$ & 0.01 \\
+ & T1-CE $\to$ pre-contrast & 35.7 & 31.6 & $-4.1^{*}$ & $-11.6$ & $1\!\times\!10^{-6}$ \\
+ & T1-CE $\to$ DWI & 34.7 & 35.4 & $+0.7^{*}$ & $+1.9$ & 0.01 \\
  & T2w $\to$ T1-CE & 51.0 & 51.6 & $+0.6$ & $+1.3$ & 0.60 \\
  & T2w $\to$ pre-contrast & 40.6 & 40.7 & $+0.0$ & $+0.1$ & 0.33 \\
  & T2w $\to$ DWI & 27.9 & 28.7 & $+0.8$ & $+3.0$ & 0.17 \\
@@ -35,18 +35,18 @@ Breast & T1-CE $\to$ T2w & 21.9 & 22.9 & $\mathbf{+0.9}$ & $+4.2$ & 0.01 \\
 \multicolumn{7}{@{}l}{\emph{Interface-bounded}} \\
 Abdomen & T1in $\to$ T1out & 84.9 & 86.1 & $+1.2$ & $+1.4$ & 0.50 \\
  & T1in $\to$ T2spir & 86.9 & 87.7 & $+0.8$ & $+1.0$ & 0.88 \\
- & T1in $\to$ CT & 83.4 & 85.2 & $\mathbf{+1.9}$ & $+2.2$ & $2\!\times\!10^{-9}$ \\
- & T1in $\to$ T2w & 87.5 & 89.4 & $\mathbf{+1.9}$ & $+2.1$ & $6\!\times\!10^{-6}$ \\
+ & T1in $\to$ CT & 83.4 & 85.2 & $+1.9^{*}$ & $+2.2$ & $2\!\times\!10^{-9}$ \\
+ & T1in $\to$ T2w & 87.5 & 89.4 & $+1.9^{*}$ & $+2.1$ & $6\!\times\!10^{-6}$ \\
  & T2spir $\to$ T1in & 78.0 & 85.9 & $+7.9$ & $+10.1$ & 0.25 \\
  & T2spir $\to$ T1out & 82.4 & 88.4 & $+6.0$ & $+7.3$ & 0.25 \\
- & T2spir $\to$ CT & 78.9 & 83.6 & $\mathbf{+4.6}$ & $+5.9$ & $9\!\times\!10^{-19}$ \\
- & T2spir $\to$ T2w & 88.7 & 90.6 & $\mathbf{+1.9}$ & $+2.1$ & 0.03 \\
+ & T2spir $\to$ CT & 78.9 & 83.6 & $+4.6^{*}$ & $+5.9$ & $9\!\times\!10^{-19}$ \\
+ & T2spir $\to$ T2w & 88.7 & 90.6 & $+1.9^{*}$ & $+2.1$ & 0.03 \\
 Brain & T1w $\to$ T2w & 87.9 & 87.7 & $-0.2$ & $-0.2$ & 0.09 \\
- & T1w $\to$ BOLD & 49.4 & 46.9 & $\mathbf{-2.5}$ & $-5.1$ & 0.04 \\
+ & T1w $\to$ BOLD & 49.4 & 46.9 & $-2.5^{*}$ & $-5.1$ & 0.04 \\
  & T1w $\to$ DWI & 72.1 & 71.1 & $-1.0$ & $-1.4$ & 0.09 \\
  & T1w $\to$ EPI & 48.6 & 46.8 & $-1.7$ & $-3.6$ & 0.25 \\
  & T1w $\to$ GRE & 58.0 & 56.8 & $-1.2$ & $-2.2$ & 0.09 \\
- & T2w $\to$ T1w & 90.3 & 89.6 & $\mathbf{-0.7}$ & $-0.7$ & 0.04 \\
+ & T2w $\to$ T1w & 90.3 & 89.6 & $-0.7^{*}$ & $-0.7$ & 0.04 \\
  & T2w $\to$ BOLD & 50.2 & 49.1 & $-1.1$ & $-2.2$ & 0.07 \\
  & T2w $\to$ DWI & 72.8 & 72.0 & $-0.8$ & $-1.1$ & 0.08 \\
  & T2w $\to$ EPI & 50.6 & 48.0 & $-2.6$ & $-5.1$ & 0.12 \\
@@ -56,13 +56,13 @@ Brain & T1w $\to$ T2w & 87.9 & 87.7 & $-0.2$ & $-0.2$ & 0.09 \\
  & DWI $\to$ BOLD & 57.0 & 57.7 & $+0.7$ & $+1.3$ & 0.44 \\
  & DWI $\to$ EPI & 56.9 & 57.4 & $+0.5$ & $+0.9$ & 0.94 \\
  & DWI $\to$ GRE & 50.1 & 50.5 & $+0.5$ & $+0.9$ & 0.94 \\
-Mandible & CBCT $\to$ HaN-Seg CT & 83.2 & 84.1 & $\mathbf{+0.9}$ & $+1.0$ & $5\!\times\!10^{-3}$ \\
- & CBCT $\to$ HaN-Seg MR-T1 & 54.3 & 55.7 & $\mathbf{+1.5}$ & $+2.7$ & 0.03 \\
- & CBCT $\to$ PDDCA CT & 80.7 & 82.4 & $\mathbf{+1.6}$ & $+2.0$ & $8\!\times\!10^{-6}$ \\
+Mandible & CBCT $\to$ HaN-Seg CT & 83.2 & 84.1 & $+0.9^{*}$ & $+1.0$ & $5\!\times\!10^{-3}$ \\
+ & CBCT $\to$ HaN-Seg MR-T1 & 54.3 & 55.7 & $+1.5^{*}$ & $+2.7$ & 0.03 \\
+ & CBCT $\to$ PDDCA CT & 80.7 & 82.4 & $+1.6^{*}$ & $+2.0$ & $8\!\times\!10^{-6}$ \\
 Pelvis & CT $\to$ MRI & 35.3 & 38.3 & $+3.1$ & $+8.7$ & 0.07 \\
- & MRI $\to$ CT & 63.1 & 67.2 & $\mathbf{+4.1}$ & $+6.5$ & $2\!\times\!10^{-7}$ \\
+ & MRI $\to$ CT & 63.1 & 67.2 & $+4.1^{*}$ & $+6.5$ & $2\!\times\!10^{-7}$ \\
 \bottomrule
 \end{tabular}}
-\caption{The fill swap for each training $\to$ test contrast pair: out-of-domain Dice (\%) of the noise-fill rung and of the real-fill rung (PALETTE alone), their difference, the difference relative to the noise-fill Dice, and the pair's paired Wilcoxon test on patients, Holm-corrected across the held-out contrasts of its setting (bold: $p<0.05$, the pairs colored in \cref{fig:ladder}; \cref{tab:dissociation} tests each setting as a whole). External cohorts are pooled with the training cohort by contrast, except Mandible, whose held-out contrasts all come from external cohorts and are listed per cohort. 50 pairs.}
+\caption{The fill swap for each training $\to$ test contrast pair: out-of-domain Dice (\%) of the noise-fill rung and of the real-fill rung (PALETTE alone), their difference, the difference relative to the noise-fill Dice, and the pair's paired Wilcoxon test on patients, Holm-corrected across the held-out contrasts of its setting ($^*$: $p<0.05$, the pairs colored in \cref{fig:ladder}; \cref{tab:dissociation} tests each setting as a whole). External cohorts are pooled with the training cohort by contrast, except Mandible, whose held-out contrasts all come from external cohorts and are listed per cohort. 50 pairs.}
 \label{tab:fill-swap-pairs}
 \end{table}

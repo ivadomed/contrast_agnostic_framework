@@ -459,10 +459,10 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
     if layout == "column":
         style_h = [
             Line2D([0], [0], color="black", label="task average", linewidth=2.6),
-            Line2D([0], [0], color=NEUTRAL, label="one model:\ntrain → test contrast", linewidth=1.3),
-            Line2D([0], [0], color=IMPROVE_LIGHT, label="its fill swap: sig. gain", linewidth=2.2),
-            Line2D([0], [0], color=WORSEN_LIGHT, label="its fill swap: sig. loss", linewidth=2.2),
-            Line2D([0], [0], color=FLAT, label="its fill swap: n.s.", linewidth=1.5),
+            Line2D([0], [0], color=NEUTRAL, label="trained on one contrast,\ntested on another\n(e.g. T1n → T2w)", linewidth=1.3),
+            Line2D([0], [0], color=IMPROVE_LIGHT, label="that pair at the swap:\nsignificant gain", linewidth=2.2),
+            Line2D([0], [0], color=WORSEN_LIGHT, label="significant loss", linewidth=2.2),
+            Line2D([0], [0], color=FLAT, label="not significant", linewidth=1.5),
             Line2D([], [], linestyle="none", label="values per pair:\nsupplementary tables"),
         ]
         single = [i for i, r in enumerate(rows) if len(r) == 1]
@@ -477,10 +477,10 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
     else:
         style_h = [
             Line2D([0], [0], color="black", label="task average", linewidth=2.6),
-            Line2D([0], [0], color=NEUTRAL, label="one model: train → test contrast", linewidth=1.3),
-            Line2D([0], [0], color=IMPROVE_LIGHT, label="its fill swap: significant gain", linewidth=2.2),
-            Line2D([0], [0], color=WORSEN_LIGHT, label="its fill swap: significant loss", linewidth=2.2),
-            Line2D([0], [0], color=FLAT, label="its fill swap: not significant", linewidth=1.5),
+            Line2D([0], [0], color=NEUTRAL, label="trained on one contrast, tested on another (e.g. T1n → T2w)", linewidth=1.3),
+            Line2D([0], [0], color=IMPROVE_LIGHT, label="that pair at the swap: significant gain", linewidth=2.2),
+            Line2D([0], [0], color=WORSEN_LIGHT, label="significant loss", linewidth=2.2),
+            Line2D([0], [0], color=FLAT, label="not significant", linewidth=1.5),
         ]
         fig.legend(handles=style_h, loc="center", ncol=5, fontsize=9, frameon=False,
                    bbox_to_anchor=(0.5, 0.10), handlelength=2.2, columnspacing=1.6)

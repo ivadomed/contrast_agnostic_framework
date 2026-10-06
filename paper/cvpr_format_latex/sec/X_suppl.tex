@@ -173,10 +173,11 @@ SynthSeg-noEM   & 78.0 & 41.9 & 101.1 &  80.6 &  6.7 & 32.9 & 111.8 & 261.8 & $<
 SynthSeg-EM     & 17.9 & 24.7 & 60.9 &  23.7 &  4.7 & 24.9 & 4.0 & 34.0 & $1.8\times10^{-6}$ \\
 SRCSM           & 17.5 & 24.6 & 91.8 & 24.4 &  5.3 & \textbf{19.3} & --- & 33.9 & $<\!10^{-10}$ \\
 Auglab          & 16.1 & 26.5 & \textbf{57.1} & 27.8 &  4.7 & 22.1 & 4.7 & 35.6 & $1.0\times10^{-4}$ \\
-\textbf{PALETTE-Aug (ours)} & \textbf{15.6} & \textbf{24.3} & 57.7 & \textbf{22.7} & \textbf{4.3} & 23.5 & \textbf{3.5} & \textbf{29.0} & --- \\
 \midrule
-% TODO(rung-5 val000 retrain): Glioma and MS cells provisional; p cell pending.
-PALETTE alone (ours) & 15.8 & 25.6 & 56.3 & 24.9 & 4.6 & 22.3 & --- & 35.2 & --- \\
+% TODO(rung-5 val000 retrain): Glioma, MS and Brain PALETTE-alone cells and the p cell wait for the retrain
+% (Brain also for the on-harmony re-prediction). Spine has no PALETTE-alone run (separate pipeline, no ladder).
+PALETTE alone (ours) & \pending & \pending & 56.3 & 24.9 & \pending & 22.3 & --- & 35.2 & \pending \\
+\textbf{PALETTE-Aug (ours)} & \textbf{15.6} & \textbf{24.3} & 57.7 & \textbf{22.7} & \textbf{4.3} & 23.5 & \textbf{3.5} & \textbf{29.0} & --- \\
 \midrule
 \multicolumn{1}{r}{\footnotesize competitors beaten ($p<0.05$)} &
 5/5 & 3/5 & 3/5 & 4/5 & 3/5 & 2/5 & 4/4 & 2/5 & \\
@@ -203,6 +204,7 @@ training $\to$ test contrast pair.
 
 \begin{figure*}[t]
 \centering
+% TODO(rung-5 val000 retrain): figure built from the pre-retrain ladders (LADDER_JSON_SUFFIX=.bak_20261006_pre_val000_rung5); regenerate without the suffix.
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_hd95}
 \caption{\Cref{fig:ladder} (main paper) on HD95 instead of Dice: same tasks,
 grouping and visual scheme. Annotation: the task's HD95 change at the fill swap
@@ -212,6 +214,7 @@ significantly. Per-setting numbers: \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
 \end{figure*}
 
+% TODO(rung-5 val000 retrain): pre-retrain numbers (real-fill rung = val100); regenerate (paper/scripts/compute_dissociation_pvalues.py, compute_ladder_significance.py).
 \begin{table}[t]
 \centering
 \small
@@ -221,8 +224,8 @@ significantly. Per-setting numbers: \cref{tab:dissociation-hd95}.}
 Setting & noise & $\Delta$ & rel.\ (\%) & $p$ \\
 \midrule
 \multicolumn{5}{l}{\emph{Appearance-defined}} \\
-Glioma T1n & 39.8 & $+7.22$ & $+18.1$ & $3.3\times10^{-11}$ \\
-Glioma T1c & 30.5 & $+13.27$ & $+43.6$ & $5.0\times10^{-12}$ \\
+Glioma T1n & 39.8 & $+7.22^{*}$ & $+18.1$ & $3.3\times10^{-11}$ \\
+Glioma T1c & 30.5 & $+13.27^{*}$ & $+43.6$ & $5.0\times10^{-12}$ \\
 Glioma T2w & 41.0 & $+0.69$ & $+1.7$ & 0.61 \\
 Glioma FLAIR & 31.9 & $-0.19$ & $-0.6$ & 1.0 \\
 MS FLAIR & 19.6 & $+7.69$ & $+39.3$ & 0.078$^\dagger$ \\
@@ -231,21 +234,21 @@ Breast T1-CE & 30.8 & $-0.85$ & $-2.8$ & 0.33 \\
 Breast T2w & 39.8 & $+0.50$ & $+1.3$ & 0.11 \\
 \midrule
 \multicolumn{5}{l}{\emph{Interface-bounded}} \\
-Abdomen T1in & 85.7 & $+1.43$ & $+1.7$ & $4.6\times10^{-12}$ \\
-Abdomen T2spir & 82.0 & $+5.11$ & $+6.2$ & $1.2\times10^{-20}$ \\
+Abdomen T1in & 85.7 & $+1.43^{*}$ & $+1.7$ & $4.6\times10^{-12}$ \\
+Abdomen T2spir & 82.0 & $+5.11^{*}$ & $+6.2$ & $1.2\times10^{-20}$ \\
 Brain T1w & 63.2 & $-1.34$ & $-2.1$ & 0.078$^\dagger$ \\
 Brain T2w & 64.2 & $-1.55$ & $-2.4$ & 0.078$^\dagger$ \\
 Brain DWI & 64.6 & $+0.78$ & $+1.2$ & 0.11$^\dagger$ \\
-Mandible CBCT$^\ddagger$ & 68.1 & $+1.36$ & $+2.0$ & $5.3\times10^{-6}$ \\
+Mandible CBCT$^\ddagger$ & 68.1 & $+1.36^{*}$ & $+2.0$ & $5.3\times10^{-6}$ \\
 Pelvis CT & 35.3 & $+3.08$ & $+8.7$ & 0.33 \\
-Pelvis MRI & 63.1 & $+4.12$ & $+6.5$ & $2.0\times10^{-6}$ \\
+Pelvis MRI & 63.1 & $+4.12^{*}$ & $+6.5$ & $2.0\times10^{-6}$ \\
 \bottomrule
 \end{tabular}
 \caption{Replacing SynthSeg-style noise fill with the real-intensity remap,
 \emph{with the partition and region target means unchanged}, for every
 training modality of every task with a ladder. noise: out-of-domain Dice with
 noise fill; $\Delta$: Dice change at the swap; rel.: $\Delta$ relative to the
-noise-fill Dice. $p$: two-sided paired Wilcoxon on patients (each patient's
+noise-fill Dice; $^*$: $p<0.05$. $p$: two-sided paired Wilcoxon on patients (each patient's
 mean over the setting's held-out contrasts), Holm-corrected across all sixteen
 settings; \cref{tab:ladder-full} corrects within each ladder instead, so the
 same step can be significant there and not here. $^\dagger$With eight test patients (MS) or eight sessions of four subjects,
@@ -257,6 +260,7 @@ ToothFairy2 is CBCT only. Per-task summary: \cref{fig:ladder} (main paper); per 
 \label{tab:dissociation}
 \end{table}
 
+% TODO(rung-5 val000 retrain): pre-retrain numbers (real-fill rung = val100); regenerate (paper/scripts/compute_dissociation_pvalues.py, compute_ladder_significance.py).
 \begin{table}[t]
 \centering
 \small
@@ -266,18 +270,18 @@ ToothFairy2 is CBCT only. Per-task summary: \cref{fig:ladder} (main paper); per 
 Setting & $\Delta$ HD95 (mm) & $p$ \\
 \midrule
 \multicolumn{3}{l}{\emph{Appearance-defined}} \\
-Glioma T1n     & $-4.59$ & $7.4\times10^{-10}$ \\
-Glioma T1c     & $-9.91$ & $4.9\times10^{-11}$ \\
-Glioma T2w     & $-1.86$ & 0.010 \\
+Glioma T1n     & $-4.59^{*}$ & $7.4\times10^{-10}$ \\
+Glioma T1c     & $-9.91^{*}$ & $4.9\times10^{-11}$ \\
+Glioma T2w     & $-1.86^{*}$ & 0.010 \\
 Glioma FLAIR   & $-1.71$ & 0.29 \\
 MS FLAIR     & $-3.02$ & 0.19 \\
 MS T1w       & $+3.94$ & 1.0 \\
-Breast T1-CE      & $-3.21$ & $1.0\times10^{-4}$ \\
-Breast T2w        & $-1.82$ & 0.0029 \\
+Breast T1-CE      & $-3.21^{*}$ & $1.0\times10^{-4}$ \\
+Breast T2w        & $-1.82^{*}$ & 0.0029 \\
 \midrule
 \multicolumn{3}{l}{\emph{Interface-bounded}} \\
 Abdomen T1in        & $-1.36$ & 1.0 \\
-Abdomen T2spir      & $-18.47$ & $3.8\times10^{-12}$ \\
+Abdomen T2spir      & $-18.47^{*}$ & $3.8\times10^{-12}$ \\
 Brain T1w    & $+1.38$ & 0.078 \\
 Brain T2w    & $+0.38$ & 0.078 \\
 Brain DWI    & $-0.05$ & 1.0 \\
@@ -287,7 +291,7 @@ Pelvis MRI        & $-0.49$ & 1.0 \\
 \bottomrule
 \end{tabular}
 \caption{Same fill-swap step as \cref{tab:dissociation}, on HD95
-(negative is better), with $p$ Holm-corrected across the sixteen rows. Five of
+(negative is better), with $p$ Holm-corrected across the sixteen rows ($^*$: $p<0.05$). Five of
 the six significant improvements are on appearance-defined targets, including
 both Breast rows, whose Dice does not move; the sixth, and the largest in
 millimeters, is Abdomen T2spir. HD95 is less consistent than Dice within a task
@@ -326,6 +330,7 @@ decrease), and significantly \emph{hurts} Glioma T1n. The full method is still b
 the subsequent real-intensity fill step, so the net effect of the complete
 pipeline is positive even though one internal component is not.
 
+% TODO(rung-5 val000 retrain): pre-retrain numbers (real-fill rung = val100); regenerate (paper/scripts/compute_dissociation_pvalues.py, compute_ladder_significance.py).
 \begin{table}[t]
 \centering
 \scriptsize
@@ -381,6 +386,7 @@ contrasts all come from external cohorts.}
 
 \Cref{tab:fill-swap-pairs} breaks the fill swap down by training $\to$ test contrast pair: the numbers behind the thin curves of \cref{fig:ladder}.
 
+% TODO(rung-5 val000 retrain): regenerate make_fill_swap_pairs_table.py without LADDER_JSON_SUFFIX.
 \input{sec/_suppl_fill_swap_pairs}
 
 % Regenerated 2026-10-03 with folds capped to 0-2 (06_15_t1n_t2w_transfer_per_label.py).
@@ -407,7 +413,7 @@ resection cavity).
 Label & T1n$\to$T2w & T2w$\to$T1n & gap \\
 \midrule
 NCR  & 21.5 & 20.0 & $+1.4$ \\
-SNFH & 66.3 & 46.4 & $\mathbf{+19.9}$ \\
+SNFH & 66.3 & 46.4 & $+19.9$ \\
 ET   & 27.5 & 29.0 & $-1.5$ \\
 RC   & 52.3 & 42.8 & $+9.5$ \\
 \bottomrule
@@ -426,14 +432,14 @@ per label, both transfer directions.}
 Label & T1n$\to$T2w $\Delta$ & T2w$\to$T1n $\Delta$ \\
 \midrule
 NCR  & $+1.9$ ($p=0.10$) & $+1.0$ ($p=0.77$) \\
-SNFH & $\mathbf{+14.7}$ ($p=4.3\times10^{-11}$) & $\mathbf{-8.8}$ ($p=1\times10^{-4}$) \\
-ET   & $\mathbf{+2.3}$ ($p=0.017$) & $+1.6$ ($p=0.24$) \\
-RC   & $\mathbf{+2.9}$ ($p=3\times10^{-4}$) & $\mathbf{-6.9}$ ($p=4\times10^{-4}$) \\
+SNFH & $+14.7^{*}$ ($p=4.3\times10^{-11}$) & $-8.8^{*}$ ($p=1\times10^{-4}$) \\
+ET   & $+2.3^{*}$ ($p=0.017$) & $+1.6$ ($p=0.24$) \\
+RC   & $+2.9^{*}$ ($p=3\times10^{-4}$) & $-6.9^{*}$ ($p=4\times10^{-4}$) \\
 \bottomrule
 \end{tabular}
 \caption{Fill-swap step (+Voronoi noise fill $\to$ real fill),
 per label, both directions. $p$: Holm-corrected paired Wilcoxon, family =
-the four labels within each direction. Bold: significant.}
+the four labels within each direction; $^*$: significant.}
 \label{tab:per-label-delta}
 \end{table}
 
@@ -522,6 +528,7 @@ extends to model selection and is not confined to the gradient updates.
 \section{Component ablation on all test contrasts}
 \label{sec:suppl-mechanism}
 
+% TODO(rung-5 val000 retrain): tab:mechanism real-fill row is pre-retrain.
 \input{sec/_suppl_mechanism}
 
 \FloatBarrier

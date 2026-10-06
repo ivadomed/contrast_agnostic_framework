@@ -42,35 +42,6 @@ the other contrasts. External volumes that image more of the body than the
 training cohort are cropped to its field of view before prediction, identically
 for every method (\cref{sec:suppl-data}).
 
-\begin{table*}[t]
-\centering
-\footnotesize
-\setlength{\tabcolsep}{5pt}
-\renewcommand{\arraystretch}{1.12}
-\begin{tabular}{@{}lll l@{}}
-\toprule
-Task & Target & Trained on (one model per modality) & Tested on (every model; $^\dagger$from an external cohort) \\
-\midrule
-\multicolumn{4}{@{}l}{\textbf{Appearance-defined targets}: abnormal signal inside a tissue} \\[1pt]
-Glioma   & glioma, 4 sub-regions       & T1n $\mid$ T1c $\mid$ T2w $\mid$ FLAIR & T1n, T1c, T2w, FLAIR \\
-MS       & MS lesions                  & FLAIR $\mid$ T1w                       & FLAIR, T1w, T2w \\
-Breast   & tumor                       & T1-CE $\mid$ T2w                       & T1-CE$^{(\dagger)}$, T2w, pre-contrast$^\dagger$, DWI$^\dagger$ \\
-\midrule
-\multicolumn{4}{@{}l}{\textbf{Interface-bounded targets}: a structure bounded by another tissue} \\[1pt]
-Abdomen  & liver, kidneys, spleen      & T1in $\mid$ T2spir                     & T1in, T1out, T2spir, T2w$^\dagger$, CT$^{(\dagger)}$ \\
-Brain    & 31 brain regions            & T1w $\mid$ T2w $\mid$ DWI              & T1w, T2w, DWI, BOLD, EPI, GRE \\
-Mandible & mandible                    & CBCT                                   & CBCT, CT$^\dagger$, MR-T1$^\dagger$ \\
-Spine    & vertebrae, discs, canal     & CT $\mid$ Dixon in-phase               & CT, Dixon in-phase, fat, water, T1w$^\dagger$, T2w$^\dagger$ \\
-Pelvis   & 11 bones and muscles        & CT $\mid$ MRI                          & CT, MRI \\
-\bottomrule
-\end{tabular}
-\caption{The eight tasks and eighteen settings. Each training modality trains
-its own models, which are tested on every contrast listed for the task, the
-training contrast included ($^{(\dagger)}$: from the training cohort and an
-external cohort). All tasks but Spine have an ablation ladder. Datasets and case
-counts per contrast: \cref{tab:datasets}.}
-\label{tab:tasks}
-\end{table*}
 
 % TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
 % in the imported results) -- no citable source for it exists in the repo.
@@ -129,10 +100,11 @@ SynthSeg-noEM   &  8.8 &  4.3 & 16.5 & 60.9 & 64.8 & 53.6 & 47.5 & 15.0 & $<\!10
 SynthSeg-EM     & 43.1 & 33.9 & 39.6 & 84.0 & 66.3 & 76.3 & 80.6 & 62.5 & $<\!10^{-10}$ \\
 SRCSM           & 41.5 & 33.0 & 16.4 & 84.6 & \textbf{66.6} & \textbf{79.0} & --- & 65.3 & $<\!10^{-10}$ \\
 Auglab          & 44.8 & 34.3 & 40.1 & 84.6 & 66.1 & 78.3 & 80.9 & 64.3 & $<\!10^{-10}$ \\
-\textbf{PALETTE-Aug (ours)} & \textbf{45.9} & \textbf{38.5} & \textbf{41.2} & \textbf{85.9} & 66.5 & 77.7 & \textbf{82.3} & \textbf{65.6} & --- \\
 \midrule
-% TODO(rung-5 val000 retrain): Glioma and MS cells are provisional until their PALETTE-alone runs finish; p cell pending.
-PALETTE alone (ours) & 44.2 & 38.5 & 40.3 & 86.4 & 67.1 & 78.3 & --- & 65.7 & --- \\
+% TODO(rung-5 val000 retrain): Glioma, MS and Brain PALETTE-alone cells and the p cell wait for the retrain
+% (Brain also for the on-harmony re-prediction). Spine has no PALETTE-alone run (separate pipeline, no ladder).
+PALETTE alone (ours) & \pending & \pending & 40.3 & 86.4 & \pending & 78.3 & --- & 65.7 & \pending \\
+\textbf{PALETTE-Aug (ours)} & \textbf{45.9} & \textbf{38.5} & \textbf{41.2} & \textbf{85.9} & 66.5 & 77.7 & \textbf{82.3} & \textbf{65.6} & --- \\
 \midrule
 \multicolumn{1}{r}{\footnotesize competitors beaten ($p<0.05$)} &
 5/5 & 5/5 & 5/5 & 5/5 & 2/5 & 3/5 & 4/4 & 3/5 & \\
@@ -205,6 +177,7 @@ within-region intensity structure instead of noise.
 
 \begin{figure}[t]
 \centering
+% TODO(rung-5 val000 retrain): figure built from the pre-retrain ladders (LADDER_JSON_SUFFIX=.bak_20261006_pre_val000_rung5); regenerate without the suffix.
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_column}
 \caption{The fill swap (shaded band), one panel per task with a ladder,
 grouped by target type. Thin lines: one model, i.e.\ one training modality
@@ -219,6 +192,7 @@ numbers: \cref{tab:dissociation}; HD95: \cref{fig:ladder-hd95}.}
 \end{figure}
 
 
+% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated.
 In our data every large relative gain from real fill is on an
 appearance-defined target, but not every appearance-defined target shows one
 (\cref{fig:ladder,tab:dissociation}). We report each gain relative to its

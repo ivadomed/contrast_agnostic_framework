@@ -1,5 +1,22 @@
 \section{Related Work}
 \label{sec:related}
+% Fig. 1 is defined here (page 2) so it floats to the top of page 3, next to the method.
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/method_pipeline}
+  \caption{The PALETTE-Aug transform on one real CHAOS T2SPIR slice (top) and one
+  real ON-Harmony T1w slice (bottom), built up in the order of the ablation ladder
+  (\cref{subsec:e-ablation}); every panel is a deterministic function of the same
+  real image. (b)--(d) paint each region flat with its target mean $\mu$
+  (\cref{eq:affine}) to show the partition alone: $k$-means regions (b); the
+  label remap (c), an affine re-remap inside each anatomical label that keeps the
+  structure already there; Voronoi sub-regions under the same label remap (d).
+  (e), the actual training input, applies the signed affine remap of
+  \cref{eq:affine} to the same partition, which keeps the real texture inside
+  every region.}
+  \label{fig:method-pipeline}
+\end{figure*}
+
 
 \subsection{Domain generalization for medical segmentation}
 \label{subsec:dg}

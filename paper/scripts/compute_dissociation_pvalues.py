@@ -145,7 +145,7 @@ def main():
     print(f"\n--- LaTeX rows for tab:dissociation ({metric}) ---")
     # Columns: task (boundary-type footnote marks moved onto the label) & level before
     # the step & absolute delta & relative delta (%) & Holm p. Group header rows replace
-    # the old boundary-type column. Bold = relative gain >= 15% (Dice only).
+    # the old boundary-type column. * on the delta = Holm-significant (bold is reserved for 'best').
     prev = None
     for (label, btype, r), pa in zip(rows, adj):
         group = "no" if btype.startswith("no") else "if"
@@ -156,8 +156,8 @@ def main():
             print(rf"\multicolumn{{5}}{{l}}{{\emph{{{title}}}}} \\")
         mark = btype[btype.index("$"):] if "$" in btype else ""
         d, rel = f"{r['delta']:+.2f}", f"{r['rel']:+.1f}"
-        if metric == "dice" and r["rel"] >= 15.0:
-            rel = rf"\mathbf{{{rel}}}"
+        if pa < 0.05:            # paper convention: bold = best, * = significant
+            d += "^{*}"
         print(f"{label + mark:<36}& {r['before']:.1f} & ${d}$ & ${rel}$ & {fmt_p(pa)} \\\\")
         prev = group
 

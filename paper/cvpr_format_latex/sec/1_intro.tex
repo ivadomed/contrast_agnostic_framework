@@ -48,6 +48,7 @@ randomized, including sign inversions that no acquisition protocol produces.
 An optional last step uses labels, and only the sparse task labels that any
 segmentation dataset already has.
 
+% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated.
 We test the mechanism by intervention. Keeping the partition and the region
 target means fixed, we replace SynthSeg-style noise fill with the real-intensity remap in sixteen training settings and measure the Dice change relative to the
 noise-fill Dice. Pooled per task, the gain is largest on the appearance-defined

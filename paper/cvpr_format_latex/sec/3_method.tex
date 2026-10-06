@@ -1,5 +1,36 @@
 \section{Method}
 \label{sec:method}
+% Tab. 1 is defined here (page 3) so it floats to the top of page 4, next to the setup.
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{@{}lll l@{}}
+\toprule
+Task & Target & Trained on (one model per modality) & Tested on (every model; $^\dagger$from an external cohort) \\
+\midrule
+\multicolumn{4}{@{}l}{\textbf{Appearance-defined targets}: abnormal signal inside a tissue} \\[1pt]
+Glioma   & glioma, 4 sub-regions       & T1n $\mid$ T1c $\mid$ T2w $\mid$ FLAIR & T1n, T1c, T2w, FLAIR \\
+MS       & MS lesions                  & FLAIR $\mid$ T1w                       & FLAIR, T1w, T2w \\
+Breast   & tumor                       & T1-CE $\mid$ T2w                       & T1-CE$^{(\dagger)}$, T2w, pre-contrast$^\dagger$, DWI$^\dagger$ \\
+\midrule
+\multicolumn{4}{@{}l}{\textbf{Interface-bounded targets}: a structure bounded by another tissue} \\[1pt]
+Abdomen  & liver, kidneys, spleen      & T1in $\mid$ T2spir                     & T1in, T1out, T2spir, T2w$^\dagger$, CT$^{(\dagger)}$ \\
+Brain    & 31 brain regions            & T1w $\mid$ T2w $\mid$ DWI              & T1w, T2w, DWI, BOLD, EPI, GRE \\
+Mandible & mandible                    & CBCT                                   & CBCT, CT$^\dagger$, MR-T1$^\dagger$ \\
+Spine    & vertebrae, discs, canal     & CT $\mid$ Dixon in-phase               & CT, Dixon in-phase, fat, water, T1w$^\dagger$, T2w$^\dagger$ \\
+Pelvis   & 11 bones and muscles        & CT $\mid$ MRI                          & CT, MRI \\
+\bottomrule
+\end{tabular}
+\caption{The eight tasks and eighteen settings. Each training modality trains
+its own models, which are tested on every contrast listed for the task, the
+training contrast included ($^{(\dagger)}$: from the training cohort and an
+external cohort). All tasks but Spine have an ablation ladder. Datasets and case
+counts per contrast: \cref{tab:datasets}.}
+\label{tab:tasks}
+\end{table*}
+
 
 We describe PALETTE-Aug (\S\ref{subsec:m-transform}), how it is applied during
 training (\S\ref{subsec:m-training}), and the causal ablation used to
@@ -57,17 +88,6 @@ without it, PALETTE-Aug reduces to steps 1--3, e.g.\ on unlabeled data. An
 optional second blur and a foreground z-score normalization then give the
 training input (\cref{fig:method-pipeline}e).
 
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\linewidth]{figures/method_pipeline}
-  \caption{The PALETTE-Aug pipeline on one real CHAOS T2SPIR slice (top) and one
-  real ON-Harmony T1w slice (bottom). Every panel is a deterministic function of
-  the same real image (no external model). Panels (b)--(d) paint each region,
-  sub-region or label flat with its target mean $\mu$ (\cref{eq:affine}) to show
-  the partition alone; (e), the actual training input, applies the signed affine
-  remap of \cref{eq:affine}, which keeps the real texture inside every region.}
-  \label{fig:method-pipeline}
-\end{figure*}
 
 \subsection{Training protocol}
 \label{subsec:m-training}
