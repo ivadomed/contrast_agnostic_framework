@@ -14,9 +14,9 @@ matter~\cite{zhang2008mstexture}. This account interprets the intervention of
 \cref{subsec:e-ablation}; it is not independent evidence.
 
 % TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated. [Breast numbers are already post-retrain, final.]
-\paragraph{Not every appearance-defined target gains much.} MS T1w, Glioma
-T2w and FLAIR show no Dice gain, and Breast gains only slightly: $+5.3\%$ from
-T2w training but $-3.8\%$ from T1-CE. We have two hypotheses. First, the effect depends sharply on the
+\paragraph{Not every appearance-defined target gains much.} Glioma T2w and
+FLAIR show no Dice gain \TODO{Glioma retrain}, and Breast gains only slightly:
+$+5.3\%$ from T2w training but $-3.8\%$ from T1-CE. We have two hypotheses. First, the effect depends sharply on the
 training contrast (Glioma: $+13.3$ from T1c, $+7.2$ from T1n, about zero
 from T2w and FLAIR), so whether its texture transfers may matter as much as the
 target; with T2w training, real fill helps some labels and hurts others
@@ -33,8 +33,8 @@ by a measured boundary statistic. Target type is confounded with difficulty:
 all interface-bounded rows but one start above $63\%$ noise-fill Dice and
 every appearance-defined row below $42\%$, so dividing by the starting Dice
 favors the latter; as a share of the remaining error, Abdomen T2spir would rank
-first. The exception, Pelvis CT, starts at $35\%$ and gains $+8.7\%$, below the
-large appearance-defined gains.
+first. The exception, Pelvis CT, starts at $35\%$ and gains $+13.5\%$ (not
+significant), below the large appearance-defined gains.
 The between-group comparison is descriptive: a permutation test on the
 seven per-task gains gives $p=0.2$. MS has eight test patients and Brain eight
 sessions of four subjects, so their single-setting effects can be consistent
@@ -56,7 +56,7 @@ domains.
 We asked when preserving real image texture matters for contrast-robust
 segmentation. Relative to the noise-fill Dice, preserving texture helps most
 where the target is defined by tissue appearance rather than an anatomical
-interface: $+15\%$ on brain tumor and $+16\%$ on MS lesions per task, against
+interface: $+15\%$ \TODO{Glioma retrain} on brain tumor and $+25\%$ on MS lesions per task, against
 at most $7\%$ on interface-bounded tasks. Not every appearance-defined target
 gains. PALETTE-Aug, which
 preserves texture and needs no dense label map, wins the eight-task benchmark overall and significantly beats every

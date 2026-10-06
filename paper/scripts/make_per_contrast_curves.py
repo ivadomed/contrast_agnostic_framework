@@ -135,6 +135,9 @@ def _src_key(run_subdir, run_key: str) -> str:
 # LADDER_JSON_SUFFIX (optional): read <ladder_series.json><suffix> where that file exists -- e.g. the
 # pre-retrain copies, to keep the figure consistent with the text until every ladder is regenerated.
 JSON_SUFFIX = os.environ.get("LADDER_JSON_SUFFIX", "")
+# LADDER_PENDING (optional, comma-separated task names): panels whose ladder awaits a retrain;
+# their annotation reads "TODO" instead of a stale or undefined number.
+PENDING = {t.strip() for t in os.environ.get("LADDER_PENDING", "").split(",") if t.strip()}
 
 
 def load(rel: str):
@@ -418,7 +421,9 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
         ax.set_ylim(lo, hi + 0.12 * (hi - lo))
         top = ax.get_ylim()[1]
         star = "*" if (np.isfinite(p) and p < 0.05) else ""
-        if metric == "dice":
+        if title in PENDING:
+            ann, seg = "TODO", "#d62728"
+        elif metric == "dice":
             # Relative gain at the fill swap (Paul, 2026-10-03): panel delta divided by
             # the panel-average noise-fill Dice; * = panel-pooled test significant.
             before = avg[FILL - 1]

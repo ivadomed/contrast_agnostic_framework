@@ -65,6 +65,11 @@ def main():
                 a, b = s[M.FILL - 1], s[M.FILL]
                 if not (np.isfinite(a) and np.isfinite(b)):
                     continue
+                if task in M.PENDING:   # ladder awaits its retrain
+                    lines.append(f"{task if first else ''} & {TRAIN.get(lab, lab)} $\\to$ {NAME.get(c, c)} & "
+                                 "\\pending & \\pending & \\pending & \\pending & \\pending \\\\")
+                    first = False; n += 1
+                    continue
                 p = pc.get(c, float("nan"))
                 sig = np.isfinite(p) and p < 0.05
                 delta = f"${b - a:+.1f}^{{*}}$" if sig else f"${b - a:+.1f}$"
