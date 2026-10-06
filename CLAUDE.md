@@ -627,10 +627,13 @@ cystic lesions / suspected PDAC (not healthy); inter-observer kappa only 0.62-0.
 - **SPLIT TRAINING since 2026-10-05 (Paul: "Killarney is struggling, move some stuff to Vulcan"):** by then 27/60 folds had finished on Killarney (all baseline/auglab_default/noEM/EM + srcsm-t1wce) while the other 33 sat pending
   on the H100 queue ("Priority", 15 h, nothing running; ~32 of 168 Killarney L40S nodes down/draining/failed). The 24 LADDER-RUNG folds (baseline_kmeans, +label_remap, +voronoi, v26-alone x 2 contrasts x 3 folds) were
   moved to **Vulcan L40S** (`04_train/04_30_vulcan_rungs.sh`; probe on Vulcan: 13.9 / 14.1 / 14.6 / 22.9 h per 2000-epoch fold; limits 22 h / 32 h; RUN_IDs in `8_results_pansegdata/_launch/RUN_IDS_vulcan_rungs.tsv`);
-  the 9 headline folds still pending (OURS DualVal x6, srcsm-t2w x3) stay on Killarney H100. **Code parity:** the headline runs used Killarney's AugLab 7b761b5, Vulcan's own AugLab differs (2 extra
+  the 9 headline folds (OURS DualVal x6, srcsm-t2w x3) were moved too at 20:13 the same day (still pending after ~16 h on Killarney H100; L40S limits 42 h / 20 h, `SET=headline` mode of the same script), so ALL 33
+  remaining folds train on Vulcan and Killarney holds no jobs. **Code parity:** the headline runs used Killarney's AugLab 7b761b5, Vulcan's own AugLab differs (2 extra
   code commits + uncommitted configs), so the Vulcan rungs run against a PINNED exact copy `/project/aip-jcohen/paulh/pansegdata_auglab_7b761b5/AugLab` via `CE_EXTRA_PYTHONPATH` (proved: the transform module resolves to the pin; the 5 config
-  JSONs are byte-identical, venv trainer copy/logger/torch/nnunetv2/kornia/batchgenerators/numpy/blosc2 identical). nnU-Net raw+preprocessed (9.4 GB) were rsynced to Vulcan and verified byte-for-byte. The Killarney controller was cancelled:
-  **predict+eval now run centrally on Vulcan** — when everything has finished run `05_predict/05_31_vulcan_gather_and_queue.sh` (pulls Killarney results, queues controller `05_29` here); manual tail unchanged.
+  JSONs are byte-identical, venv trainer copy/logger/torch/nnunetv2/kornia/batchgenerators/numpy/blosc2 identical). nnU-Net raw+preprocessed (9.4 GB) were rsynced to Vulcan and verified byte-for-byte. The Killarney controller was cancelled and
+  **predict+eval run centrally on Vulcan**: controller job 1319812 (queued by `05_predict/05_31_vulcan_gather_and_queue.sh`; `afterany` all 33 Vulcan fold jobs, 6 h limit) verifies checkpoints, pins, predicts, queues eval `06_09`.
+  Verified on Vulcan 2026-10-05: `05_29 --check` refuses (INCOMPLETE) while training runs; real predict + evaluate on Killarney-trained checkpoints work (fold 0, 42 test cases, PRELIMINARY): baseline t1wce-trained scores
+  t1wce 0.814 / t2w 0.002, baseline t2w-trained t2w 0.793 / t1wce 0.007 (the plain baseline collapses cross-contrast both ways = genuine, not a data bug), auglab_default t1wce-trained 0.796 / 0.641. Manual tail unchanged.
 - Two probe jobs once died at startup on node kn001 (not reproducible; same code ran fine on rerun): after any launch confirm EVERY fold's log reaches epoch ≥1 (`04_29 --problems`) and resubmit dead folds early.
 - Scaffolder fixed this session: it now also rewrites the label name in 06_00/06_01 comments (was leaving `lesion`).
 
