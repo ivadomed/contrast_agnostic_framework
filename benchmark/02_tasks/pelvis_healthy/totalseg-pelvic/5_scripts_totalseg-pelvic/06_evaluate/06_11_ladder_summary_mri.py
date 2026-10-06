@@ -31,7 +31,7 @@ RUNGS = [
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
      "mri_baseline_kmeans_label_remap_voronoi_20260916_072453"),
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
-     "mri_v26_6_2_train050_val100_20260916_072453"),
+     "totalseg-pelvic_mri_v26_6_2_train050_val000_20261005_223058"),   # val000 (2026-10-06; was mri_v26_6_2_train050_val100_20260916_072453)
     ("+AugLab (OURS)", "+ full AugLab recipe on top", "mri_ours_20260916_072453"),
 ]
 

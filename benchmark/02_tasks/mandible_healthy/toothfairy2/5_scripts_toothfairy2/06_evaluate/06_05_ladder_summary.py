@@ -83,7 +83,7 @@ def main() -> None:
     r2 = one_run_id(abl, "*_baseline_kmeans_2*")
     r3 = one_run_id(abl, "*_baseline_kmeans_label_remap_2*")
     r4 = one_run_id(abl, "*_baseline_kmeans_label_remap_voronoi_*")
-    r5 = one_run_id(abl, "*_v26_6_2_train050_val100_*")
+    r5 = one_run_id(abl, "*_v26_6_2_train050_val000_*")   # val000 real-image checkpoint selection (2026-10-06; was the ValSynth val100 run)
     if ours.count("_val000_") != 1:
         raise SystemExit(f"OURS run id {ours!r} must contain '_val000_' exactly once")
 
