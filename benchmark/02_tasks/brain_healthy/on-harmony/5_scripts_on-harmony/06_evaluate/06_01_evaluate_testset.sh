@@ -22,10 +22,10 @@
 #       Scores every contrast for its fold against GT → summarize_fold → fold{k}/eval_all.csv
 #       (group=test contrast). No prediction happens here anymore.
 #
-# Optional env: CHECKPOINT (default "checkpoint_final.pth" — unchanged default, matches
-#   the predict-stage default in 05_01_predict_common.sh so eval reads the same run it
-#   predicted). Set CHECKPOINT=checkpoint_best.pth to score the best-checkpoint arm
-#   instead (must have been predicted with the same CHECKPOINT first).
+# Optional env: CHECKPOINT (default "checkpoint_best.pth" since 2026-10-06, like every other
+#   dataset; was checkpoint_final). best -> <category>_<run>/ from flat fold{k}/<contrast>/;
+#   any other checkpoint -> <category>_<run>_<tag>/ from fold{k}/<tag>/<contrast>/ (e.g. the
+#   legacy final arm: CHECKPOINT=checkpoint_final.pth -> <run>_final, predicted with TTA).
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${HERE}/../00_utils/env.sh"
@@ -64,13 +64,13 @@ TESTSET="${PREDICTIONS_ROOT}/${MODEL_TYPE}/_test_set"                           
 PRED_BASE="${RUN_BASE}"                                                                  # predictions co-located w/ model (chaos-style)
 CONTRAST_LIST="T1w T2w bold dwi_ap epi_ap gre_echo1_mag"
 
-CHECKPOINT="${CHECKPOINT:-checkpoint_final.pth}"
+CHECKPOINT="${CHECKPOINT:-checkpoint_best.pth}"
 _CKPT_TAG="$(basename "${CHECKPOINT}" .pth)"; _CKPT_TAG="${_CKPT_TAG#checkpoint_}"
 # NOTE: matches predict_common.sh's convention (flat only for "best"), NOT the old
 # inline script's convention (flat only for "final") — see 05_01_predict_common.sh's
 # header for why this changed and what it means for on-disk paths.
 _PRED_SUBDIR=""; [ "${_CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${_CKPT_TAG}/"
-_OUT_SUFFIX=""; [ "${_CKPT_TAG}" != "final" ] && _OUT_SUFFIX="_${_CKPT_TAG}"
+_OUT_SUFFIX=""; [ "${_CKPT_TAG}" != "best" ] && _OUT_SUFFIX="_${_CKPT_TAG}"
 # METRICS_SUBDIR (optional): unset (default) writes to the normal flat METRICS_ROOT/.../
 # <contrast>/ layout. Set to e.g. "ablations" to write to METRICS_ROOT/.../<contrast>/
 # ablations/ instead — for non-headline result sets (CLAUDE.md's "Within 02_metrics/

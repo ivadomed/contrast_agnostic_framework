@@ -1,7 +1,8 @@
 # Generated as part of the checkpoint_best vs checkpoint_final comparison sweep.
 # Real data for the side that wasn't this dataset's historical on-disk default
 # lives under metrics_dir/checkpoint_comparison/ (keys below are prefixed accordingly); the
-# other side is the pre-existing headline data, untouched, in metrics_dir itself.
+# other side is the legacy checkpoint_final data in metrics_dir/<run>_final (renamed 2026-10-06 when
+# on-harmony switched its default to checkpoint_best like every other dataset; unsuffixed = best now).
 # auglabAug_v26_6_2's val000/val100 DualVal mirrors have genuinely different
 # checkpoint_best.pth so both are kept as separate best rows; checkpoint_final.pth
 # is byte-identical between them (verified via md5sum), so there is one final row.
@@ -11,9 +12,9 @@ output_prefix: "final_ckpt"
 in_domain_contrast: T1w
 
 runs:
-  - nnUNet_on-harmony_T1w_baseline_20260623_192811  # baseline
-  - auglab_on-harmony_T1w_synthseg_noEM_20260623_192811  # synthseg_noEM
-  - auglab_on-harmony_T1w_synthseg_EM_20260623_192811  # synthseg_EM
-  - auglab_on-harmony_T1w_auglab_default_20260623_192811  # auglab_default
-  - auglab_on-harmony_T1w_srcsm_20260709_122115  # srcsm
-  - auglab_on-harmony_T1w_auglabAug_v26_6_2_train050_20260727_075205  # auglabAug_v26_6_2
+  - nnUNet_on-harmony_T1w_baseline_20260623_192811_final  # baseline
+  - auglab_on-harmony_T1w_synthseg_noEM_20260623_192811_final  # synthseg_noEM
+  - auglab_on-harmony_T1w_synthseg_EM_20260623_192811_final  # synthseg_EM
+  - auglab_on-harmony_T1w_auglab_default_20260623_192811_final  # auglab_default
+  - auglab_on-harmony_T1w_srcsm_20260709_122115_final  # srcsm
+  - auglab_on-harmony_T1w_auglabAug_v26_6_2_train050_20260727_075205_final  # auglabAug_v26_6_2

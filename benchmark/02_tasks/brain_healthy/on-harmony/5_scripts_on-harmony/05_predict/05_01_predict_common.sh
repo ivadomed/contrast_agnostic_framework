@@ -19,9 +19,8 @@
 # documented in predict_common.sh/totalseg-pelvic's shim (2026-09-16): without it every
 # T2w/dwi_ap-trained prediction would silently produce zero output files.
 #
-# ⚠️ KNOWN LAYOUT CHANGE vs. the old inline-predict script: this dataset's historical
-# default checkpoint is checkpoint_final.pth (NOT checkpoint_best.pth, unlike every other
-# dataset), and the OLD inline script wrote checkpoint_final predictions to a FLAT
+# ⚠️ CHECKPOINT (2026-10-06): default is now checkpoint_best.pth like every other dataset.
+# Historical note: the default USED to be checkpoint_final.pth, and the OLD inline script wrote checkpoint_final predictions to a FLAT
 # fold{F}/<contrast>/ path (subdir only for non-default checkpoints). predict_common.sh's
 # shared convention is the opposite (flat only for checkpoint_best, subdir for everything
 # else, including "final") -- it cannot be changed here without affecting every other
@@ -48,10 +47,9 @@ case "${TRAINING_CONTRAST:-T1w}" in
 esac
 PREDICT_TIME="01:00:00"
 PREDICT_EXTRA_FLAGS="--disable_tta"
-# Preserve this dataset's historical default checkpoint (see header note above) --
-# predict_common.sh's own default is checkpoint_best.pth, wrong for on-harmony unless a
-# caller explicitly wants the best-checkpoint arm.
-CHECKPOINT="${CHECKPOINT:-checkpoint_final.pth}"
+# Checkpoint: the shared driver's default (checkpoint_best.pth, flat fold{F}/<contrast>/) since 2026-10-06, like every
+# other dataset. on-harmony used to default to checkpoint_final (and its pre-2026-09-27 inline script also ran mirroring
+# TTA); those legacy predictions live in fold{F}/final/<contrast>/ and their metrics in <category>_<run>_final.
 
 # on-harmony-only post-step: resample RAS predictions back to native geometry. Run INSIDE each
 # predict job through the shared driver's PREDICT_POST_ITEM_CMD hook (2026-10-06). It used to run
