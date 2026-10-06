@@ -67,7 +67,10 @@ SynthSeg~\cite{billot2023synthseg} without and with its EM label-subdivision
 extension~\cite[\S5.4]{billot2023synthseg} (re-implemented), both given each
 task's training labels, which are a dense parcellation only on Brain;
 SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab}, a
-competitor in its own right. Our method adds one operator to Auglab, so
+competitor in its own right. Each competitor is run as its authors propose:
+the SynthSeg variants and SRCSM synthesize on every training iteration with
+their own augmentation recipe, and Auglab uses its default configuration
+(\cref{tab:suppl-aug-probs}). Our method adds one operator to Auglab, so
 comparing the two also tests that operator.
 
 \begin{table}[t]
