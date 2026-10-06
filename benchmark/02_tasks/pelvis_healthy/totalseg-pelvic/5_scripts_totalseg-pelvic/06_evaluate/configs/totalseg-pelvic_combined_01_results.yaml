@@ -28,7 +28,7 @@ modalities:
       synthseg_EM: ct_synthseg_EM_20260916_072434
       srcsm: ct_srcsm_20260916_072434
       auglabAug_v26_6_2_train050_val000: ct_ours_20260916_072434
-      v26_6_2_train050_val100: ct_v26_6_2_train050_val100_20260916_072434
+      v26_6_2_train050_val000: totalseg-pelvic_ct_v26_6_2_train050_val000_20261005_223025
   - name: mri
     sources:
       - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
@@ -39,4 +39,4 @@ modalities:
       synthseg_EM: mri_synthseg_EM_20260916_072453
       srcsm: mri_srcsm_20260916_072453
       auglabAug_v26_6_2_train050_val000: mri_ours_20260916_072453
-      v26_6_2_train050_val100: mri_v26_6_2_train050_val100_20260916_072453
+      v26_6_2_train050_val000: totalseg-pelvic_mri_v26_6_2_train050_val000_20261005_223058

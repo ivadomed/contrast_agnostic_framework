@@ -42,4 +42,4 @@ runs:
   - ct_synthseg_EM_20260916_072434
   - ct_srcsm_20260916_072434
   - ct_ours_20260916_072434
-  - ct_v26_6_2_train050_val100_20260916_072434
+  - totalseg-pelvic_ct_v26_6_2_train050_val000_20261005_223025

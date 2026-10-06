@@ -32,7 +32,10 @@ ROWS=(
  "r2_kmeans:05_09_predict_baseline_kmeans.sh:toothfairy2_cbct_baseline_kmeans_20260908_013028:auglab"
  "r3_remap:05_10_predict_baseline_kmeans_label_remap.sh:toothfairy2_cbct_baseline_kmeans_label_remap_20260908_013028:auglab"
  "r4_voronoi:05_11_predict_baseline_kmeans_label_remap_voronoi.sh:toothfairy2_cbct_baseline_kmeans_label_remap_voronoi_20260908_013028:auglab"
- "r5_v26alone:05_12_predict_v26_6_2_train050_val100.sh:toothfairy2_cbct_v26_6_2_train050_val100_20260908_013028:nnUNet"
+ # rung 5 = the val000 retrain (2026-10-05; rung-4 predict wrapper, same trainer); the old ValSynth rung 5 was
+ # 05_12_predict_v26_6_2_train050_val100.sh : toothfairy2_cbct_v26_6_2_train050_val100_20260908_013028 : nnUNet
+ # NOTE: the val000 run was trained on VULCAN; rsync its run dir to TamIA before re-running this roster there.
+ "r5_v26alone:05_11_predict_baseline_kmeans_label_remap_voronoi.sh:toothfairy2_cbct_v26_6_2_train050_val000_20261005_222846:auglab"
 )
 
 echo "[hs] pack=${PACK_DIR}"
