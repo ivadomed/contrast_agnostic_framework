@@ -228,26 +228,25 @@ tell whether that is why.
 The ladder shows that the fill swap changes Dice, not that it changes texture.
 We check this without any segmentation, with the normalized-gradient-field
 (NGF) similarity~\cite{haber2006ngf} between each augmented volume and its
-source scan. NGF measures how well image gradients align: it is high when
-edges and fine structure are kept and falls to about $1/3$ for isotropic
-noise. \Cref{fig:ngf-dose} follows NGF and Dice along the same rungs on MS
-FLAIR. The three noise-fill rungs stay at NGF $0.45$--$0.46$: above the noise floor,
-since partition edges survive, but far below the source. Their Dice still rises
-from $11.2$ to $19.6$, through contrast randomization, not texture. Only the real-fill swap raises both, NGF to $0.81$ and Dice to
-$27.3$. On the same scale, PALETTE-Aug without Auglab (the real-fill rung) keeps
-significantly more source texture than Auglab (paired Wilcoxon, $30$ scans;
-FLAIR $p=3.2\times10^{-3}$, T1w $p=1.2\times10^{-6}$), and the SynthSeg
-variants stay far below the source (\cref{tab:ngf}).
+source scan. NGF measures how well image gradients align: it is $1$ when all
+edges and fine structure are kept and about $1/3$ for isotropic noise.
+\Cref{fig:ngf-methods} reports it for every method on the seven ablation tasks.
+The noise fill keeps only the partition edges (mean NGF $0.44$); the real fill,
+on the same partition, raises it to $0.83$, the highest of all methods.
+PALETTE alone keeps more texture than every competitor on six tasks and ties
+with Auglab on Brain (\cref{tab:ngf}). SynthSeg keeps little ($0.50$ with EM,
+$0.37$ without, near the noise floor). PALETTE-Aug keeps less than PALETTE
+alone ($0.70$): it applies PALETTE in half of its draws, on top of the Auglab
+chain, which acts on every draw.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/ngf_dose_response_openms_flair}
-\caption{Noise versus real fill on MS FLAIR. Left: out-of-domain Dice
-at each rung. Right: NGF similarity of the augmented volume to its source
-(mean $\pm$ s.e. over $30$ scans), a segmentation-free measure of retained
-texture. The noise-fill rungs keep only the partition edges while Dice rises;
-the real-fill swap (shaded) lifts both.}
-\label{fig:ngf-dose}
+\includegraphics[width=\linewidth]{figures/ngf_methods}
+\caption{Texture kept by each augmentation: NGF similarity of the augmented
+volume to its source scan on the seven ablation tasks (violin: all scans, each
+averaged over $5$ draws; dots: task means; bar: mean of the task means). The
+noise fill keeps only the partition edges; the real fill keeps the most.}
+\label{fig:ngf-methods}
 \end{figure}
 
 

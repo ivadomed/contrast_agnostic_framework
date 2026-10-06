@@ -497,35 +497,27 @@ extends to model selection and is not confined to the gradient updates.
 \section{Texture fidelity per method}
 \label{sec:suppl-ngf}
 
-The noise-versus-real NGF analysis is in the main paper (\cref{fig:ngf-dose});
-\cref{tab:ngf} gives the per-method values it cites.
+The per-method NGF analysis is in the main paper (\cref{fig:ngf-methods});
+\cref{tab:ngf} gives its per-task values. \Cref{fig:ngf-dose} follows NGF and
+Dice along the ladder rungs on MS FLAIR: the three noise-fill rungs stay at NGF
+$0.45$--$0.46$ while their Dice rises from $11.2$ to $19.6$, through contrast
+randomization, not texture; only the real-fill swap raises both.
 
 \paragraph{Why Auglab is the closest competitor.} Auglab is the strongest
 competitor on the cross-task test, and NGF suggests why: it keeps most of the
-source texture, only modestly less than PALETTE-Aug and far more than the
-label-style methods (\cref{tab:ngf}). The large margins appear against the
+source texture, less than PALETTE alone on six of seven tasks but far more than
+the label-style methods (\cref{tab:ngf}). The large margins appear against the
 methods that discard texture.
 
+\input{sec/_suppl_ngf_table}
 
-\begin{table}[h]
+\begin{figure}[h]
 \centering
-\small
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{lcc}
-\toprule
-Method & FLAIR & T1w \\
-\midrule
-\textbf{PALETTE-Aug} & \textbf{0.809} & \textbf{0.894} \\
-Auglab           & 0.768 & 0.777 \\
-SynthSeg-EM      & 0.462 & 0.422 \\
-noise fill       & 0.457 & 0.401 \\
-SynthSeg-noEM    & 0.330 & 0.319 \\
-\bottomrule
-\end{tabular}
-\caption{Texture fidelity: NGF similarity to the source scan (mean over
-$n{=}30$ MS scans; $\approx\!1/3$ = isotropic-noise floor). The
-PALETTE-Aug row is the transform alone (the real-fill rung), without the Auglab
-pipeline.}
-\label{tab:ngf}
-\end{table}
+\includegraphics[width=\linewidth]{figures/ngf_dose_response_openms_flair}
+\caption{Noise versus real fill on MS FLAIR. Left: out-of-domain Dice
+at each rung. Right: NGF similarity of the augmented volume to its source
+(mean $\pm$ s.e. over $30$ scans). The noise-fill rungs keep only the partition
+edges while Dice rises; the real-fill swap (shaded) lifts both.}
+\label{fig:ngf-dose}
+\end{figure}
 
