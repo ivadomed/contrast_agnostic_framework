@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# RETIRED 2026-10-05: this trainer validates on SYNTHETIC images (ValSynth: VALsynthonly at p=1), so checkpoint_best is
+# chosen on synthetic validation (val100), unlike every other ladder rung. Use the generated *_train050_val000.sh wrapper
+# (scripts/cluster/rung5_val000/make_wrappers.py). Set ALLOW_VAL100_ALONE=1 only for a deliberate val100 experiment.
+[ "${ALLOW_VAL100_ALONE:-0}" = 1 ] || { echo "ERROR: $(basename "${BASH_SOURCE[0]}") is retired (val100 checkpoint selection); use the *_train050_val000.sh wrapper" >&2; exit 1; }
 # CAUSAL LADDER (totalseg-pelvic MRI), rung 5 — v26_6_2/PALETTE alone: identical partition to rung 4, REAL-INTENSITY fill. NAMING: METHOD is v26_6_2_train050_val100 with NO auglabAug_ prefix (that prefix denotes rungs 6/7 — see 04_06/04_13's DualVal wrapper) — an auglabAug_-prefixed RUN_ID here would collide with that run's val100 mirror. NNUNET_RESULTS_BASE deliberately NOT set — lands under the default nnUNet-category path, not auglab/.
 # 3 folds (0 1 2), 1 GPU/fold, 200 epochs.
 source "$(dirname "$0")/../00_utils/env_mri.sh"

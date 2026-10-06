@@ -16,7 +16,7 @@ LADDER = [
     ("+kmeans", "+ K-means intensity clustering", "baseline_kmeans", True),
     ("+label_remap", "+ label remap", "baseline_kmeans_label_remap", True),
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill", "baseline_kmeans_label_remap_voronoi", True),
-    ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)", "v26_6_2_train050_val100", True),
+    ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)", "v26_6_2_train050_val000", True),
     ("+AugLab (val000)", "+ full AugLab recipe on top", "auglabAug_v26_6_2_train050_val000", False),
     ("+AugLab (val100)", "+ 100%-synth validation", "auglabAug_v26_6_2_train050_val100", False),
 ]

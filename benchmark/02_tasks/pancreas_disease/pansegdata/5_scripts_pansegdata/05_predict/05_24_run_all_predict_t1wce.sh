@@ -15,6 +15,6 @@ METHOD_SCRIPTS=(
     "${HERE}/05_09_predict_t1wce_baseline_kmeans.sh"
     "${HERE}/05_10_predict_t1wce_baseline_kmeans_label_remap.sh"
     "${HERE}/05_11_predict_t1wce_baseline_kmeans_label_remap_voronoi.sh"
-    "${HERE}/05_12_predict_t1wce_v26_6_2_train050_val100.sh"
+    "${HERE}/05_12_predict_t1wce_v26_6_2_train050_val000.sh"
 )
 source "${PROJECT_ROOT}/benchmark/00_commun_scripts/00_02_predict/run_all_predict_common.sh"

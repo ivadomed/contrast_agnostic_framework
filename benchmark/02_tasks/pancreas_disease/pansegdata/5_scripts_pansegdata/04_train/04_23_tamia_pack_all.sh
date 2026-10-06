@@ -33,7 +33,7 @@ RUNS=(
  "t1wce|04_15_train_t1wce_baseline_kmeans.sh|${COST_kmeans:-1}"
  "t1wce|04_16_train_t1wce_baseline_kmeans_label_remap.sh|${COST_kmeans:-1}"
  "t1wce|04_17_train_t1wce_baseline_kmeans_label_remap_voronoi.sh|${COST_kmeans:-1}"
- "t1wce|04_18_train_t1wce_v26_6_2_train050_val100.sh|${COST_v26alone:-1}"
+ "t1wce|04_18_train_t1wce_v26_6_2_train050_val000.sh|${COST_v26alone:-1}"
  "t2w|04_08_train_t2w_baseline.sh|${COST_baseline:-1}"
  "t2w|04_09_train_t2w_auglab_default.sh|${COST_auglab_default:-1}"
  "t2w|04_10_train_t2w_synthseg_noEM.sh|${COST_synthseg_noEM:-1}"
@@ -43,7 +43,7 @@ RUNS=(
  "t2w|04_19_train_t2w_baseline_kmeans.sh|${COST_kmeans:-1}"
  "t2w|04_20_train_t2w_baseline_kmeans_label_remap.sh|${COST_kmeans:-1}"
  "t2w|04_21_train_t2w_baseline_kmeans_label_remap_voronoi.sh|${COST_kmeans:-1}"
- "t2w|04_22_train_t2w_v26_6_2_train050_val100.sh|${COST_v26alone:-1}"
+ "t2w|04_22_train_t2w_v26_6_2_train050_val000.sh|${COST_v26alone:-1}"
 )
 RUNIDS="${PACKROOT}/RUN_IDS.tsv"
 if [ ! -f "${RUNIDS}" ] || [ "${DRY}" = 1 ]; then TS="$(date +%Y%m%d_%H%M%S)"; else TS=""; fi

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# RETIRED 2026-10-05: this trainer validates on SYNTHETIC images (ValSynth: VALsynthonly at p=1), so checkpoint_best is
+# chosen on synthetic validation (val100), unlike every other ladder rung. Use the generated *_train050_val000.sh wrapper
+# (scripts/cluster/rung5_val000/make_wrappers.py). Set ALLOW_VAL100_ALONE=1 only for a deliberate val100 experiment.
+[ "${ALLOW_VAL100_ALONE:-0}" = 1 ] || { echo "ERROR: $(basename "${BASH_SOURCE[0]}") is retired (val100 checkpoint selection); use the *_train050_val000.sh wrapper" >&2; exit 1; }
 # CAUSAL LADDER rung 6 (BraTS T1n): rung 5 (04_20, PALETTE alone, real fill) + boundary
 # partial-volume simulation -- K-means thresholds softened in intensity space, Voronoi cuts +
 # label-remap edges in a spatial band; one level per sample from pv_levels. The ONLY diff vs

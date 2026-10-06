@@ -22,10 +22,10 @@ REPO = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 from roster_runs import HEADLINE_METHODS, LADDER  # noqa: E402
 
-CATEGORY = {"baseline": "nnUNet", "v26_6_2_train050_val100": "nnUNet"}
-TRAINER = {"baseline": "Baseline", "auglabAug_v26_6_2_train050_val000": "AugLabDualVal", "auglabAug_v26_6_2_train050_val100": "AugLabDualVal", "v26_6_2_train050_val100": "AugLabValSynth"}
+CATEGORY = {"baseline": "nnUNet"}
+TRAINER = {"baseline": "Baseline", "auglabAug_v26_6_2_train050_val000": "AugLabDualVal", "auglabAug_v26_6_2_train050_val100": "AugLabDualVal"}
 BASE = {"baseline": .40, "synthseg_noEM": .45, "synthseg_EM": .47, "auglab_default": .50, "srcsm": .52, "auglabAug_v26_6_2_train050_val000": .58,
-        "auglabAug_v26_6_2_train050_val100": .57, "baseline_kmeans": .42, "baseline_kmeans_label_remap": .44, "baseline_kmeans_label_remap_voronoi": .46, "v26_6_2_train050_val100": .54}
+        "auglabAug_v26_6_2_train050_val100": .57, "baseline_kmeans": .42, "baseline_kmeans_label_remap": .44, "baseline_kmeans_label_remap_voronoi": .46, "v26_6_2_train050_val000": .54}
 
 
 def sh(cmd, env, check=True):

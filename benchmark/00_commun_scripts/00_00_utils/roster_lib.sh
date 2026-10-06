@@ -11,7 +11,7 @@
 # (2) otherwise the NEWEST matching run dir (timestamp sorts lexicographically).
 #
 # Methods whose metrics go in the non-headline 'ablations/' subdir (causal-ablation ladder rungs 2-5):
-ROSTER_ABLATION_METHODS="baseline_kmeans baseline_kmeans_label_remap baseline_kmeans_label_remap_voronoi v26_6_2_train050_val100"
+ROSTER_ABLATION_METHODS="baseline_kmeans baseline_kmeans_label_remap baseline_kmeans_label_remap_voronoi v26_6_2_train050_val000"
 
 roster_pin_file() { echo "${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/roster_run_ids.tsv"; }
 

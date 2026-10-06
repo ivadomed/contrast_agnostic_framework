@@ -23,10 +23,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from roster_runs import LADDER, HEADLINE_METHODS  # noqa: E402
 
-CATEGORY = {"baseline": "nnUNet", "v26_6_2_train050_val100": "nnUNet"}  # everything else: auglab (matches the predict wrappers)
+CATEGORY = {"baseline": "nnUNet"}  # everything else: auglab (matches the predict wrappers)
 BASE = {"baseline": .40, "synthseg_noEM": .45, "synthseg_EM": .47, "auglab_default": .50, "srcsm": .52,
         "auglabAug_v26_6_2_train050_val000": .58, "auglabAug_v26_6_2_train050_val100": .57, "baseline_kmeans": .42,
-        "baseline_kmeans_label_remap": .44, "baseline_kmeans_label_remap_voronoi": .46, "v26_6_2_train050_val100": .54}
+        "baseline_kmeans_label_remap": .44, "baseline_kmeans_label_remap_voronoi": .46, "v26_6_2_train050_val000": .54}
 
 
 def main():

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# RETIRED 2026-10-05: this trainer validates on SYNTHETIC images (ValSynth: VALsynthonly at p=1), so checkpoint_best is
+# chosen on synthetic validation (val100), unlike every other ladder rung. Use the generated *_train050_val000.sh wrapper
+# (scripts/cluster/rung5_val000/make_wrappers.py). Set ALLOW_VAL100_ALONE=1 only for a deliberate val100 experiment.
+[ "${ALLOW_VAL100_ALONE:-0}" = 1 ] || { echo "ERROR: $(basename "${BASH_SOURCE[0]}") is retired (val100 checkpoint selection); use the *_train050_val000.sh wrapper" >&2; exit 1; }
 # Train V26_6_2 (train_synth_prob=0.50, val_synth_prob=1.0) on BraTS 2024 Glioma.
 # Usage: bash 04_10_train_v26_6_2_train050_val100.sh [RUN_ID]
 

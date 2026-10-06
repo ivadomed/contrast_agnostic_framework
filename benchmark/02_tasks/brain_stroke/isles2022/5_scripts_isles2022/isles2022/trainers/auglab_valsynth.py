@@ -7,10 +7,11 @@ both set by the 04_train wrapper (or the DualVal trainer):
   AUGLAB_PARAMS_GPU_JSON      — TRAIN pipeline (full augmentation + synth at train prob)
   AUGLAB_VAL_PARAMS_GPU_JSON  — VAL pipeline: synth-only (all other augs off)
 
-Not used standalone by any of the 6 headline methods here (auglabAug_v26_6_2_train050 is
-DualVal, see auglab_dualval.py) — used standalone by the ladder's rung 5
-("v26_6_2 alone", real-fill, 04_2X_train_<contrast>_v26_6_2_train050_val100.sh) — kept for
-parity with the other datasets' trainer packages. Direct port of
+Not used standalone by any method here: the 6 headline methods use DualVal (auglab_dualval.py) for OURS,
+and the ladder's rung 5 ("v26_6_2 alone", real fill, 04_XX_train_<contrast>_v26_6_2_train050_val000.sh) uses
+AugLabDefault like rung 4, so checkpoint_best is chosen on REAL validation images in every rung (until
+2026-10-05 rung 5 used this class, i.e. synthetic validation -- retired). Kept for parity with the other
+datasets' trainer packages. Direct port of
 ambl.trainers.auglab_valsynth (itself ported from ON-Harmony / CHAOS / open-ms /
 atlas-liver-hcc), renamed.
 """
