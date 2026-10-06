@@ -11,7 +11,9 @@ is the only dataset that reorients its predict INPUT to RAS-canonical (see
 be mirrored relative to the RAS-trained network). Every other dataset predicts directly in
 native space, so predict_common.sh (shared by all datasets) has no resample-back step and
 none should be added there for one dataset's quirk. This script is on-harmony-local
-post-processing, called by 05_01_predict_common.sh right after the shared driver returns.
+post-processing, run by 05_01_predict_common.sh INSIDE each predict job (the shared driver's
+PREDICT_POST_ITEM_CMD hook) right after that item's nnUNetv2_predict. Exits non-zero if a
+prediction has no native reference (it would otherwise be scored on the RAS grid).
 
 Usage: 05_02_resample_predictions_to_native.py <PRED_DIR> <REF_DIR>
   PRED_DIR: directory of *.nii.gz predictions in RAS space (overwritten in place)
@@ -32,11 +34,12 @@ def main() -> None:
     if not pred_dir.is_dir():
         print(f"[resample_to_native] skip (no such dir): {pred_dir}")
         return
-    n = 0
+    n, missing = 0, []
     for p in sorted(pred_dir.glob("*.nii.gz")):
         cid = p.stem.replace(".nii", "")
         ref = ref_dir / f"{cid}_0000.nii.gz"
         if not ref.exists():
+            missing.append(cid)
             continue
         pr = sitk.ReadImage(str(p), sitk.sitkUInt8)
         rf = sitk.ReadImage(str(ref))
@@ -44,6 +47,8 @@ def main() -> None:
         sitk.WriteImage(resampled, str(p))
         n += 1
     print(f"[resample_to_native] {pred_dir}: {n} predictions resampled to native geometry")
+    if missing:
+        sys.exit(f"[resample_to_native] ERROR {pred_dir}: no native reference in {ref_dir} for {missing}")
 
 
 if __name__ == "__main__":

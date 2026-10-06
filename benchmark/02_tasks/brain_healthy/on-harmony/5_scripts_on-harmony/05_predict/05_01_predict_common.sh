@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Shared predict template for on-harmony -- sourced by 05_0X_predict_<method>_<contrast>.sh,
 # NOT run directly. Thin shim: sources env.sh, sets on-harmony's config, delegates to the
-# shared driver benchmark/00_commun_scripts/00_02_predict/predict_common.sh, then does one
-# on-harmony-specific post-step the shared driver has no hook for: resampling RAS-space
-# predictions back to native geometry (see 05_02_resample_predictions_to_native.py's
-# docstring for why this dataset alone needs it).
+# shared driver benchmark/00_commun_scripts/00_02_predict/predict_common.sh, adding one
+# on-harmony-specific post-step through the driver's PREDICT_POST_ITEM_CMD hook: resampling
+# RAS-space predictions back to native geometry inside each predict job (see
+# 05_02_resample_predictions_to_native.py's docstring for why this dataset alone needs it).
 #
 # Cross-contrast test set: ALL 6 held-out contrasts (T1w/T2w/bold/dwi_ap/epi_ap/
 # gre_echo1_mag) are predicted regardless of which contrast trained the model -- run
@@ -53,24 +53,12 @@ PREDICT_EXTRA_FLAGS="--disable_tta"
 # caller explicitly wants the best-checkpoint arm.
 CHECKPOINT="${CHECKPOINT:-checkpoint_final.pth}"
 
-source "${PROJECT_ROOT}/benchmark/00_commun_scripts/00_02_predict/predict_common.sh" "$@"
-
-# ── on-harmony-only post-step: resample RAS predictions back to native geometry ─────────
-_CKPT_TAG="$(basename "${CHECKPOINT}" .pth)"; _CKPT_TAG="${_CKPT_TAG#checkpoint_}"
-_CKPT_SUBDIR=""; [ "${_CKPT_TAG}" != "best" ] && _CKPT_SUBDIR="${_CKPT_TAG}"
-_OUT_BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${TRAINING_CONTRAST}/${CATEGORY:-nnUNet}"
+# on-harmony-only post-step: resample RAS predictions back to native geometry. Run INSIDE each
+# predict job through the shared driver's PREDICT_POST_ITEM_CMD hook (2026-10-06). It used to run
+# here, after the driver returned -- a silent no-op in node-pack record mode (no prediction
+# exists yet at record time), which got x-mirrored predictions of the natively-LAS contrasts
+# scored once (2026-10-05). 06_01_evaluate_testset.sh now also refuses off-grid predictions.
 _TESTSET="${PREDICTIONS_ROOT}/${MODEL_TYPE}/_test_set"
-_RUN_ID="${1:?RUN_ID required}"
-_FOLD="${2:-${PREDICT_FOLD_DEFAULT}}"
-shift $(( $# >= 2 ? 2 : $# )) || true
-_ITEMS=("$@"); [ ${#_ITEMS[@]} -eq 0 ] && read -ra _ITEMS <<< "${PREDICT_ITEMS_DEFAULT}"
-_FOLDS_TO_RESAMPLE="${_FOLD}"; [ "${_FOLD}" = "all" ] && _FOLDS_TO_RESAMPLE="${PREDICT_FOLDS:-0 1 2}"
+PREDICT_POST_ITEM_CMD=".venv/bin/python '${PROJECT_ROOT}/benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/05_predict/05_02_resample_predictions_to_native.py' '{out}' '${_TESTSET}/{item}/images_native'"
 
-for F in ${_FOLDS_TO_RESAMPLE}; do
-    for item in "${_ITEMS[@]}"; do
-        PRED_DIR="${_OUT_BASE}/${_RUN_ID}/fold${F}/${_CKPT_SUBDIR:+${_CKPT_SUBDIR}/}${item}"
-        REF_DIR="${_TESTSET}/${item}/images_native"
-        [ -d "$PRED_DIR" ] || continue
-        .venv/bin/python "$(dirname "${BASH_SOURCE[0]}")/05_02_resample_predictions_to_native.py" "$PRED_DIR" "$REF_DIR"
-    done
-done
+source "${PROJECT_ROOT}/benchmark/00_commun_scripts/00_02_predict/predict_common.sh" "$@"

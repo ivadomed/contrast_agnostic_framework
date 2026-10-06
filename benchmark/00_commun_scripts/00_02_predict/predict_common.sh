@@ -31,6 +31,12 @@
 #   PREDICT_OUTPUT_SUBDIR (optional, default "") namespace inserted after fold{F}/ in
 #                         the output path, e.g. "exp_translation_050" →
 #                         .../fold{F}/exp_translation_050/<item>/. Pairs with the suffix.
+#   PREDICT_POST_ITEM_CMD (optional, default "") a shell command run INSIDE the predict job
+#                         right after each item's nnUNetv2_predict (so it also runs in
+#                         node-pack record mode, where a post-step placed after this driver
+#                         returns would run before any prediction exists). {out} and {item}
+#                         are replaced by that item's output dir and name; a non-zero exit
+#                         fails the job. e.g. on-harmony's RAS->native resample.
 #
 # From the method wrapper (env): METHOD, TRAINER, CATEGORY (default nnUNet).
 # From the user (positional args, forwarded as "$@"):
@@ -148,6 +154,10 @@ predict_fold() {
         # anywhere the orchestration script surfaced — predict_common.sh printed "done" for
         # every fold regardless, since it never checks a case actually got written).
         predict_cmds+="echo 'fold${F} ${item}...'; .venv/bin/nnUNetv2_predict -i '${INPUT_DIR}' -o '${OUTPUT_DIR}' -d ${PREDICT_MODEL_DATASET_ID:-${DATASET_ID}} -c 3d_fullres -tr ${TRAINER} -f ${F} --disable_tta -chk ${CHECKPOINT}${PREDICT_EXTRA_FLAGS:+ ${PREDICT_EXTRA_FLAGS}}; echo 'fold${F} ${item} done'; "
+        if [ -n "${PREDICT_POST_ITEM_CMD:-}" ]; then
+            local _post="${PREDICT_POST_ITEM_CMD//\{out\}/${OUTPUT_DIR}}"; _post="${_post//\{item\}/${item}}"
+            predict_cmds+="${_post} || { echo 'fold${F} ${item}: PREDICT_POST_ITEM_CMD FAILED' >&2; exit 1; }; "
+        fi
     done
 
     if [ "$any_valid" = "0" ]; then

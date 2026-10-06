@@ -102,6 +102,7 @@ fi
 # ════════════════════════════════════════════════════════════════════════════
 echo "[$(date '+%H:%M:%S')] WORKER ${RUN_ID} fold${FOLD} -> ${TRAIN_CONTRAST}/${CATEGORY}"
 FOLD_METRICS="${METRICS_DIR}/fold${FOLD}"; mkdir -p "$FOLD_METRICS"
+GEOM_FAIL=0
 
 for CONTRAST in $CONTRAST_LIST; do
     GT_DIR="${TESTSET}/${CONTRAST}/gt_native"
@@ -110,6 +111,12 @@ for CONTRAST in $CONTRAST_LIST; do
         echo "  ! [fold${FOLD}] skip $CONTRAST (no predictions at $PRED_DIR — run 05_predict/ first)"; continue
     fi
     [ -d "$GT_DIR" ] && NGT=$(ls "$GT_DIR" 2>/dev/null | wc -l) || NGT=0
+    # Geometry guard (2026-10-06): a prediction left on the RAS input grid (resample-to-native
+    # skipped) would be scored x-mirrored on the natively-LAS contrasts, silently. Refuse it.
+    if [ "$NGT" -gt 0 ] && ! $PY "${HERE}/../00_utils/check_pred_geometry.py" --pred_dir "$PRED_DIR" --gt_dir "$GT_DIR"; then
+        rm -f "$FOLD_METRICS/${CONTRAST}_metrics.csv"; GEOM_FAIL=1
+        echo "  ! [fold${FOLD}] REFUSED $CONTRAST: predictions not on the native GT grid" >&2; continue
+    fi
     if [ "$NGT" -gt 0 ]; then
         $PY "${PROJECT_ROOT}/benchmark/00_commun_scripts/00_03_evaluate/evaluate.py" \
             --pred_dir "$PRED_DIR" --gt_dir "$GT_DIR" \
@@ -118,6 +125,9 @@ for CONTRAST in $CONTRAST_LIST; do
     fi
     echo "[$(date '+%H:%M:%S')]   [fold${FOLD}] done $CONTRAST"
 done
+
+# no eval_all.csv for a fold with refused predictions (a partial one would look complete downstream)
+[ "$GEOM_FAIL" = 0 ] || { rm -f "$FOLD_METRICS/eval_all.csv"; echo "[fold${FOLD}] FAILED: off-grid predictions refused (see above)" >&2; exit 1; }
 
 present=()
 for c in $CONTRAST_LIST; do [ -f "$FOLD_METRICS/${c}_metrics.csv" ] && present+=("$c"); done

@@ -86,17 +86,17 @@ brats2024-glioma_*)
       for F in 0 1 2; do bash ${B}/06_evaluate/06_01_evaluate_run.sh ${RID} \${F} || exit 1; done"
   audit "${M}/${tc}/ablations/${OLD}" "${M}/${tc}/ablations/${CAT}_${RID}" "brats_${tc}"
   ;;
-# ── Brain (on-harmony; checkpoint_final by default for predict AND eval, as for all its runs) ──────────────────
+# ── Brain (on-harmony; checkpoint_best since 2026-10-06 like every dataset -- was checkpoint_final; the legacy
+#    final-checkpoint metrics of the OLD runs now sit in <dir>_final. RAS->native resample runs inside the predict job) ──
 on-harmony_*)
   O="${T}/brain_healthy/on-harmony/5_scripts_on-harmony"
   M="${T}/brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model"
   case "${RID}" in
-    on-harmony_T1w_*)    tc=T1w;    envf=env.sh;     W=05_06_predict_t1w_auglab_default.sh;    OLD=ablations/nnUNet_on-harmony_T1w_v26_6_2_train050_val100_20261003_123018 ;;
-    on-harmony_T2w_*)    tc=T2w;    envf=env_t2w.sh; W=05_12_predict_t2w_auglab_default.sh;    OLD=nnUNet_on-harmony_T2w_v26_6_2_train050_val100_20260625_154418 ;;
-    on-harmony_dwi_ap_*) tc=dwi_ap; envf=env_dwi.sh; W=05_18_predict_dwi_ap_auglab_default.sh; OLD=nnUNet_on-harmony_dwi_ap_v26_6_2_train050_val100_20260921_203727 ;;
+    on-harmony_T1w_*)    tc=T1w;    envf=env.sh;     W=05_06_predict_t1w_auglab_default.sh;    OLD=ablations/nnUNet_on-harmony_T1w_v26_6_2_train050_val100_20261003_123018_final ;;
+    on-harmony_T2w_*)    tc=T2w;    envf=env_t2w.sh; W=05_12_predict_t2w_auglab_default.sh;    OLD=nnUNet_on-harmony_T2w_v26_6_2_train050_val100_20260625_154418_final ;;
+    on-harmony_dwi_ap_*) tc=dwi_ap; envf=env_dwi.sh; W=05_18_predict_dwi_ap_auglab_default.sh; OLD=nnUNet_on-harmony_dwi_ap_v26_6_2_train050_val100_20260921_203727_final ;;
   esac
   SUB="$(sub_for ablations "")"
-  # predict_common blocks per fold (run_job --wait), so the shim's RAS->native resample runs AFTER the predictions exist
   predict bash "${O}/05_predict/${W}" "${RID}"
   ev "source ${O}/00_utils/${envf}; export METRICS_SUBDIR=${SUB}; for F in 0 1 2; do bash ${O}/06_evaluate/06_01_evaluate_testset.sh ${RID} \${F} || exit 1; done"
   audit "${M}/${tc}/${OLD}" "${M}/${tc}${SUB:+/${SUB}}/${CAT}_${RID}" "onh_${tc}"
