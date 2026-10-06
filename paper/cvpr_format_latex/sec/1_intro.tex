@@ -1,10 +1,12 @@
 \section{Introduction}
 \label{sec:intro}
 
-Medical image segmentation models are trained on one acquisition setting and
-are frequently applied to another: a different scanner, sequence, or imaging
-modality than the one seen during training. MRI contrast is a protocol choice, not a physical constant, so the same anatomy
-has different intensities across sequences. A network trained only on
+Medical image segmentation models are often trained on one acquisition
+setting~\cite{guan2022dasurvey} and frequently applied to another: a different
+scanner, sequence, or imaging modality than the one seen during
+training~\cite{ghafoorian2017transfer,karani2018lifelong}. MRI contrast is a
+protocol choice, not a physical constant, so the same anatomy has different
+intensities across sequences~\cite{bitar2006pulsesequences}. A network trained only on
 T1-weighted brain images can fail outright on T2-weighted or FLAIR
 images~\cite{billot2023synthseg}. Acquiring and
 annotating training data for every contrast a model might encounter is not
@@ -15,14 +17,19 @@ to unseen contrasts and modalities without target-domain
 data~\cite{zhang2020bigaug,ouyang2022gin,su2023slaug,xu2021randconv}.
 
 The dominant single-source strategy is label-generative domain randomization,
-popularized by SynthSeg~\cite{billot2023synthseg}. It resamples intensities from a per-label Gaussian mixture over a \emph{dense}
-anatomical label map, a voxel-wise parcellation of the whole image rather than
-the sparse annotation a segmentation dataset normally provides. The resulting
-images have arbitrary, unrealistic contrast, forcing the network to rely on
-shape and layout~\cite{billot2023synthseg}. This is
-effective, but carries two structural costs. First, it is \emph{label-driven}:
-the dense parcellation it needs is richer than the task's own annotation, so it
-reintroduces the expensive labeling it aims to avoid. Second, and less discussed, it
+popularized by SynthSeg~\cite{billot2023synthseg}. SynthSeg does not use the
+real image at all: it builds each training image from a label map, filling
+every labeled structure with Gaussian noise of a randomly drawn mean and
+variance. The label map must be \emph{dense}, a voxel-wise parcellation of
+the whole image rather than the sparse annotation a segmentation dataset
+normally provides. The resulting images have arbitrary, unrealistic contrast,
+forcing the network to rely on shape and layout~\cite{billot2023synthseg}.
+This is effective, but carries two structural costs. First, it is
+\emph{label-driven}: the dense parcellation it needs is richer than the task's
+own annotation. SynthSeg trains on whole-brain parcellations with dozens of
+labeled structures~\cite{billot2023synthseg}, whereas an MS dataset such as
+Open-MS annotates only the lesions~\cite{lesjak2018openms}; obtaining the
+parcellation reintroduces the expensive labeling the method aims to avoid. Second, and less discussed, it
 \emph{does not preserve texture}: replacing every labeled region with
 piecewise Gaussian noise discards the real gradients, partial-volume
 boundaries, and unlabeled fine structure the acquired scan contains. Layout
@@ -43,15 +50,19 @@ scan into classes with 1-D $k$-means, splits each class into spatial
 sub-regions with a Voronoi partition, and applies a signed random affine remap
 to the \emph{real} intensities of each sub-region. Edges, gradients and partial-volume detail therefore survive inside each
 sub-region, because existing intensities are remapped rather than replaced by
-noise. Only the contrast between regions is
-randomized, including sign inversions that no acquisition protocol produces.
-An optional last step uses labels, and only the sparse task labels that any
-segmentation dataset already has.
+noise. Only the contrast between regions is randomized, and without a
+target: PALETTE-Aug can produce any contrast, including implausible ones such
+as inverted intensities, because it is not tied to a specific target contrast.
+An optional step also re-randomizes each labeled structure; it uses whatever
+labels exist, a dense label map or just the task's own segmentation labels.
 
 % TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated.
-We test the mechanism by intervention. Keeping the partition and the region
-target means fixed, we replace SynthSeg-style noise fill with the real-intensity remap in sixteen training settings and measure the Dice change relative to the
-noise-fill Dice. Pooled per task, the gain is largest on the appearance-defined
+We then test when texture matters, with a controlled ablation in sixteen
+training settings. We keep PALETTE-Aug's partition and region target means and
+change only how each region is filled: with its real intensities, which keeps
+the texture, or with Gaussian noise, which removes it. We report the Dice of
+real fill relative to that of noise fill. Pooled per task, the relative gain is
+largest on the appearance-defined
 targets, brain tumor ($+15\%$) and MS lesions ($+16\%$), against at most
 $7\%$ on interface-bounded tasks. The converse does not hold: several
 appearance-defined settings, breast lesions among them, show no Dice gain, so
@@ -61,15 +72,20 @@ noise fill keeps only the partition edges, and real fill recovers most of the
 source texture.
 
 We train one nnU-Net~\cite{isensee2021nnunet} configuration, varying only the
-epoch budget per dataset, and evaluate cross-contrast, cross-modality and
-cross-dataset transfer on eight tasks: healthy brain, MS lesion, brain tumor,
+epoch budget per dataset, and evaluate cross-contrast and cross-modality
+transfer on eight tasks: healthy brain, MS lesion, brain tumor,
 abdominal organ, mandible, breast lesion, spine and pelvis. We compare against
-nnU-Net with its default augmentation, two variants of SynthSeg (the original and our
-re-implementation of its EM label-subdivision extension),
-SRCSM~\cite{thaler2025semrandconv}, and Auglab~\cite{molinier2026auglab}, a
-published cross-modality augmentation pipeline. PALETTE-Aug wins the benchmark overall: it has the best Dice on six of the
-eight tasks, significantly beats every competitor on five of them, and is
-ahead of each competitor across tasks on both Dice and boundary distance.
+nnU-Net with its default augmentation; two variants of SynthSeg, the original
+and one that first subdivides each label into sub-regions by
+expectation-maximization (EM) clustering of the image intensities, an extension
+described in the SynthSeg paper~\cite[\S5.4]{billot2023synthseg} whose code was
+not released when this work was done, so we re-implemented it;
+SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab}, a
+published cross-modality augmentation pipeline. PALETTE-Aug wins the benchmark
+overall: it has the best Dice on six of the eight tasks and significantly beats
+every competitor on five of them. Pooling all tasks into one test, it is
+significantly better than each competitor on both Dice and boundary distance,
+though not on every task.
 
 In summary, we make the following contributions:
 \begin{itemize}
@@ -82,8 +98,8 @@ In summary, we make the following contributions:
     needs no dense label map, only the task's own labels. In every comparison
     it runs as one added operator inside the Auglab pipeline; the ablation also
     tests it alone.
-    \item \textbf{Breadth evidence.} Across cross-contrast, cross-modality and
-    cross-dataset transfer on eight tasks and sixteen datasets, with one
+    \item \textbf{Breadth evidence.} Across cross-contrast and cross-modality
+    transfer on eight tasks and sixteen datasets, with one
     configuration reused throughout, PALETTE-Aug wins the benchmark overall: it is best on six tasks and
     significantly beats every competitor on five; where it does not win, we
     test whether the leader is truly ahead.
