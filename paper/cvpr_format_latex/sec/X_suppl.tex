@@ -174,10 +174,14 @@ SynthSeg-EM     & 17.9 &  23.7 &  4.7 & 24.7 & 24.9 & 60.9 & 4.0 & 34.0 & 1.8e-6
 SRCSM           & 17.5 & 24.4 &  5.3 & 24.6 & \textbf{19.3} & 91.8 & --- & 33.9 & 2.0e-34 \\
 Auglab          & 16.1 & 27.8 &  4.7 & 26.5 & 22.1 & \textbf{57.1} & 4.7 & 35.6 & 1.0e-4 \\
 \textbf{PALETTE-Aug (ours)} & \textbf{15.6} & \textbf{22.7} & \textbf{4.3} & \textbf{24.3} & 23.5 & 57.7 & \textbf{3.5} & \textbf{29.0} & --- \\
+\midrule
+% TODO(rung-5 val000 retrain): Glioma and MS cells provisional; p cell pending.
+PALETTE alone (ours) & 15.8 & 24.9 & 4.6 & 25.6 & 22.3 & 56.3 & --- & 35.2 & --- \\
 \bottomrule
 \end{tabular}
 \caption{Task-level HD95 (mm, $\downarrow$). Same pooling and test as
-\cref{tab:meta}, and likewise no cross-task average. Spine has no SRCSM run.}
+\cref{tab:meta}, and likewise no cross-task average. Spine has no SRCSM run.
+PALETTE alone: the transform without Auglab, shown for reference and left out of the bolding.}
 \label{tab:meta-hd95}
 \end{table*}
 
@@ -354,6 +358,10 @@ smallest attainable $p$ after correction is just under $0.05$. Breast and Pelvis
 val100 arm. Mandible's held-out axis is cross-dataset.}
 \label{tab:ladder-full}
 \end{table}
+
+\Cref{tab:fill-swap-pairs} breaks the fill swap down by training $\to$ test contrast pair: the numbers behind the thin curves of \cref{fig:ladder}.
+
+\input{sec/_suppl_fill_swap_pairs}
 
 % Regenerated 2026-10-03 with folds capped to 0-2 (06_15_t1n_t2w_transfer_per_label.py).
 \paragraph{Per-label breakdown: is the fill-swap effect uniform within a task?}

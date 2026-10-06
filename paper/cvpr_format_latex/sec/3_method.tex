@@ -59,34 +59,13 @@ training input (\cref{fig:method-pipeline}e).
 
 \begin{figure*}[t]
   \centering
-  \footnotesize
-  \setlength{\tabcolsep}{2pt}
-  % Row labels and panels are both centred on the text axis, so each label sits
-  % at the vertical middle of its row whatever the row's image height.
-  \newcommand{\methodrowlabel}[1]{\raisebox{-0.5\height}{\rotatebox{90}{\parbox{2.1cm}{\centering #1}}}}
-  \newcommand{\methodpanel}[1]{\raisebox{-0.5\height}{\includegraphics[width=3.3cm]{figures/method_panels/#1}}}
-  \resizebox{\linewidth}{!}{%
-  \begin{tabular}{c ccccc}
-    & (a) Input
-    & (b) $k$-means flat remap
-    & (c) + Voronoi sub-parcellation (flat remap)
-    & (d) + label flat remap
-    & (e) Final output (affine remap, \cref{eq:affine}) \\
-    \methodrowlabel{CHAOS T2SPIR\\(abdominal MRI)}
-    & \methodpanel{chaos_a} & \methodpanel{chaos_b} & \methodpanel{chaos_c}
-    & \methodpanel{chaos_d} & \methodpanel{chaos_e} \\
-    \methodrowlabel{ON-Harmony T1w\\(brain MRI)}
-    & \methodpanel{onharmony_a} & \methodpanel{onharmony_b} & \methodpanel{onharmony_c}
-    & \methodpanel{onharmony_d} & \methodpanel{onharmony_e} \\
-  \end{tabular}%
-  }
-  \caption{The PALETTE-Aug pipeline on one real CHAOS T2SPIR volume (top) and
-  one real ON-Harmony T1w volume (bottom); every panel is a deterministic
-  function of the same real volume (no external model), min--max normalized
-  to $[0,1]$ for display only. Panels (b)--(d) paint each region, sub-region or label flat with its target
-mean $\mu$ (\cref{eq:affine}) to show the partition alone; panel (e), the
-actual training input, applies the full signed affine remap, keeping real
-texture, at region and, where available, label level.}
+  \includegraphics[width=\linewidth]{figures/method_pipeline}
+  \caption{The PALETTE-Aug pipeline on one real CHAOS T2SPIR slice (top) and one
+  real ON-Harmony T1w slice (bottom). Every panel is a deterministic function of
+  the same real image (no external model). Panels (b)--(d) paint each region,
+  sub-region or label flat with its target mean $\mu$ (\cref{eq:affine}) to show
+  the partition alone; (e), the actual training input, applies the signed affine
+  remap of \cref{eq:affine}, which keeps the real texture inside every region.}
   \label{fig:method-pipeline}
 \end{figure*}
 

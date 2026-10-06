@@ -36,6 +36,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import sys
 from itertools import cycle
 from pathlib import Path
@@ -131,8 +132,15 @@ def _src_key(run_subdir, run_key: str) -> str:
     return _engine_src_key({"run_subdir": run_subdir} if run_subdir else None, run_key)
 
 
+# LADDER_JSON_SUFFIX (optional): read <ladder_series.json><suffix> where that file exists -- e.g. the
+# pre-retrain copies, to keep the figure consistent with the text until every ladder is regenerated.
+JSON_SUFFIX = os.environ.get("LADDER_JSON_SUFFIX", "")
+
+
 def load(rel: str):
     p = REPO / rel
+    if JSON_SUFFIX and (REPO / (rel + JSON_SUFFIX)).exists():
+        p = REPO / (rel + JSON_SUFFIX)
     if not p.exists():
         return None
     d = json.loads(p.read_text())
@@ -367,23 +375,20 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
 
     for ax, (title, _grp, items) in zip(axes, loaded):
         for lab, d in items:
-            ls = "-" if lab in T1_FAMILY else "--"
+            ls = "-"   # one style for every pair (no train-contrast family coding)
             per_p = ((d.get("fill_swap_significance") or {}).get(metric) or {}).get("per_contrast", {})
             for c in ood_contrasts(d):
                 s = np.asarray(d["per_contrast"][metric][c][:N_RUNGS], float)
                 if not np.isfinite(s).any():
                     continue
-                mk = marker_of[c]
                 ax.plot(range(len(s)), s, color=NEUTRAL, linestyle=ls, linewidth=1.1,
-                        alpha=0.55, marker=mk, markersize=6, markeredgecolor="white",
-                        markeredgewidth=0.5, zorder=1, label=c)
+                        alpha=0.55, zorder=1, label=c)
                 if np.isfinite(s[FILL - 1:FILL + 1]).all():
                     dl = (s[FILL] - s[FILL - 1]) * (1 if higher_is_better else -1)
                     col = sig_color(per_p.get(c, float("nan")), dl, light=True)
                     ax.plot([FILL - 1, FILL], s[FILL - 1:FILL + 1], color=col, linestyle=ls,
                             linewidth=2.2 if col != FLAT else 1.5,
-                            alpha=0.95 if col != FLAT else 0.75, marker=mk, markersize=7.5,
-                            markeredgecolor="white", markeredgewidth=0.7,
+                            alpha=0.95 if col != FLAT else 0.75,
                             zorder=4 if col != FLAT else 3)
 
         # Bold panel average: mean over this panel's ladders' pooled OOD series.
@@ -454,11 +459,11 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
     if layout == "column":
         style_h = [
             Line2D([0], [0], color="black", label="task average", linewidth=2.6),
-            Line2D([0], [0], color=NEUTRAL, label="one contrast pair", linewidth=1.3),
-            Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on non-T1", linewidth=1.5),
-            Line2D([0], [0], color=IMPROVE_LIGHT, marker="o", label="pair: sig. gain", linewidth=2.0, markersize=6),
-            Line2D([0], [0], color=WORSEN_LIGHT, marker="o", label="pair: sig. loss", linewidth=2.0, markersize=6),
-            Line2D([0], [0], color=FLAT, marker="o", label="pair: n.s.", linewidth=1.3, markersize=5),
+            Line2D([0], [0], color=NEUTRAL, label="one model:\ntrain → test contrast", linewidth=1.3),
+            Line2D([0], [0], color=IMPROVE_LIGHT, label="its fill swap: sig. gain", linewidth=2.2),
+            Line2D([0], [0], color=WORSEN_LIGHT, label="its fill swap: sig. loss", linewidth=2.2),
+            Line2D([0], [0], color=FLAT, label="its fill swap: n.s.", linewidth=1.5),
+            Line2D([], [], linestyle="none", label="values per pair:\nsupplementary tables"),
         ]
         if len(rows[-1]) == 1:   # odd panel count: the legend fills the empty last cell
             cell = gs[nrow - 1, 1].get_position(fig)
@@ -470,25 +475,16 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
                        bbox_to_anchor=(0.53, 0.045), handlelength=2.0, columnspacing=1.2)
     else:
         style_h = [
-            Line2D([0], [0], color="#2a2a2a", linestyle="-", label="trained on T1-weighted", linewidth=1.8),
-            Line2D([0], [0], color="#2a2a2a", linestyle="--", label="trained on another contrast", linewidth=1.8),
-            Line2D([0], [0], color="black", label="panel average, other rungs", linewidth=2.6),
-            Line2D([0], [0], color=NEUTRAL, label="per-curve, other rungs", linewidth=1.1),
+            Line2D([0], [0], color="black", label="task average", linewidth=2.6),
+            Line2D([0], [0], color=NEUTRAL, label="one model: train → test contrast", linewidth=1.3),
+            Line2D([0], [0], color=IMPROVE_LIGHT, label="its fill swap: significant gain", linewidth=2.2),
+            Line2D([0], [0], color=WORSEN_LIGHT, label="its fill swap: significant loss", linewidth=2.2),
+            Line2D([0], [0], color=FLAT, label="its fill swap: not significant", linewidth=1.5),
         ]
-        sig_h = [
-            Line2D([0], [0], color=IMPROVE_LIGHT, marker="o", label="per curve: significant improvement", linewidth=2.0, markersize=7),
-            Line2D([0], [0], color=WORSEN_LIGHT, marker="o", label="per curve: significant worsening", linewidth=2.0, markersize=7),
-            Line2D([0], [0], color=FLAT, marker="o", label="per curve: not significant", linewidth=1.3, alpha=0.7, markersize=6),
-            Line2D([0], [0], color=IMPROVE, marker="o", label="panel average: matches header", linewidth=3.0, markersize=7.5),
-        ]
-        fig.add_artist(fig.legend(handles=style_h + sig_h, loc="center", ncol=4, fontsize=9,
-                                  frameon=False, bbox_to_anchor=(0.5, 0.116),
-                                  handlelength=2.2, columnspacing=1.6))
-        fig.legend(handles=[Line2D([0], [0], color="#666666", marker=marker_of[c], linestyle="none",
-                                   markersize=7.5, label=c) for c in all_c],
-                   loc="center", ncol=12, fontsize=8.5, frameon=False, bbox_to_anchor=(0.5, 0.052),
-                   title="eval contrast (marker)", title_fontsize=9,
-                   handletextpad=0.5, columnspacing=1.4)
+        fig.legend(handles=style_h, loc="center", ncol=5, fontsize=9, frameon=False,
+                   bbox_to_anchor=(0.5, 0.10), handlelength=2.2, columnspacing=1.6)
+        fig.text(0.5, 0.05, "values per training → test contrast pair: supplementary tables",
+                 ha="center", va="center", fontsize=9, color="#333333")
         if metric == "dice":
             fig.text(0.5, 0.008,
                       "relative = Δ Dice at the real-fill step ÷ the panel's noise-fill Dice "
