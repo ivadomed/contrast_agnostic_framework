@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Scaffold a NEW TRAINING dataset's train / predict / evaluate scripts by cloning the reference implementation
-(default: benchmark/02_tasks/brain_stroke/isles2022 -- two training contrasts, 6-method suite + OURS val100 mirror + ladder rungs 2-5,
+(default: benchmark/03_archive/isles2022 [ARCHIVED 2026-10-06 as a benchmark task, kept as THE scaffolding reference; its scripts keep the 02_tasks-depth hop counts on purpose -- never "fix" them, only clone them] -- two training contrasts, 6-method suite + OURS val100 mirror + ladder rungs 2-5,
 roster-driven predict/eval on top of the shared drivers in 00_commun_scripts) with name / contrast / id substitutions.
 Sibling of create_dataset_structure.py (which makes the empty 9-subdir skeleton); run THAT first.
 
@@ -94,7 +94,7 @@ def main():
     ap.add_argument("--dataset-ids", nargs=2, required=True, metavar=("ID1", "ID2"), help="nnU-Net Dataset ids for C1 / C2 (unused: ls benchmark/*/*/2_nnUNet_*/raw)")
     ap.add_argument("--labels", default=REF_LABEL, help="foreground label name(s) in dataset.json (space-separated string)")
     ap.add_argument("--target-desc", default="segmentation target", help="short description replacing 'ischemic stroke lesion' in trainer docstrings")
-    ap.add_argument("--reference", default=str(PROJECT / "benchmark/02_tasks" / REF_TASK / REF_DS))
+    ap.add_argument("--reference", default=str(PROJECT / "benchmark/03_archive" / REF_DS))
     ap.add_argument("--out-root", help="default: benchmark/02_tasks/<task>/<dataset>")
     ap.add_argument("--force", action="store_true"); ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()

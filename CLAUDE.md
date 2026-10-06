@@ -39,7 +39,7 @@ redistribution / no git-annex / no public figures"), on which contrasts to train
 by analogy with the epoch policy below), on BIDS leaf names, or on pushing (push the branch with the gh credential helper, or sync by tar). Decide, record decision + alternative in memory and the
 final report, keep going. Stop only if really blocking: research use forbidden, access only the user can complete, a destructive/irreversible step, spend wildly above the probe estimate.
 
-**Reference implementations (copy, never re-invent):** training task = `benchmark/02_tasks/brain_stroke/isles2022/` (scaffolder `benchmark/create_pipeline_scripts.py`; probe/launch/queue scripts
+**Reference implementations (copy, never re-invent):** training task = `benchmark/03_archive/isles2022/` (archived 2026-10-06 as a benchmark task but kept as the scaffolding reference: its scripts keep the 02_tasks-depth hop counts ON PURPOSE, never "fix" them, only clone them; scaffolder `benchmark/create_pipeline_scripts.py`; probe/launch/queue scripts
 `04_24`/`04_23`/`05_27`); eval-only companion = `breast_cancer/ispy1` + `acrin6698` (scaffolder `benchmark/create_eval_companion_scripts.py`). Both sit on the roster-driven shared drivers in
 `benchmark/00_commun_scripts/` (no timestamps anywhere; verified by `selftest_roster_pipeline.py` / `selftest_companion_pipeline.py`). If a skill is wrong or a new dataset teaches something, fix the
 reference AND the scaffolder AND the skill in the same commit.
@@ -218,14 +218,13 @@ convention. Current roster:
 | `brain_tumor` | brats2024-glioma |
 | `brain_ms` | open-ms |
 | `brain_healthy` | on-harmony |
-| `brain_stroke` | isles2022 (trains; ISLES'22 acute/subacute ischemic stroke — onboarding in progress, see section below) |
 | `mandible_healthy` | toothfairy2, hanseg, pddca |
 | `abdomen_healthy` | chaos, amos, sliver07 |
 | `pelvis_healthy` | totalseg-pelvic |
 | `spine_healthy` | healthy-spine-tum |
 | `pancreas_disease` | pansegdata (trains; pancreas MRI T1WCE+T2W, 212 subjects after excluding center MCF — see its section below) |
 
-`benchmark/03_archive/<name>` (17 excluded/superseded datasets) stays flat, untouched by the
+`benchmark/03_archive/<name>` (17 excluded/superseded datasets, + `isles2022` archived 2026-10-06 — see "Stroke task" below) stays flat, untouched by the
 task taxonomy — archived datasets don't need it, and archival status is orthogonal to anatomy/
 pathology. Shared infra keeps the same numbered-sibling convention it always had, just under the
 new top-level name: `benchmark/00_commun_scripts/`, `benchmark/01_commun_results/`,
@@ -575,33 +574,22 @@ the 4 archived datasets were left in place (harmless, orphaned).
 
 ---
 
-## Stroke task: ISLES 2022 (`brain_stroke/isles2022`) — trained + evaluated 2026-10-04..06 (headline tables done; ladders pending rung-5 fix)
+## Stroke task: ISLES 2022 — ARCHIVED 2026-10-06 (`benchmark/03_archive/isles2022`)
 
-Chosen by a `find-a-new-task` pass for "pathology, intra-tissue (texture-defined)" (brain MS + glioma already
-covered). Source: Zenodo 10.5281/zenodo.7153326 (Sci Data 9:762). Paul approved use 2026-10-04 **despite** the
-zip's LICENSE clause "no redistribution without written agreement of the ISLES'22 team" (badge says CC BY 4.0;
-same kind of restriction as LLD-MMRI) → **never upload to git-annex or show its images in public figures without
-that written agreement.** BIDS leaf `1_BIDS_isles2022/stroke-brain-isles2022` (name provisional).
-- **Contrasts:** train `dwi` (Dataset140) and `flair` (Dataset141); every test case scored on dwi and flair. **ADC (in the release, derived
-  from DWI) is deliberately NOT used anywhere** (Paul, 2026-10-04: DWI is the contrast the labels were drawn on, ADC nearly redundant); it stays
-  in the BIDS tree only as a faithful copy. All three contrasts of a subject live together in ONE BIDS tree; the two nnU-Net datasets are views of the
-  same subjects with identical case ids and one shared split (`02_nnunet/02_04_verify_heldout.sh` proves no test subject appears in any train/val
-  fold of either dataset, nor in preprocessing).
-- **Usable N = 246 of 250:** 3 empty masks (0150/0151/0170) + isles2022_0007 (FLAIR FOV holds only 53% of the
-  lesion). FLAIR is on its OWN native grid in all 250 raw cases and is resampled onto the DWI grid by
-  `02_nnunet/02_01_convert.py`; DWI/mask share one LAS grid. Partition: 47 test (volume-stratified) + 199 pool,
-  3 folds (`01_create_splits/01_01_create_splits.py`). Case ids `isles2022_<NNNN>` carry no contrast suffix.
-- **Built:** BIDS, nnU-Net raw + preprocessed (3d_fullres, patch 80x96x80 @2mm, batch 6), splits, trainer package
-  `isles2022/trainers` + `02_nnunet/ISLES2022Trainers.py` shim (installed in Vulcan's venv; discovery verified),
-  04_* wrappers (6 methods x 2 contrasts + ladder rungs 2-5; **no rung-6 PV wrappers yet**), `04_23_tamia_pack_all.sh`,
-  `scripts/cluster/tamia_env_isles2022.sh`, orientation QC PNG in `9_tests_isles2022/`.
-- **TRAINED + PREDICTED + EVALUATED on TamIA, fully unattended (2026-10-04 → 06):** 60 fold-jobs (6 packs; packs 1-2 hit the 24 h limit and finished in their chained 2nd link, packs 3-6 ran ~23.5-23.9 h), then the queued
-  controller (`05_28`) verified every checkpoint, pinned the RUN_IDs (11 methods per contrast), submitted the predict packs (3 min each) and the eval job (14 min): `EVAL COMPLETE`, 66 `eval_all.csv` (22 runs x 3 folds).
-  Pins/metrics/predictions/checkpoints (best+final) were fetched to Vulcan `8_results_isles2022/`. Headline configs generated by `06_05_write_configs.sh`; tables by `06_02/03/04` (NOT `06_07`: it includes the ladders).
-  **Result (Dice, 7-method table, 3 folds, both training contrasts pooled): baseline 51.9 > auglab_default 45.7 > OURS val000 43.4 > srcsm 30.3 ≈ synthseg_EM 34.7 > OURS val100 36.7 > synthseg_noEM 18.2 → on ISLES the plain baseline WINS; OURS does not.**
-  Per direction: DWI-trained: baseline 80.5 in-domain / 37.1 on FLAIR, OURS 64.7 / 36.9 (OOD tie, p=0.54, OURS loses in-domain by ~16); FLAIR-trained: baseline 41.0 / **49.0 on DWI**, OURS 35.4 / 36.7 (OURS loses OOD by ~12). HD95 same ordering.
-  Untested hypothesis only: lesion is hyperintense on BOTH DWI and FLAIR, so a baseline transfers across them through the shared polarity cue, which contrast randomization removes. **NOT registered in `meta_task_heatmap.yaml`** (it would change the project-side "overall" table with a task where OURS loses; one-line add + regenerate when decided). Ladders NOT run (rung 5 is being re-run by another session; those files in the tree are theirs).
-  Whole path as a skill: `setup-train-predict-eval-scripts`. License reminder: no redistribution / public figures of ISLES images without the ISLES'22 team's written agreement.
+Paul archived it after a full run: **ISLES is a poor domain-generalization example** — not enough OOD, and the ADC control's Dice too low to show anything. Kept (not deleted) because (a) it is the
+scaffolding reference for `create_pipeline_scripts.py` / the skills (scripts there keep the 02_tasks hop counts on purpose), (b) its results are an honest negative worth not re-discovering.
+- **What it was:** ISLES'22 training release (Zenodo 10.5281/zenodo.7153326, 250 acute/subacute infarct MRIs, usable N 246 = minus 3 empty masks and 1 case whose FLAIR FOV cuts the lesion); trained on `dwi` (Dataset140) and
+  `flair` (Dataset141), tested on both; ADC dropped from the benchmark (derived from DWI). 47 test + 199 pool, 3 folds, 2000 epochs; whole pipeline (train → predict → eval) ran unattended on TamIA 2026-10-04..06.
+  **License: the zip's LICENSE forbids redistribution without the ISLES'22 team's written agreement (badge says CC BY 4.0) → no git-annex, no public figures.**
+- **Result (Dice, 7-method table): baseline 51.9 > auglab_default 45.7 > OURS val000 43.4 > OURS val100 36.7 > synthseg_EM 34.7 > srcsm 30.3 > synthseg_noEM 18.2 — the baseline wins.** DWI-trained: baseline 80.5 in-domain / 37.1 on FLAIR, OURS 64.7 / 36.9 (OOD tie p=0.54);
+  FLAIR-trained: baseline 41.0 / 49.0 on DWI, OURS 35.4 / 36.7. Not registered in `meta_task_heatmap.yaml`; no ladders run.
+- **Why (checked, no bug found):** nnU-Net's own in-training validation Dice has the same ordering (not a predict/eval bug); the in-domain penalty of AugLab methods and the synthseg_noEM collapse on lesion-only-label tasks are normal in this project (open-ms, brats, ispy2 show the same);
+  held-out proof passed. DWI and FLAIR show the lesion with the SAME polarity (bright), so the plain baseline transfers between them (FLAIR→DWI baseline 120% of its in-domain Dice) and there is no contrast shift for domain randomization to fix; failures track lesion size
+  (small lesions missed by every method) and FLAIR visibility (early strokes are DWI-bright, FLAIR-negative: even the FLAIR-trained baseline misses 28% of cases). **ADC positive control** (lesion DARK, a real polarity shift; diag `05_29`): baseline collapses (0.6 / 0.2 Dice, 98-100% missed), contrast-randomized methods recover only 5-14 Dice
+  (OURS 8.9 / 9.4, auglab_default 9.8 / 13.5) with ~70% of cases missed: the pipeline responds to a polarity shift but absolute levels are too low to show anything. Case-level diagnostics: `06_20`.
+- **LESSON (now in the skills):** before launching 60 folds, check that the task DISCRIMINATES: the baseline must lose a lot (cross-contrast Dice < ~60% of in-domain) in BOTH directions, i.e. the two training contrasts need different lesion polarity or tissue contrast; a 20-epoch baseline probe evaluated both ways is enough.
+- Where things are: data/BIDS/results/checkpoints in `benchmark/03_archive/isles2022/` (README there); TamIA scratch copy `$SCRATCH/isles2022` is purge-on-inactivity and not needed; `scripts/cluster/tamia_env_isles2022.sh` is left in place (orphaned, like the other archived tasks'). The venv trainer shims (`ISLES2022Trainers.py`) are harmless leftovers.
+
 ---
 
 ## Pancreas task: PanSegData (`pancreas_disease/pansegdata`) — training launched on KILLARNEY, NOT yet evaluated (2026-10-04)
