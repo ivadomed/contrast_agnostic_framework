@@ -1,12 +1,12 @@
 All methods share one nnU-Net~\cite{isensee2021nnunet} configuration; only
-the input augmentation differs. Nothing below is tuned per dataset.
+the input augmentation differs. Nothing below is tuned per task.
 
 \paragraph{Training schedule.} 3D full-resolution nnU-Net, SGD with Nesterov
 momentum $0.99$, initial learning rate $10^{-2}$ with the nnU-Net
 \texttt{polyLR} decay, $250$ mini-batches per epoch, combined Dice and
 cross-entropy loss, deep supervision on. Patch size, spacing and batch size
 are whatever the nnU-Net planner selects for that dataset, identically for
-every method. The epoch budget is fixed per dataset and shared by all methods
+every method. The epoch budget is fixed per task and shared by all methods
 on it: $2500$ (Glioma), $2000$ (Brain, MS), $1000$ (Mandible, Breast) and $200$ (Abdomen, Pelvis); Spine was trained on a separate pipeline.
 Each method is trained as three models on three train/validation folds, all
 scored on the same held-out test set; folds are the same across methods.
@@ -24,16 +24,16 @@ blur $\sigma$ drawn from $\{0,0,0,0.3,0.5,0.8\}$, applied twice (after the
 region-level and after the label-level remap), so applied half the time at
 each point. The transform is applied on the GPU, on-the-fly, to a fixed
 $50\%$ of training
-iterations (\emph{train050}); the remaining half of iterations use the
+iterations; the remaining half of iterations use the
 un-transformed real image.
 
-\paragraph{Validation-time configuration.} \emph{val000} (the configuration
-reported in the main paper) applies no synthetic contrast to the validation
-split, matching every competing method and keeping model selection
-like-for-like. \emph{val100} applies PALETTE-Aug to the entire validation split;
-it is reported in \cref{sec:suppl-val100}.
+\paragraph{Validation-time configuration.} Every reported model, every
+competitor and every ladder rung included, selects its best checkpoint on
+real-contrast validation images (\emph{val000}). \emph{val100} applies
+PALETTE-Aug to the entire validation split instead; it is reported only in
+\cref{sec:suppl-val100}.
 
-\paragraph{Baseline configurations.} Both SynthSeg variants run through
+\paragraph{Competitor configurations.} Both SynthSeg variants run through
 Auglab's GPU implementation of the SynthSeg generator, with uniform intensity
 priors and with the generator's own spatial and flip steps disabled (the
 pipeline's spatial augmentation is shared by all methods). They receive each
@@ -98,5 +98,6 @@ axis independently.}
 \paragraph{Compute.} Training was performed on NVIDIA L40S and H100 GPUs. A
 single fold costs from under an hour (Abdomen, $200$ epochs) to roughly three
 days (Glioma, $2500$ epochs); the full study is dominated by the six
-methods $\times$ eighteen settings $\times$ three folds of the main comparison,
+methods $\times$ sixteen settings $\times$ three folds of the main comparison
+(Spine's two settings were trained on a separate pipeline, without SRCSM),
 plus the sixteen ablation ladders of \cref{subsec:e-ablation}.

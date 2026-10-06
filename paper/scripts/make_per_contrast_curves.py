@@ -349,13 +349,13 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
     # to read -- and this layout also makes the grouping structural rather than
     # something the reader has to track from a header span.
     groups = [[(t, g, it) for t, g, it in loaded if g == grp_key]
-              for grp_key in ("interface", "no_interface")]
+              for grp_key in ("no_interface", "interface")]
     groups = [r for r in groups if r]
     if layout == "column":
         # One paper column: each group wraps onto rows of 2 panels.
         rows = [grp[i:i + 2] for grp in groups for i in range(0, len(grp), 2)]
         ncol, nrow = 2, len(rows)
-        odd = len(rows[-1]) == 1
+        odd = any(len(r) == 1 for r in rows)
         fig = plt.figure(figsize=(6.6, 2.75 * nrow + (0.6 if odd else 1.3)))
         gs = fig.add_gridspec(nrow, ncol, wspace=0.28, hspace=0.75,
                               left=0.11, right=0.99, top=0.94, bottom=0.05 if odd else 0.10)
@@ -465,8 +465,9 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
             Line2D([0], [0], color=FLAT, label="its fill swap: n.s.", linewidth=1.5),
             Line2D([], [], linestyle="none", label="values per pair:\nsupplementary tables"),
         ]
-        if len(rows[-1]) == 1:   # odd panel count: the legend fills the empty last cell
-            cell = gs[nrow - 1, 1].get_position(fig)
+        single = [i for i, r in enumerate(rows) if len(r) == 1]
+        if single:   # a row with one panel: the legend fills its empty cell
+            cell = gs[single[0], 1].get_position(fig)
             fig.legend(handles=style_h, loc="center", ncol=1, fontsize=11.5, frameon=False,
                        bbox_to_anchor=((cell.x0 + cell.x1) / 2, (cell.y0 + cell.y1) / 2),
                        handlelength=2.0)

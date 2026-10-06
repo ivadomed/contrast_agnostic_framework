@@ -34,20 +34,20 @@ OUT = REPO / "paper/cvpr_format_latex/sec/_suppl_tables.tex"
 SCRIPT = REPO / "benchmark/00_commun_scripts/00_03_evaluate/combined_modality_summary.py"
 
 # (task label, dataset, task folder, {modality name in config -> display label})
-TASKS = [
+TASKS = [   # tab:tasks order: appearance-defined, then interface-bounded
     ("Glioma",  "brats2024-glioma", "brain_tumor",
      {"t1n": "T1n", "t1c": "T1c", "t2w": "T2w", "t2f": "FLAIR"}),
+    ("MS",    "open-ms", "brain_ms", {"flair": "FLAIR", "t1w": "T1w"}),
+    ("Breast",     "ispy2", "breast_cancer", {"t1wce": "T1-CE", "t2w": "T2w"}),
     ("Abdomen",      "chaos", "abdomen_healthy", {"t1in": "T1in", "t2spir": "T2spir"}),
     ("Brain", "on-harmony", "brain_healthy", {"T1w": "T1w", "T2w": "T2w", "dwi_ap": "DWI"}),
-    ("MS",    "open-ms", "brain_ms", {"flair": "FLAIR", "t1w": "T1w"}),
     ("Mandible",   "toothfairy2", "mandible_healthy", {"cbct": "CBCT"}),
-    ("Breast",     "ispy2", "breast_cancer", {"t1wce": "T1-CE", "t2w": "T2w"}),
-    ("Spine",      "healthy-spine-tum", "spine_healthy", {"ct": "CT", "inphase": "Dixon in"}),
+    ("Spine",      "healthy-spine-tum", "spine_healthy", {"ct": "CT", "inphase": "Dixon in-phase"}),
     ("Pelvis",     "totalseg-pelvic", "pelvis_healthy", {"ct": "CT", "mri": "MRI"}),
 ]
-METHODS = [("baseline", "Base"), ("synthseg_noEM", "noEM"), ("synthseg_EM", "EM"),
-           ("srcsm", "SRCSM"), ("auglab_default", "Auglab"),
-           ("auglabAug_v26_6_2_train050_val000", r"\textbf{Ours}")]
+METHODS = [("baseline", "Baseline"), ("synthseg_noEM", r"\makecell{SynthSeg\\-noEM}"),
+           ("synthseg_EM", r"\makecell{SynthSeg\\-EM}"), ("srcsm", "SRCSM"), ("auglab_default", "Auglab"),
+           ("auglabAug_v26_6_2_train050_val000", r"\makecell{\textbf{PALETTE-}\\\textbf{Aug}}")]
 REF = "auglabAug_v26_6_2_train050_val000"
 
 
@@ -137,9 +137,10 @@ def main():
             print(f"{label:<11}{disp:<9}", "  ".join(
                 f"{k[:6]}={d.get(k, (None,))[0]}" for k, _ in METHODS))
 
-    common = (r" Each row is one training modality of one task, scored on exactly the "
-              r"held-out contrasts and external cohorts of its task column in "
-              r"\cref{tab:meta}, so the rows of a task average to that column. "
+    common = (r" Each row is one setting (one training modality of one task), scored on "
+              r"every test contrast of its task, the training contrast and external cohorts "
+              r"included, exactly as its task column of \cref{tab:meta}, so the rows of a "
+              r"task average to that column. "
               r"$^{\ast}$: PALETTE-Aug significantly better than that method within the "
               r"setting (same patient-level sign-flip test, Holm-corrected across "
               r"competitors). Spine has no SRCSM run.")

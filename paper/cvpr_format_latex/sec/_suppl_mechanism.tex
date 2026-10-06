@@ -1,4 +1,3 @@
-\label{subsec:e-mechanism}
 % moved from the main text 2026-08-02 to fit the 8-page limit
 
 To attribute the gain of the full method to its individual components,
@@ -8,9 +7,9 @@ additive ablation ladder on top of the nnU-Net baseline (\emph{Base},
 alone (\S\ref{subsec:m-transform}, step~1); then the anatomical label-remap
 step (step~4); then the Voronoi spatial sub-parcellation (step~2); and
 finally the full signed affine remap of \cref{eq:affine} (step~3), which
-together constitute PALETTE-Aug on its own. Every rung is evaluated without
+together constitute PALETTE alone. Every rung is evaluated without
 Auglab, so
-that the ladder isolates PALETTE-Aug's own internal components from the
+that the ladder isolates PALETTE's own internal components from the
 separate question of whether it composes with a prior augmentation
 pipeline, which we address next. The synthetic-data fraction is fixed at
 $50\%$ of training iterations throughout, as one of several augmentation
@@ -29,23 +28,27 @@ contrast at validation time).
 Component & Abdomen & MS & Glioma & Brain \\
           & T1in  & FLAIR   & T1n       & T1w \\
 \midrule
-Base (nnU-Net default)                & 36.1 & 25.2 & 26.0 & 27.5 \\
+Baseline (nnU-Net default)            & 36.1 & 25.2 & 26.0 & 27.5 \\
 \quad + $k$-means partition           & 84.8 & 30.6 & 41.7 & 67.6 \\
 \quad + label remap                   & 87.7 & 34.6 & 44.3 & 68.0 \\
 \quad + Voronoi sub-parcellation      & 87.2 & 36.1 & 42.8 & 68.2 \\
-\quad + affine remap (PALETTE-Aug alone) & 87.9 & 40.4 & 48.5 & 63.6 \\
+\quad real fill (PALETTE alone)        & 87.9 & 40.4 & 48.5 & 63.6 \\
 \midrule
-\quad + Auglab (\textbf{Ours}, deployed) & 87.4 & 39.5 & 47.5 & 68.6 \\
+\quad + Auglab (PALETTE-Aug)           & 87.4 & 39.5 & 47.5 & 68.6 \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Mechanism ablation (top five rows, additive, no Auglab) and
-deployment composability check (bottom row). Each rung adds exactly one
+\caption{Component ablation (top five rows, additive, no Auglab) and
+composability check (bottom row). Each rung adds exactly one
 PALETTE-Aug component on top of the row above. Dice (\%) over all test
 contrasts of the setting, the training contrast included, with equal weight per
 contrast (the all-contrast series of the same ladders as
 \cref{tab:ladder-full}, which reports the held-out contrasts only). Abdomen T1in:
-CHAOS's own test contrasts only, without the external cohorts.}
+CHAOS's own test contrasts only, without the external cohorts. The baseline
+and PALETTE-Aug rows are the runs of \cref{tab:suppl-dice}; their values can
+differ slightly from it (Glioma), because the ladder averages over the labels
+present in each case before averaging cases, whereas \cref{tab:suppl-dice}
+averages each label over cases first.}
 \label{tab:mechanism}
 \end{table}
 
@@ -54,8 +57,8 @@ paper, as one additional operator inside the Auglab pipeline rather than as
 a replacement for it (\cref{subsec:e-setup}); Auglab is a full prior
 augmentation method in its own right, not a component of PALETTE-Aug, so
 stacking it on top of the ladder above is a composability/deployment check,
-not a further mechanism-ablation step. \cref{tab:mechanism} keeps the two
-separate: the top five rows isolate PALETTE-Aug's internal mechanism, evaluated
+not a further component-ablation step. \Cref{tab:mechanism} keeps the two
+separate: the top five rows isolate PALETTE's internal components, evaluated
 with no Auglab throughout, while the bottom row reports PALETTE-Aug plus Auglab
 --- the configuration used everywhere else in this paper --- set apart by a
 rule rather than presented as the next rung of the same ladder.
