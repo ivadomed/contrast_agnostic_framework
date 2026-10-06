@@ -22,6 +22,9 @@ DEFAULT=(
   "$T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_33_ladder_summary_t1c.py"
   "$T/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py"
   "$T/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_35_ladder_summary_t2spir.py"
+  "$T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py"
+  "$T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py"
+  "$T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_12_ladder_summary_dwi_ap.py"
   "$T/breast_cancer/ispy2/5_scripts_ispy2/06_evaluate/06_10_ladder_summary_t1wce.py"
   "$T/breast_cancer/ispy2/5_scripts_ispy2/06_evaluate/06_11_ladder_summary_t2w.py"
 )

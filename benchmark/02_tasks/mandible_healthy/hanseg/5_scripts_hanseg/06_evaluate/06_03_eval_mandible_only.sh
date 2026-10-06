@@ -45,14 +45,15 @@ HS_DIR="${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/hanseg/5_scripts_han
 PY="${PROJECT_ROOT}/.venv/bin/python"
 SUMMARIZE="${PROJECT_ROOT}/benchmark/00_commun_scripts/00_03_evaluate/summarize_fold.py"
 
-HS_PRED=/scratch/p/paulh/hanseg/8_results/01_predictions/toothfairy2_model/cbct
-HS_METRICS=/scratch/p/paulh/hanseg/8_results/02_metrics/toothfairy2_model/cbct
+# HS_PRED / HS_METRICS overridable (defaults = TamIA scratch) so the same script runs on Vulcan's repo tree.
+HS_PRED="${HS_PRED:-/scratch/p/paulh/hanseg/8_results/01_predictions/toothfairy2_model/cbct}"
+HS_METRICS="${HS_METRICS:-/scratch/p/paulh/hanseg/8_results/02_metrics/toothfairy2_model/cbct}"
 # GT_OVERRIDE / MO_DIR / ITEMS_OVERRIDE let the S-I-flipped rerun reuse this script unchanged
 # (2026-09-17): the eval arms are flipped into ToothFairy2's inverted training convention, so
 # that run passes GT_OVERRIDE=...labelsTs_ct_sif, ITEMS_OVERRIDE="ct_sif mrt1_sif",
 # MO_DIR=mandible_only_sif. Defaults reproduce the original upright run exactly.
 HS_GT="${GT_OVERRIDE:-/scratch/p/paulh/hanseg/2_nnUNet/raw/labelsTs_ct}"
-MO_DIR="${MO_DIR:-mandible_only}"
+MO_DIR="${MO_DIR-mandible_only}"   # set-but-empty = no MO_DIR level (Vulcan's flattened layout)
 
 PRED_SUBDIR="${PRED_SUBDIR:-}"   # e.g. "sif" -> read fold{F}/sif/<item>
 ITEMS="${ITEMS_OVERRIDE:-ct mrt1}"
@@ -71,7 +72,10 @@ for CAT in nnUNet auglab; do
 
     # Mirror the run's EXISTING metrics location so the mandible_only tree matches the
     # union tree one-for-one (headline runs flat, ladder rungs under ablations/).
-    if   [ -d "${HS_METRICS}/${CAT}_${RID}" ];            then SUB=""
+    # FORCE_SUB (optional, set even to ""): place the output here instead of mirroring an existing tree
+    # (a brand-new run has none to mirror). Used on Vulcan by scripts/cluster/rung5_val000/post_run.sh.
+    if [ -n "${FORCE_SUB+x}" ]; then SUB="${FORCE_SUB}"
+    elif [ -d "${HS_METRICS}/${CAT}_${RID}" ];            then SUB=""
     elif [ -d "${HS_METRICS}/ablations/${CAT}_${RID}" ];  then SUB="ablations"
     else echo "[mo] WARN no existing metrics dir for ${CAT}_${RID}, defaulting flat" >&2; SUB=""
     fi

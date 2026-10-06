@@ -23,8 +23,9 @@ PD_DIR="${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/pddca/5_scripts_pddc
 PY="${PROJECT_ROOT}/.venv/bin/python"
 SUMMARIZE="${PROJECT_ROOT}/benchmark/00_commun_scripts/00_03_evaluate/summarize_fold.py"
 
-PD_PRED=/scratch/p/paulh/pddca/8_results/01_predictions/toothfairy2_model/cbct
-PD_METRICS=/scratch/p/paulh/pddca/8_results/02_metrics/toothfairy2_model/cbct
+# PD_PRED / PD_METRICS overridable (defaults = TamIA scratch) so the same script runs on Vulcan's repo tree.
+PD_PRED="${PD_PRED:-/scratch/p/paulh/pddca/8_results/01_predictions/toothfairy2_model/cbct}"
+PD_METRICS="${PD_METRICS:-/scratch/p/paulh/pddca/8_results/02_metrics/toothfairy2_model/cbct}"
 # GT_OVERRIDE / MO_DIR / ITEMS_OVERRIDE: see the hanseg twin — the S-I-flipped rerun
 # (2026-09-17) reuses this script with GT_OVERRIDE=...labelsTs_ct_sif, ITEMS_OVERRIDE=ct_sif,
 # MO_DIR=mandible_only_sif. Defaults reproduce the original upright run exactly.
@@ -50,7 +51,7 @@ for CAT in nnUNet auglab; do
     # Ladder rungs -> ablations/, matching the toothfairy2/hanseg layout. Pattern-based
     # because a brand-new dataset has no existing metrics tree to mirror.
     case "${RID}" in
-      *baseline_kmeans*|*_v26_6_2_train050_val100_*|toothfairy2_cbct_v26_6_2_pv_train050_*) SUB="/ablations" ;;
+      *baseline_kmeans*|*_v26_6_2_train050_val100_*|*_v26_6_2_train050_val000_*|toothfairy2_cbct_v26_6_2_pv_train050_*) SUB="/ablations" ;;
       *) SUB="" ;;
     esac
     # auglabAug_v26_6_2_* is the HEADLINE method, not a ladder rung — don't let the

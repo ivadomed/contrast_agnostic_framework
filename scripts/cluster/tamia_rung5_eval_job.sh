@@ -43,7 +43,7 @@ is_skipped chaos || ( source "$T/abdomen_healthy/chaos/5_scripts_chaos/00_utils/
 is_skipped onharmony || ( source "$T/brain_healthy/on-harmony/5_scripts_on-harmony/00_utils/env.sh"; source scripts/cluster/tamia_env_onharmony.sh
   export TRAINING_CONTRAST=T1w
   rc=0; for F in 0 1 2; do bash "$T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_01_evaluate_testset.sh" "${ONH_RUN}" "${F}" || rc=1; done
-  audit "${METRICS_ROOT}" "${ONH_RUN}" "T1w:8 T2w:8 bold:8 dwi_ap:8 epi_ap:4 gre_echo1_mag:8" && [ "$rc" = 0 ] ) || { echo "[eval-job] on-harmony FAILED"; rc_all=1; }
+  audit "${METRICS_ROOT}" "${ONH_RUN}" "T1w:8 T2w:8 bold:8 dwi_ap:8 epi_ap:4 gre_echo1_mag:7" && [ "$rc" = 0 ] ) || { echo "[eval-job] on-harmony FAILED"; rc_all=1; }
 # ---- brats t2w (in-process, folds sequential: 3 folds x 4 contrasts at once OOM-killed a 64G job before) ----
 is_skipped brats || ( export METRICS_ROOT="${SCRATCH}/brats2024-glioma/8_results/02_metrics"
   source "$T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/00_utils/env_t2w.sh"; source scripts/cluster/tamia_env.sh

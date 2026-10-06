@@ -35,14 +35,15 @@ TF2_DIR="${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/5_scrip
 PY="${PROJECT_ROOT}/.venv/bin/python"
 SUMMARIZE="${PROJECT_ROOT}/benchmark/00_commun_scripts/00_03_evaluate/summarize_fold.py"
 
-TF2_PRED=/scratch/p/paulh/toothfairy2/8_results/01_predictions/toothfairy2_model/cbct
-TF2_METRICS=/scratch/p/paulh/toothfairy2/8_results/02_metrics/toothfairy2_model/cbct_mandible_only
-TF2_RAW=/scratch/p/paulh/toothfairy2/2_nnUNet/raw/Dataset110_ToothFairy2CBCT
+# TF2_PRED / TF2_METRICS / TF2_RAW / TF2_METRICS_SRC overridable (defaults = TamIA scratch) so the same script runs on Vulcan.
+TF2_PRED="${TF2_PRED:-/scratch/p/paulh/toothfairy2/8_results/01_predictions/toothfairy2_model/cbct}"
+TF2_METRICS="${TF2_METRICS:-/scratch/p/paulh/toothfairy2/8_results/02_metrics/toothfairy2_model/cbct_mandible_only}"
+TF2_RAW="${TF2_RAW:-/scratch/p/paulh/toothfairy2/2_nnUNet/raw/Dataset110_ToothFairy2CBCT}"
 DJ="${TF2_RAW}/dataset.json"
 GT="${TF2_RAW}/labelsTs_cbct"
 
 # Where each run's 3-class metrics currently live, so ablations/ membership is mirrored.
-TF2_METRICS_SRC=/scratch/p/paulh/toothfairy2/8_results/02_metrics/toothfairy2_model/cbct
+TF2_METRICS_SRC="${TF2_METRICS_SRC:-/scratch/p/paulh/toothfairy2/8_results/02_metrics/toothfairy2_model/cbct}"
 
 fail=0; n_ok=0
 echo "[mo-cbct] host=$(hostname) job=${SLURM_JOB_ID:-none}"
@@ -56,7 +57,10 @@ for CAT in nnUNet auglab; do
     # ONLY_RUN (optional): score just this one run id instead of re-scoring every run dir.
     [ -n "${ONLY_RUN:-}" ] && [ "${RID}" != "${ONLY_RUN}" ] && continue
 
-    if   [ -d "${TF2_METRICS_SRC}/${CAT}_${RID}" ];           then SUB=""
+    # FORCE_SUB (optional, set even to ""): place the output here instead of mirroring an existing tree
+    # (a brand-new run has none to mirror). Used on Vulcan by scripts/cluster/rung5_val000/post_run.sh.
+    if [ -n "${FORCE_SUB+x}" ]; then SUB="${FORCE_SUB}"
+    elif [ -d "${TF2_METRICS_SRC}/${CAT}_${RID}" ];           then SUB=""
     elif [ -d "${TF2_METRICS_SRC}/ablations/${CAT}_${RID}" ]; then SUB="ablations"
     else echo "[mo-cbct] WARN no existing metrics dir for ${CAT}_${RID}, defaulting flat" >&2; SUB=""
     fi

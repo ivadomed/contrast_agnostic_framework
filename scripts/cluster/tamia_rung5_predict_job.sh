@@ -73,6 +73,19 @@ for j in "${!PIDS[@]}"; do
   if wait "${PIDS[$j]}"; then echo "[predict-job] OK   '${NAMES[$j]}'"; else echo "[predict-job] FAIL '${NAMES[$j]}'"; rc_all=1; fi
 done
 
+# (3b) on-harmony ONLY: its predict INPUT is RAS-canonical, so predictions come out RAS and must be resampled back to native
+# geometry (05_02) before scoring against the native-space GT. The shim does this right after the driver returns -- but in
+# pack-RECORD mode that is at record time, before any prediction exists (silent no-op), so the x-mirrored RAS predictions were
+# scored against LAS GT (2026-10-05: OOD Dice 58 -> 32, caught by comparing against the old run). Do it here, after the folds ran.
+for row in "${ROWS[@]}"; do IFS='|' read -r name dir envf tenv tc wrapper run exp <<<"${row}"
+  [ "${name}" = onharmony ] || continue
+  ( envsetup "${dir}" "${envf}" "${tenv}" "${tc}"
+    base="${PREDICTIONS_ROOT}/${MODEL_TYPE}/${tc}/nnUNet/${run}"
+    for k in 0 1 2; do for it in ${exp}; do item="${it%%:*}"
+      .venv/bin/python "${dir}/05_predict/05_02_resample_predictions_to_native.py" "${base}/fold${k}/final/${item}" "${PREDICTIONS_ROOT}/${MODEL_TYPE}/_test_set/${item}/images_native"
+    done; done ) || { echo "[predict-job] ERROR resampling on-harmony predictions to native" >&2; rc_all=1; }
+done
+
 # (4) audit
 audit_fail=0
 for row in "${ROWS[@]}"; do IFS='|' read -r name dir envf tenv tc wrapper run exp <<<"${row}"

@@ -172,6 +172,8 @@ def _pv_branch_key(ablations_root):
     reg = (yaml.safe_load(PV_BRANCH_REGISTRY.read_text()) or {}).get("ladders") or {}
     s = str(Path(ablations_root)).rstrip("/")
     hits = [v for k, v in reg.items() if s.endswith(str(k).rstrip("/"))]
+    # value = rung-6 run key (str) OR {rung6: key, rung5: key} -- the optional rung5 REPLACES the ladder's own
+    # real-fill key inside the _pv branch only (e.g. a retrained rung 5 not yet wired into the ladder script).
     if len(hits) > 1:
         raise ValueError(f"ladder_pv_branch.yaml: {len(hits)} entries match {s}")
     return hits[0] if hits else None
@@ -192,6 +194,10 @@ def _with_pv_branch(fn):
             fi = _find_fill_swap_idx(rungs)
             if fi is None:
                 raise ValueError("PV branch: ladder has no real-fill rung to branch from")
+            if isinstance(key, dict):
+                if key.get("rung5"):
+                    rungs[fi] = (rungs[fi][0], rungs[fi][1], key["rung5"])
+                key = key["rung6"]
             out = Path(kw["ablations_root"]).with_name(Path(kw["ablations_root"]).name + "_pv")
             out.mkdir(parents=True, exist_ok=True)
             print(f"[pv-branch] {fn.__name__}: rungs 0..{fi} + rung 6 ({key}) -> {out}")

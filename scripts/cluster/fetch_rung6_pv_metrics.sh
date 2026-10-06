@@ -4,12 +4,12 @@
 # fetch_tamia_results.sh, which re-pulls a whole 02_metrics tree over Vulcan-side files.
 # The mandible arms are PROMOTED the same way their rung 5 was (verified byte-identical 2026-10-04):
 # TamIA mandible_only[_sif]/ablations/<run> -> Vulcan cbct/ablations/<run>.
-#   bash scripts/cluster/fetch_rung6_pv_metrics.sh [open-ms toothfairy2 hanseg pddca totalseg-pelvic brats2024-glioma chaos amos sliver07 ispy2]
+#   bash scripts/cluster/fetch_rung6_pv_metrics.sh [open-ms toothfairy2 hanseg pddca totalseg-pelvic brats2024-glioma chaos amos sliver07 ispy2 on-harmony]
 # Verifies every file by md5 (no short transfers).
 set -euo pipefail
 cd /project/aip-jcohen/paulh/mri_synthesis_project
 T=benchmark/02_tasks; SC=/scratch/p/paulh
-SEL="${*:-open-ms toothfairy2 hanseg pddca totalseg-pelvic brats2024-glioma chaos amos sliver07 ispy2}"
+SEL="${*:-open-ms toothfairy2 hanseg pddca totalseg-pelvic brats2024-glioma chaos amos sliver07 ispy2 on-harmony}"
 TS=20261003_111216; TS_OMS=20261003_111215; TS_PEL=20261003_120315
 # <dataset>|TamIA metrics dir (under ${SC})|Vulcan metrics dir (under ${T})
 ROWS=(
@@ -32,6 +32,11 @@ ROWS=(
 "sliver07|sliver07/8_results_sliver07/02_metrics/chaos_model/t2spir/fov_crop/ablations/nnUNet_chaos_t2spir_v26_6_2_pv_train050_val100_20261003_111218|abdomen_healthy/sliver07/8_results_sliver07/02_metrics/chaos_model/t2spir/fov_crop/ablations"
 "ispy2|ispy2/8_results/02_metrics/ispy2_model/t1wce/ablations/nnUNet_ispy2_t1wce_v26_6_2_pv_train050_val100_20261003_111216|breast_cancer/ispy2/8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations"
 "ispy2|ispy2/8_results/02_metrics/ispy2_model/t2w/ablations/nnUNet_ispy2_t2w_v26_6_2_pv_train050_val100_20261003_111217|breast_cancer/ispy2/8_results_ispy2/02_metrics/ispy2_model/t2w/ablations"
+"on-harmony|on-harmony/8_results/02_metrics/on_harmony_model/T1w/nnUNet_on-harmony_T1w_v26_6_2_pv_train050_val100_20261003_111214|brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T1w"
+"on-harmony|on-harmony/8_results/02_metrics/on_harmony_model/T2w/nnUNet_on-harmony_T2w_v26_6_2_pv_train050_val100_20261003_111214|brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T2w"
+"on-harmony|on-harmony/8_results/02_metrics/on_harmony_model/dwi_ap/nnUNet_on-harmony_dwi_ap_v26_6_2_pv_train050_val100_20261003_111214|brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/dwi_ap"
+"on-harmony|on-harmony/8_results/02_metrics/on_harmony_model/T1w/ablations/nnUNet_on-harmony_T1w_v26_6_2_train050_val100_20261003_123018|brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T1w/ablations"
+"brats2024-glioma|brats2024-glioma/8_results/02_metrics/brats2024_glioma_model/t2w/ablations/nnUNet_brats2024-glioma_t2w_v26_6_2_train050_val100_20261003_123018|brain_tumor/brats2024-glioma/8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations"
 )
 for r in "${ROWS[@]}"; do IFS='|' read -r ds src dst <<<"$r"
   [[ " ${SEL} " == *" ${ds} "* ]] || continue

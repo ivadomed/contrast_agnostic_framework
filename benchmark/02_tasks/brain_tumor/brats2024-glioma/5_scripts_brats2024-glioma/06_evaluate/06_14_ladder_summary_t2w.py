@@ -33,7 +33,7 @@ RUNGS = [
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
      "ablations/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659"),
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
-     "brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217"),
+     "ablations/brats2024-glioma_t2w_v26_6_2_train050_val100_20261003_123018"),   # RETRAINED 2026-10-03 on AugLab code (old 20260620 run was partly pre-AugLab src)
     ("+AugLab (val000)", "+ full AugLab recipe on top",
      "brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val000_20260725_113540"),
     ("+AugLab (val100)", "+ 100%-synth validation",
