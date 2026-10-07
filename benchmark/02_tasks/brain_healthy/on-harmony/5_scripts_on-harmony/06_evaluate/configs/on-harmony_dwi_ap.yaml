@@ -24,6 +24,6 @@ runs:
   - on-harmony_dwi_ap_synthseg_noEM_20260921_203727
   - on-harmony_dwi_ap_synthseg_EM_20260921_203727
   - on-harmony_dwi_ap_auglab_default_20260921_203727
-  - on-harmony_dwi_ap_srcsm_20260921_203727
+  - on-harmony_dwi_ap_srcsm_20260921_203727_srcmatch
   - on-harmony_dwi_ap_auglabAug_v26_6_2_train050_val000_20260921_203727
   - on-harmony_dwi_ap_auglabAug_v26_6_2_train050_val100_20260921_203727

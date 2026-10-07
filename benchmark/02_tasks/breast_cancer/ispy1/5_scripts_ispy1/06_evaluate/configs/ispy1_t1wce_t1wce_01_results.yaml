@@ -11,5 +11,5 @@ runs:
   - ispy2_t1wce_auglab_default_20260905_163655
   - ispy2_t1wce_synthseg_noEM_20260905_163655
   - ispy2_t1wce_synthseg_EM_20260905_163655
-  - ispy2_t1wce_srcsm_20260905_163655
+  - ispy2_t1wce_srcsm_20260905_163655_srcmatch
   - ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655

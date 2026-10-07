@@ -26,6 +26,6 @@ runs:
   - mri_auglab_default_20260916_072453
   - mri_synthseg_noEM_20260916_072453
   - mri_synthseg_EM_20260916_072453
-  - mri_srcsm_20260916_072453
+  - mri_srcsm_20260916_072453_srcmatch
   - mri_ours_20260916_072453
   - totalseg-pelvic_mri_v26_6_2_train050_val000_20261005_223058

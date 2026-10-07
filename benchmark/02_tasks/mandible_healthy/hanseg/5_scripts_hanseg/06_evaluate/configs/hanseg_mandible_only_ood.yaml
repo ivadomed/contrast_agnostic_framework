@@ -47,6 +47,6 @@ runs:
   - toothfairy2_cbct_auglab_default_20260908_013025
   - toothfairy2_cbct_synthseg_noEM_20260908_013025
   - toothfairy2_cbct_synthseg_EM_20260908_013027
-  - toothfairy2_cbct_srcsm_20260908_013027
+  - toothfairy2_cbct_srcsm_20260908_013027_srcmatch
   - toothfairy2_cbct_auglabAug_v26_6_2_train050_val000_20260908_013027
   - toothfairy2_cbct_auglabAug_v26_6_2_train050_val100_20260908_013027

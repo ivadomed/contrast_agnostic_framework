@@ -22,6 +22,6 @@ runs:
   - on-harmony_T2w_synthseg_noEM_20260624_191418
   - on-harmony_T2w_synthseg_EM_20260624_191329
   - on-harmony_T2w_auglab_default_20260625_143115
-  - on-harmony_T2w_srcsm_20260709_122145
+  - on-harmony_T2w_srcsm_20260709_122145_srcmatch
   - on-harmony_T2w_auglabAug_v26_6_2_train050_val000_20260710_040443
   - on-harmony_T2w_auglabAug_v26_6_2_train050_val100_20260727_075205

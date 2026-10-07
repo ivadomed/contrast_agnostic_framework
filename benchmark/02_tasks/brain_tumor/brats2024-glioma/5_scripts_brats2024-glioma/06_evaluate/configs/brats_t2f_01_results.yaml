@@ -17,6 +17,6 @@ runs:
   - brats2024-glioma_t2f_synthseg_noEM_20260917_113412
   - brats2024-glioma_t2f_synthseg_EM_20260917_113412
   - brats2024-glioma_t2f_auglab_default_20260917_113412
-  - brats2024-glioma_t2f_srcsm_20260917_094019
+  - brats2024-glioma_t2f_srcsm_20260917_094019_srcmatch
   - brats2024-glioma_t2f_auglabAug_v26_6_2_train050_val000_20260917_113412
   - brats2024-glioma_t2f_auglabAug_v26_6_2_train050_val100_20260917_113412
