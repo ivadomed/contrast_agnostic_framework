@@ -19,12 +19,10 @@ ladders:
   totalseg_pelvic_model/ct/ablations: ablations/totalseg-pelvic_ct_v26_6_2_pv_train050_val000_20261005_224032
   totalseg_pelvic_model/mri/ablations: ablations/totalseg-pelvic_mri_v26_6_2_pv_train050_val000_20261005_224105
   # brats (own 4 contrasts)
-  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1n/ablations: ablations/brats2024-glioma_t1n_v26_6_2_pv_train050_val100_20261003_111212
-  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations:
-    rung6: ablations/brats2024-glioma_t2w_v26_6_2_pv_train050_val100_20261003_111212
-    rung5: ablations/brats2024-glioma_t2w_v26_6_2_train050_val100_20261003_123018   # RETRAINED rung 5
-  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2f/ablations: ablations/brats2024-glioma_t2f_v26_6_2_pv_train050_val100_20261003_111213
-  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1c/ablations: ablations/brats2024-glioma_t1c_v26_6_2_pv_train050_val100_20261003_111213
+  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1n/ablations: ablations/brats2024-glioma_t1n_v26_6_2_pv_train050_val000_20261005_223353
+  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations: ablations/brats2024-glioma_t2w_v26_6_2_pv_train050_val000_20261005_223426
+  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2f/ablations: ablations/brats2024-glioma_t2f_v26_6_2_pv_train050_val000_20261005_223501
+  8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t1c/ablations: ablations/brats2024-glioma_t1c_v26_6_2_pv_train050_val000_20261005_223534
   # chaos (own + amos/sliver07 crop-before-predict, all under .../ablations)
   8_results_chaos/02_metrics/chaos_model/t1in/ablations: ablations/chaos_t1in_v26_6_2_pv_train050_val000_20261003_111217
   8_results_chaos/02_metrics/chaos_model/t2spir/ablations: ablations/chaos_t2spir_v26_6_2_pv_train050_val000_20261005_223819
