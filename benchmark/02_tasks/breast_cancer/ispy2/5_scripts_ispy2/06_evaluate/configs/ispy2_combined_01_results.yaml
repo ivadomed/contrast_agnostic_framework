@@ -62,8 +62,7 @@ modalities:
       auglab_default: ispy2_t1wce_auglab_default_20260905_163655
       synthseg_noEM: ispy2_t1wce_synthseg_noEM_20260905_163655
       synthseg_EM: ispy2_t1wce_synthseg_EM_20260905_163655
-      srcsm: ispy2_t1wce_srcsm_20260905_163655
-      srcsm_srcmatch: ispy2_t1wce_srcsm_20260905_163655_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: ispy2_t1wce_srcsm_20260905_163655_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: ispy2_t1wce_srcsm_20260905_163655)
       auglabAug_v26_6_2_train050_val000: ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
   - name: t2w
     sources:
@@ -83,6 +82,5 @@ modalities:
       auglab_default: ispy2_t2w_auglab_default_20260905_163655
       synthseg_noEM: ispy2_t2w_synthseg_noEM_20260905_163655
       synthseg_EM: ispy2_t2w_synthseg_EM_20260905_163655
-      srcsm: ispy2_t2w_srcsm_20260905_163655
-      srcsm_srcmatch: ispy2_t2w_srcsm_20260905_163655_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: ispy2_t2w_srcsm_20260905_163655_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: ispy2_t2w_srcsm_20260905_163655)
       auglabAug_v26_6_2_train050_val000: ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

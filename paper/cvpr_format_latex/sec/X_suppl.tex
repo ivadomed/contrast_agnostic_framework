@@ -158,7 +158,7 @@ HD95 counterpart of \cref{tab:meta}. Across tasks PALETTE-Aug is significantly
 better than every competitor, Auglab included. Per task it has the lowest HD95
 on Glioma, Abdomen, Brain, MS, Spine and Pelvis (on Abdomen the gap to
 SRCSM is not significant); it ties Auglab on Breast without a significant gap; and on Mandible it
-is significantly behind SRCSM, Auglab and the baseline, the
+is significantly behind Auglab and the baseline, the
 one task where the baseline beats PALETTE-Aug. PALETTE alone, shown for
 reference, has the lowest HD95 on Breast. When HD95 disagrees with Dice for a
 method (a noticeably better HD95 than its Dice would predict), the usual
@@ -175,11 +175,10 @@ Dice is a warning sign rather than evidence of competitiveness.
 \toprule
  & Glioma & MS & Breast & Abdomen & Brain & Mandible & Spine & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 44.8 & 35.2 & 58.5 & 122.1 & 30.3 & 21.7 & 49.9 & 149.3 & $2\times10^{-47}$ \\
+Baseline        & 44.8 & 35.2 & 58.5 & 122.1 & 30.3 & \textbf{21.7} & 49.9 & 149.3 & $2\times10^{-47}$ \\
 SynthSeg-noEM   & 78.0 & 41.9 & 101.1 &  80.6 &  8.8 & 32.9 & 111.8 & 261.8 & $2\times10^{-58}$ \\
 SynthSeg-EM     & 17.9 & 24.7 & 60.9 &  23.7 &  5.3 & 24.9 & 4.0 & 34.0 & $2.7\times10^{-6}$ \\
-SRCSM           & 17.5 & 24.6 & 91.8 & 24.4 &  5.2 & \textbf{19.3} & --- & 33.9 & $2\times10^{-32}$ \\
-\quad + matching & 21.7 & 25.4 & 92.4 & 25.6 &  5.3 & 21.9 & --- & 39.6 & $2\times10^{-43}$ \\
+SRCSM           & 21.7 & 25.4 & 92.4 & 25.6 &  5.3 & 21.9 & --- & 39.6 & $1\times10^{-43}$ \\
 Auglab          & 16.1 & 26.5 & \textbf{57.1} & 27.8 &  5.4 & 22.1 & 4.7 & 35.6 & $2\times10^{-4}$ \\
 \midrule
 % paper/scripts/compare_palette_alone_per_task.py (7 tasks; Spine has no PALETTE-alone run)
@@ -187,16 +186,16 @@ PALETTE alone (ours) & 16.6 & 23.3 & 56.3 & 24.9 & 4.9 & 22.3 & --- & 35.2 & $0.
 \textbf{PALETTE-Aug (ours)} & \textbf{15.6} & \textbf{24.3} & 57.7 & \textbf{22.7} & \textbf{5.2} & 23.5 & \textbf{3.5} & \textbf{29.0} & --- \\
 \midrule
 \multicolumn{1}{r}{\footnotesize competitors beaten ($p<0.05$)} &
-6/6 & 3/6 & 4/6 & 4/6 & 2/6 & 2/6 & 4/4 & 3/6 & \\
+5/5 & 3/5 & 3/5 & 4/5 & 2/5 & 2/5 & 4/4 & 5/5 & \\
 \bottomrule
 \end{tabular}
 \caption{Task-level HD95 (mm, $\downarrow$). Same pooling and test as
 \cref{tab:meta}, and likewise no cross-task average; the bottom row counts the
-competitors PALETTE-Aug beats within each task (on Mandible, SRCSM, Auglab and
+competitors PALETTE-Aug beats within each task (on Mandible, Auglab and
 the baseline are significantly ahead of it). Spine has no SRCSM run and no
 ladder. PALETTE alone: the transform without Auglab, left out of the bolding;
 $^\S$PALETTE-Aug against PALETTE alone over the seven tasks with both.
-``+ matching'': SRCSM with its test-time histogram matching.}
+SRCSM includes its test-time source matching.}
 \label{tab:meta-hd95}
 \end{table*}
 
@@ -535,7 +534,7 @@ like-for-like val000 configuration throughout the main paper.}
 Validation-time randomization improves Glioma and Abdomen on both metrics
 (\cref{tab:suppl-val100}), most visibly on boundary distance for Abdomen
 ($22.7 \rightarrow 20.6$~mm). Across tasks the HD95 gain is significant but
-the Dice change is not, and MS Dice moves slightly the other way, so we do
+the Dice change is not, and MS and Brain Dice move slightly the other way, so we do
 not claim it as a separate contribution; we report it because it costs
 nothing and because it indicates that the benefit of contrast randomization
 extends to model selection and is not confined to the gradient updates.
@@ -561,7 +560,7 @@ over $20$ scans each, hence $0.42$ for MS noise fill there.)
 \paragraph{Auglab keeps the most texture among the competitors.} Auglab keeps
 less source texture than PALETTE alone on six of seven tasks but far more than
 the label-style methods (\cref{tab:ngf}), which fits its standing as the best
-competitor on four tasks (\cref{tab:meta}). The large margins appear against
+competitor on five tasks (\cref{tab:meta}). The large margins appear against
 the methods that discard texture.
 
 \input{sec/_suppl_ngf_table}

@@ -26,8 +26,7 @@ modalities:
       auglab_default: ct_auglab_default_20260916_072434
       synthseg_noEM: ct_synthseg_noEM_20260916_072434
       synthseg_EM: ct_synthseg_EM_20260916_072434
-      srcsm: ct_srcsm_20260916_072434
-      srcsm_srcmatch: ct_srcsm_20260916_072434_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: ct_srcsm_20260916_072434_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: ct_srcsm_20260916_072434)
       auglabAug_v26_6_2_train050_val000: ct_ours_20260916_072434
       v26_6_2_train050_val000: totalseg-pelvic_ct_v26_6_2_train050_val000_20261005_223025
   - name: mri
@@ -38,7 +37,6 @@ modalities:
       auglab_default: mri_auglab_default_20260916_072453
       synthseg_noEM: mri_synthseg_noEM_20260916_072453
       synthseg_EM: mri_synthseg_EM_20260916_072453
-      srcsm: mri_srcsm_20260916_072453
-      srcsm_srcmatch: mri_srcsm_20260916_072453_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: mri_srcsm_20260916_072453_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: mri_srcsm_20260916_072453)
       auglabAug_v26_6_2_train050_val000: mri_ours_20260916_072453
       v26_6_2_train050_val000: totalseg-pelvic_mri_v26_6_2_train050_val000_20261005_223058

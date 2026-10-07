@@ -29,8 +29,7 @@ modalities:
       synthseg_noEM: on-harmony_T1w_synthseg_noEM_20260623_192811
       synthseg_EM: on-harmony_T1w_synthseg_EM_20260623_192811
       auglab_default: on-harmony_T1w_auglab_default_20260623_192811
-      srcsm: on-harmony_T1w_srcsm_20260709_122115
-      srcsm_srcmatch: on-harmony_T1w_srcsm_20260709_122115_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: on-harmony_T1w_srcsm_20260709_122115_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: on-harmony_T1w_srcsm_20260709_122115)
       auglabAug_v26_6_2_train050_val000: on-harmony_T1w_auglabAug_v26_6_2_train050_val000_20260727_075205
       auglabAug_v26_6_2_train050_val100: on-harmony_T1w_auglabAug_v26_6_2_train050_val100_20260727_075205
   - name: T2w
@@ -40,8 +39,7 @@ modalities:
       synthseg_noEM: on-harmony_T2w_synthseg_noEM_20260624_191418
       synthseg_EM: on-harmony_T2w_synthseg_EM_20260624_191329
       auglab_default: on-harmony_T2w_auglab_default_20260625_143115
-      srcsm: on-harmony_T2w_srcsm_20260709_122145
-      srcsm_srcmatch: on-harmony_T2w_srcsm_20260709_122145_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: on-harmony_T2w_srcsm_20260709_122145_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: on-harmony_T2w_srcsm_20260709_122145)
       auglabAug_v26_6_2_train050_val000: on-harmony_T2w_auglabAug_v26_6_2_train050_val000_20260710_040443
       auglabAug_v26_6_2_train050_val100: on-harmony_T2w_auglabAug_v26_6_2_train050_val100_20260727_075205
   - name: dwi_ap
@@ -51,7 +49,6 @@ modalities:
       synthseg_noEM: on-harmony_dwi_ap_synthseg_noEM_20260921_203727
       synthseg_EM: on-harmony_dwi_ap_synthseg_EM_20260921_203727
       auglab_default: on-harmony_dwi_ap_auglab_default_20260921_203727
-      srcsm: on-harmony_dwi_ap_srcsm_20260921_203727
-      srcsm_srcmatch: on-harmony_dwi_ap_srcsm_20260921_203727_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: on-harmony_dwi_ap_srcsm_20260921_203727_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: on-harmony_dwi_ap_srcsm_20260921_203727)
       auglabAug_v26_6_2_train050_val000: on-harmony_dwi_ap_auglabAug_v26_6_2_train050_val000_20260921_203727
       auglabAug_v26_6_2_train050_val100: on-harmony_dwi_ap_auglabAug_v26_6_2_train050_val100_20260921_203727

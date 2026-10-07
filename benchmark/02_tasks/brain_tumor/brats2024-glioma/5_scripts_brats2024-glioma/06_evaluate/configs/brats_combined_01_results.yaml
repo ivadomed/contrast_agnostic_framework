@@ -31,8 +31,7 @@ modalities:
       synthseg_noEM: brats2024-glioma_t1n_synthseg_noEM_20260622_044535
       synthseg_EM: brats2024-glioma_t1n_synthseg_EM_20260622_044535
       auglab_default: brats2024-glioma_t1n_auglab_default_20260622_044535
-      srcsm: brats2024-glioma_t1n_srcsm_20260709_122015
-      srcsm_srcmatch: brats2024-glioma_t1n_srcsm_20260709_122015_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: brats2024-glioma_t1n_srcsm_20260709_122015_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: brats2024-glioma_t1n_srcsm_20260709_122015)
       auglabAug_v26_6_2_train050_val000: brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val000_20260710_040303
       auglabAug_v26_6_2_train050_val100: brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val100_20260725_113540
   - name: t2w
@@ -42,8 +41,7 @@ modalities:
       synthseg_noEM: brats2024-glioma_t2w_synthseg_noEM_20260620_125442
       synthseg_EM: brats2024-glioma_t2w_synthseg_EM_20260620_125354
       auglab_default: brats2024-glioma_t2w_auglab_default_20260620_125306
-      srcsm: brats2024-glioma_t2w_srcsm_20260709_122045
-      srcsm_srcmatch: brats2024-glioma_t2w_srcsm_20260709_122045_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: brats2024-glioma_t2w_srcsm_20260709_122045_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: brats2024-glioma_t2w_srcsm_20260709_122045)
       auglabAug_v26_6_2_train050_val000: brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val000_20260725_113540
       auglabAug_v26_6_2_train050_val100: brats2024-glioma_t2w_auglabAug_v26_6_2_train050_val100_20260725_113540
   - name: t2f
@@ -53,8 +51,7 @@ modalities:
       synthseg_noEM: brats2024-glioma_t2f_synthseg_noEM_20260917_113412
       synthseg_EM: brats2024-glioma_t2f_synthseg_EM_20260917_113412
       auglab_default: brats2024-glioma_t2f_auglab_default_20260917_113412
-      srcsm: brats2024-glioma_t2f_srcsm_20260917_094019
-      srcsm_srcmatch: brats2024-glioma_t2f_srcsm_20260917_094019_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: brats2024-glioma_t2f_srcsm_20260917_094019_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: brats2024-glioma_t2f_srcsm_20260917_094019)
       auglabAug_v26_6_2_train050_val000: brats2024-glioma_t2f_auglabAug_v26_6_2_train050_val000_20260917_113412
       auglabAug_v26_6_2_train050_val100: brats2024-glioma_t2f_auglabAug_v26_6_2_train050_val100_20260917_113412
   - name: t1c
@@ -64,7 +61,6 @@ modalities:
       synthseg_noEM: brats2024-glioma_t1c_synthseg_noEM_20260921_140000
       synthseg_EM: brats2024-glioma_t1c_synthseg_EM_20260921_140000
       auglab_default: brats2024-glioma_t1c_auglab_default_20260921_140000
-      srcsm: brats2024-glioma_t1c_srcsm_20260921_140000
-      srcsm_srcmatch: brats2024-glioma_t1c_srcsm_20260921_140000_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: brats2024-glioma_t1c_srcsm_20260921_140000_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: brats2024-glioma_t1c_srcsm_20260921_140000)
       auglabAug_v26_6_2_train050_val000: brats2024-glioma_t1c_auglabAug_v26_6_2_train050_val000_20260921_140000
       auglabAug_v26_6_2_train050_val100: brats2024-glioma_t1c_auglabAug_v26_6_2_train050_val100_20260921_140000

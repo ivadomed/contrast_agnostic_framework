@@ -59,8 +59,8 @@ competitor in its own right. Each competitor is run as its authors propose:
 the SynthSeg variants and SRCSM synthesize on every training iteration with
 their own augmentation recipe, and Auglab uses its default configuration
 (\cref{tab:suppl-aug-probs}). SRCSM's published pipeline also
-histogram-matches test images to the source domain; we report SRCSM both
-without and with that step (\emph{+ matching}).
+histogram-matches each test image to the average source histogram, part of
+the method as published, so we apply it.
 On sparse task labels, SynthSeg-noEM (designed for dense labels) is a
 reference point for synthesizing from labels alone, not a tuned competitor. Our method adds one
 operator to Auglab, so comparing the two tests that operator; the other
@@ -105,16 +105,15 @@ Augmentation probabilities: \cref{tab:suppl-aug-probs}.}
 Baseline        & 23.4 & 21.0 & 35.0 & 29.5 & 34.5 & 59.2 & 48.5 & 29.8 & $3\times10^{-75}$ \\
 SynthSeg-noEM   &  8.8 &  4.3 & 16.5 & 60.9 & 64.1 & 53.6 & 47.5 & 15.0 & $2\times10^{-86}$ \\
 SynthSeg-EM     & 43.1 & 33.9 & 39.6 & 84.0 & 66.1 & 76.3 & 80.6 & 62.5 & $1\times10^{-35}$ \\
-SRCSM           & 41.5 & 33.0 & 16.4 & 84.6 & \textbf{66.8} & 79.0 & --- & 65.3 & $4\times10^{-84}$ \\
-\quad + matching & 36.9 & 27.5 & 14.7 & 85.6 & 66.5 & \textbf{79.8} & --- & 62.9 & $8\times10^{-66}$ \\
+SRCSM           & 36.9 & 27.5 & 14.7 & 85.6 & 66.5 & \textbf{79.8} & --- & 62.9 & $8\times10^{-66}$ \\
 Auglab          & 44.8 & 34.3 & 40.1 & 84.6 & 66.0 & 78.3 & 80.9 & 64.3 & $1.1\times10^{-13}$ \\
 \midrule
 % paper/scripts/compare_palette_alone_per_task.py (7 tasks; Spine has no PALETTE-alone run)
 PALETTE alone (ours) & 43.7 & 41.1 & 40.3 & 86.4 & 67.0 & 78.3 & --- & 65.7 & $0.70^\S$ \\
-\textbf{PALETTE-Aug (ours)} & \textbf{45.9} & \textbf{38.5} & \textbf{41.2} & \textbf{85.9} & 66.7 & 77.7 & \textbf{82.3} & \textbf{65.6} & --- \\
+\textbf{PALETTE-Aug (ours)} & \textbf{45.9} & \textbf{38.5} & \textbf{41.2} & \textbf{85.9} & \textbf{66.7} & 77.7 & \textbf{82.3} & \textbf{65.6} & --- \\
 \midrule
 \multicolumn{1}{r}{\footnotesize competitors beaten ($p<0.05$)} &
-6/6 & 6/6 & 6/6 & 5/6 & 3/6 & 3/6 & 4/4 & 4/6 & \\
+5/5 & 5/5 & 5/5 & 4/5 & 3/5 & 3/5 & 4/4 & 5/5 & \\
 \bottomrule
 \end{tabular}
 \caption{Task-level Dice (\%). Each column pools the task's test cases of every contrast (the
@@ -123,42 +122,38 @@ weighting contrast groups equally so a modality with several external sources
 does not outvote one with fewer (\cref{sec:suppl-stats}). $p$: Holm-corrected one-sided sign-flip test on
 the macro-averaged per-patient difference, stratified by task with tasks weighted equally. We print no cross-task mean
 Dice, since whole-liver and breast-lesion Dice are not on a common scale. The bottom row counts the competitors PALETTE-Aug beats
-within each task alone (same test). ``+ matching'': SRCSM with its published
-test-time histogram matching (\cref{subsec:e-setup}). Spine has no SRCSM run
+within each task alone (same test). SRCSM includes its test-time source
+matching (\cref{subsec:e-setup}). Spine has no SRCSM run
 (\cref{tab:datasets}). PALETTE alone: the PALETTE transform without the Auglab pipeline (the ladder's real-fill rung, \cref{subsec:e-ablation}), left out of the bolding; Spine has no ladder. $^\S$Same test, PALETTE-Aug against PALETTE alone, over the seven tasks with both. HD95 is in \cref{tab:meta-hd95}.}
 \label{tab:meta}
 \end{table*}
 
 \paragraph{PALETTE-Aug is the best method overall.} PALETTE-Aug has the best
-Dice on six of the eight tasks. Across tasks it is significantly better than every
+Dice on seven of the eight tasks. Across tasks it is significantly better than every
 competitor (\cref{tab:meta}): $p=1.1\times10^{-13}$ against Auglab, the
 closest, and $p\le10^{-35}$ against the others. Within single tasks it
-significantly outperforms every competitor on Glioma, MS, Breast and Spine, all
-but SRCSM with matching on Abdomen ($85.6$ vs.\ $85.9$), and three or four of
-six on Brain, Mandible and Pelvis. SRCSM's test-time matching lowers its Dice
-across tasks ($-1.9$, $p=2\times10^{-10}$) and helps only on Abdomen. The cross-task test generalizes to new patients on these eight tasks, not to
+significantly outperforms every competitor on five tasks (Glioma, MS, Breast,
+Spine, Pelvis), all but SRCSM on Abdomen ($85.6$ vs.\ $85.9$), and three of five
+on Brain and Mandible. The cross-task test generalizes to new patients on these eight tasks, not to
 new tasks. Counting each task as one unit instead, PALETTE-Aug beats Auglab on seven of
-eight tasks (one-sided sign test $p=0.035$) and SRCSM on five of the
-seven tasks where SRCSM was run ($p=0.23$).
+eight tasks (one-sided sign test $p=0.035$) and SRCSM on six of the
+seven tasks where SRCSM was run ($p=0.063$).
 
 SynthSeg-noEM falls below the baseline on the six sparse-label tasks; on Brain,
 the one dense-label task, it is within $2.6$ Dice of PALETTE-Aug.
 
 \paragraph{No competitor is reliably second.} The best competitor alternates
-between Auglab (Glioma, MS, Breast, Spine) and SRCSM (Brain, Pelvis; with
-matching on Abdomen and Mandible), and SRCSM fails on Breast ($16.4$ Dice,
-$14.7$ with matching).
+between Auglab (Glioma, MS, Breast, Spine, Pelvis) and SRCSM (Abdomen, Brain,
+Mandible), and SRCSM fails on Breast ($14.7$ Dice).
 Picking the right one would require knowing the answer in advance.
-PALETTE-Aug is first or second on every task but one.
+PALETTE-Aug is first on every task but Mandible.
 
 \paragraph{Where PALETTE-Aug does not win.} The one-sided test above cannot show
-that a competitor is ahead, so on Brain and Mandible we also ran the reverse test on
+that a competitor is ahead, so on Mandible we also ran the reverse test on
 the same patient-level design (Holm-corrected across competitors within the
-task). On Brain SRCSM leads by $0.1$ Dice and is not significantly
-ahead ($p=1.0$). On Mandible SRCSM ($+1.3$ Dice, $p=7\times10^{-4}$) and
-Auglab ($+0.6$, $p=3\times10^{-3}$) are significantly ahead, SRCSM with
-matching ($+2.1$) is not ($p=0.15$), and PALETTE-Aug is fourth; PALETTE
-alone matches Auglab there ($78.3$).
+task). There Auglab is significantly ahead ($+0.6$ Dice, $p=3\times10^{-3}$),
+SRCSM leads by $2.1$ but not significantly ($p=0.15$), and PALETTE-Aug is
+third; PALETTE alone matches Auglab ($78.3$).
 
 \paragraph{PALETTE without Auglab.} The transform alone (the ladder's
 real-fill rung) is as strong as the full method: over the seven tasks with
@@ -172,8 +167,8 @@ responsible.
 
 \paragraph{Boundary distance.} On HD95 (\cref{tab:meta-hd95}), PALETTE-Aug is
 lowest on six of the eight tasks and significantly better than every
-competitor across tasks; it ties Auglab on Breast and trails SRCSM, Auglab and
-the baseline on Mandible.
+competitor across tasks; it ties Auglab on Breast and trails Auglab and the
+baseline on Mandible.
 
 \subsection{Causal ablation: when does texture matter?}
 \label{subsec:e-ablation}

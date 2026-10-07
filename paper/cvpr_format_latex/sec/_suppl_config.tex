@@ -45,10 +45,15 @@ sub-region then receives a randomly sampled intensity, as in SynthSeg. Both
 SynthSeg variants and SRCSM synthesize on every training iteration because
 their original papers train that way, so we keep that setting when running
 them; PALETTE-Aug synthesizes on $50\%$ of iterations
-(\cref{tab:suppl-aug-probs} lists every augmentation's probability). SRCSM is a training-time
-augmentation only: no test-time intensity matching is applied, and every
-method is predicted with the same nnU-Net predictor, without test-time
-augmentation. SRCSM and Auglab otherwise use their published default
+(\cref{tab:suppl-aug-probs} lists every augmentation's probability). SRCSM is run as
+published, including its test-time source matching: each test image is
+histogram-matched to the average intensity histogram of the training images
+(re-implemented from the authors' code), with two adjustments for our data:
+MR intensities are clipped at $0$ first (resampling leaves small negative
+values that would otherwise map the background to a tissue intensity) and the
+CT window is $[-1024, 3071]$ instead of $[-1023, 1024]$ (CBCT and bone exceed
+$1024$). Held-out cases are never part of the source histogram. Every method is
+predicted with the same nnU-Net predictor, without test-time augmentation. SRCSM and Auglab otherwise use their published default
 configurations. No competing method was re-tuned in our favor, and all use
 the same folds, schedule and epoch budget as above.
 

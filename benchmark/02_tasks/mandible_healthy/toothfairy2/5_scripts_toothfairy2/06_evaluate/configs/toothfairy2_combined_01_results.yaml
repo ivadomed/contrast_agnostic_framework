@@ -54,6 +54,5 @@ modalities:
       auglab_default: toothfairy2_cbct_auglab_default_20260908_013025
       synthseg_noEM: toothfairy2_cbct_synthseg_noEM_20260908_013025
       synthseg_EM: toothfairy2_cbct_synthseg_EM_20260908_013027
-      srcsm: toothfairy2_cbct_srcsm_20260908_013027
-      srcsm_srcmatch: toothfairy2_cbct_srcsm_20260908_013027_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
+      srcsm: toothfairy2_cbct_srcsm_20260908_013027_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: toothfairy2_cbct_srcsm_20260908_013027)
       auglabAug_v26_6_2_train050_val000: toothfairy2_cbct_auglabAug_v26_6_2_train050_val000_20260908_013027
