@@ -44,7 +44,7 @@ RUNGS = [
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
      f"ablations/on-harmony_dwi_ap_baseline_kmeans_label_remap_voronoi_{TS}"),
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
-     f"on-harmony_dwi_ap_v26_6_2_train050_val100_{TS}"),
+     "ablations/on-harmony_dwi_ap_v26_6_2_train050_val000_20261005_222547"),   # val000 (real-image checkpoint selection, like rung 4) 2026-10-06; was ..._val100_{TS} (flat)
     ("+AugLab (val000)", "+ full AugLab recipe on top",
      f"on-harmony_dwi_ap_auglabAug_v26_6_2_train050_val000_{TS}"),
     ("+AugLab (val100)", "+ 100%-synth validation",

@@ -23,6 +23,10 @@ for k in "$@"; do
     glioma_t2w)     .venv/bin/python $T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py ;;
     glioma_t2f)     .venv/bin/python $T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_16_ladder_summary_t2f.py ;;
     glioma_t1c)     .venv/bin/python $T/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_33_ladder_summary_t1c.py ;;
+    brain_dwi)      .venv/bin/python $T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_12_ladder_summary_dwi_ap.py \
+                      && .venv/bin/python $T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_12_ladder_summary_dwi_ap.py --restricted ;;
+    brain_t1w)      .venv/bin/python $T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py ;;
+    brain_t2w)      .venv/bin/python $T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py ;;
     ms_t1w)         .venv/bin/python $T/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py ;;
     *) echo "unknown ladder key $k"; false ;;
   esac || { echo "!!! ${k} FAILED"; rc=1; }
