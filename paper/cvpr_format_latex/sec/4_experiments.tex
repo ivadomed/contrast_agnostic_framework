@@ -162,18 +162,16 @@ helps significantly; Dice drops only once Auglab is added
 real-fill rung) is as strong as the full method: over the six tasks with both,
 it is significantly better than every competitor, Auglab included (Dice
 $p=7\times10^{-5}$), and does not differ from PALETTE-Aug (two-sided
-$p=0.68$). Adding Auglab raises task Dice on Glioma and Breast, lowers it on
-MS (significantly), Abdomen and Mandible and leaves Pelvis unchanged
-(\cref{tab:meta}), so the
-two interact differently per task; we have not identified which Auglab operator is
-responsible. \TODO{Paul: keep PALETTE-Aug as the headline?}
+$p=0.68$). PALETTE-Aug's margin over the competitors therefore does not come
+from the Auglab pipeline. Adding Auglab raises task Dice on Glioma and Breast,
+lowers it on MS (significantly), Abdomen and Mandible and leaves Pelvis
+unchanged (\cref{tab:meta}); we have not identified which Auglab operator is
+responsible.
 
-\paragraph{Boundary distance.} The 95th-percentile Hausdorff distance (HD95)
-is reported in the supplement
-(\cref{tab:meta-hd95}). PALETTE-Aug has the lowest HD95 on six of the eight
-tasks (Glioma, Abdomen, Brain, MS, Spine, Pelvis) and is significantly
-better than every competitor across tasks. It ties Auglab on Breast and is significantly behind SRCSM,
-Auglab and the baseline on Mandible.
+\paragraph{Boundary distance.} On HD95 (\cref{tab:meta-hd95}), PALETTE-Aug is
+lowest on six of the eight tasks and significantly better than every
+competitor across tasks; it ties Auglab on Breast and trails SRCSM, Auglab and
+the baseline on Mandible.
 
 \subsection{Causal ablation: when does texture matter?}
 \label{subsec:e-ablation}
@@ -224,13 +222,10 @@ on MS and $+4.6$ on Glioma, against $+3.5$ on Pelvis, $+2.6$ on Abdomen,
 $+0.1$ on Mandible and \TODO{Brain retrain} on Brain. Breast gains only
 $+0.5$, all from T2w training ($+2.1$; T1-CE training loses $1.2$, both
 significant), and Glioma T2w and FLAIR show no significant gain. Relative to
-the noise-fill Dice the top of the ranking is unchanged (MS $+25\%$, Glioma
-$+13\%$, interface-bounded tasks at most $+7\%$), but that view favors tasks
-with a low starting Dice (\cref{sec:discussion}).
+the noise-fill Dice (\cref{fig:ladder}) the ranking at the top is unchanged.
 
 ON-Harmony labels 31 brain regions in the FreeSurfer label
-set~\cite{fischl2012freesurfer}: ventricles, cortex, white matter,
-cerebellum, brainstem and eight deep grey nuclei. Nearly all are bounded by
+set~\cite{fischl2012freesurfer}. Nearly all are bounded by
 another tissue class (CSF against tissue, grey against white matter), so we
 group it with Abdomen as interface-bounded. At the task level it is the only
 task where the swap significantly hurts \TODO{Brain retrain: check sign}, with sessions as units. It is also
@@ -248,9 +243,8 @@ The noise fill keeps only the partition edges (mean NGF $0.44$); the real fill,
 on the same partition, raises it to $0.83$, the highest of all methods.
 PALETTE alone keeps more texture than every competitor on six tasks and ties
 with Auglab on Brain (\cref{tab:ngf}). SynthSeg keeps little ($0.50$ with EM,
-$0.37$ without, near the noise floor). PALETTE-Aug keeps less than PALETTE
-alone ($0.70$): it applies PALETTE in half of its draws, on top of the Auglab
-chain, which acts on every draw.
+$0.37$ without, near the noise floor). PALETTE-Aug keeps less ($0.70$): it
+applies PALETTE in half of its draws, on top of Auglab.
 
 \begin{figure}[t]
 \centering

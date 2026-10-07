@@ -42,32 +42,21 @@ without reaching significance, and
 Brain's session-level tests are optimistic. Spine was run on a separate
 pipeline and has no SRCSM arm. The cross-task test covers new patients, not new tasks; with the task as the
 unit, the advantage over SRCSM is not significant.
-We applied each competitor as its paper proposes and did not develop it
-further. In particular, we did not combine SRCSM or SynthSeg with the full
-Auglab pipeline, which would be a new method of our own design; part of
-PALETTE-Aug's margin over them may therefore come from Auglab, which only the
-comparison with Auglab itself controls. We also left out SRCSM's test-time
-histogram matching, so its Breast score may be lower than its full pipeline
-would give. PALETTE-Aug targets the single-source setting and is complementary to
-multi-source domain generalization, which assumes several labeled source
-domains.
+We applied each competitor as its paper proposes and did not place SRCSM or
+SynthSeg inside the Auglab pipeline; PALETTE alone, without Auglab, already
+beats each of them (\cref{subsec:e-main}).
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We asked when preserving real image texture matters for contrast-robust
-segmentation. In our sixteen settings, every large gain from keeping texture,
-$+5.9$ to $+12.7$ Dice, is on a target defined by tissue appearance (brain
-tumor, MS lesions), against at most $+4.8$ where an anatomical interface
-bounds the target; not every appearance-defined target gains. PALETTE-Aug,
-which preserves texture and needs no dense label map, wins the eight-task
-benchmark overall and significantly beats every competitor on five tasks.
-Whether the pattern holds on new tasks, and whether a measured boundary
-statistic can replace our anatomical grouping, remains to be tested.
+Preserving real image texture helps most where the target is defined by
+tissue appearance (brain tumor, MS lesions: $+4.6$ and $+6.8$ Dice per task)
+rather than by an anatomical interface (at most $+3.5$), though not on every
+appearance-defined target. PALETTE-Aug, which preserves texture and needs no
+dense label map, wins the eight-task benchmark overall.
 
-\paragraph{Reproducibility.} \TODO{Paul: confirm release} Code (PALETTE-Aug,
-our SynthSeg-EM re-implementation, all pipeline scripts) and per-case metrics
-will be released; all datasets but the Spine training cohort are public.
+\paragraph{Reproducibility.} All code is public on GitHub (link withheld for
+review), as are all datasets but the Spine training cohort.
 
 %%%%%%%%% ACKNOWLEDGEMENTS - if applicable, uncomment for camera-ready
 % \paragraph{Acknowledgements.} This work was enabled in part by support

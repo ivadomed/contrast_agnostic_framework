@@ -116,7 +116,18 @@ fills each sub-region with SynthSeg-style Gaussian noise, $\mu_R + \sigma_R
 drawn uniformly from $[0.05, 0.25]$ per sub-region; the label step is
 noise-filled the same way. The partition and the target means are
 PALETTE-Aug's own, so a difference between the two isolates whether the real
-intensity structure inside each region is kept or replaced by noise. We report
+intensity structure inside each region is kept or replaced by noise
+(\cref{fig:fill-swap-example}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fill_swap_example}
+\caption{The two arms of the fill swap on the slices of
+\cref{fig:method-pipeline}: the same partition and region target means,
+filled with Gaussian noise or with the remapped real intensities (PALETTE's
+output).}
+\label{fig:fill-swap-example}
+\end{figure} We report
 this comparison separately for \emph{interface-bounded} targets (a normal
 structure bounded by another tissue class) and \emph{appearance-defined}
 targets (a pathology identified by abnormal signal within a tissue), assigned

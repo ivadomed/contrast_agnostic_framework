@@ -77,15 +77,11 @@ We train one nnU-Net~\cite{isensee2021nnunet} configuration, varying only the
 epoch budget per dataset, and evaluate cross-contrast and cross-modality
 transfer on eight tasks: healthy brain, MS lesion, brain tumor,
 abdominal organ, mandible, breast lesion, spine and pelvis. We compare against
-nnU-Net with its default augmentation; two variants of SynthSeg: SynthSeg-noEM,
-the released SynthSeg, which its authors developed and tested on the brain, and
-SynthSeg-EM, which first subdivides each label into sub-regions by
-expectation-maximization (EM) clustering of the image intensities, a variant
-the same authors developed and tested on cardiac
-MRI~\cite[\S5.4]{billot2023synthseg} but whose code was not released when this
-work was done, so we re-implemented it;
-SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab}, a
-published cross-modality augmentation pipeline. PALETTE-Aug wins the benchmark
+nnU-Net with its default augmentation; the released SynthSeg (SynthSeg-noEM)
+and its expectation-maximization variant for cardiac
+MRI~\cite[\S5.4]{billot2023synthseg} (SynthSeg-EM), whose code was not
+released, so we re-implemented it; SRCSM~\cite{thaler2025semrandconv}; and the
+Auglab augmentation pipeline~\cite{molinier2026auglab}. PALETTE-Aug wins the benchmark
 overall: it has the best Dice on six of the eight tasks and significantly beats
 every competitor on five of them. Pooling all tasks into one test, it is
 significantly better than each competitor on both Dice and boundary distance,
