@@ -630,6 +630,21 @@ cystic lesions / suspected PDAC (not healthy); inter-observer kappa only 0.62-0.
 
 ---
 
+## Pancreas eval companion: TotalSegmentator MRI v2 (`pancreas_disease/totalsegmri-pancreas`, added 2026-10-07, run on Vulcan)
+
+Eval-only companion for pansegdata (more external test power). Source: Zenodo 10.5281/zenodo.14710732 (616 clinical-routine MRI, Basel + IDC), **license CC BY-NC-SA 2.0** (record page + API field; the zip has no LICENSE file, so
+`1_BIDS_totalsegmri-pancreas/abdomen-totalsegmri/LICENSE` is a note quoting the record) -> NC + share-alike, IDC-sourced exams carry their own collection licenses; needs its own tag if ever in a CC-BY git-annex upload. Masks are model-assisted, reviewed by two radiologists (soft gap vs PanSegData's manual ones).
+- **Usable N:** 182/616 have a pancreas mask; items (each exam in ONE item): `t1gre` n=97 (sequence exactly GR; contrast phase/fat-sat unknown, so NOT assumed equal to t1wce) and `t2like` n=12 (no GR and spleen/liver >= 1.3); meta TR/TE are unusable (mixed units), organ-intensity ratios too noisy to label contrast phase.
+  Exclusions fixed before predicting: other sequences (21), coronal/sagittal stacks (source is axial only), pancreas < 20 mL. Patient overlap with the source cannot be proven from metadata (no patient id; AMOS/CHAOS are test-only in the TotalSeg paper, so no overlap with those).
+- **FOV (user warned "careful with the FOV"):** the median-only `fov_audit.py` hid the tails (test S-I up to 1080 mm vs source p95 298 mm). The converter applies a MEASURED per-case crop-before-predict rule (`crop_window()` in `02_01_convert_test.py`; `02_03_fov_per_case.py` measures source vs test per case):
+  axis longer than the source's p95 -> window of the source's p90 length, pancreas centroid at the source's median fraction, widened to contain mask + 10 mm. 41/109 cropped, no mask clipped; post-crop extents <= source p95. Unfixable soft gaps: narrow FOVs, 18 masks touching the border (partial gland), S-I spacing 3 vs 5.5 mm (nnU-Net resamples).
+- **Results (22 runs x 3 folds, 109 cases, all row counts checked):** combined table Dice all: srcsm/auglab_default/synthseg_EM/OURS val000 within ~3 points (OURS val000 56.8, val100 59.2, baseline 24.8, synthseg_noEM 2.6); HD95 srcsm best. Real-fill (rung 4->5) is NEGATIVE here (pansegdata t1wce-trained -2.60 Dice p=2.9e-5; t2w-trained -0.51 p=0.006): pancreas is boundary-defined, matches the paper's one-way texture claim.
+- **Wired into the source (hand-edited, shared files):** `pansegdata_combined_01_results.yaml` (`sources:` + `contrast_groups`: t2like pooled into the t2w column, t1gre its own column `totalseg_t1gre`) and ladders `06_10`/`06_11` (grouped mode; only the genuinely held-out item per direction: t2like in the t1wce ladder, t1gre in the t2w ladder). The old combined table is `*.bak_20261007_pre_totalsegmri`; do NOT rerun `06_05_write_configs.sh --force` without re-adding the block.
+  `pansegdata` is still not in `scripts/evaluate/meta_task_heatmap.yaml` (nothing to rewire there until it is registered). The AMOS-MRI companion (`amos-pancreas`, item `mixed_t1`) belongs to another session and still has to be added to the same yaml/ladders.
+- Gotchas: eval job OOM at 16 GB for synthseg_noEM predictions (many components) -> run with `RUN_JOB_MEM_DEFAULT=48G`; quarantine partial metrics dirs before rerunning (stale-skip); selftest needs `--workdir` if the default exists; `create_dataset_structure.py` makes no `00_bidsify` dir.
+
+---
+
 ## Breast task: I-SPY2 (training) + duke-breast-mri (eval) — AMBL archived (2026-09-13)
 
 **Current roster for the breast task: `ispy2` trains, `duke-breast-mri` is the cross-dataset eval
