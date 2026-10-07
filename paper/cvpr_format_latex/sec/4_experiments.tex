@@ -194,7 +194,6 @@ within-region intensity structure instead of noise.
 
 \begin{figure}[t]
 \centering
-% TODO(rung-5 val000 retrain): figure built with LADDER_PENDING=Brain (its panel reads TODO); regenerate without it once the Brain T1w/T2w ladders are redone.
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_column}
 \caption{The fill swap (shaded band), one panel per task with a ladder,
 grouped by target type. Thin lines: one model, i.e.\ one training modality
@@ -216,9 +215,8 @@ target, but not every appearance-defined target shows one
 pooling its training modalities (\cref{sec:suppl-stats}); the per-setting
 values are a breakdown of that test. Pooled per task, the swap adds $+6.8$
 Dice on MS (all eight test patients improve) and $+4.6$ on Glioma, against
-$+3.5$ on Pelvis, $+2.6$ on Abdomen, $+0.1$ on Mandible and \TODO{Brain
-retrain} on Brain; each of these tasks passes the correction, Mandible with a
-negligible gain. The four largest per-setting gains are Glioma T1c ($+12.7$
+$+3.5$ on Pelvis, $+2.6$ on Abdomen, $+0.1$ on Mandible and $-0.7$ on Brain; each of these tasks passes the correction, Mandible with a
+negligible gain and Brain with a loss. The four largest per-setting gains are Glioma T1c ($+12.7$
 Dice), MS FLAIR ($+7.7$), Glioma T1n ($+6.0$) and MS T1w ($+5.9$); no
 interface-bounded setting gains more than $+4.8$ (Pelvis CT). Breast gains
 only $+0.5$, all from T2w training ($+2.1$; T1-CE training loses $1.2$), and
@@ -229,7 +227,7 @@ ON-Harmony labels 31 brain regions in the FreeSurfer label
 set~\cite{fischl2012freesurfer}. Nearly all are bounded by
 another tissue class (CSF against tissue, grey against white matter), so we
 group it with Abdomen as interface-bounded. At the task level it is the only
-task where the swap significantly hurts \TODO{Brain retrain: check sign}, with sessions as units. It is also
+task where the swap significantly hurts ($-0.7$ Dice), with sessions as units. It is also
 the only task labeling nearly the whole brain; with one such task, we cannot
 tell whether that is why.
 
