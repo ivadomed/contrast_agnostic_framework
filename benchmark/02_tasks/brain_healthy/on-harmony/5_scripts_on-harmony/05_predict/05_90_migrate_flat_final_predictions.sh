@@ -6,8 +6,10 @@
 # fold{k}/final/<contrast>/ so a checkpoint_best prediction can take the flat slot without overwriting them.
 # Predictions only: metrics are not touched. Refuses to overwrite an existing final/<contrast>.
 #   bash 05_90_migrate_flat_final_predictions.sh [--dry-run]
+# On TamIA: CLUSTER_ENV=scripts/cluster/tamia_env_onharmony.sh bash 05_90_migrate_flat_final_predictions.sh  (scratch PREDICTIONS_ROOT)
 set -euo pipefail
 source "$(dirname "$0")/../00_utils/env.sh"
+[ -n "${CLUSTER_ENV:-}" ] && source "${PROJECT_ROOT}/${CLUSTER_ENV}"   # cluster path override (sourced after env.sh)
 DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1
 BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}"
 n=0; skip=0
