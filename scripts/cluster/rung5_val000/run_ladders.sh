@@ -28,6 +28,10 @@ for k in "$@"; do
     brain_t1w)      .venv/bin/python $T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_10_ladder_summary.py ;;
     brain_t2w)      .venv/bin/python $T/brain_healthy/on-harmony/5_scripts_on-harmony/06_evaluate/06_11_ladder_summary_t2w.py ;;
     ms_t1w)         .venv/bin/python $T/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py ;;
+    breast_companions)  # per-source companion ladders (duke / ispy1 / acrin6698), rung 5 -> val000 since 2026-10-07
+                    for f in $T/breast_cancer/{duke-breast-mri,ispy1,acrin6698}/5_scripts_*/06_evaluate/06_1*_ladder_summary_ispy2cross_*.py; do
+                      echo "--- $f"; .venv/bin/python "$f" || exit 1
+                    done ;;
     *) echo "unknown ladder key $k"; false ;;
   esac || { echo "!!! ${k} FAILED"; rc=1; }
 done

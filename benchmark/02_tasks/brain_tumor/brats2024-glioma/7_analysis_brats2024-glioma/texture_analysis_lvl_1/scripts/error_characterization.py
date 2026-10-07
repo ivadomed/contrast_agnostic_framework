@@ -36,7 +36,7 @@ from compute_cross_contrast_ngf import FOLDS, LABELS_DIR  # noqa: E402
 
 PRED = PROJECT / "benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w"
 RUNS = {"noise": PRED / "auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659",
-        "real": PRED / "nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217"}
+        "real": PRED / "auglab/brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300"}  # 2026-10-07: val000 retrain (was nnUNet/..._val100_20260620_125217)
 OUT = THIS_DIR.parent / "outputs"
 EVALS = ("t1n", "t1c", "t2f", "t2w")
 REGIONS = {"SNFH": 2, "RC": 4}

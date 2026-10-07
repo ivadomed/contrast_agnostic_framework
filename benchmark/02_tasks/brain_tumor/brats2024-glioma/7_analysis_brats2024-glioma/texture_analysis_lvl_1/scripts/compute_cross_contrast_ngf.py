@@ -81,22 +81,30 @@ MIN_REGION_VOX = 50
 # that ladder_summary.md itself reports. FOLDS is hardcoded to 0-2 below and enforced everywhere.
 FOLDS = ("fold0", "fold1", "fold2")
 RUNG_DIRS = {
+    # 2026-10-07: rung 5 -> the val000 retrains (checkpoint_best chosen on REAL validation, like rung 4;
+    # the earlier *_val100_* runs picked it on synthetic validation and are retired, see CLAUDE.md
+    # "Rung 5 ... are val000 runs (2026-10-06)"). t1c (4th training contrast, ladder 06_33) added.
     "t1n": {
         "voronoi": "ablations/auglab_brats2024-glioma_t1n_baseline_kmeans_label_remap_voronoi_20260730_200711",
-        "realfill": "ablations/nnUNet_brats2024-glioma_t1n_v26_6_2_train050_val100_20260730_200711",
+        "realfill": "ablations/auglab_brats2024-glioma_t1n_v26_6_2_train050_val000_20261005_222227",
+    },
+    "t1c": {
+        "voronoi": "ablations/auglab_brats2024-glioma_t1c_baseline_kmeans_label_remap_voronoi_20260921_140000",
+        "realfill": "ablations/auglab_brats2024-glioma_t1c_v26_6_2_train050_val000_20261005_222406",
     },
     "t2w": {
         "voronoi": "ablations/auglab_brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659",
-        "realfill": "nnUNet_brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217",  # headline dir, has fold3 too — FOLDS excludes it
+        "realfill": "ablations/auglab_brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300",
     },
     "t2f": {
         "voronoi": "ablations/auglab_brats2024-glioma_t2f_baseline_kmeans_label_remap_voronoi_20260917_094019",
-        "realfill": "ablations/nnUNet_brats2024-glioma_t2f_v26_6_2_train050_val100_20260917_113412",
+        "realfill": "ablations/auglab_brats2024-glioma_t2f_v26_6_2_train050_val000_20261005_222333",
     },
 }
-# Published ladder_summary.md pooled-OOD Dice deltas (rung4->5), for the sanity gate below.
-# (train, region-agnostic pooled across OOD contrasts only — matches the "OOD Dice" column.)
-PUBLISHED_OOD_DELTA_DICE = {"t1n": 47.02 - 39.81, "t2w": 41.55 - 40.95, "t2f": 31.73 - 31.92}
+TRAIN_CONTRASTS = ("t1n", "t1c", "t2w", "t2f")
+# Published ladder_series.json pooled-OOD Dice (rung4 -> rung5), for the sanity gate below
+# (2026-10-06 regeneration with the val000 rung 5; "dice"[3], "dice"[4] of each json).
+PUBLISHED_OOD_DELTA_DICE = {"t1n": 45.78 - 39.81, "t1c": 43.19 - 30.46, "t2w": 42.08 - 40.95, "t2f": 30.67 - 31.92}
 
 EPS = 1e-5
 EDGE_PCTL = 50
@@ -357,7 +365,7 @@ def merge_and_correlate(data_dir: Path):
     ngf_df.to_csv(ngf_csv, index=False)
     log.info("Merged %d shard file(s) -> %d NGF rows -> %s", len(shard_files), len(ngf_df), ngf_csv)
 
-    delta_frames = [patient_region_deltas(c) for c in ("t1n", "t2w", "t2f")]
+    delta_frames = [patient_region_deltas(c) for c in TRAIN_CONTRASTS]
     delta_df = pd.concat(delta_frames, ignore_index=True)
     delta_csv = data_dir / "patient_region_deltas.csv"
     delta_df.to_csv(delta_csv, index=False)
@@ -432,7 +440,7 @@ def main():
 
     log.info("Loading per-patient rung4->5 (noise-fill -> real-fill) region Dice deltas "
               "from eval_all.csv (folds 0-2 only), with a sanity gate against ladder_summary.md...")
-    delta_frames = [patient_region_deltas(c) for c in ("t1n", "t2w", "t2f")]
+    delta_frames = [patient_region_deltas(c) for c in TRAIN_CONTRASTS]
     delta_df = pd.concat(delta_frames, ignore_index=True)
     unique_patients = sorted(delta_df["case"].unique())
     if args.limit_patients:

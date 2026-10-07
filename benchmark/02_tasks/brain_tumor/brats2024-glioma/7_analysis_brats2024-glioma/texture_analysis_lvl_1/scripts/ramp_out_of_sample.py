@@ -47,7 +47,9 @@ PRE-REGISTERED (written before computing any R value, 2026-09-24 continuation se
   binomial here because the OOD pair set is NOT balanced -- most open-ms/chaos/ispy2
   pairs are net-positive Delta and most on-harmony pairs are net-negative, so a rule
   that just recovers "which dataset is this" could look falsely good under a plain
-  binomial). Restricted-to-p<0.05 subset reported separately. Secondary (exploratory):
+  binomial). Restricted-to-p<0.05 subset reported separately.
+  2026-10-07: re-aggregated on the rung-5 val000 retrains (ispy2 breast pairs re-mapped, on-harmony dwi_ap arm
+  added; on-harmony T1w/T2w ladders still val100 at that date). Secondary (exploratory):
   Spearman(R_eval - R_train, Delta) over the same pairs.
   Not adjusted after seeing outcomes; extras beyond this list are labelled exploratory.
 
@@ -248,8 +250,14 @@ LADDER_JSONS = {
     ("open-ms", "t1w"): "benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/02_metrics/open_ms_model/t1w/ablations/ladder_series.json",
     ("chaos", "t1in"): "benchmark/02_tasks/abdomen_healthy/chaos/8_results_chaos/02_metrics/chaos_model/t1in/ablations/ladder_series.json",
     ("chaos", "t2spir"): "benchmark/02_tasks/abdomen_healthy/chaos/8_results_chaos/02_metrics/chaos_model/t2spir/ablations/ladder_series.json",
+    # 2026-10-07: ispy2's own ladders are grouped by TRUE contrast since 2026-10-01 (the t2w-trained 't1wce' group pools
+    # ispy2 + duke + ispy1, so that pair is dropped: R is only computed on ispy2's own t1wce); duke pairs come from duke's
+    # per-source ladders (the *_uniap items; R was computed on the *_uni volumes, whose lesion interiors are identical).
     ("ispy2", "t1wce"): "benchmark/02_tasks/breast_cancer/ispy2/8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations/ladder_series.json",
-    ("ispy2", "t2w"): "benchmark/02_tasks/breast_cancer/ispy2/8_results_ispy2/02_metrics/ispy2_model/t2w/ablations/ladder_series.json",
+    ("ispy2", "t1wce>duke"): "benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/ablations/precontrast_uniap/ladder_series.json",
+    ("ispy2", "t2w>duke-t1wce"): "benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/t1wce_uniap/ladder_series.json",
+    ("ispy2", "t2w>duke-precon"): "benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/ablations/precontrast_uniap/ladder_series.json",
+    ("onharmony", "dwi_ap"): "benchmark/02_tasks/brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/dwi_ap/ablations/ladder_series.json",
     ("onharmony", "T1w"): "benchmark/02_tasks/brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T1w/ablations/ladder_series.json",
     ("onharmony", "T2w"): "benchmark/02_tasks/brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model/T2w/ablations/ladder_series.json",
     ("toothfairy2", "cbct"): "benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/cbct/ablations/ladder_series.json",
@@ -261,9 +269,12 @@ EVAL_KEY_MAP = {
     ("open-ms", "t1w"): {"flair": "open-ms:flair", "t2w": "open-ms:t2w"},
     ("chaos", "t1in"): {"t1out": "chaos:t1out", "t2spir": "chaos:t2spir", "ct": "chaos:ct"},
     ("chaos", "t2spir"): {"t1in": "chaos:t1in", "t1out": "chaos:t1out", "ct": "chaos:ct"},
-    ("ispy2", "t1wce"): {"t2w": "ispy2:t2w", "duke-breast-mri/precontrast_uni": "duke:precontrast_uni"},
-    ("ispy2", "t2w"): {"t1wce": "ispy2:t1wce", "duke-breast-mri/t1wce_uni": "duke:t1wce_uni",
-                        "duke-breast-mri/precontrast_uni": "duke:precontrast_uni"},
+    ("ispy2", "t1wce"): {"t2w": "ispy2:t2w"},
+    ("ispy2", "t1wce>duke"): {"precontrast_uniap": "duke:precontrast_uni"},
+    ("ispy2", "t2w>duke-t1wce"): {"t1wce_uniap": "duke:t1wce_uni"},
+    ("ispy2", "t2w>duke-precon"): {"precontrast_uniap": "duke:precontrast_uni"},
+    ("onharmony", "dwi_ap"): {"T1w": "onharmony:T1w", "T2w": "onharmony:T2w", "bold": "onharmony:bold",
+                              "epi_ap": "onharmony:epi_ap", "gre_echo1_mag": "onharmony:gre_echo1_mag"},
     ("onharmony", "T1w"): {"T2w": "onharmony:T2w", "bold": "onharmony:bold", "dwi_ap": "onharmony:dwi_ap",
                             "epi_ap": "onharmony:epi_ap", "gre_echo1_mag": "onharmony:gre_echo1_mag"},
     ("onharmony", "T2w"): {"T1w": "onharmony:T1w", "bold": "onharmony:bold", "dwi_ap": "onharmony:dwi_ap",
@@ -273,8 +284,9 @@ EVAL_KEY_MAP = {
 TRAIN_R_KEY = {
     ("open-ms", "flair"): "open-ms:flair", ("open-ms", "t1w"): "open-ms:t1w",
     ("chaos", "t1in"): "chaos:t1in", ("chaos", "t2spir"): "chaos:t2spir",
-    ("ispy2", "t1wce"): "ispy2:t1wce", ("ispy2", "t2w"): "ispy2:t2w",
-    ("onharmony", "T1w"): "onharmony:T1w", ("onharmony", "T2w"): "onharmony:T2w",
+    ("ispy2", "t1wce"): "ispy2:t1wce", ("ispy2", "t1wce>duke"): "ispy2:t1wce",
+    ("ispy2", "t2w>duke-t1wce"): "ispy2:t2w", ("ispy2", "t2w>duke-precon"): "ispy2:t2w",
+    ("onharmony", "T1w"): "onharmony:T1w", ("onharmony", "T2w"): "onharmony:T2w", ("onharmony", "dwi_ap"): "onharmony:dwi_ap",
     ("toothfairy2", "cbct"): "toothfairy2:cbct",
 }
 
@@ -374,12 +386,10 @@ def do_aggregate():
          f"- **Restricted to fill-swap p<0.05 ({n_tot_sig} pairs): the ramp rule gets {n_hit_sig}/{n_tot_sig} "
          f"(binomial p={bt_sig.pvalue:.3g}), while \"always helps\" gets {n_pos_sig}/{n_tot_sig} -- "
          f"the trivial baseline WINS on the significant subset.**",
-         f"- **The \"hurts\" side has zero significant support: {n_hurts_sig_hit}/{n_hurts_sig_tot} "
-         "significant hurts-predictions were correct** (open-ms flair->t1w, ispy2 t1wce->t2w, "
-         "ispy2 t1wce->duke precontrast_uni all predicted hurts and actually helped; on-harmony "
-         "T2w->T1w -- the only significant negative Delta anywhere in this pair set -- was itself "
-         "predicted to help, so it is a miss on the \"helps\" side, not a hurts-prediction). Every "
-         "dataset where the rule scores a hit on a significant pair does so on the \"helps\" side.",
+         f"- **Significant hurts-predictions correct: {n_hurts_sig_hit}/{n_hurts_sig_tot}** (wrong ones: "
+         + (", ".join(f"{r.dataset} {r.train}->{r.eval} ({r.delta:+.1f})" for r in pred_hurts_sig[~pred_hurts_sig['hit']].itertuples()) or "none")
+         + "; significant hurts outcomes missed: "
+         + (", ".join(f"{r.dataset} {r.train}->{r.eval} ({r.delta:+.1f})" for r in sig[(sig['actual_sign'] < 0) & ~sig['hit']].itertuples()) or "none") + ").",
          f"- **Two of five datasets (on-harmony, toothfairy2) supply almost all the hits, and both "
          "have outcomes that are almost all one sign already** (on-harmony: 9/10 pairs Delta<0; "
          "toothfairy2: 3/3 Delta>0) -- so a same-sign-as-dataset-mean rule would do about as well "

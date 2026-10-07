@@ -21,7 +21,8 @@ Gate: from the same raw eval_all.csv rows, reproducing the engine's exact per-ca
 (mean over every finite fold x label value, each rung independently; Holm within the 3 OOD
 contrasts) must match ladder_series.json — that validates run dirs, folds and case sets.
 
-Holm families: the 36 cross-contrast (OOD) cells are corrected together; the 12 in-domain
+Holm families: the 48 cross-contrast (OOD) cells (4 trains x 3 evals x 4 regions; 36 before the
+2026-10-07 t1c addition) are corrected together; the 16 in-domain
 cells (train == eval) are reported as a separate family so they don't dilute the OOD question.
 """
 from __future__ import annotations
@@ -44,7 +45,7 @@ from compute_cross_contrast_ngf import (  # noqa: E402
 )
 
 DATA_DIR = THIS_DIR.parent / "outputs" / "data"
-TRAINS = ("t1n", "t2w", "t2f")
+TRAINS = ("t1n", "t1c", "t2w", "t2f")   # 2026-10-07: + t1c; rung 5 = val000 retrains (see RUNG_DIRS)
 CONTRASTS = ("t1n", "t1c", "t2w", "t2f")
 REGIONS = ("NCR", "SNFH", "ET", "RC")
 

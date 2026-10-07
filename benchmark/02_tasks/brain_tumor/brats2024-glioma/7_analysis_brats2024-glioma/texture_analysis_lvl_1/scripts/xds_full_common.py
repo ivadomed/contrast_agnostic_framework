@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import glob
 import json
+import os
 import sys
 import warnings
 from pathlib import Path
@@ -36,6 +37,9 @@ LOGS = W / "outputs" / "logs"
 TS = REPO / "benchmark/02_tasks"
 CAP = 20  # cases per non-BraTS key (matches the existing radiomics_xds extraction)
 BREG = ("NCR", "SNFH", "ET", "RC")
+
+
+SKIP_ONH = [a for a in os.environ.get("FILLSWAP_SKIP_ONH", "").split(",") if a]  # 2026-10-07: on-harmony arms whose rung 5 is still the retired val100 run (T1w,T2w while retraining)
 
 
 def jload(p):
@@ -78,6 +82,8 @@ def dev_specs():
     c = []
     oh = "brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model"
     for t in ("T1w", "T2w", "dwi_ap"):
+        if t in SKIP_ONH:
+            print(f"NOTE: skipping on-harmony {t} (FILLSWAP_SKIP_ONH)"); continue
         rel = f"{oh}/{t}/ablations/ladder_series.json"
         c += _ladder_specs(rel, f"onharmony:{t}", "onharmony", {e: f"onharmony:{e}" for e in jload(TS / rel)["ood_contrasts"]})
     rel = "mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/cbct/ablations/ladder_series.json"

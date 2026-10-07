@@ -51,6 +51,7 @@ import ramp_out_of_sample as ro  # noqa: E402
 
 REPO = ro.REPO
 SMOKE = os.environ.get("SMOKE") == "1"
+SKIP_ONH = [a for a in os.environ.get("FILLSWAP_SKIP_ONH", "").split(",") if a]  # 2026-10-07: on-harmony arms whose rung 5 is still the retired val100 run (T1w,T2w while retraining)
 OUT = THIS.parent / "outputs"
 DATA = OUT / ("smoke_data" if SMOKE else "data")
 TABLES = OUT / "tables"
@@ -268,6 +269,8 @@ def dev_cells():
                           {e: f"chaos:{e}" for e in d["ood_contrasts"]})
     oh = "brain_healthy/on-harmony/8_results_on-harmony/02_metrics/on_harmony_model"
     for t in ("T1w", "T2w", "dwi_ap"):
+        if t in SKIP_ONH:
+            print(f"NOTE: skipping on-harmony {t} (FILLSWAP_SKIP_ONH)"); continue
         rel = f"benchmark/02_tasks/{oh}/{t}/ablations/ladder_series.json"
         c += ladder_cells(rel, f"onharmony:{t}", "onharmony", {e: f"onharmony:{e}" for e in jload(rel)["ood_contrasts"]})
     rel = "benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/cbct/ablations/ladder_series.json"

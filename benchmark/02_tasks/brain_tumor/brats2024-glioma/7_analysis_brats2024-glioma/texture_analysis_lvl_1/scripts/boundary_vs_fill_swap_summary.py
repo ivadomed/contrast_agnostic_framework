@@ -236,6 +236,7 @@ def build_cells(patient_table: pd.DataFrame) -> pd.DataFrame:
             cells = cells.merge(counts, on=["train", "eval", "region"])
             cells.loc[cells[f"n_{col}"] < MIN_CELL_PATIENTS, col] = np.nan
     cells.to_csv(DATA_DIR / "boundary_cells.csv", index=False)
+    cells = cells[cells["train"].isin(TRAINS)].reset_index(drop=True)  # 2026-10-07: the deltas table also carries the t1c arm; this script stays on its 3 pre-registered arms
     assert len(cells) == 36, f"expected 36 cells (3 trains x 3 evals x 4 regions), got {len(cells)}"
     return cells
 
