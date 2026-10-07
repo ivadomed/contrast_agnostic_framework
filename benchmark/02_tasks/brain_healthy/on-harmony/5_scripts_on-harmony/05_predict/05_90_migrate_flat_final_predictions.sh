@@ -12,6 +12,9 @@ source "$(dirname "$0")/../00_utils/env.sh"
 [ -n "${CLUSTER_ENV:-}" ] && source "${PROJECT_ROOT}/${CLUSTER_ENV}"   # cluster path override (sourced after env.sh)
 DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1
 BASE="${PREDICTIONS_ROOT}/${MODEL_TYPE}"
+# ONE-OFF: after it ran, flat dirs hold checkpoint_best predictions -- a second run would wrongly move them to final/.
+MARK="${BASE}/.flat_final_migrated"
+[ -e "${MARK}" ] && { echo "[migrate] already done on this machine ($(cat "${MARK}")) -- refusing (flat dirs are checkpoint_best now)" >&2; exit 1; }
 n=0; skip=0
 for fold in "${BASE}"/{T1w,T2w,dwi_ap}/{nnUNet,auglab}/*/fold[0-9]; do
     [ -d "${fold}" ] || continue
@@ -25,5 +28,6 @@ for fold in "${BASE}"/{T1w,T2w,dwi_ap}/{nnUNet,auglab}/*/fold[0-9]; do
         n=$((n+1))
     done
 done
+[ "${DRY}" = 1 ] || echo "migrated $(date +%F) by 05_90 (${n} dirs)" > "${MARK}"
 echo "[migrate] ${n} flat contrast dirs $([ "${DRY}" = 1 ] && echo 'to move' || echo 'moved') to fold*/final/, ${skip} skipped (base ${BASE})"
 [ "${skip}" = 0 ]
