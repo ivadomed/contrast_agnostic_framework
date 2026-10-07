@@ -31,9 +31,13 @@ sessions of one subject are not fully independent, so its $p$-values are, if
 anything, optimistic, and we state Brain-only results with this caveat.
 Per-setting comparisons (\cref{sec:suppl-persetting}) use the same test within
 each setting. The ablation ladders use the paired Wilcoxon signed-rank
-test~\cite{wilcoxon1945}, since there each setting is judged on its own; each
-patient then contributes one difference, its mean over the held-out contrasts
-it appears in, so patients, not contrasts, are weighted equally. All tests are
+test~\cite{wilcoxon1945}, since there each task is judged on its own: each
+patient contributes one difference, its mean over the held-out contrasts and
+training modalities it appears in, so patients, not contrasts, are weighted
+equally. The fill swap has one correction family: it is tested once per task
+and Holm-corrected across the seven tasks (\cref{fig:ladder,tab:dissociation});
+its per-setting rows report the same test uncorrected, as a breakdown, and
+carry no significance marks. All other tests are
 Holm-corrected~\cite{holm1979} for multiple comparisons.
 
 \paragraph{Why the aggregate tests are sign-flip tests on a macro-average.}
@@ -218,86 +222,103 @@ improve significantly; MS, Abdomen and Pelvis do not move significantly
 \label{fig:ladder-hd95}
 \end{figure*}
 
-% TODO(rung-5 val000 retrain): Brain T1w/T2w rows pending (regenerated 2026-10-07 for every other setting; Holm values may shift slightly once they land).
+% GENERATED rows: paper/scripts/compute_dissociation_pvalues.py (LADDER_PENDING=Brain) -- regenerate, do not hand-edit.
+% TODO(rung-5 val000 retrain): Brain rows pending; the seven-task Holm values shift slightly once Brain lands.
 \begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccc}
 \toprule
-Setting & noise & $\Delta$ & rel.\ (\%) & $p$ \\
-\midrule
-\multicolumn{5}{l}{\emph{Appearance-defined}} \\
-Glioma T1n & 39.8 & $+5.98^{*}$ & $+15.0$ & $1.0\times10^{-9}$ \\
-Glioma T1c & 30.5 & $+12.73^{*}$ & $+41.8$ & $5.0\times10^{-12}$ \\
-Glioma T2w & 41.0 & $+1.13$ & $+2.8$ & 0.19 \\
-Glioma FLAIR & 31.9 & $-1.25$ & $-3.9$ & 0.19 \\
-MS FLAIR & 19.6 & $+7.69$ & $+39.3$ & 0.07$^\dagger$ \\
-MS T1w & 34.1 & $+5.94$ & $+17.4$ & 0.07$^\dagger$ \\
-Breast T1-CE & 30.8 & $-1.16^{*}$ & $-3.8$ & $6.8\times10^{-4}$ \\
-Breast T2w & 39.8 & $+2.13^{*}$ & $+5.3$ & $6.3\times10^{-14}$ \\
+Task / setting & noise & $\Delta$ & rel.\ (\%) & $p$ \\
 \midrule
 \multicolumn{5}{l}{\emph{Interface-bounded}} \\
-Abdomen T1in & 85.7 & $+1.43^{*}$ & $+1.7$ & $4.6\times10^{-12}$ \\
-Abdomen T2spir & 82.0 & $+3.72^{*}$ & $+4.5$ & $1.4\times10^{-9}$ \\
-Brain T1w & \pending & \pending & \pending & \pending \\
-Brain T2w & \pending & \pending & \pending & \pending \\
-Brain DWI & 64.6 & $+0.54$ & $+0.8$ & 0.07$^\dagger$ \\
-Mandible CBCT$^\ddagger$ & 68.1 & $+0.07$ & $+0.1$ & 0.07 \\
-Pelvis CT & 35.3 & $+4.76$ & $+13.5$ & 0.07 \\
-Pelvis MRI & 63.1 & $+2.59^{*}$ & $+4.1$ & 0.0095 \\
+\textbf{Abdomen} (all settings) & 83.9 & $+2.58^{*}$ & $+3.1$ & 1.7e-14 \\
+\quad Abdomen T1in & 85.7 & $+1.43$ & $+1.7$ & 3.1e-13 \\
+\quad Abdomen T2spir & 82.0 & $+3.72$ & $+4.5$ & 1.2e-10 \\
+\textbf{Brain} (all settings) & \pending & \pending & \pending & \pending \\
+\quad Brain T1w & \pending & \pending & \pending & \pending \\
+\quad Brain T2w & \pending & \pending & \pending & \pending \\
+\quad Brain DWI & \pending & \pending & \pending & \pending \\
+\textbf{Mandible} (all settings) & 68.1 & $+0.07^{*}$ & $+0.1$ & 0.023 \\
+\quad Mandible CBCT$^\ddagger$ & 68.1 & $+0.07$ & $+0.1$ & 0.0091 \\
+\textbf{Pelvis} (all settings) & 49.2 & $+3.53^{*}$ & $+7.2$ & 0.00097 \\
+\quad Pelvis CT & 35.3 & $+4.76$ & $+13.5$ & 0.02 \\
+\quad Pelvis MRI & 63.1 & $+2.59$ & $+4.1$ & 0.00095 \\
+\midrule
+\multicolumn{5}{l}{\emph{Appearance-defined}} \\
+\textbf{Glioma} (all settings) & 35.8 & $+4.65^{*}$ & $+13.0$ & 6.4e-10 \\
+\quad Glioma T1n & 39.8 & $+5.98$ & $+15.0$ & 7.8e-11 \\
+\quad Glioma T1c & 30.5 & $+12.73$ & $+41.8$ & 3.6e-13 \\
+\quad Glioma T2w & 41.0 & $+1.13$ & $+2.8$ & 0.096 \\
+\quad Glioma FLAIR & 31.9 & $-1.25$ & $-3.9$ & 0.14 \\
+\textbf{MS} (all settings) & 26.8 & $+6.82^{*}$ & $+25.4$ & 0.023 \\
+\quad MS FLAIR & 19.6 & $+7.69$ & $+39.3$ & 0.0078 \\
+\quad MS T1w & 34.1 & $+5.94$ & $+17.4$ & 0.0078 \\
+\textbf{Breast} (all settings) & 35.3 & $+0.49^{*}$ & $+1.4$ & 0.00088 \\
+\quad Breast T1-CE & 30.8 & $-1.16$ & $-3.8$ & 6.1e-5 \\
+\quad Breast T2w & 39.8 & $+2.13$ & $+5.3$ & 3.9e-15 \\
 \bottomrule
 \end{tabular}
 \caption{Replacing SynthSeg-style noise fill with the real-intensity remap,
-\emph{with the partition and region target means unchanged}, for every
-training modality of every task with a ladder. noise: out-of-domain Dice with
-noise fill; $\Delta$: Dice change at the swap; rel.: $\Delta$ relative to the
-noise-fill Dice; $^*$: $p<0.05$. $p$: two-sided paired Wilcoxon on patients (each patient's
-mean over the setting's held-out contrasts), Holm-corrected across all sixteen
-settings; \cref{tab:ladder-full} corrects within each ladder instead, so the
-same step can be significant there and not here. $^\dagger$With eight test patients (MS) or eight sessions of four subjects,
-two sites each (Brain), no row reaches $p<0.05$ after correction even
-when all eight move together, as for MS FLAIR ($8/8$ improve).
-$^\ddagger$Held-out contrasts are cross-dataset (HaN-Seg, PDDCA), since
-ToothFairy2 is CBCT only. Per-task summary: \cref{fig:ladder} (main paper); per pair: \cref{tab:fill-swap-pairs}; HD95: \cref{tab:dissociation-hd95}.}
+\emph{with the partition and region target means unchanged}. noise:
+out-of-domain Dice with noise fill; $\Delta$: Dice change at the swap; rel.:
+$\Delta$ relative to the noise-fill Dice. Significance is tested once per task
+(bold rows; the test annotated in \cref{fig:ladder}): two-sided paired Wilcoxon
+on patients, each patient contributing its mean difference over the held-out
+contrasts and training modalities it appears in, Holm-corrected across the
+seven tasks ($^*$: $p<0.05$). The indented setting rows break each task into
+its training modalities; their $p$ is the same test within the setting,
+uncorrected and without significance marks, since the claim is made at the
+task level. With eight test patients (MS) or eight sessions of four subjects
+(Brain) a two-sided $p$ cannot fall below $1/128$. $^\ddagger$Held-out
+contrasts are cross-dataset (HaN-Seg, PDDCA), since ToothFairy2 is CBCT only.
+Per pair: \cref{tab:fill-swap-pairs}; HD95: \cref{tab:dissociation-hd95}.}
 \label{tab:dissociation}
 \end{table}
 
-% TODO(rung-5 val000 retrain): Brain T1w/T2w rows pending (regenerated 2026-10-07 for every other setting; Holm values may shift slightly once they land).
 \begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcc}
+\begin{tabular}{lcccc}
 \toprule
-Setting & $\Delta$ HD95 (mm) & $p$ \\
+Task / setting & noise & $\Delta$ (mm) & rel.\ (\%) & $p$ \\
 \midrule
-\multicolumn{3}{l}{\emph{Appearance-defined}} \\
-Glioma T1n & $-3.89^{*}$ & $9.8\times10^{-8}$ \\
-Glioma T1c & $-9.77^{*}$ & $1.0\times10^{-10}$ \\
-Glioma T2w & $-1.51$ & 0.052 \\
-Glioma FLAIR & $+1.97$ & 0.088 \\
-MS FLAIR & $-3.02$ & 0.16 \\
-MS T1w & $-1.91$ & 0.59 \\
-Breast T1-CE & $-3.43^{*}$ & 0.0066 \\
-Breast T2w & $-2.57^{*}$ & $3.2\times10^{-6}$ \\
+\multicolumn{5}{l}{\emph{Interface-bounded}} \\
+\textbf{Abdomen} (all settings) & 31.9 & $-8.83$ & $-27.7$ & 0.06 \\
+\quad Abdomen T1in & 23.3 & $-1.36$ & $-5.9$ & 0.4 \\
+\quad Abdomen T2spir & 40.5 & $-16.30$ & $-40.3$ & 0.035 \\
+\textbf{Brain} (all settings) & \pending & \pending & \pending & \pending \\
+\quad Brain T1w & \pending & \pending & \pending & \pending \\
+\quad Brain T2w & \pending & \pending & \pending & \pending \\
+\quad Brain DWI & \pending & \pending & \pending & \pending \\
+\textbf{Mandible} (all settings) & 34.3 & $-1.17^{*}$ & $-3.4$ & 0.021 \\
+\quad Mandible CBCT$^\ddagger$ & 34.3 & $-1.17$ & $-3.4$ & 0.0042 \\
+\textbf{Pelvis} (all settings) & 59.6 & $-2.79$ & $-4.7$ & 0.43 \\
+\quad Pelvis CT & 67.1 & $-3.61$ & $-5.4$ & 0.031 \\
+\quad Pelvis MRI & 52.2 & $-0.48$ & $-0.9$ & 0.56 \\
 \midrule
-\multicolumn{3}{l}{\emph{Interface-bounded}} \\
-Abdomen T1in & $-1.36$ & 0.8 \\
-Abdomen T2spir & $-16.30$ & 0.19 \\
-Brain T1w & \pending & \pending \\
-Brain T2w & \pending & \pending \\
-Brain DWI & $-0.17$ & 0.44 \\
-Mandible CBCT & $-1.17$ & 0.051 \\
-Pelvis CT & $-3.61$ & 0.19 \\
-Pelvis MRI & $-0.48$ & 0.8 \\
+\multicolumn{5}{l}{\emph{Appearance-defined}} \\
+\textbf{Glioma} (all settings) & 22.7 & $-3.30^{*}$ & $-14.5$ & 1.5e-8 \\
+\quad Glioma T1n & 20.5 & $-3.89$ & $-19.0$ & 6.5e-9 \\
+\quad Glioma T1c & 27.6 & $-9.77$ & $-35.4$ & 6.5e-12 \\
+\quad Glioma T2w & 18.8 & $-1.51$ & $-8.0$ & 0.0047 \\
+\quad Glioma FLAIR & 23.9 & $+1.97$ & $+8.2$ & 0.011 \\
+\textbf{MS} (all settings) & 27.7 & $-2.46$ & $-8.9$ & 0.39 \\
+\quad MS FLAIR & 31.5 & $-3.02$ & $-9.6$ & 0.023 \\
+\quad MS T1w & 23.8 & $-1.91$ & $-8.0$ & 0.2 \\
+\textbf{Breast} (all settings) & 55.5 & $-3.00^{*}$ & $-5.4$ & 5.4e-7 \\
+\quad Breast T1-CE & 70.1 & $-3.43$ & $-4.9$ & 0.00051 \\
+\quad Breast T2w & 40.9 & $-2.57$ & $-6.3$ & 2.3e-7 \\
 \bottomrule
 \end{tabular}
-\caption{Same fill-swap step as \cref{tab:dissociation}, on HD95
-(negative is better), with $p$ Holm-corrected across the sixteen rows ($^*$: $p<0.05$).
-HD95 is less consistent than Dice within a task
-(on Glioma it improves from three training contrasts and worsens from FLAIR), so we state the claim
-on Dice and report HD95 here rather than as confirmation of it.}
+\caption{Same fill-swap step as \cref{tab:dissociation}, on HD95 (negative is
+better; noise: HD95 with noise fill), with the same tests: task rows Holm-corrected across the seven tasks
+($^*$: $p<0.05$), setting rows uncorrected. HD95 is less consistent than Dice
+within a task (on Glioma it improves from three training contrasts and
+worsens from FLAIR), so we state the claim on Dice and report HD95 here rather
+than as confirmation of it.}
 \label{tab:dissociation-hd95}
 \end{table}
 
@@ -375,8 +396,8 @@ real fill & $87.1^{***}$ & $85.7^{***}$ & \pending & \pending & $65.2^{*}$ & $68
 (\cref{fig:ladder}), with significance for each step against the rung above
 it (``s.v.'', synthetic-contrast validation, against real-contrast
 validation): $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$ (Holm-corrected paired
-Wilcoxon on patients, within each ladder; \cref{tab:dissociation} corrects the
-fill swap across the sixteen settings instead); $\downarrow$ marks a significant
+Wilcoxon on patients, within each ladder; \cref{tab:dissociation} tests the
+fill swap once per task instead); $\downarrow$ marks a significant
 \emph{decrease}. Rungs: baseline, $+k$-means, $+$label remap, $+$Voronoi
 (noise fill), real fill (PALETTE alone), $+$Auglab (PALETTE-Aug); \cref{fig:ladder}
 abbreviates them base, +km, +lbl, +vor, +real, +Auglab. MS and Brain have eight

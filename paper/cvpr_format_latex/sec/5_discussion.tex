@@ -14,7 +14,7 @@ matter~\cite{zhang2008mstexture}. This account interprets the intervention of
 \cref{subsec:e-ablation}; it is not independent evidence.
 
 \paragraph{Not every appearance-defined target gains much.} Glioma T2w and
-FLAIR show no significant Dice gain, and Breast gains only slightly:
+FLAIR show no Dice gain, and Breast gains only slightly:
 $+2.1$ Dice from T2w training but $-1.2$ from T1-CE. We have two hypotheses. First, the effect depends sharply on the
 training contrast (Glioma: $+12.7$ from T1c, $+6.0$ from T1n, $+1.1$ and
 $-1.3$ from T2w and FLAIR), so whether its texture transfers may matter as much as the
@@ -33,13 +33,12 @@ $63\%$ noise-fill Dice and every appearance-defined row below $42\%$. We
 therefore lead with the absolute Dice change; dividing by the starting Dice
 favors the appearance-defined rows, and as a share of the remaining error
 ($100\%$ minus noise-fill Dice) Abdomen T2spir would rank first. The
-exception, Pelvis CT, starts at $35\%$ and gains $+4.8$ (not significant),
-below the four large appearance-defined gains.
+exception, Pelvis CT, starts at $35\%$ and gains $+4.8$, below the four
+large appearance-defined gains.
 The between-group comparison is descriptive: a permutation test on the
 seven per-task gains gives $p=0.2$. MS has eight test patients and Brain eight
-sessions of four subjects, so their single-setting effects can be consistent
-without reaching significance, and
-Brain's session-level tests are optimistic. Spine was run on a separate
+sessions of four subjects, the floor of a paired test, and Brain's
+session-level tests are optimistic. Spine was run on a separate
 pipeline and has no SRCSM arm. The cross-task test covers new patients, not new tasks; with the task as the
 unit, the advantage over SRCSM is not significant.
 We applied each competitor as its paper proposes and did not place SRCSM or
