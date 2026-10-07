@@ -60,6 +60,7 @@ def zoom_box(mask2d, rng, win=96):
     """Window of win x win that CONTAINS the ROI's bounding box (or overlaps it when the ROI is larger), placed at a
     uniformly random offset so the ROI is not systematically centred."""
     H, W = mask2d.shape
+    win = min(win, H, W)   # small (cropped) volumes: never ask for a window larger than the slice
     idx = np.argwhere(mask2d)
     if idx.size == 0:
         r0, c0 = rng.integers(0, H - win + 1), rng.integers(0, W - win + 1)
