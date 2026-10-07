@@ -28,19 +28,21 @@ contrast at validation time).
 Component & Abdomen & MS & Glioma & Brain \\
           & T1in  & FLAIR   & T1n       & T1w \\
 \midrule
-Baseline (nnU-Net default)            & 36.1 & 25.2 & 26.0 & 27.5 \\
-\quad + $k$-means partition           & 84.8 & 30.6 & 41.7 & 67.6 \\
-\quad + label remap                   & 87.7 & 34.6 & 44.3 & 68.0 \\
-\quad + Voronoi sub-parcellation      & 87.2 & 36.1 & 42.8 & 68.2 \\
-\quad real fill (PALETTE alone)        & 87.9 & 40.4 & 48.5 & 63.6 \\
+Baseline (nnU-Net default)            & 36.1 & 25.2 & 26.0 & \pending \\
+\quad + $k$-means partition           & 84.8 & 30.6 & 41.7 & \pending \\
+\quad + label remap                   & 87.7 & 34.6 & 44.3 & \pending \\
+\quad + Voronoi sub-parcellation      & 87.2 & 36.1 & 42.8 & \pending \\
+\quad real fill (PALETTE alone)       & 87.9 & 40.4 & 47.6 & \pending \\
 \midrule
-\quad + Auglab (PALETTE-Aug)           & 87.4 & 39.5 & 47.5 & 68.6 \\
+\quad + Auglab (PALETTE-Aug)          & 87.4 & 39.5 & 47.5 & \pending \\
 \bottomrule
 \end{tabular}%
 }
 \caption{Component ablation (top five rows, additive, no Auglab) and
-composability check (bottom row). Each rung adds exactly one
-PALETTE-Aug component on top of the row above. Dice (\%) over all test
+composability check (bottom row). From the $k$-means row on, each rung adds
+one PALETTE-Aug component on top of the row above; the first step also
+replaces nnU-Net's default intensity augmentation with spatial augmentation
+only. Dice (\%) over all test
 contrasts of the setting, the training contrast included, with equal weight per
 contrast (the all-contrast series of the same ladders as
 \cref{tab:ladder-full}, which reports the held-out contrasts only). Abdomen T1in:

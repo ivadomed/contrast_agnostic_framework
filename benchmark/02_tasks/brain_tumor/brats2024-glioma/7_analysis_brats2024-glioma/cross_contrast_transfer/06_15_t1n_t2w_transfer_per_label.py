@@ -46,11 +46,11 @@ LABELS = ["NCR", "SNFH", "ET", "RC"]
 # (direction label, real-fill metrics dir, voronoi(noise-fill) metrics dir, eval contrast)
 DIRECTIONS = [
     ("T1n -> T2w (transfers well)",
-     METRICS_ROOT / "t1n/ablations/nnUNet_brats2024-glioma_t1n_v26_6_2_train050_val100_20260730_200711",
+     METRICS_ROOT / "t1n/ablations/auglab_brats2024-glioma_t1n_v26_6_2_train050_val000_20261005_222227",
      METRICS_ROOT / "t1n/ablations/auglab_brats2024-glioma_t1n_baseline_kmeans_label_remap_voronoi_20260730_200711",
      "t2w"),
     ("T2w -> T1n (fails)",
-     METRICS_ROOT / "t2w/nnUNet_brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217",
+     METRICS_ROOT / "t2w/ablations/auglab_brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300",
      METRICS_ROOT / "t2w/ablations/auglab_brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659",
      "t1n"),
 ]

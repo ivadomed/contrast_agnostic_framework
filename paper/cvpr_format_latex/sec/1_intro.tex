@@ -56,18 +56,18 @@ as inverted intensities, because it is not tied to a specific target contrast.
 An optional step also re-randomizes each labeled structure; it uses whatever
 labels exist, a dense label map or just the task's own segmentation labels.
 
-% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated. [Breast numbers are already post-retrain, final.]
 We then test when texture matters, with a controlled ablation in sixteen
 training settings. We keep PALETTE-Aug's partition and region target means and
 change only what fills each region: the region's own image content, affinely
 remapped so that its gradients and fine structure survive (texture kept), or
-Gaussian noise (texture removed). We report the Dice of
-real fill relative to that of noise fill. Pooled per task, the relative gain is
-largest on the appearance-defined
-targets, brain tumor ($+15\%$ \TODO{Glioma retrain}) and MS lesions ($+25\%$), against at most
-$7\%$ on interface-bounded tasks. The converse does not hold: breast lesions,
-also appearance-defined, gain only a relative $1.4\%$, and several appearance-defined
-settings show no gain, so we state the result in one direction only
+Gaussian noise (texture removed). The four largest Dice gains are all on
+appearance-defined targets: brain tumor ($+12.7$ points from T1c training,
+$+6.0$ from T1n) and MS lesions ($+7.7$ from FLAIR, $+5.9$ from T1w), against
+at most $+4.8$ in any interface-bounded setting. Pooled per task, the swap adds
+$+6.8$ Dice on MS and $+4.6$ on brain tumor, against at most $+3.5$ on an
+interface-bounded task. The converse does not hold: breast lesions, also
+appearance-defined, gain only $+0.5$, and several appearance-defined settings
+show no gain, so we state the result in one direction only
 (\S\ref{subsec:e-ablation}). A
 segmentation-free gradient measurement confirms that the swap changes texture:
 noise fill keeps only the partition edges, and real fill recovers most of the
@@ -95,15 +95,15 @@ In summary, we make the following contributions:
 \begin{itemize}
     \item \textbf{When texture preservation matters, tested by intervention.}
     Replacing noise fill with the real-intensity remap, with the partition fixed,
-    gives the largest gains relative to the starting Dice on appearance-defined
-    targets, though not on every one. A segmentation-free gradient measurement
+    gives its largest gains on appearance-defined targets, though not on every
+    one. A segmentation-free gradient measurement
     confirms that the swap changes texture.
     \item \textbf{PALETTE-Aug}, a single-source contrast augmentation that
     needs no dense label map, only the task's own labels. In every comparison
     it runs as one added operator inside the Auglab pipeline; the ablation also
     tests it alone.
     \item \textbf{Breadth evidence.} Across cross-contrast and cross-modality
-    transfer on eight tasks and sixteen datasets, with one
+    transfer on eight tasks and seventeen datasets, with one
     configuration reused throughout, PALETTE-Aug wins the benchmark overall: it is best on six tasks and
     significantly beats every competitor on five; where it does not win, we
     test whether the leader is truly ahead.

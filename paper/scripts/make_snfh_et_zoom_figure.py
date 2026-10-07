@@ -28,7 +28,7 @@ CASE = "BraTSGLI02108101"
 
 RAW051 = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset051_BraTS2024GliomaT1n"
 GT_DIR = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset052_BraTS2024GliomaT2w/labelsTr"
-P_REAL = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217/fold0/t1n"
+P_REAL = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300/fold0/t1n"
 P_NOISE = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659/fold0/t1n"
 
 OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "snfh_et_zoom.pdf"

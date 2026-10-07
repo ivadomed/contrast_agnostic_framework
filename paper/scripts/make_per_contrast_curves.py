@@ -424,10 +424,11 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
         if title in PENDING:
             ann, seg = "TODO", "#d62728"
         elif metric == "dice":
-            # Relative gain at the fill swap (Paul, 2026-10-03): panel delta divided by
-            # the panel-average noise-fill Dice; * = panel-pooled test significant.
+            # Absolute Dice change at the fill swap first, then (2026-10-07, review item 3) the
+            # relative gain (panel delta / panel-average noise-fill Dice) in brackets;
+            # * = panel-pooled test significant.
             before = avg[FILL - 1]
-            ann = (f"{dl / before * 100.0:+.1f}%{star}" if np.isfinite(before) and before > 1.0
+            ann = (f"{dl:+.1f}{star} ({dl / before * 100.0:+.0f}%)" if np.isfinite(before) and before > 1.0
                    else f"{dl:+.1f}{star}")
         else:
             ann = f"{-dl:+.1f} mm{star}"   # dl is the improvement; print the HD95 change itself
@@ -493,8 +494,8 @@ def build(metric, ylabel, out_name, higher_is_better, layout="wide"):
                  ha="center", va="center", fontsize=9, color="#333333")
         if metric == "dice":
             fig.text(0.5, 0.008,
-                      "relative = Δ Dice at the real-fill step ÷ the panel's noise-fill Dice "
-                      "(the level the step starts from)",
+                      "annotation: Δ Dice at the real-fill step (relative to the panel's noise-fill Dice) "
+                      "",
                       ha="center", va="bottom", fontsize=8, color="#555555", style="italic")
 
     out = OUT / out_name

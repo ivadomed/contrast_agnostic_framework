@@ -103,7 +103,10 @@ exactly the designs we have, where a few patients spanning several contrasts
 carry most of the null variance: on the Abdomen table it returned $p=0.013$ for
 a comparison that a $200{,}000$-draw Monte-Carlo test places below
 $5\times10^{-6}$. The enumerated tail is deterministic and reaches far tails
-without the $1/B$ floor of resampling. Its corollary is a hard floor for small
+without the $1/B$ floor of resampling. In the cross-task tests of
+\cref{tab:meta} (1{,}456--1{,}730 patients), the Gaussian remainder carries
+$7$--$24\%$ of the null variance for Dice ($13$--$40\%$ for HD95); the
+exactly enumerated twenty patients carry the rest. Exact enumeration also sets a hard floor for small
 cohorts: eight patients admit $2^8=256$ sign patterns, so no one-sided $p$
 can fall below $1/256$ however consistent the effect.
 
@@ -168,15 +171,15 @@ Dice is a warning sign rather than evidence of competitiveness.
 \toprule
  & Glioma & MS & Breast & Abdomen & Brain & Mandible & Spine & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 44.8 & 35.2 & 58.5 & 122.1 & 30.3 & 21.7 & 49.9 & 149.3 & $<\!10^{-10}$ \\
-SynthSeg-noEM   & 78.0 & 41.9 & 101.1 &  80.6 &  8.8 & 32.9 & 111.8 & 261.8 & $<\!10^{-10}$ \\
+Baseline        & 44.8 & 35.2 & 58.5 & 122.1 & 30.3 & 21.7 & 49.9 & 149.3 & $2\times10^{-47}$ \\
+SynthSeg-noEM   & 78.0 & 41.9 & 101.1 &  80.6 &  8.8 & 32.9 & 111.8 & 261.8 & $2\times10^{-58}$ \\
 SynthSeg-EM     & 17.9 & 24.7 & 60.9 &  23.7 &  5.3 & 24.9 & 4.0 & 34.0 & $2.7\times10^{-6}$ \\
-SRCSM           & 17.5 & 24.6 & 91.8 & 24.4 &  5.2 & \textbf{19.3} & --- & 33.9 & $<\!10^{-10}$ \\
+SRCSM           & 17.5 & 24.6 & 91.8 & 24.4 &  5.2 & \textbf{19.3} & --- & 33.9 & $2\times10^{-32}$ \\
 Auglab          & 16.1 & 26.5 & \textbf{57.1} & 27.8 &  5.4 & 22.1 & 4.7 & 35.6 & $2\times10^{-4}$ \\
 \midrule
-% TODO(rung-5 val000 retrain): Glioma and Brain PALETTE-alone cells and the p cell wait for the retrain
+% TODO(rung-5 val000 retrain): Brain PALETTE-alone cell and the p cell (6 tasks now) wait for the on-harmony T1w/T2w retrain
 % (Brain also for the on-harmony re-prediction). Spine has no PALETTE-alone run (separate pipeline, no ladder).
-PALETTE alone (ours) & \pending & 23.3 & 56.3 & 24.9 & \pending & 22.3 & --- & 35.2 & \pending \\
+PALETTE alone (ours) & 16.6 & 23.3 & 56.3 & 24.9 & \pending & 22.3 & --- & 35.2 & $0.21^\S$ \\
 \textbf{PALETTE-Aug (ours)} & \textbf{15.6} & \textbf{24.3} & 57.7 & \textbf{22.7} & \textbf{5.2} & 23.5 & \textbf{3.5} & \textbf{29.0} & --- \\
 \midrule
 \multicolumn{1}{r}{\footnotesize competitors beaten ($p<0.05$)} &
@@ -187,8 +190,9 @@ PALETTE alone (ours) & \pending & 23.3 & 56.3 & 24.9 & \pending & 22.3 & --- & 3
 \cref{tab:meta}, and likewise no cross-task average; the bottom row counts the
 competitors PALETTE-Aug beats within each task (on Mandible, SRCSM, Auglab and
 the baseline are significantly ahead of it). Spine has no SRCSM run and no
-ladder. PALETTE alone: the transform without Auglab, shown for reference and
-left out of the bolding.}
+ladder. PALETTE alone: the transform without Auglab, left out of the bolding;
+$^\S$PALETTE-Aug against PALETTE alone over the six tasks with both (Brain
+pending).}
 \label{tab:meta-hd95}
 \end{table*}
 
@@ -204,7 +208,7 @@ training $\to$ test contrast pair.
 
 \begin{figure*}[t]
 \centering
-% TODO(rung-5 val000 retrain): figure built with LADDER_PENDING=Glioma,Brain (their panels read TODO); regenerate without it once both ladders are redone.
+% TODO(rung-5 val000 retrain): figure built with LADDER_PENDING=Brain (its panel reads TODO); regenerate without it once Brain T1w/T2w are redone.
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_hd95}
 \caption{\Cref{fig:ladder} (main paper) on HD95 instead of Dice: same tasks,
 grouping and visual scheme. Annotation: the task's HD95 change at the fill swap
@@ -214,7 +218,7 @@ significantly. Per-setting numbers: \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
 \end{figure*}
 
-% TODO(rung-5 val000 retrain): pre-retrain numbers (real-fill rung = val100); regenerate (paper/scripts/compute_dissociation_pvalues.py, compute_ladder_significance.py).
+% TODO(rung-5 val000 retrain): Brain T1w/T2w rows pending (regenerated 2026-10-07 for every other setting; Holm values may shift slightly once they land).
 \begin{table}[t]
 \centering
 \small
@@ -224,10 +228,10 @@ significantly. Per-setting numbers: \cref{tab:dissociation-hd95}.}
 Setting & noise & $\Delta$ & rel.\ (\%) & $p$ \\
 \midrule
 \multicolumn{5}{l}{\emph{Appearance-defined}} \\
-Glioma T1n & \pending & \pending & \pending & \pending \\
-Glioma T1c & \pending & \pending & \pending & \pending \\
-Glioma T2w & \pending & \pending & \pending & \pending \\
-Glioma FLAIR & \pending & \pending & \pending & \pending \\
+Glioma T1n & 39.8 & $+5.98^{*}$ & $+15.0$ & $1.0\times10^{-9}$ \\
+Glioma T1c & 30.5 & $+12.73^{*}$ & $+41.8$ & $5.0\times10^{-12}$ \\
+Glioma T2w & 41.0 & $+1.13$ & $+2.8$ & 0.19 \\
+Glioma FLAIR & 31.9 & $-1.25$ & $-3.9$ & 0.19 \\
 MS FLAIR & 19.6 & $+7.69$ & $+39.3$ & 0.07$^\dagger$ \\
 MS T1w & 34.1 & $+5.94$ & $+17.4$ & 0.07$^\dagger$ \\
 Breast T1-CE & 30.8 & $-1.16^{*}$ & $-3.8$ & $6.8\times10^{-4}$ \\
@@ -238,7 +242,7 @@ Abdomen T1in & 85.7 & $+1.43^{*}$ & $+1.7$ & $4.6\times10^{-12}$ \\
 Abdomen T2spir & 82.0 & $+3.72^{*}$ & $+4.5$ & $1.4\times10^{-9}$ \\
 Brain T1w & \pending & \pending & \pending & \pending \\
 Brain T2w & \pending & \pending & \pending & \pending \\
-Brain DWI & \pending & \pending & \pending & \pending \\
+Brain DWI & 64.6 & $+0.54$ & $+0.8$ & 0.07$^\dagger$ \\
 Mandible CBCT$^\ddagger$ & 68.1 & $+0.07$ & $+0.1$ & 0.07 \\
 Pelvis CT & 35.3 & $+4.76$ & $+13.5$ & 0.07 \\
 Pelvis MRI & 63.1 & $+2.59^{*}$ & $+4.1$ & 0.0095 \\
@@ -259,7 +263,7 @@ ToothFairy2 is CBCT only. Per-task summary: \cref{fig:ladder} (main paper); per 
 \label{tab:dissociation}
 \end{table}
 
-% TODO(rung-5 val000 retrain): pre-retrain numbers (real-fill rung = val100); regenerate (paper/scripts/compute_dissociation_pvalues.py, compute_ladder_significance.py).
+% TODO(rung-5 val000 retrain): Brain T1w/T2w rows pending (regenerated 2026-10-07 for every other setting; Holm values may shift slightly once they land).
 \begin{table}[t]
 \centering
 \small
@@ -269,23 +273,23 @@ ToothFairy2 is CBCT only. Per-task summary: \cref{fig:ladder} (main paper); per 
 Setting & $\Delta$ HD95 (mm) & $p$ \\
 \midrule
 \multicolumn{3}{l}{\emph{Appearance-defined}} \\
-Glioma T1n & \pending & \pending \\
-Glioma T1c & \pending & \pending \\
-Glioma T2w & \pending & \pending \\
-Glioma FLAIR & \pending & \pending \\
-MS FLAIR & $-3.02$ & 0.19 \\
-MS T1w & $-1.91$ & 0.78 \\
+Glioma T1n & $-3.89^{*}$ & $9.8\times10^{-8}$ \\
+Glioma T1c & $-9.77^{*}$ & $1.0\times10^{-10}$ \\
+Glioma T2w & $-1.51$ & 0.052 \\
+Glioma FLAIR & $+1.97$ & 0.088 \\
+MS FLAIR & $-3.02$ & 0.16 \\
+MS T1w & $-1.91$ & 0.59 \\
 Breast T1-CE & $-3.43^{*}$ & 0.0066 \\
 Breast T2w & $-2.57^{*}$ & $3.2\times10^{-6}$ \\
 \midrule
 \multicolumn{3}{l}{\emph{Interface-bounded}} \\
 Abdomen T1in & $-1.36$ & 0.8 \\
-Abdomen T2spir & $-16.30$ & 0.22 \\
+Abdomen T2spir & $-16.30$ & 0.19 \\
 Brain T1w & \pending & \pending \\
 Brain T2w & \pending & \pending \\
-Brain DWI & \pending & \pending \\
-Mandible CBCT & $-1.17^{*}$ & 0.047 \\
-Pelvis CT & $-3.61$ & 0.22 \\
+Brain DWI & $-0.17$ & 0.44 \\
+Mandible CBCT & $-1.17$ & 0.051 \\
+Pelvis CT & $-3.61$ & 0.19 \\
 Pelvis MRI & $-0.48$ & 0.8 \\
 \bottomrule
 \end{tabular}
@@ -303,20 +307,21 @@ underlying out-of-domain Dice at every rung of all sixteen ladders, with
 significance for each step against the rung immediately before it
 (Holm-corrected paired Wilcoxon on patients, within each ladder's family of
 steps). Most steps that add an ingredient help, as expected.
-% TODO(rung-5 val000 retrain): add the Brain and Glioma cells once their ladders are regenerated.
-Among the settings already final, the significant \emph{decreases} (marked
-$\downarrow$) are the Voronoi step on Glioma T1n and Abdomen T1in, which the
-real-fill step then more than recovers; the fill swap on Breast T1-CE; and the
-$+$Auglab step on MS T1w, both Abdomen settings and Mandible, the task where
+% TODO(rung-5 val000 retrain): Brain T1w/T2w cells still pending.
+Among the settings already final (all but Brain T1w and T2w), the significant
+\emph{decreases} (marked $\downarrow$) are the Voronoi step on Glioma T1n and
+Abdomen T1in, which the real-fill step then more than recovers; the fill swap
+on Breast T1-CE; and the $+$Auglab step on MS T1w, both Abdomen settings,
+Brain DWI and Mandible, the task where
 the complete method places third (\cref{subsec:e-main}), plus Mandible's step
 to synthetic-contrast validation. On Mandible, PALETTE alone (the real-fill
 rung, $68.2$) is the ladder's maximum and adding the Auglab recipe takes it back
 down; adding PALETTE to Auglab also lowers Mandible Dice (\cref{tab:meta}), so
 the two components interact negatively there and we cannot attribute the
 shortfall to either; we have not diagnosed which Auglab operator is responsible.
-Abdomen T1in and MS T1w also peak at the real-fill rung.
+Abdomen T1in, MS T1w and Brain DWI also peak at the real-fill rung, while on all four Glioma settings and on Breast and Pelvis the $+$Auglab step adds Dice.
 
-We likewise do not hide that Voronoi's own marginal contribution is
+Voronoi's own marginal contribution is
 task-dependent rather than uniformly positive. A separate paired
 significance check on all-contrast Dice (the estimand of \cref{tab:mechanism},
 not the OOD slice above) shows that Voronoi
@@ -327,7 +332,7 @@ decrease), and significantly \emph{hurts} Glioma T1n. The full method is still b
 the subsequent real-intensity fill step, so the net effect of the complete
 pipeline is positive even though one internal component is not.
 
-% TODO(rung-5 val000 retrain): pre-retrain numbers (real-fill rung = val100); regenerate (paper/scripts/compute_dissociation_pvalues.py, compute_ladder_significance.py).
+% TODO(rung-5 val000 retrain): Brain T1w/T2w rows pending (regenerated 2026-10-07 for every other setting; Holm values may shift slightly once they land).
 \begin{table}[t]
 \centering
 \scriptsize
@@ -342,8 +347,8 @@ base & 16.5 & 15.9 & 6.0 & 11.0 & 2.4 & 1.1 & 23.7 & 33.5 \\
 +$k$-means & $38.4^{***}$ & $29.6^{***}$ & $38.6^{***}$ & $26.1^{***}$ & $11.2^{*}$ & $9.8^{*}$ & $28.8^{***}$ & $37.0^{***}$ \\
 +label remap & $41.8^{***}$ & 30.3 & $40.2^{**}$ & 26.4 & $17.5^{*}$ & $22.4^{*}$ & 28.5 & $38.8^{***}$ \\
 +Voronoi & $39.8^{***}{\downarrow}$ & 30.5 & 41.0 & $31.9^{***}$ & 19.6 & $34.1^{*}$ & $30.8^{***}$ & $39.8^{**}$ \\
-real fill & \pending & \pending & \pending & \pending & $27.3^{*}$ & $40.0^{*}$ & $29.6^{***}{\downarrow}$ & $41.9^{***}$ \\
-+Auglab & \pending & \pending & \pending & \pending & 30.6 & $36.4^{*}{\downarrow}$ & $34.7^{***}$ & 41.9 \\
+real fill & $45.8^{***}$ & $43.2^{***}$ & 42.1 & 30.7 & $27.3^{*}$ & $40.0^{*}$ & $29.6^{***}{\downarrow}$ & $41.9^{***}$ \\
++Auglab & 46.9 & 44.2 & $46.8^{***}$ & $40.9^{***}$ & 30.6 & $36.4^{*}{\downarrow}$ & $34.7^{***}$ & 41.9 \\
 +Auglab, s.v. & $47.6^{*}$ & $46.5^{***}$ & 46.9 & 41.2 & 31.3 & 34.7 & --- & --- \\
 \bottomrule
 \end{tabular}%
@@ -356,13 +361,13 @@ real fill & \pending & \pending & \pending & \pending & $27.3^{*}$ & $40.0^{*}$ 
 Rung & Abdomen & Abdomen & Brain & Brain & Brain & Mandible & Pelvis & Pelvis \\
      & T1in & T2spir & T1w & T2w & DWI & CBCT & CT & MRI \\
 \midrule
-base & 17.0 & 19.7 & \pending & \pending & \pending & 39.4 & 0.7 & 10.0 \\
-+$k$-means & $82.2^{***}$ & $77.4^{***}$ & \pending & \pending & \pending & $64.6^{***}$ & $22.6^{***}$ & $55.9^{***}$ \\
-+label remap & $86.1^{***}$ & $81.4^{***}$ & \pending & \pending & \pending & $65.6^{***}$ & $30.0^{***}$ & $63.3^{***}$ \\
-+Voronoi & $85.7^{**}{\downarrow}$ & $82.0^{***}$ & \pending & \pending & \pending & $68.1^{***}$ & $35.3^{**}$ & 63.1 \\
-real fill & $87.1^{***}$ & $85.7^{***}$ & \pending & \pending & \pending & $68.2^{**}$ & $40.0^{*}$ & $65.7^{**}$ \\
-+Auglab & $86.4^{***}{\downarrow}$ & $85.4^{***}{\downarrow}$ & \pending & \pending & \pending & $67.6^{***}{\downarrow}$ & $46.3^{**}$ & 67.2 \\
-+Auglab, s.v. & 86.1 & 85.9 & \pending & \pending & \pending & $67.5^{***}{\downarrow}$ & --- & --- \\
+base & 17.0 & 19.7 & \pending & \pending & 34.6 & 39.4 & 0.7 & 10.0 \\
++$k$-means & $82.2^{***}$ & $77.4^{***}$ & \pending & \pending & $60.5^{*}$ & $64.6^{***}$ & $22.6^{***}$ & $55.9^{***}$ \\
++label remap & $86.1^{***}$ & $81.4^{***}$ & \pending & \pending & $63.6^{*}$ & $65.6^{***}$ & $30.0^{***}$ & $63.3^{***}$ \\
++Voronoi & $85.7^{**}{\downarrow}$ & $82.0^{***}$ & \pending & \pending & 64.6 & $68.1^{***}$ & $35.3^{**}$ & 63.1 \\
+real fill & $87.1^{***}$ & $85.7^{***}$ & \pending & \pending & $65.2^{*}$ & $68.2^{**}$ & $40.0^{*}$ & $65.7^{**}$ \\
++Auglab & $86.4^{***}{\downarrow}$ & $85.4^{***}{\downarrow}$ & \pending & \pending & $62.7^{*}{\downarrow}$ & $67.6^{***}{\downarrow}$ & $46.3^{**}$ & 67.2 \\
++Auglab, s.v. & 86.1 & 85.9 & \pending & \pending & 61.5 & $67.5^{***}{\downarrow}$ & --- & --- \\
 \bottomrule
 \end{tabular}%
 }
@@ -383,11 +388,10 @@ contrasts all come from external cohorts.}
 
 \Cref{tab:fill-swap-pairs} breaks the fill swap down by training $\to$ test contrast pair: the numbers behind the thin curves of \cref{fig:ladder}.
 
-% TODO(rung-5 val000 retrain): regenerate make_fill_swap_pairs_table.py without LADDER_PENDING once Glioma and Brain are redone.
+% TODO(rung-5 val000 retrain): regenerate make_fill_swap_pairs_table.py without LADDER_PENDING once Brain T1w/T2w are redone.
 \input{sec/_suppl_fill_swap_pairs}
 
-% Regenerated 2026-10-03 with folds capped to 0-2 (06_15_t1n_t2w_transfer_per_label.py).
-% TODO(rung-5 val000 retrain): regenerate tab:per-label-abs/-delta and fig:snfh-et-zoom on the val000 real-fill run.
+% Regenerated 2026-10-07 on the val000 real-fill runs, folds 0-2 (06_15_t1n_t2w_transfer_per_label.py, make_snfh_et_zoom_figure.py).
 \paragraph{Per-label breakdown: is the fill-swap effect uniform within a task?}
 Glioma T2w's pooled fill-swap effect is small and not significant
 (\cref{tab:dissociation}), with one significantly negative held-out contrast
@@ -409,10 +413,10 @@ resection cavity).
 \toprule
 Label & T1n$\to$T2w & T2w$\to$T1n & gap \\
 \midrule
-NCR  & 21.5 & 20.0 & $+1.4$ \\
-SNFH & 66.3 & 46.4 & $+19.9$ \\
-ET   & 27.5 & 29.0 & $-1.5$ \\
-RC   & 52.3 & 42.8 & $+9.5$ \\
+NCR  & 18.3 & 21.5 & $-3.2$ \\
+SNFH & 66.4 & 43.2 & $+23.2$ \\
+ET   & 27.2 & 26.9 & $+0.4$ \\
+RC   & 50.6 & 43.1 & $+7.5$ \\
 \bottomrule
 \end{tabular}
 \caption{Absolute OOD Dice (\%) of the real-fill rung (PALETTE alone),
@@ -428,10 +432,10 @@ per label, both transfer directions.}
 \toprule
 Label & T1n$\to$T2w $\Delta$ & T2w$\to$T1n $\Delta$ \\
 \midrule
-NCR  & $+1.9$ ($p=0.10$) & $+1.0$ ($p=0.77$) \\
-SNFH & $+14.7^{*}$ ($p=4.3\times10^{-11}$) & $-8.8^{*}$ ($p=1\times10^{-4}$) \\
-ET   & $+2.3^{*}$ ($p=0.017$) & $+1.6$ ($p=0.24$) \\
-RC   & $+2.9^{*}$ ($p=3\times10^{-4}$) & $-6.9^{*}$ ($p=4\times10^{-4}$) \\
+NCR  & $+0.4$ ($p=0.25$) & $+0.8$ ($p=1.0$) \\
+SNFH & $+14.8^{*}$ ($p=5.4\times10^{-12}$) & $-11.9^{*}$ ($p=1.6\times10^{-7}$) \\
+ET   & $+2.0$ ($p=0.054$) & $-0.2$ ($p=1.0$) \\
+RC   & $+3.5^{*}$ ($p=6\times10^{-5}$) & $-6.5^{*}$ ($p=0.005$) \\
 \bottomrule
 \end{tabular}
 \caption{Fill-swap step (+Voronoi noise fill $\to$ real fill),
@@ -442,13 +446,12 @@ the four labels within each direction; $^*$: significant.}
 
 The worsening is concentrated in SNFH
 (\cref{tab:per-label-abs,tab:per-label-delta}). SNFH has the largest gap
-between directions ($+19.9$ Dice) and the largest significant sign reversal:
-$+14.7$ when trained on T1n, $-8.8$ when trained on T2w. RC reverses too, at a
-smaller size. NCR shows no significant
-effect in either direction, and ET improves only in the T1n$\to$T2w direction.
+between directions ($+23.2$ Dice) and the largest significant sign reversal:
+$+14.8$ when trained on T1n, $-11.9$ when trained on T2w. RC reverses too, at a
+smaller size. NCR and ET show no significant effect in either direction.
 \Cref{fig:snfh-et-zoom} shows this on one case: with real fill, the
-T2w-trained model's SNFH prediction shrinks to a thin band near the ventricle,
-while its ET prediction is almost unchanged.
+T2w-trained model's SNFH prediction almost vanishes (label Dice $0.90\to0.06$),
+while its ET prediction is almost unchanged ($0.61\to0.68$).
 
 \begin{figure}[h]
 \centering
@@ -506,17 +509,17 @@ MS      & \textbf{38.5} & 37.9 & 24.3 & \textbf{24.2} \\
 \caption{Applying PALETTE-Aug at validation time as well as at training time, on
 the four tasks with a task-level table for both configurations (Mandible's
 val100 arm is scored only in its ladder, \cref{tab:ladder-full}; the Breast, Spine and
-Pelvis arms were not trained). Across these tasks the two show no significant difference in either
-direction (same cross-task test as
-\cref{tab:meta}; two-sided Dice $p=0.74$, HD95 $p=0.096$ \TODO{recompute after the on-harmony re-evaluation}). We report
-the like-for-like val000 configuration throughout the main paper.}
+Pelvis arms were not trained). Across these tasks the two do not differ
+on Dice (same cross-task test as \cref{tab:meta}, two-sided $p=0.93$), and
+val100 has a lower HD95 (two-sided $p=0.031$, $-0.8$\,mm). We report the
+like-for-like val000 configuration throughout the main paper.}
 \label{tab:suppl-val100}
 \end{table}
 
 Validation-time randomization improves Glioma and Abdomen on both metrics
 (\cref{tab:suppl-val100}), most visibly on boundary distance for Abdomen
-($22.7 \rightarrow 20.6$~mm). The effect is not significant across tasks, and
-MS Dice moves slightly the other way, so we do
+($22.7 \rightarrow 20.6$~mm). Across tasks the HD95 gain is significant but
+the Dice change is not, and MS Dice moves slightly the other way, so we do
 not claim it as a separate contribution; we report it because it costs
 nothing and because it indicates that the benefit of contrast randomization
 extends to model selection and is not confined to the gradient updates.
@@ -525,7 +528,7 @@ extends to model selection and is not confined to the gradient updates.
 \section{Component ablation on all test contrasts}
 \label{sec:suppl-mechanism}
 
-% TODO(rung-5 val000 retrain): tab:mechanism real-fill row is pre-retrain.
+% TODO(rung-5 val000 retrain): tab:mechanism Brain T1w column pending.
 \input{sec/_suppl_mechanism}
 
 \FloatBarrier

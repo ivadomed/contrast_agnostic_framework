@@ -55,6 +55,33 @@ from compare_palette_alone_all_domains import DS, MOD, COLS, find_rung  # noqa: 
 
 OUT = REPO / "paper" / "generated_results" / "palette_alone_vs_competitors"
 
+# cross-task test (same design as tab:meta's p column), via the shared meta_task_heatmap module
+import importlib.util  # noqa: E402
+_spec = importlib.util.spec_from_file_location(
+    "meta_task_heatmap", REPO / "benchmark/00_commun_scripts/00_03_evaluate/meta_task_heatmap.py")
+MT = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(MT)
+from stat_tests import holm as _holm, macro_perm_design as _mpd, fmt_p as _fmt_p  # noqa: E402
+
+
+def meta_modalities(cfg: dict, metrics_root: str) -> tuple:
+    """A combined config dict -> (modalities, contrast_groups) in meta_task_heatmap's format
+    (same expansion as MT.load_task_modalities, but from an in-memory, mirrored config)."""
+    os.environ["METRICS_ROOT"] = metrics_root
+    mods = []
+    for m in cfg["modalities"]:
+        srcs = m.get("sources") or [{"metrics_dir": m["metrics_dir"]}]
+        mods.append({"name": m["name"], "runs": m.get("runs", {}),
+                     "sources": [{**s, "metrics_dir": Path(os.path.expandvars(str(s["metrics_dir"])))} for s in srcs]})
+    return mods, (cfg.get("contrast_groups") if cfg.get("use_contrast_groups", True) else None)
+
+
+def crosstask(xt: list, ref: str, comp: str, metric: str, higher_better: bool) -> tuple:
+    present = [e for e in (MT.task_design_entries(t["modalities"], ref, comp, metric, t["contrast_groups"], 0)
+                           for t in xt) if e]
+    ents = [(j, leaf, unit, c) for j, es in enumerate(present) for _, leaf, unit, c in es]
+    return _mpd(ents, len(present), higher_better) if present else (float("nan"),) * 3
+
 
 def run_task(cfg: dict, ds: str, tdir: str, out_dir: Path) -> dict:
     one = dict(cfg)
@@ -77,8 +104,9 @@ def main():
     for lab, _, rel in C.ROWS:
         task, mod = lab.split(" ", 1)
         rung[(task, MOD[task][mod])] = json.load(open(REPO / rel))["run_keys"][4]
-    rows, problems, sig_rows = [], [], []
+    rows, problems, sig_rows, xt = [], [], [], []
     for task, (ds, tdir) in DS.items():
+        n_prob = len(problems)
         mr = str(REPO / f"benchmark/02_tasks/{tdir}/{ds}/8_results_{ds}/02_metrics")
         cfg = yaml.safe_load(next((REPO / f"benchmark/02_tasks/{tdir}/{ds}/5_scripts_{ds}/06_evaluate/configs")
                                   .glob("*combined_01_results.yaml")).read_text())
@@ -110,6 +138,9 @@ def main():
             else:
                 m["metrics_dir"] = srcs[0]["metrics_dir"]
             m["runs"] = dict(m["runs"], palette_alone=bare)
+        if len(problems) == n_prob:     # PALETTE alone present for every modality of the task
+            mods, groups = meta_modalities(mirrored, mr)
+            xt.append({"name": task, "modalities": mods, "contrast_groups": groups})
         ref = run_task(cfg, ds, tdir, scratch / f"orig_{ds}")
         new = run_task(mirrored, ds, tdir, scratch / f"mirr_{ds}")
         asref = copy.deepcopy(mirrored); asref["ref"] = "palette_alone"
@@ -144,6 +175,20 @@ def main():
     txt += ("\n\nTask-level estimand of tab:meta (all training modalities, all test contrasts incl. the "
             "training contrast, external cohorts pooled by contrast group).\n\nproblems:\n"
             + ("\n".join(problems) if problems else "none (headline methods reproduce the unmodified config exactly)") + "\n")
+    # cross-task (tasks = units of equal weight, patients as sign-flip units; Spine has no ladder)
+    ours, comps = "auglabAug_v26_6_2_train050_val000", [k for k, _ in COLS if k not in ("palette_alone",
+                                                         "auglabAug_v26_6_2_train050_val000")]
+    xl = ["", f"### Cross-task (tasks: {', '.join(t['name'] for t in xt)}; same test as tab:meta's p column)", ""]
+    for metric in ("dice", "hd95"):
+        hb = metric == "dice"
+        raw = [crosstask(xt, "palette_alone", c, metric, hb)[2] for c in comps]
+        xl.append(f"- {metric}: PALETTE alone better than " + ", ".join(
+            f"{c} p_holm={_fmt_p(p)}" for c, p in zip(comps, _holm(raw))))
+        d, p2, p_aug = crosstask(xt, ours, "palette_alone", metric, hb)
+        p_alone = crosstask(xt, ours, "palette_alone", metric, not hb)[2]
+        xl.append(f"- {metric}: PALETTE-Aug minus PALETTE alone macroΔ={d:+.4f}; p two-sided={_fmt_p(p2)}, "
+                  f"p(PALETTE-Aug better)={_fmt_p(p_aug)}, p(PALETTE alone better)={_fmt_p(p_alone)}")
+    txt += "\n".join(xl) + "\n"
     (OUT / "table_per_task.md").write_text(txt)
     print(txt)
 

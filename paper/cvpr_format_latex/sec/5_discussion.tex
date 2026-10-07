@@ -1,7 +1,7 @@
 \section{Discussion and Limitations}
 \label{sec:discussion}
 
-\paragraph{Why anatomy predicts the largest effects.} Liver, spleen and kidney are
+\paragraph{A possible reason for the largest effects.} Liver, spleen and kidney are
 encapsulated organs with a clear physical boundary, and edge-following methods
 have long segmented them well~\cite{lee2007gaclivers}. An
 augmentation that scrambles their internal texture but keeps the boundary loses
@@ -13,12 +13,11 @@ texture features separate them from normal-appearing white
 matter~\cite{zhang2008mstexture}. This account interprets the intervention of
 \cref{subsec:e-ablation}; it is not independent evidence.
 
-% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated. [Breast numbers are already post-retrain, final.]
 \paragraph{Not every appearance-defined target gains much.} Glioma T2w and
-FLAIR show no Dice gain \TODO{Glioma retrain}, and Breast gains only slightly:
-$+5.3\%$ from T2w training but $-3.8\%$ from T1-CE. We have two hypotheses. First, the effect depends sharply on the
-training contrast (Glioma: $+13.3$ from T1c, $+7.2$ from T1n, about zero
-from T2w and FLAIR), so whether its texture transfers may matter as much as the
+FLAIR show no significant Dice gain, and Breast gains only slightly:
+$+2.1$ Dice from T2w training but $-1.2$ from T1-CE. We have two hypotheses. First, the effect depends sharply on the
+training contrast (Glioma: $+12.7$ from T1c, $+6.0$ from T1n, $+1.1$ and
+$-1.3$ from T2w and FLAIR), so whether its texture transfers may matter as much as the
 target; with T2w training, real fill helps some labels and hurts others
 (\cref{tab:per-label-delta}). Second, Breast pools four cohorts from different
 trials, which may dilute a cohort-specific effect. On interface-bounded
@@ -27,14 +26,15 @@ gain arrives with the texture-free partition rungs (\cref{tab:ladder-full}),
 that is, from the wide range of region-to-region contrasts PALETTE-Aug
 samples.
 
-% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated. [Breast numbers are already post-retrain, final.]
 \paragraph{Limitations.} We assign each target to a group by its anatomy, not
-by a measured boundary statistic. Target type is confounded with difficulty:
-all interface-bounded rows but one start above $63\%$ noise-fill Dice and
-every appearance-defined row below $42\%$, so dividing by the starting Dice
-favors the latter; as a share of the remaining error, Abdomen T2spir would rank
-first. The exception, Pelvis CT, starts at $35\%$ and gains $+13.5\%$ (not
-significant), below the large appearance-defined gains.
+by a measured boundary statistic, and the grouping is ours. Target type is
+confounded with difficulty: all interface-bounded rows but one start above
+$63\%$ noise-fill Dice and every appearance-defined row below $42\%$. We
+therefore lead with the absolute Dice change; dividing by the starting Dice
+favors the appearance-defined rows, and as a share of the remaining error
+($100\%$ minus noise-fill Dice) Abdomen T2spir would rank first. The
+exception, Pelvis CT, starts at $35\%$ and gains $+4.8$ (not significant),
+below the four large appearance-defined gains.
 The between-group comparison is descriptive: a permutation test on the
 seven per-task gains gives $p=0.2$. MS has eight test patients and Brain eight
 sessions of four subjects, so their single-setting effects can be consistent
@@ -43,27 +43,31 @@ Brain's session-level tests are optimistic. Spine was run on a separate
 pipeline and has no SRCSM arm. The cross-task test covers new patients, not new tasks; with the task as the
 unit, the advantage over SRCSM is not significant.
 We applied each competitor as its paper proposes and did not develop it
-further; in particular, we did not combine SRCSM or SynthSeg with the full
-Auglab pipeline, which would be a new method of our own design rather than
-theirs. PALETTE-Aug targets the single-source setting and is complementary to
+further. In particular, we did not combine SRCSM or SynthSeg with the full
+Auglab pipeline, which would be a new method of our own design; part of
+PALETTE-Aug's margin over them may therefore come from Auglab, which only the
+comparison with Auglab itself controls. We also left out SRCSM's test-time
+histogram matching, so its Breast score may be lower than its full pipeline
+would give. PALETTE-Aug targets the single-source setting and is complementary to
 multi-source domain generalization, which assumes several labeled source
 domains.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-% TODO(rung-5 val000 retrain): fill-swap numbers in this paragraph are pre-retrain (val100 real-fill rung); recompute once every ladder is regenerated. [Breast numbers are already post-retrain, final.]
 We asked when preserving real image texture matters for contrast-robust
-segmentation. Relative to the noise-fill Dice, preserving texture helps most
-where the target is defined by tissue appearance rather than an anatomical
-interface: $+15\%$ \TODO{Glioma retrain} on brain tumor and $+25\%$ on MS lesions per task, against
-at most $7\%$ on interface-bounded tasks. Not every appearance-defined target
-gains. PALETTE-Aug, which
-preserves texture and needs no dense label map, wins the eight-task benchmark overall and significantly beats every
-competitor on five tasks. The task-level account makes a
-testable prediction for new tasks: a large relative gain from texture
-preservation should not be expected where the target has an anatomical
-interface.
+segmentation. In our sixteen settings, every large gain from keeping texture,
+$+5.9$ to $+12.7$ Dice, is on a target defined by tissue appearance (brain
+tumor, MS lesions), against at most $+4.8$ where an anatomical interface
+bounds the target; not every appearance-defined target gains. PALETTE-Aug,
+which preserves texture and needs no dense label map, wins the eight-task
+benchmark overall and significantly beats every competitor on five tasks.
+Whether the pattern holds on new tasks, and whether a measured boundary
+statistic can replace our anatomical grouping, remains to be tested.
+
+\paragraph{Reproducibility.} \TODO{Paul: confirm release} Code (PALETTE-Aug,
+our SynthSeg-EM re-implementation, all pipeline scripts) and per-case metrics
+will be released; all datasets but the Spine training cohort are public.
 
 %%%%%%%%% ACKNOWLEDGEMENTS - if applicable, uncomment for camera-ready
 % \paragraph{Acknowledgements.} This work was enabled in part by support

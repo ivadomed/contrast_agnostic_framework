@@ -149,6 +149,7 @@ def run_pipeline(img_slice: np.ndarray, lbl_slice: np.ndarray, device="cpu"):
     km_lbl = panel_b.clone()            # (c) k-means regions + labels, flat
     vor_lbl = panel_c.clone()           # (d) + Voronoi sub-regions, flat
     panel_e = step3_texture.clone()     # (e) same partition, real texture
+    label_draws = []                    # (mask, mu_ell) per label, reused by the noise-fill panel
     for ell in unique_labels:
         ell_mask = (lbl_flat == ell).float()
         if ell_mask.sum() < 4:
@@ -158,13 +159,25 @@ def run_pipeline(img_slice: np.ndarray, lbl_slice: np.ndarray, device="cpu"):
         sign_ell = 1.0 if torch.rand(1).item() > 0.5 else -1.0
         alpha_ell = mag_ell * sign_ell
         m = ell_mask.bool()
+        label_draws.append((m, mu_ell))
         for buf in (km_lbl, vor_lbl, panel_e):
             mean_ell = (buf * ell_mask).sum() / ell_mask.sum().clamp(min=eps)
             buf.copy_(torch.where(m, (mu_ell + alpha_ell * (buf - mean_ell)).clamp(0, 1), buf))
 
-    # ablation-ladder order: input, +k-means, +label remap, +Voronoi (flat), real fill
+    # (n) the ladder's NOISE FILL on the same partition and the same target means (rung 4,
+    # palette_noisefill.py with label_fill_noise=True): every sub-region mu_c + sigma_c*N(0,1),
+    # sigma_c ~ U(0.05, 0.25), then every label refilled the same way with its own mu_ell.
+    # Separate generator, so the global draw sequence -- hence panels (a)-(e) -- is unchanged.
+    g = torch.Generator().manual_seed(1)
+    sig_c = torch.rand(R, generator=g) * 0.20 + 0.05
+    panel_n = (mu_c[rid] + sig_c[rid] * torch.randn(N, generator=g)).clamp(0, 1) * flat_m
+    for m, mu_ell in label_draws:
+        sig = torch.rand(1, generator=g).item() * 0.20 + 0.05
+        panel_n = torch.where(m, (mu_ell + sig * torch.randn(N, generator=g)).clamp(0, 1), panel_n)
+
+    # ablation-ladder order: input, +k-means, +label remap, +Voronoi (flat), noise fill, real fill
     panels = {
-        "a": flat, "b": panel_b, "c": km_lbl, "d": vor_lbl, "e": panel_e.clamp(0, 1),
+        "a": flat, "b": panel_b, "c": km_lbl, "d": vor_lbl, "n": panel_n, "e": panel_e.clamp(0, 1),
     }
     return {k: v.reshape(H, W).numpy() for k, v in panels.items()}
 

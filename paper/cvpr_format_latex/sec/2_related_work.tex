@@ -13,9 +13,10 @@
   structure already there (its straight edges are label boundaries, \eg between
   the two hemispheres; no Voronoi yet); Voronoi sub-regions under the same label
   remap (d).
-  (e), the actual training input, applies the signed affine remap of
-  \cref{eq:affine} to the same partition, which keeps the real texture inside
-  every region.}
+  (e) is the ablation's noise fill: the same partition and target means, each
+  region and label filled with Gaussian noise. (f), the actual training input,
+  applies the signed affine remap of \cref{eq:affine} to the same partition,
+  which keeps the real texture inside every region.}
   \label{fig:method-pipeline}
 \end{figure*}
 
@@ -61,11 +62,17 @@ MRI~\cite[\S5.4]{billot2023synthseg}; we re-implement it.
 \subsection{Texture as a segmentation signal}
 \label{subsec:texture}
 
-Independent work establishes that local texture, not only intensity level,
-carries information a segmentation model can use: second-order
-gray-level statistics discriminate image content beyond simple
-intensity~\cite{haralick1973texture}, and quantitative texture features from
-tumor regions carry prognostic signal across CT, MRI and
+ImageNet-trained CNNs classify more by texture than by shape, and training
+them on style-randomized images shifts them toward shape and improves
+robustness~\cite{geirhos2019texturebias}; how strong this texture bias is
+depends mostly on the training data and
+augmentation~\cite{hermann2020texturebias}. SynthSeg-style randomization
+pulls the same lever on medical images: replacing texture with noise forces
+the network onto shape. We ask what that costs when the target is itself
+defined by its appearance. In medical images, texture carries such
+information: second-order gray-level statistics discriminate image content
+beyond intensity~\cite{haralick1973texture}, and texture features from tumor
+regions carry prognostic signal across CT, MRI and
 PET~\cite{lambin2012radiomics}. Closer to our setting, Kang et al.\
 disentangle structure from texture in cross-domain image translation with a
 texture co-occurrence loss, targeting the same failure mode we do --- naive

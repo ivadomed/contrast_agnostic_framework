@@ -1,26 +1,20 @@
 \begin{abstract}
-\textbf{Introduction.} Deep learning for medical image segmentation generalizes
-poorly across imaging modalities, and annotating data for every new domain is
-prohibitively costly. Synthesis-based augmentation methods such as SynthSeg
-address this by generating training images from label maps alone, but they
-require dense label maps and discard the source image's texture. We introduce
-PALETTE-Aug, a texture-preserving alternative, and ask when texture matters
-for generalization.
-\textbf{Methods.} We benchmark PALETTE-Aug against five methods on eight
-segmentation tasks: five whose targets are bounded by an anatomical interface
-(healthy brain, multi-organ, healthy spine, mandible, pelvis) and three defined
-by tissue appearance (brain tumor, multiple sclerosis lesions, breast lesions).
-Each method trains on one modality and is evaluated in-domain and
-out-of-domain. An ablation isolates the effect of texture preservation.
-\textbf{Results.} PALETTE-Aug wins the benchmark overall: it has the highest
-Dice on six of the eight tasks and significantly beats every competitor on
-five of them. In the ablation, replacing noise fill with real texture
-% TODO(rung-5 val000 retrain): the fill-swap numbers below are pre-retrain; recompute once every ladder is regenerated. [Breast numbers are already post-retrain, final.]
-raises Dice by a relative $15\%$ \TODO{Glioma retrain} on brain tumor and
-$25\%$ on multiple sclerosis lesions, both appearance-defined, but by at most
-$7\%$ on interface-bounded tasks. Breast lesions, also appearance-defined,
-gain significantly but only slightly (a relative $1.4\%$).
-\textbf{Conclusion.} Texture preservation helps most on targets defined by tissue
-appearance rather than an anatomical interface, though not on all of them.
-PALETTE-Aug generalizes best overall across eight segmentation tasks.
+Segmentation networks trained on one MRI contrast or imaging modality often
+fail on another, and annotating data for every new domain is costly.
+Synthesis-based domain randomization such as SynthSeg generates training
+images from label maps alone, but it needs dense label maps and discards the
+texture of the real image. We introduce PALETTE-Aug, a contrast augmentation
+that remaps the real intensities of an unsupervised partition of the image, so
+that the texture inside every region survives, and that needs only the task's
+own labels. We then ask when keeping texture matters. In a controlled ablation
+over sixteen training settings, we hold the partition fixed and replace noise
+fill with the real-intensity remap. The four largest gains, $+5.9$ to $+12.7$
+Dice points, are all on targets defined by tissue appearance (brain tumor and
+multiple sclerosis lesions), against at most $+4.8$ on targets bounded by an
+anatomical interface. The converse does not hold: several appearance-defined
+settings, including breast lesions, gain little or nothing. On eight
+segmentation tasks across MRI, CT and dental CBCT, each trained on one modality
+and tested on the others, PALETTE-Aug, which adds our transform to the Auglab
+augmentation pipeline, has the highest Dice on six tasks and, with all tasks
+pooled, is significantly better than each of five competing methods.
 \end{abstract}

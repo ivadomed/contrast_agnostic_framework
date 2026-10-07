@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compose fig:method-pipeline (2 rows x 5 panels) from the panels written by
+Compose fig:method-pipeline (2 rows x 6 panels) from the panels written by
 generate_method_figure_panels.py, in one matplotlib figure so every cell has the
 same width, the headers sit on a common baseline and the slices are shown in
 radiological orientation (anterior up, patient right on the image left; the
@@ -20,9 +20,10 @@ import numpy as np  # noqa: E402
 FIG = Path(__file__).resolve().parent.parent / "cvpr_format_latex/figures"
 PANELS = FIG / "method_panels"
 OUT = FIG / "method_pipeline"
-LETTERS = "abcde"
-HEADERS = ["(a) Input", "(b) + $k$-means regions\n(flat fill)", "(c) + label remap\n(flat fill)",
-           "(d) + Voronoi sub-regions\n(flat fill)", "(e) Real fill:\nPALETTE output"]
+LETTERS = "abcdne"   # n = noise fill (rung 4), shown before the real fill (rung 5)
+HEADERS = ["(a) Input", "(b) + $k$-means\n(flat fill)", "(c) + label remap\n(flat fill)",
+           "(d) + Voronoi\n(flat fill)", "(e) Noise fill\n(texture removed)",
+           "(f) Real fill\n(PALETTE output)"]
 # slug, row label, raw-array -> radiological display (array axes from nib.aff2axcodes of the source volume)
 ROWS = [("chaos", "Abdomen\nCHAOS T2SPIR", lambda a: a.T),                 # LPS: rows=x(L), cols=y(P)
         ("onharmony", "Brain\nON-Harmony T1w", lambda a: a.T[::-1, ::-1])]  # RAS: rows=x(R), cols=y(A)
@@ -38,10 +39,10 @@ def load(slug: str, letter: str, orient) -> np.ndarray:
 def main():
     imgs = [[load(s, l, o) for l in LETTERS] for s, _, o in ROWS]
     aspect = [im[0].shape[0] / im[0].shape[1] for im in imgs]       # h / w per row
-    cell_w = 1.27                                                    # inches
+    cell_w = 1.07                                                    # inches
     lab_w, head_h, gap = 0.32, 0.34, 0.04
     heights = [cell_w * a for a in aspect]
-    W = lab_w + 5 * cell_w + 4 * gap
+    W = lab_w + len(LETTERS) * cell_w + (len(LETTERS) - 1) * gap
     H = head_h + sum(heights) + gap * (len(ROWS) - 1)
     fig = plt.figure(figsize=(W, H))
     y = H - head_h
