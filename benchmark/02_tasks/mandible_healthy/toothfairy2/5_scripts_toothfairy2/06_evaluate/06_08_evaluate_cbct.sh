@@ -66,7 +66,7 @@ for CAT in nnUNet auglab; do
     fi
 
     for F in 0 1 2; do
-      D="${RUNDIR}fold${F}/cbct"
+      D="${RUNDIR}fold${F}/${PRED_SUBDIR:+${PRED_SUBDIR}/}cbct"   # PRED_SUBDIR (optional): e.g. srcmatch -> fold{F}/srcmatch/cbct
       [ -d "$D" ] || { echo "[mo-cbct] MISSING ${D}" >&2; fail=1; continue; }
       n=$(find "$D" -name '*.nii.gz' 2>/dev/null | wc -l)
       [ "$n" = "71" ] || { echo "[mo-cbct] BAD COUNT ${n}/71: $D" >&2; fail=1; continue; }

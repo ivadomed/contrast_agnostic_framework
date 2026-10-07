@@ -160,7 +160,7 @@ done
 N=${#JOBS[@]}; echo "[fov] ${N} predict tasks"
 
 worker() {
-  local slot="$1" idx="$1" gpu=$(( $1 % 4 ))
+  local slot="$1" idx="$1" gpu=$(( $1 % ${FOV_NGPU:-4} ))   # FOV_NGPU: GPUs in the allocation (default 4 = a TamIA node)
   while [ "${idx}" -lt "${N}" ]; do
     IFS='|' read -r contrast cat rid tr f it _sub <<< "${JOBS[$idx]}"
     local out="${RES}/01_predictions/chaos_model/${contrast}/${cat}/${rid}/fold${f}/${it}_fovcrop"
