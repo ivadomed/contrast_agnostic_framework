@@ -12,9 +12,10 @@ from ladder_from_roster import run  # noqa: E402
 # 2026-10-07: + external cohort totalsegmri-pancreas (TotalSegmentator MRI v2), pooled by TRUE held-out contrast (grouped mode, OOD-only report, patient-merged significance).
 # Only the item that is genuinely held-out for this training direction enters: item t1gre here. The other item (t2like) is same-contrast (or not provably different) ->
 # cross-dataset evidence only, it stays in totalsegmri-pancreas's OWN ladders (06_1X there), never in an OOD bucket.
+# 2026-10-07 (2): + msd-pancreas item ct (portal-venous CT, a new modality = genuinely held-out for both directions, own group "ct").
 TS_ROOT = DATASET_ROOT.parent / "totalsegmri-pancreas" / "8_results_totalsegmri-pancreas/02_metrics/pansegdata_model/t2w"
-EXTRA_OOD_SOURCES = [{"metrics_root": TS_ROOT, "run_subdir": "t1gre"}]
-OOD_GROUPS = {"t1wce": ["t1wce"], "t1gre": ["totalsegmri-pancreas/t1gre"]}
+EXTRA_OOD_SOURCES = [{"metrics_root": TS_ROOT, "run_subdir": "t1gre"}, {"metrics_root": DATASET_ROOT.parent / "msd-pancreas" / "8_results_msd-pancreas/02_metrics/pansegdata_model/t2w", "run_subdir": "ct"}]
+OOD_GROUPS = {"t1wce": ["t1wce"], "t1gre": ["totalsegmri-pancreas/t1gre"], "ct": ["msd-pancreas/ct"]}
 
 if __name__ == "__main__":
     run(dataset_root=DATASET_ROOT, model_type="pansegdata_model", contrast="t2w",
