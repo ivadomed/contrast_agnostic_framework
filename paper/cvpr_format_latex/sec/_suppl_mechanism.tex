@@ -5,8 +5,8 @@ rather than to synthetic-contrast augmentation in general, we build an
 additive ablation ladder on top of the nnU-Net baseline (\emph{Base},
 \cref{subsec:e-setup}): first the unsupervised $k$-means intensity partition
 alone (\S\ref{subsec:m-transform}, step~1); then the anatomical label-remap
-step (step~4); then the Voronoi spatial sub-parcellation (step~2); and
-finally the full signed affine remap of \cref{eq:affine} (step~3), which
+step (step~2); then the Voronoi spatial sub-parcellation (step~3); and
+finally the real fill through the signed affine remap of \cref{eq:affine} (step~4), which
 together constitute PALETTE alone. Every rung is evaluated without
 Auglab, so
 that the ladder isolates PALETTE's own internal components from the

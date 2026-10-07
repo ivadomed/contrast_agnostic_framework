@@ -5,15 +5,17 @@
   \centering
   \includegraphics[width=\linewidth]{figures/method_pipeline}
   \caption{The PALETTE-Aug transform on one real CHAOS T2SPIR slice (top) and one
-  real ON-Harmony T1w slice (bottom), in the order of its four steps
-  (\cref{sec:method}); every panel is a deterministic function of the same real
-  image. (b) and (c) paint each region flat with its target mean $\mu$ to show
-  the partition alone: $k$-means intensity classes (b, step 1) split into
-  Voronoi sub-regions (c, step 2). (d) applies the signed affine remap of
-  \cref{eq:affine} to the real intensities of each sub-region (step 3), which
-  keeps their texture; (e) adds the label remap (step 4), an affine re-remap
-  inside each anatomical label (its straight edges are label boundaries, \eg
-  between the two hemispheres), and is the training input.}
+  real ON-Harmony T1w slice (bottom), built up in the order of its steps and of
+  the ablation ladder (\cref{subsec:m-transform,subsec:e-ablation}); every
+  panel is a deterministic function of the same real image. (b)--(d) paint each
+  region flat with its target mean $\mu$ (\cref{eq:affine}) to show the
+  partition alone: $k$-means regions (b, step 1); the label remap (c, step 2),
+  an affine re-remap inside each anatomical label that keeps the structure
+  already there (its straight edges are label boundaries, \eg between the two
+  hemispheres); Voronoi sub-regions under the same label remap (d, step 3).
+  (e), the training input, fills the same partition through \cref{eq:affine}
+  from the real intensities (step 4), which keeps the texture inside every
+  region.}
   \label{fig:method-pipeline}
 \end{figure*}
 
