@@ -1,20 +1,37 @@
-# 2026-10-07 — Fable review (.review/2026-10-07-cvpr-manuscript.md) acted on
-Done (text + light regeneration): Glioma val000 rung-5 numbers everywhere (abstract/intro/4.3/5/6, tab:dissociation(+hd95),
-tab:ladder-full, fig:ladder, pairs table, per-label tables, snfh zoom, tab:mechanism); absolute Δ Dice now primary (abstract,
-intro, 4.3, fig:ladder annotation "+Δ* (+rel%)"); one-paragraph abstract; "predicts" dropped from conclusion; rung-1 wording
-(baseline = nnU-Net default aug; first step also drops its intensity aug); Fig. 1 noise-fill panel (e); Geirhos/Hermann
-framing in §2.3; SRCSM test-time matching + SynthSeg-noEM framing + Auglab asymmetry (§4.1, limitations); real p-values in
-tab:meta/-hd95; Brain reverse test (SRCSM not ahead, p=1.0); val100 test recomputed (Dice p=0.93, HD95 p=0.031 val100 better);
-remainder null-variance share sentence; crop disclosure; reproducibility placeholder; PALETTE-alone row + cross-task test
-(6 tasks: beats every competitor incl. Auglab p=7e-5; vs PALETTE-Aug two-sided p=0.68) via
-paper/scripts/compare_palette_alone_per_task.py; extras via paper/scripts/compute_crosstask_extras.py.
-Item 9 below (ON-Harmony val000==val100) RESOLVED: was checkpoint_final (same file in both mirrors); at checkpoint_best they differ.
-Bib "template notes" claim of the review: false positive (template entries are never cited, nothing prints).
-STILL OPEN: Brain T1w/T2w rung 5 (training on Vulcan, r5post 1331464/1331466 queued) -> re-point on-harmony 06_10/06_11,
-run_ladders.sh brain_t1w brain_t2w, rerun paper regen ($SCRATCH/paper_regen_20261007/regen.sh, drop LADDER_PENDING), fill every
-\pending + \TODO{Brain retrain}. Paul decisions: headline PALETTE-Aug vs PALETTE alone; Holm family (task-level 7 vs per-setting 16);
-spine cite / move to suppl; release statement. Compute not launched (Paul to approve): SRCSM + histogram matching re-predict;
-measured boundary-definedness predictor.
+# Paper TODO — CURRENT STATUS (2026-10-07, evening). Everything below this block is history.
+
+## State
+- Builds clean (pdflatex -> bibtex -> pdflatex x2), 0 errors / 0 undefined refs; main text ends on p8 with ~1-2 lines of
+  slack (check `endofmaintext` in main.aux after every edit; any addition needs a matching cut).
+- Every number regenerated on current data: all 16 ladders on the val000 rung 5 (Brain T1w/T2w landed 10-07), ON-Harmony at
+  checkpoint_best/no TTA, SRCSM = the PUBLISHED method (SRC + its test-time source matching; combined + headline configs point
+  at `<run>_srcmatch`; plain SRC kept on disk only as an ablation). No \pending / \TODO left in the .tex except Spine.
+- Headline (tab:meta): best Dice on 7/8 tasks (all but Mandible), every competitor significantly beaten within task on 5
+  (Glioma, MS, Breast, Spine, Pelvis), Abdomen all but SRCSM (85.6 vs 85.9, tie), Mandible: only Auglab significantly ahead,
+  PALETTE-Aug third. Cross-task p <= 1.1e-13 vs every competitor. PALETTE alone (7 tasks) beats every competitor and ties
+  PALETTE-Aug (p=0.60).
+- Fill swap: one Holm family = the seven task-level tests (fable_review's d481d01); Glioma +4.6, MS +6.8, Pelvis +3.5,
+  Abdomen +2.6, Breast +0.5, Mandible +0.1, Brain -0.7 Dice (all significant at task level).
+- Abstract is Paul's structured format (Introduction/Methods/Results/Conclusion), task-level fill-swap numbers, no cohort or
+  test-size talk. Absolute Delta Dice is primary everywhere, relative in brackets (fig:ladder annotation).
+- Fig 1 = method in step order (k-means -> Voronoi -> signed affine remap -> label remap); the ablation's noise fill is its own
+  figure (fig:fill-swap-example, brain slice, noise vs real with magnified insets).
+- Generators: paper/scripts/{compute_dissociation_pvalues, compute_ladder_significance, make_per_contrast_curves,
+  make_fill_swap_pairs_table, make_suppl_tables, compute_crosstask_extras, compare_palette_alone_per_task,
+  compare_srcsm_srcmatch, generate_method_figure_panels + make_method_figure + make_fill_swap_example_figure}.py.
+  Paper task table: bash scripts/evaluate/run_meta_task_heatmap.sh paper/scripts/meta_task_heatmap_paper.yaml.
+
+## Still open
+1. Spine: cite the CT/Dixon training cohort and give its training-subject count (two TODO(Paul) comments).
+2. Code link for camera-ready (currently "link withheld for review").
+3. Optional: measured boundary-definedness predictor (Paul is trying it; would replace the anatomy-assigned grouping).
+4. Other sessions edit the paper too (fable_review, 2026-10-07): re-check the numbers above after their commits.
+
+## Resolved 2026-10-07 (detail in git log)
+Fable review acted on (`.review/2026-10-07-cvpr-manuscript.md`; archive pooling skipped per Paul); old item 9 (ON-Harmony
+val000 == val100) = checkpoint_final sharing, gone at checkpoint_best; bib "template notes" = false positive (never cited);
+rung-1 wording (baseline = nnU-Net default aug); GT-crop caveat removed per Paul (crops described by purpose only);
+legacy eval configs archived (benchmark/03_archive/legacy_eval_configs_20261007).
 
 # Paper TODO — CURRENT STATUS (2026-10-03). History from 2026-08-02/03 kept below, now mostly superseded.
 

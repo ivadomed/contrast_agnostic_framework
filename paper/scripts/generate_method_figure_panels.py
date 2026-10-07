@@ -175,9 +175,12 @@ def run_pipeline(img_slice: np.ndarray, lbl_slice: np.ndarray, device="cpu"):
         sig = torch.rand(1, generator=g).item() * 0.20 + 0.05
         panel_n = torch.where(m, (mu_ell + sig * torch.randn(N, generator=g)).clamp(0, 1), panel_n)
 
-    # ablation-ladder order: input, +k-means, +label remap, +Voronoi (flat), noise fill, real fill
+    # method order (Sec. 3.1, 2026-10-07): (b) k-means regions flat, (v) + Voronoi sub-regions flat, (t) signed affine
+    # remap of the real intensities (step 3, no label step), (e) + label remap = PALETTE output. Ablation-order previews
+    # (c: k-means + label remap, d: Voronoi + label remap) are still written for reference; (n) = the ablation's noise fill.
     panels = {
-        "a": flat, "b": panel_b, "c": km_lbl, "d": vor_lbl, "n": panel_n, "e": panel_e.clamp(0, 1),
+        "a": flat, "b": panel_b, "c": km_lbl, "d": vor_lbl, "v": panel_c, "t": step3_texture.clamp(0, 1),
+        "n": panel_n, "e": panel_e.clamp(0, 1),
     }
     return {k: v.reshape(H, W).numpy() for k, v in panels.items()}
 

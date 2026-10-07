@@ -20,9 +20,9 @@ import numpy as np  # noqa: E402
 FIG = Path(__file__).resolve().parent.parent / "cvpr_format_latex/figures"
 PANELS = FIG / "method_panels"
 OUT = FIG / "method_pipeline"
-LETTERS = "abcde"   # the noise-fill panel (n) is drawn separately by make_fill_swap_example_figure.py
-HEADERS = ["(a) Input", "(b) + $k$-means regions\n(flat fill)", "(c) + label remap\n(flat fill)",
-           "(d) + Voronoi sub-regions\n(flat fill)", "(e) Real fill:\nPALETTE output"]
+LETTERS = "abvte"   # method order: input, k-means, + Voronoi, signed affine remap (real texture), + label remap
+HEADERS = ["(a) Input", "(b) $k$-means regions\n(flat fill)", "(c) + Voronoi sub-regions\n(flat fill)",
+           "(d) Signed affine remap\n(real intensities)", "(e) + Label remap:\nPALETTE output"]
 # slug, row label, raw-array -> radiological display (array axes from nib.aff2axcodes of the source volume)
 ROWS = [("chaos", "Abdomen\nCHAOS T2SPIR", lambda a: a.T),                 # LPS: rows=x(L), cols=y(P)
         ("onharmony", "Brain\nON-Harmony T1w", lambda a: a.T[::-1, ::-1])]  # RAS: rows=x(R), cols=y(A)
