@@ -11,7 +11,7 @@
 # The plain SRCSM metrics are never touched. Status: $SCRATCH/srcsm_match/_status/<key>.status
 #   bash scripts/cluster/srcsm_srcmatch/run_setting.sh <key>
 #   keys: ms_flair ms_t1w glioma_t1n glioma_t2w glioma_t1c glioma_t2f abdomen_t1in abdomen_t2spir brain_t1w brain_t2w brain_dwi
-#         breast_t1wce breast_t2w mandible pelvis_ct pelvis_mri
+#         breast_t1wce breast_t2w mandible pelvis_ct pelvis_mri pancreas_t1wce pancreas_t2w
 set -uo pipefail
 cd /project/aip-jcohen/paulh/mri_synthesis_project
 KEY="${1:?usage: run_setting.sh <key>}"
@@ -184,6 +184,33 @@ mandible)
     if [ -n "${T1}" ]; then rm -rf "${X}/auglab_${RID}_srcmatch"; mv "${T1}" "${X}/auglab_${RID}_srcmatch"; rm -r "${X}/_srcmatch_tmp"
     else fail "no metrics in ${X}/_srcmatch_tmp"; fi
     audit "${X}/auglab_${RID}" "${X}/auglab_${RID}_srcmatch" "mandible_$(basename "$(dirname "$(dirname "$(dirname "${X}")")")")"
+  done
+  ;;
+# ── Pancreas (pansegdata own t1wce/t2w + companions totalsegmri-pancreas, amos-pancreas, msd-pancreas (CT)) ─────────
+pancreas_t1wce|pancreas_t2w)
+  PZ="${T}/pancreas_disease"; S="${PZ}/pansegdata/5_scripts_pansegdata"; RAW="${PZ}/pansegdata/2_nnUNet_pansegdata/raw"
+  if [ "${KEY}" = pancreas_t1wce ]; then TC=t1wce; DS=150; R="${RAW}/Dataset150_PanSegData_T1WCE"; RID=pansegdata_t1wce_srcsm_20261004_214055; W=05_06_predict_t1wce_srcsm.sh; envf=env.sh
+  else TC=t2w; DS=151; R="${RAW}/Dataset151_PanSegData_T2W"; RID=pansegdata_t2w_srcsm_20261005_201341; W=05_17_predict_t2w_srcsm.sh; envf=env_t2w.sh; fi
+  TS="${PZ}/totalsegmri-pancreas/2_nnUNet_totalsegmri-pancreas/raw"; AP="${PZ}/amos-pancreas/2_nnUNet_amos-pancreas/raw"; MS="${PZ}/msd-pancreas/2_nnUNet_msd-pancreas/raw"
+  match "pancreas_${TC}" "${TC}" "${R}/imagesTr" mr "${R}/imagesTs_t1wce:mr" "${R}/imagesTs_t2w:mr" \
+        "${TS}/imagesTs_t1gre:mr" "${TS}/imagesTs_t2like:mr" "${AP}/imagesTs_mixed_t1:mr" "${MS}/imagesTs_ct:ct" || exit 1
+  predict bash "${S}/05_predict/${W}" "${RID}" all
+  ev "source ${S}/00_utils/${envf}; export TRAINING_CONTRAST=${TC}; bash ${S}/06_evaluate/06_01_evaluate_run.sh ${RID} auglab"
+  audit "${PZ}/pansegdata/8_results_pansegdata/02_metrics/pansegdata_model/${TC}/auglab_${RID}" "${PZ}/pansegdata/8_results_pansegdata/02_metrics/pansegdata_model/${TC}/auglab_${RID}_srcmatch" "pansegdata_${TC}_own"
+  for comp in totalsegmri-pancreas amos-pancreas msd-pancreas; do
+    CS="${PZ}/${comp}/5_scripts_${comp}"
+    ( export PANSEG_TRAINING_CONTRAST=${TC} PANSEG_DATASET_ID=${DS} METHOD=srcsm TRAINER=nnUNetTrainerPANSEGDATAAugLabDefault CATEGORY=auglab \
+             PREDICT_INPUT_SUFFIX=_srcmatch_${TC} PREDICT_OUTPUT_SUBDIR=srcmatch
+      bash "${CS}/05_predict/05_01_predict_pansegdata_common.sh" "${RID}" all ) > "${OUTD}/${KEY}.predict_${comp}.log" 2>&1 || { fail "predict ${comp}"; continue; }
+    # msd-pancreas: its owner asked that the srcmatch eval run only AFTER its plain eval finished (shared metrics root);
+    # set SM_EVAL_MSD=1 to evaluate it (or run: CKPT_TAG=srcmatch bash ${CS}/06_evaluate/06_01_evaluate_run.sh ${RID} auglab ${TC})
+    if [ "${comp}" = msd-pancreas ] && [ "${SM_EVAL_MSD:-0}" != 1 ]; then log "msd-pancreas: predicted, eval deferred (SM_EVAL_MSD=1)"; continue; fi
+    ev "bash ${CS}/06_evaluate/06_01_evaluate_run.sh ${RID} auglab ${TC}"
+    CM="${PZ}/${comp}/8_results_${comp}/02_metrics/pansegdata_model/${TC}"
+    for item in $(ls -d "${CM}"/*/auglab_${RID}_srcmatch 2>/dev/null | xargs -r -n1 dirname | xargs -r -n1 basename); do
+      if [ -d "${CM}/${item}/auglab_${RID}" ]; then audit "${CM}/${item}/auglab_${RID}" "${CM}/${item}/auglab_${RID}_srcmatch" "${comp}_${TC}_${item}"
+      else log "note: ${comp}/${item}: no plain SRCSM metrics yet to audit against (matched run evaluated anyway)"; fi
+    done
   done
   ;;
 *) log "FAILED: no recipe for ${KEY}"; exit 3 ;;
