@@ -212,9 +212,9 @@ training $\to$ test contrast pair.
 \includegraphics[width=\linewidth]{figures/per_contrast_curves/fill_swap_per_contrast_hd95}
 \caption{\Cref{fig:ladder} (main paper) on HD95 instead of Dice: same tasks,
 grouping and visual scheme. Annotation: the task's HD95 change at the fill swap
-in mm (negative is better); $^*$: significant. Glioma, Abdomen and Breast
-improve significantly and Brain worsens; MS, Mandible and Pelvis do not move
-significantly. Per-setting numbers: \cref{tab:dissociation-hd95}.}
+in mm (negative is better); $^*$: significant. Glioma, Breast and Mandible
+improve significantly; MS, Abdomen and Pelvis do not move significantly
+(Brain: \TODO{Brain retrain}). Per-setting numbers: \cref{tab:dissociation-hd95}.}
 \label{fig:ladder-hd95}
 \end{figure*}
 
@@ -296,7 +296,7 @@ Pelvis MRI & $-0.48$ & 0.8 \\
 \caption{Same fill-swap step as \cref{tab:dissociation}, on HD95
 (negative is better), with $p$ Holm-corrected across the sixteen rows ($^*$: $p<0.05$).
 HD95 is less consistent than Dice within a task
-(its sign flips between the two modalities of MS and of Pelvis), so we state the claim
+(on Glioma it improves from three training contrasts and worsens from FLAIR), so we state the claim
 on Dice and report HD95 here rather than as confirmation of it.}
 \label{tab:dissociation-hd95}
 \end{table}
