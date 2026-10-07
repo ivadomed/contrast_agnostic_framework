@@ -125,15 +125,8 @@ half of bilateral volumes, then, for full-thorax acquisitions, an
 anterior-posterior window from $27$\,mm in front of the skin to $147$\,mm
 behind it, the measured geometry of I-SPY2's unilateral acquisitions, extended
 if needed to contain the lesion; I-SPY1 is natively unilateral and is not
-cropped. The network sees, and is scored on, only the cropped volume. Each crop
-is placed using the reference annotation (organ, mandible or lesion position).
-This reveals the target's position, and, where a crop is enlarged to contain
-the whole target (some Mandible and Breast cases), also a bound on its extent.
-The crops are identical for every method, so they do not favor any method; but
-absolute Dice and HD95 are better than a pipeline that had to localize the
-target first would obtain. For Abdomen and Breast, results without these crops
-(masking at scoring time, or the full or left-right-only field of view) were
-computed for every method and are archived with the metrics.
+cropped. The network sees, and is scored on, only the cropped volume, and the
+crops are identical for every method.
 
 % TODO(Paul): Spine training-subject count (separate pipeline) -- replace n/a.
 \begin{table}[h]
