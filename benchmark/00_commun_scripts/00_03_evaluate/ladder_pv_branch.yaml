@@ -26,13 +26,10 @@ ladders:
   # chaos (own + amos/sliver07 crop-before-predict, all under .../ablations)
   8_results_chaos/02_metrics/chaos_model/t1in/ablations: ablations/chaos_t1in_v26_6_2_pv_train050_val000_20261003_111217
   8_results_chaos/02_metrics/chaos_model/t2spir/ablations: ablations/chaos_t2spir_v26_6_2_pv_train050_val000_20261005_223819
-  # on-harmony (own contrasts; its metrics are flat, like its rung 5). T1w additionally uses the RETRAINED rung 5
-  # (rung5 override; the T1w ladder script still points at the old pre-AugLab run).
-  8_results_on-harmony/02_metrics/on_harmony_model/T1w/ablations:
-    rung6: on-harmony_T1w_v26_6_2_pv_train050_val100_20261003_111214
-    rung5: ablations/on-harmony_T1w_v26_6_2_train050_val100_20261003_123018
-  8_results_on-harmony/02_metrics/on_harmony_model/T2w/ablations: on-harmony_T2w_v26_6_2_pv_train050_val100_20261003_111214
-  8_results_on-harmony/02_metrics/on_harmony_model/dwi_ap/ablations: on-harmony_dwi_ap_v26_6_2_pv_train050_val100_20261003_111214
+  # on-harmony (own contrasts; PV metrics are flat, rung 5 is under ablations/ -- both checkpoint_best since 2026-10-06)
+  8_results_on-harmony/02_metrics/on_harmony_model/T1w/ablations: on-harmony_T1w_v26_6_2_pv_train050_val000_20261005_223607
+  8_results_on-harmony/02_metrics/on_harmony_model/T2w/ablations: on-harmony_T2w_v26_6_2_pv_train050_val000_20261005_223640
+  8_results_on-harmony/02_metrics/on_harmony_model/dwi_ap/ablations: on-harmony_dwi_ap_v26_6_2_pv_train050_val000_20261005_223713
   # ispy2 headline ladders (own + duke/ispy1/acrin6698 pooled by true contrast)
   8_results_ispy2/02_metrics/ispy2_model/t1wce/ablations: ablations/ispy2_t1wce_v26_6_2_pv_train050_val000_20261005_223926
   8_results_ispy2/02_metrics/ispy2_model/t2w/ablations: ablations/ispy2_t2w_v26_6_2_pv_train050_val000_20261005_223959
