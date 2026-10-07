@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-"Train me": let a human go through what the rung-4 (noise-fill) and rung-5 (real-fill) models were trained on, then take
-their test. Builds ONE self-contained HTML (base64 PNGs, no server) with three parts:
+"Train me" (interactive slideshow): let a human go through what the rung-4 (noise-fill) and rung-5 (real-fill) models were trained on, then take
+their test. Builds ONE self-contained HTML slideshow (base64 PNGs, no server; arrows = navigate, space = toggle labels, p = toggle the\nmodels' predictions on test slides) in four phases: noise-fill training set -> test set A -> real-fill training set (other\ncases) -> test set B (other cases). Parts:
   A. training set of the NOISE-FILL model: N samples = fold-0 training cases, nnU-Net z-scored (mask norm), patch of the
      plans' patch size around the tumour, passed through the REAL AugLab GPU pipeline of rung 4
      (transform_params_gpu_baseline_kmeans_label_remap_voronoi_spatialDA_train050.json), one seed per sample;
@@ -112,26 +112,30 @@ def main():
         if (seg == 2).sum() < 3000:
             continue
         picked.append(case)
-        if len(picked) == a.n_train:
+        if len(picked) == 2 * a.n_train:
             break
+    arm_of = {case: list(ARMS)[0] if i < a.n_train else list(ARMS)[1] for i, case in enumerate(picked)}  # disjoint cases per arm
     for i, case in enumerate(picked):
         img = zscore(load(ds, case)); seg = np.asarray(nib.load(str(RAW / ds / "labelsTr" / f"{case}.nii.gz")).dataobj).astype(np.int16)
         box = patch_box(seg, size); x = torch.from_numpy(img[box])[None, None].to(dev); y = torch.from_numpy(seg[box].astype(np.float32))[None, None].to(dev)
         z = int(np.argmax((seg[box] == 2).sum((0, 1))))
         for k, pipe in pipes.items():
+            if k != arm_of[case]:
+                continue
             torch.manual_seed(1000 * a.seed + i); np.random.seed(1000 * a.seed + i)
             with torch.no_grad():
                 xo, yo = pipe(x.clone(), y.clone())
             g = xo[0, 0].float().cpu().numpy()[:, :, z]; s = yo[0, 0].round().long().cpu().numpy()[:, :, z]
             changed = float(np.abs(xo[0, 0].float().cpu().numpy() - img[box]).mean()) > 1e-3
-            if k == list(ARMS)[0]:
-                zb = zoom_box(s == 2, rng)   # same window for both arms of this sample
+            zb = zoom_box(s == 2, rng)
             cards[k].append(dict(case=case, i=i, img=to_png(g[zb]), lab=to_png(g[zb], s[zb]), thumb=to_png(g), augmented=changed))
         print(f"train sample {i + 1}/{len(picked)} {case}", flush=True)
     # ---- C: test
     d = pd.read_csv(THIS.parent / "outputs/data/patient_region_deltas.csv")
     d = d[(d.train == a.train) & (d.region == "SNFH") & (d["eval"] == "t1n")].sort_values("delta_dice")
-    tests = list(d.case.head(a.n_test // 2)) + list(d.case.tail(a.n_test - a.n_test // 2))  # worst and best t1n edema cases
+    worst, best = list(d.case.head(a.n_test)), list(d.case.tail(a.n_test))[::-1]
+    tests = [c for pair in zip(worst, best) for c in pair]            # worst1 best1 worst2 best2 ...
+    test_set = {c: ("A" if i < a.n_test else "B") for i, c in enumerate(tests)}  # set A after the noise arm, set B after the real arm
     quiz = []
     for case in tests:
         seg = np.asarray(nib.load(str(RAW / ds / "labelsTr" / f"{case}.nii.gz")).dataobj).astype(np.int16) if (RAW / ds / "labelsTr" / f"{case}.nii.gz").exists() else None
@@ -139,7 +143,7 @@ def main():
             gt_path = next((RAW / DS[a.train]).glob(f"labelsTs*/{case}.nii.gz"), None) or next(RAW.glob(f"*/labelsTs*/{case}.nii.gz"))
             seg = np.asarray(nib.load(str(gt_path)).dataobj).astype(np.int16)
         z = int(np.argmax((seg == 2).sum((0, 1))))
-        row = dict(case=case, views=[]); zb = zoom_box(seg[:, :, z] == 2, rng); sz = seg[:, :, z]
+        row = dict(case=case, set=test_set[case], views=[]); zb = zoom_box(seg[:, :, z] == 2, rng); sz = seg[:, :, z]
         for ev in ("t1n", "t1c", "t2f", "t2w"):
             img = np.asarray(nib.load(str(RAW / ds / f"imagesTs_{ev}" / f"{case}_0000.nii.gz")).dataobj).astype(np.float32)[:, :, z]
             preds = {}
@@ -149,39 +153,31 @@ def main():
             row["views"].append(dict(ev=ev, img=to_png(img[zb]), thumb=to_png(img), gt=to_png(img[zb], sz[zb]), noise=preds["noise"], real=preds["real"],
                                      dcase=float(d[d.case == case].delta_dice.iloc[0]) if ev == "t1n" else None))
         quiz.append(row); print("test", case, flush=True)
-    # ---- HTML
-    def img_tag(b64, w=330): return f'<img src="data:image/png;base64,{b64}" width="{w}">'
-    H = ["<!doctype html><html><head><meta charset='utf-8'><title>Train me: BraTS fill swap</title><style>",
-         "body{font-family:sans-serif;background:#fcfcfb;color:#0b0b0b;margin:16px} .grid{display:flex;flex-wrap:wrap;gap:10px}",
-         ".card{border:1px solid #ddd;padding:6px;background:#fff} .card img{display:block} .hid{display:none} button{margin:4px 0}",
-         ".small{color:#52514e;font-size:12px} h2{margin-top:32px} .row{display:flex;gap:8px;align-items:flex-start}",
-         "</style><script>function tog(c){document.querySelectorAll('.'+c).forEach(e=>e.classList.toggle('hid'));}",
-         "function rev(id){document.getElementById(id).classList.toggle('hid');}</script></head><body>",
-         f"<h1>Train me: what the two models saw, then their test (BraTS, trained on {a.train.upper()})</h1>",
-         "<p class='small'>Real AugLab pipelines from the training configs (rung 4 noise-fill, rung 5 real-fill), applied to fold-0 training "
-         "patches with nnU-Net's own normalisation; one seed per sample, same seed for both arms. Each config applies the synthesis with "
-         "p = 0.5, so roughly half the samples are plain training images, exactly as in training. Axial slice at the largest edema section, zoomed to a 96x96 voxel window that contains the edema at a RANDOM offset (the ROI is not centred); the small image is the full slice. "
-         "Labels: <span style='color:#eb6834'>edema</span>, <span style='color:#4a3aa7'>NCR</span>, <span style='color:#1baf7a'>ET</span>, <span style='color:#eda100'>RC</span>.</p>"]
+    # ---- HTML slideshow: phases = noise train -> test A -> real train -> test B; keys: arrows, space = labels, p = predictions
+    slides = []
     for k in ARMS:
-        key = k.split()[0].replace("-", "")
-        H.append(f"<h2>Training set, {k} model</h2><button onclick=\"tog('lab_{key}')\">toggle labels</button><div class='grid'>")
-        for c in cards[k]:
-            H.append(f"<div class='card'><div class='small'>#{c['i'] + 1} {c['case']} {'(synthesised)' if c['augmented'] else '(plain training image)'}</div>"
-                     f"<div class='lab_{key} hid'>{img_tag(c['lab'])}</div><div class='lab_{key}'>{img_tag(c['img'])}</div>{img_tag(c['thumb'], 110)}</div>")
-        H.append("</div>")
-    H.append("<h2>The test</h2><p class='small'>Held-out cases, same slice on four contrasts. Decide where the edema is, then reveal: GT, the noise-fill model's prediction, "
-             "the real-fill model's prediction (fold 0), with slice edema Dice. Cases = the 3 where real-fill hurt T1n edema most and the 3 where it helped most (patient-level Δ shown).</p>")
-    for qi, q in enumerate(quiz):
-        H.append(f"<h3>case {q['case']}</h3>")
-        for v in q["views"]:
-            rid = f"r{qi}_{v['ev']}"
-            H.append(f"<div class='row'><div class='card'><div class='small'>{v['ev'].upper()}{' (training contrast)' if v['ev'] == a.train else ''}</div>{img_tag(v['img'])}{img_tag(v['thumb'], 110)}"
-                     f"<button onclick=\"rev('{rid}')\">reveal</button></div><div id='{rid}' class='row hid'>"
-                     f"<div class='card'><div class='small'>GT</div>{img_tag(v['gt'])}</div>"
-                     f"<div class='card'><div class='small'>noise-fill pred, edema Dice {v['noise']['dice']:.2f}</div>{img_tag(v['noise']['png'])}</div>"
-                     f"<div class='card'><div class='small'>real-fill pred, edema Dice {v['real']['dice']:.2f}" + (f" (patient Δ {100 * v['dcase']:+.0f} pts)" if v['dcase'] is not None else "") + f"</div>{img_tag(v['real']['png'])}</div></div></div>")
-    H.append("</body></html>")
-    out = OUT / f"trainme_{a.train}.html"; out.write_text("\n".join(H)); print("wrote", out, f"{out.stat().st_size / 1e6:.1f} MB")
+        cards_k = sorted(cards[k], key=lambda c: c["i"])
+        set_id = "A" if k == list(ARMS)[0] else "B"
+        for j in range(0, len(cards_k), 2):   # training images two by two
+            pair = cards_k[j:j + 2]
+            slides.append(dict(phase=f"training set, {k} model", n=f"{j + 1}-{j + len(pair)}/{len(cards_k)}", preds=None,
+                               items=[dict(title=f"{c['case']}  {'synthesised' if c['augmented'] else 'plain training image'}", img=c["img"], lab=c["lab"], thumb=c["thumb"]) for c in pair]))
+        for q in [q for q in quiz if q["set"] == set_id]:
+            for v in q["views"]:
+                slides.append(dict(phase=f"test set {set_id} (after the {k} model)", n=f"case {q['case']}",
+                                   items=[dict(title=f"{v['ev'].upper()}{' (training contrast)' if v['ev'] == a.train else ''}", img=v["img"], lab=v["gt"], thumb=v["thumb"])],
+                                   preds=dict(noise=v["noise"]["png"], real=v["real"]["png"], dn=v["noise"]["dice"], dr=v["real"]["dice"], dcase=v["dcase"])))
+    H = ["<!doctype html><html><head><meta charset='utf-8'><title>Train me: BraTS fill swap</title><style>",
+         "body{font-family:sans-serif;background:#1a1a19;color:#eee;margin:0} #top{padding:10px 16px;font-size:14px;color:#c3c2b7} #main{display:flex;gap:24px;padding:0 16px;align-items:flex-start;flex-wrap:wrap}",
+         ".item{display:flex;gap:10px;align-items:flex-start} .item .big{width:560px} .item .th{width:180px} .cap{font-size:12px;color:#c3c2b7;margin-top:4px} .hid{display:none}",
+         "#preds{display:flex;gap:8px;padding:8px 16px} #preds img{width:330px} kbd{background:#333;padding:1px 5px;border-radius:3px}",
+         "</style></head><body><div id='top'></div><div id='main'></div><div id='preds' class='hid'></div>",
+         "<script>const S=", json.dumps(slides), ";let i=0,lab=false,pr=false;const b64=s=>'data:image/png;base64,'+s;",
+         "function show(){const s=S[i];document.getElementById('top').innerHTML=`<b>${s.phase}</b> &nbsp; ${s.n} &nbsp; slide ${i+1}/${S.length} &nbsp;&nbsp; <kbd>&larr;</kbd><kbd>&rarr;</kbd> navigate &nbsp; <kbd>space</kbd> labels ${lab?'ON':'off'}`+(s.preds?` &nbsp; <kbd>p</kbd> predictions ${pr?'ON':'off'}`:'');",
+         "document.getElementById('main').innerHTML=s.items.map(it=>`<div class='item'><div><img class='big' src='${b64(lab?it.lab:it.img)}'><div class='cap'>${it.title}</div></div><img class='th' src='${b64(it.thumb)}'></div>`).join('');",
+         "const P=document.getElementById('preds');if(s.preds&&pr){P.classList.remove('hid');P.innerHTML=`<div><div class='cap'>noise-fill model, edema Dice ${s.preds.dn.toFixed(2)}</div><img src='${b64(s.preds.noise)}'></div><div><div class='cap'>real-fill model, edema Dice ${s.preds.dr.toFixed(2)}${s.preds.dcase!==null?' (patient &Delta; '+(100*s.preds.dcase).toFixed(0)+' pts)':''}</div><img src='${b64(s.preds.real)}'></div>`;}else{P.classList.add('hid');}}",
+         "document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){i=Math.min(i+1,S.length-1);lab=false;pr=false;}else if(e.key==='ArrowLeft'){i=Math.max(i-1,0);lab=false;pr=false;}else if(e.key===' '){e.preventDefault();lab=!lab;}else if(e.key==='p'){pr=!pr;}else return;show();});show();</script></body></html>"]
+    out = OUT / f"trainme_{a.train}.html"; out.write_text("".join(H)); print("wrote", out, f"{out.stat().st_size / 1e6:.1f} MB")
 
 
 if __name__ == "__main__":
