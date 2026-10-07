@@ -40,7 +40,7 @@ spec.loader.exec_module(MT)
 
 OURS = "auglabAug_v26_6_2_train050_val000"
 V100 = "auglabAug_v26_6_2_train050_val100"
-COMPS = ["baseline", "synthseg_noEM", "synthseg_EM", "auglab_default", "srcsm"]
+COMPS = ["baseline", "synthseg_noEM", "synthseg_EM", "auglab_default", "srcsm", "srcsm_srcmatch"]
 OUT = REPO / "paper/generated_results/crosstask_extras.md"
 
 

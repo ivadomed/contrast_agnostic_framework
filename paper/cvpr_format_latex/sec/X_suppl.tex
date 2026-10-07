@@ -179,15 +179,15 @@ Baseline        & 44.8 & 35.2 & 58.5 & 122.1 & 30.3 & 21.7 & 49.9 & 149.3 & $2\t
 SynthSeg-noEM   & 78.0 & 41.9 & 101.1 &  80.6 &  8.8 & 32.9 & 111.8 & 261.8 & $2\times10^{-58}$ \\
 SynthSeg-EM     & 17.9 & 24.7 & 60.9 &  23.7 &  5.3 & 24.9 & 4.0 & 34.0 & $2.7\times10^{-6}$ \\
 SRCSM           & 17.5 & 24.6 & 91.8 & 24.4 &  5.2 & \textbf{19.3} & --- & 33.9 & $2\times10^{-32}$ \\
+\quad + matching & 21.7 & 25.4 & 92.4 & 25.6 &  5.3 & 21.9 & --- & 39.6 & $2\times10^{-43}$ \\
 Auglab          & 16.1 & 26.5 & \textbf{57.1} & 27.8 &  5.4 & 22.1 & 4.7 & 35.6 & $2\times10^{-4}$ \\
 \midrule
-% TODO(rung-5 val000 retrain): Brain PALETTE-alone cell and the p cell (6 tasks now) wait for the on-harmony T1w/T2w retrain
-% (Brain also for the on-harmony re-prediction). Spine has no PALETTE-alone run (separate pipeline, no ladder).
-PALETTE alone (ours) & 16.6 & 23.3 & 56.3 & 24.9 & \pending & 22.3 & --- & 35.2 & $0.21^\S$ \\
+% paper/scripts/compare_palette_alone_per_task.py (7 tasks; Spine has no PALETTE-alone run)
+PALETTE alone (ours) & 16.6 & 23.3 & 56.3 & 24.9 & 4.9 & 22.3 & --- & 35.2 & $0.23^\S$ \\
 \textbf{PALETTE-Aug (ours)} & \textbf{15.6} & \textbf{24.3} & 57.7 & \textbf{22.7} & \textbf{5.2} & 23.5 & \textbf{3.5} & \textbf{29.0} & --- \\
 \midrule
 \multicolumn{1}{r}{\footnotesize competitors beaten ($p<0.05$)} &
-5/5 & 3/5 & 3/5 & 4/5 & 2/5 & 2/5 & 4/4 & 2/5 & \\
+6/6 & 3/6 & 4/6 & 4/6 & 2/6 & 2/6 & 4/4 & 3/6 & \\
 \bottomrule
 \end{tabular}
 \caption{Task-level HD95 (mm, $\downarrow$). Same pooling and test as
@@ -195,8 +195,8 @@ PALETTE alone (ours) & 16.6 & 23.3 & 56.3 & 24.9 & \pending & 22.3 & --- & 35.2 
 competitors PALETTE-Aug beats within each task (on Mandible, SRCSM, Auglab and
 the baseline are significantly ahead of it). Spine has no SRCSM run and no
 ladder. PALETTE alone: the transform without Auglab, left out of the bolding;
-$^\S$PALETTE-Aug against PALETTE alone over the six tasks with both (Brain
-pending).}
+$^\S$PALETTE-Aug against PALETTE alone over the seven tasks with both.
+``+ matching'': SRCSM with its test-time histogram matching.}
 \label{tab:meta-hd95}
 \end{table*}
 

@@ -4,28 +4,28 @@
 \small
 \setlength{\tabcolsep}{3pt}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \toprule
-Setting & Baseline & \makecell{SynthSeg\\-noEM} & \makecell{SynthSeg\\-EM} & SRCSM & Auglab & \makecell{\textbf{PALETTE-}\\\textbf{Aug}} \\
+Setting & Baseline & \makecell{SynthSeg\\-noEM} & \makecell{SynthSeg\\-EM} & SRCSM & \makecell{SRCSM\\+match} & Auglab & \makecell{\textbf{PALETTE-}\\\textbf{Aug}} \\
 \midrule
-Glioma T1n & 25.3$^{\ast}$ & 8.7$^{\ast}$ & 43.1$^{\ast}$ & 40.3$^{\ast}$ & 46.3 & \textbf{46.4} \\
-Glioma T1c & 28.3$^{\ast}$ & 9.5$^{\ast}$ & 42.9$^{\ast}$ & 44.5$^{\ast}$ & 46.6 & \textbf{47.1} \\
-Glioma T2w & 18.1$^{\ast}$ & 8.4$^{\ast}$ & 44.1$^{\ast}$ & 43.8$^{\ast}$ & 47.1 & \textbf{47.3} \\
-Glioma FLAIR & 21.8$^{\ast}$ & 8.7$^{\ast}$ & 42.3 & 37.5$^{\ast}$ & 39.4$^{\ast}$ & \textbf{43.0} \\
-MS FLAIR & 25.2$^{\ast}$ & 4.6$^{\ast}$ & 32.8$^{\ast}$ & 34.6$^{\ast}$ & 32.8$^{\ast}$ & \textbf{39.5} \\
-MS T1w & 16.7$^{\ast}$ & 4.0$^{\ast}$ & 35.1$^{\ast}$ & 31.4$^{\ast}$ & 35.8 & \textbf{37.4} \\
-Breast T1-CE & 34.1$^{\ast}$ & 16.6$^{\ast}$ & 40.4$^{\ast}$ & 18.0$^{\ast}$ & 41.1$^{\ast}$ & \textbf{41.9} \\
-Breast T2w & 35.9$^{\ast}$ & 16.5$^{\ast}$ & 38.9$^{\ast}$ & 14.8$^{\ast}$ & 39.0$^{\ast}$ & \textbf{40.5} \\
-Abdomen T1in & 29.5$^{\ast}$ & 63.3$^{\ast}$ & 84.4$^{\ast}$ & 84.5 & 84.7$^{\ast}$ & \textbf{86.0} \\
-Abdomen T2spir & 29.6$^{\ast}$ & 58.5$^{\ast}$ & 83.5$^{\ast}$ & 84.8$^{\ast}$ & 84.5$^{\ast}$ & \textbf{85.8} \\
-Brain T1w & 26.4$^{\ast}$ & 66.1$^{\ast}$ & 67.0$^{\ast}$ & 66.4 & 67.1$^{\ast}$ & \textbf{67.9} \\
-Brain T2w & 35.9$^{\ast}$ & 66.6 & \textbf{67.7} & 67.1 & 67.2$^{\ast}$ & 67.6 \\
-Brain DWI & 41.2$^{\ast}$ & 59.7$^{\ast}$ & 63.8 & \textbf{66.9} & 63.6 & 64.7 \\
-Mandible CBCT & 59.2$^{\ast}$ & 53.6$^{\ast}$ & 76.3$^{\ast}$ & \textbf{79.0} & 78.3 & 77.7 \\
-Spine CT & 27.0$^{\ast}$ & 46.7$^{\ast}$ & 79.1$^{\ast}$ & --- & 77.5$^{\ast}$ & \textbf{80.2} \\
-Spine Dixon in-phase & 69.9$^{\ast}$ & 48.4$^{\ast}$ & 82.2$^{\ast}$ & --- & 84.2 & \textbf{84.3} \\
-Pelvis CT & 35.6$^{\ast}$ & 17.1$^{\ast}$ & 66.5$^{\ast}$ & \textbf{71.4} & 68.5 & 69.2 \\
-Pelvis MRI & 24.0$^{\ast}$ & 12.8$^{\ast}$ & 58.6$^{\ast}$ & 59.2$^{\ast}$ & 60.0 & \textbf{62.0} \\
+Glioma T1n & 25.3$^{\ast}$ & 8.7$^{\ast}$ & 43.1$^{\ast}$ & 40.3$^{\ast}$ & 42.7$^{\ast}$ & 46.3 & \textbf{46.4} \\
+Glioma T1c & 28.3$^{\ast}$ & 9.5$^{\ast}$ & 42.9$^{\ast}$ & 44.5$^{\ast}$ & 40.2$^{\ast}$ & 46.6 & \textbf{47.1} \\
+Glioma T2w & 18.1$^{\ast}$ & 8.4$^{\ast}$ & 44.1$^{\ast}$ & 43.8$^{\ast}$ & 30.1$^{\ast}$ & 47.1 & \textbf{47.3} \\
+Glioma FLAIR & 21.8$^{\ast}$ & 8.7$^{\ast}$ & 42.3 & 37.5$^{\ast}$ & 34.7$^{\ast}$ & 39.4$^{\ast}$ & \textbf{43.0} \\
+MS FLAIR & 25.2$^{\ast}$ & 4.6$^{\ast}$ & 32.8$^{\ast}$ & 34.6$^{\ast}$ & 27.9$^{\ast}$ & 32.8$^{\ast}$ & \textbf{39.5} \\
+MS T1w & 16.7$^{\ast}$ & 4.0$^{\ast}$ & 35.1$^{\ast}$ & 31.4$^{\ast}$ & 27.2$^{\ast}$ & 35.8 & \textbf{37.4} \\
+Breast T1-CE & 34.1$^{\ast}$ & 16.6$^{\ast}$ & 40.4$^{\ast}$ & 18.0$^{\ast}$ & 16.9$^{\ast}$ & 41.1$^{\ast}$ & \textbf{41.9} \\
+Breast T2w & 35.9$^{\ast}$ & 16.5$^{\ast}$ & 38.9$^{\ast}$ & 14.8$^{\ast}$ & 12.5$^{\ast}$ & 39.0$^{\ast}$ & \textbf{40.5} \\
+Abdomen T1in & 29.5$^{\ast}$ & 63.3$^{\ast}$ & 84.4$^{\ast}$ & 84.5 & 84.9 & 84.7$^{\ast}$ & \textbf{86.0} \\
+Abdomen T2spir & 29.6$^{\ast}$ & 58.5$^{\ast}$ & 83.5$^{\ast}$ & 84.8$^{\ast}$ & \textbf{86.3} & 84.5$^{\ast}$ & 85.8 \\
+Brain T1w & 26.4$^{\ast}$ & 66.1$^{\ast}$ & 67.0$^{\ast}$ & 66.4 & 66.2 & 67.1$^{\ast}$ & \textbf{67.9} \\
+Brain T2w & 35.9$^{\ast}$ & 66.6 & \textbf{67.7} & 67.1 & 66.6 & 67.2$^{\ast}$ & 67.6 \\
+Brain DWI & 41.2$^{\ast}$ & 59.7$^{\ast}$ & 63.8 & \textbf{66.9} & 66.6 & 63.6 & 64.7 \\
+Mandible CBCT & 59.2$^{\ast}$ & 53.6$^{\ast}$ & 76.3$^{\ast}$ & 79.0 & \textbf{79.8} & 78.3 & 77.7 \\
+Spine CT & 27.0$^{\ast}$ & 46.7$^{\ast}$ & 79.1$^{\ast}$ & --- & --- & 77.5$^{\ast}$ & \textbf{80.2} \\
+Spine Dixon in-phase & 69.9$^{\ast}$ & 48.4$^{\ast}$ & 82.2$^{\ast}$ & --- & --- & 84.2 & \textbf{84.3} \\
+Pelvis CT & 35.6$^{\ast}$ & 17.1$^{\ast}$ & 66.5$^{\ast}$ & \textbf{71.4} & 67.3 & 68.5 & 69.2 \\
+Pelvis MRI & 24.0$^{\ast}$ & 12.8$^{\ast}$ & 58.6$^{\ast}$ & 59.2$^{\ast}$ & 58.5$^{\ast}$ & 60.0 & \textbf{62.0} \\
 \bottomrule
 \end{tabular}%
 }
@@ -37,28 +37,28 @@ Pelvis MRI & 24.0$^{\ast}$ & 12.8$^{\ast}$ & 58.6$^{\ast}$ & 59.2$^{\ast}$ & 60.
 \small
 \setlength{\tabcolsep}{3pt}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \toprule
-Setting & Baseline & \makecell{SynthSeg\\-noEM} & \makecell{SynthSeg\\-EM} & SRCSM & Auglab & \makecell{\textbf{PALETTE-}\\\textbf{Aug}} \\
+Setting & Baseline & \makecell{SynthSeg\\-noEM} & \makecell{SynthSeg\\-EM} & SRCSM & \makecell{SRCSM\\+match} & Auglab & \makecell{\textbf{PALETTE-}\\\textbf{Aug}} \\
 \midrule
-Glioma T1n & 41.0$^{\ast}$ & 78.0$^{\ast}$ & 18.4$^{\ast}$ & 20.8$^{\ast}$ & \textbf{15.1} & 15.4 \\
-Glioma T1c & 40.3$^{\ast}$ & 78.3$^{\ast}$ & 19.5$^{\ast}$ & \textbf{14.9} & 15.1 & 15.4 \\
-Glioma T2w & 54.9$^{\ast}$ & 79.7$^{\ast}$ & 16.5$^{\ast}$ & 15.7$^{\ast}$ & \textbf{14.8} & 15.0 \\
-Glioma FLAIR & 43.1$^{\ast}$ & 76.0$^{\ast}$ & 17.3 & 18.5$^{\ast}$ & 19.2$^{\ast}$ & \textbf{16.6} \\
-MS FLAIR & 39.9$^{\ast}$ & 41.5$^{\ast}$ & \textbf{23.6} & 23.8 & 26.6 & 24.3 \\
-MS T1w & 30.5$^{\ast}$ & 42.3$^{\ast}$ & 25.9 & 25.5 & 26.3$^{\ast}$ & \textbf{24.2} \\
-Breast T1-CE & 61.8$^{\ast}$ & 103.2$^{\ast}$ & 61.7$^{\ast}$ & 92.4$^{\ast}$ & \textbf{57.3} & 59.0 \\
-Breast T2w & \textbf{55.2} & 99.1$^{\ast}$ & 60.1$^{\ast}$ & 91.2$^{\ast}$ & 56.9 & 56.3 \\
-Abdomen T1in & 119.0$^{\ast}$ & 78.0$^{\ast}$ & 25.4 & 22.7 & 30.4$^{\ast}$ & \textbf{22.3} \\
-Abdomen T2spir & 125.1$^{\ast}$ & 83.2$^{\ast}$ & \textbf{22.0} & 26.0 & 25.1 & 23.2 \\
-Brain T1w & 44.3$^{\ast}$ & 11.2$^{\ast}$ & 7.2 & \textbf{6.3} & 7.4 & 6.9 \\
-Brain T2w & 27.8$^{\ast}$ & 9.5$^{\ast}$ & \textbf{4.0} & 4.7$^{\ast}$ & 4.3$^{\ast}$ & 4.1 \\
-Brain DWI & 18.8$^{\ast}$ & 5.7$^{\ast}$ & 4.7 & 4.7$^{\ast}$ & 4.7 & \textbf{4.6} \\
-Mandible CBCT & 21.7 & 32.9$^{\ast}$ & 24.9$^{\ast}$ & \textbf{19.3} & 22.1 & 23.5 \\
-Spine CT & 78.3$^{\ast}$ & 110.4$^{\ast}$ & 4.5$^{\ast}$ & --- & 5.8$^{\ast}$ & \textbf{3.9} \\
-Spine Dixon in-phase & 21.6$^{\ast}$ & 113.2$^{\ast}$ & 3.5$^{\ast}$ & --- & 3.6 & \textbf{3.1} \\
-Pelvis CT & 146.2$^{\ast}$ & 252.0$^{\ast}$ & 20.0 & \textbf{16.0} & 23.5 & 21.6 \\
-Pelvis MRI & 152.3$^{\ast}$ & 271.6$^{\ast}$ & 48.0 & 51.9$^{\ast}$ & 47.8$^{\ast}$ & \textbf{36.4} \\
+Glioma T1n & 41.0$^{\ast}$ & 78.0$^{\ast}$ & 18.4$^{\ast}$ & 20.8$^{\ast}$ & 17.0$^{\ast}$ & \textbf{15.1} & 15.4 \\
+Glioma T1c & 40.3$^{\ast}$ & 78.3$^{\ast}$ & 19.5$^{\ast}$ & \textbf{14.9} & 20.3$^{\ast}$ & 15.1 & 15.4 \\
+Glioma T2w & 54.9$^{\ast}$ & 79.7$^{\ast}$ & 16.5$^{\ast}$ & 15.7$^{\ast}$ & 29.2$^{\ast}$ & \textbf{14.8} & 15.0 \\
+Glioma FLAIR & 43.1$^{\ast}$ & 76.0$^{\ast}$ & 17.3 & 18.5$^{\ast}$ & 20.3$^{\ast}$ & 19.2$^{\ast}$ & \textbf{16.6} \\
+MS FLAIR & 39.9$^{\ast}$ & 41.5$^{\ast}$ & 23.6 & 23.8 & \textbf{23.0} & 26.6 & 24.3 \\
+MS T1w & 30.5$^{\ast}$ & 42.3$^{\ast}$ & 25.9 & 25.5 & 27.8$^{\ast}$ & 26.3$^{\ast}$ & \textbf{24.2} \\
+Breast T1-CE & 61.8$^{\ast}$ & 103.2$^{\ast}$ & 61.7$^{\ast}$ & 92.4$^{\ast}$ & 92.7$^{\ast}$ & \textbf{57.3} & 59.0 \\
+Breast T2w & \textbf{55.2} & 99.1$^{\ast}$ & 60.1$^{\ast}$ & 91.2$^{\ast}$ & 92.1$^{\ast}$ & 56.9 & 56.3 \\
+Abdomen T1in & 119.0$^{\ast}$ & 78.0$^{\ast}$ & 25.4 & 22.7 & 29.4$^{\ast}$ & 30.4$^{\ast}$ & \textbf{22.3} \\
+Abdomen T2spir & 125.1$^{\ast}$ & 83.2$^{\ast}$ & 22.0 & 26.0 & \textbf{21.7} & 25.1 & 23.2 \\
+Brain T1w & 44.3$^{\ast}$ & 11.2$^{\ast}$ & 7.2 & \textbf{6.3} & 6.6 & 7.4 & 6.9 \\
+Brain T2w & 27.8$^{\ast}$ & 9.5$^{\ast}$ & \textbf{4.0} & 4.7$^{\ast}$ & 4.6$^{\ast}$ & 4.3$^{\ast}$ & 4.1 \\
+Brain DWI & 18.8$^{\ast}$ & 5.7$^{\ast}$ & 4.7 & 4.7$^{\ast}$ & 4.7$^{\ast}$ & 4.7 & \textbf{4.6} \\
+Mandible CBCT & 21.7 & 32.9$^{\ast}$ & 24.9$^{\ast}$ & \textbf{19.3} & 21.9 & 22.1 & 23.5 \\
+Spine CT & 78.3$^{\ast}$ & 110.4$^{\ast}$ & 4.5$^{\ast}$ & --- & --- & 5.8$^{\ast}$ & \textbf{3.9} \\
+Spine Dixon in-phase & 21.6$^{\ast}$ & 113.2$^{\ast}$ & 3.5$^{\ast}$ & --- & --- & 3.6 & \textbf{3.1} \\
+Pelvis CT & 146.2$^{\ast}$ & 252.0$^{\ast}$ & 20.0 & \textbf{16.0} & 22.3 & 23.5 & 21.6 \\
+Pelvis MRI & 152.3$^{\ast}$ & 271.6$^{\ast}$ & 48.0 & 51.9$^{\ast}$ & 56.9$^{\ast}$ & 47.8$^{\ast}$ & \textbf{36.4} \\
 \bottomrule
 \end{tabular}%
 }

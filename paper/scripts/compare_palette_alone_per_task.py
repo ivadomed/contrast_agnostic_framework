@@ -177,7 +177,7 @@ def main():
             + ("\n".join(problems) if problems else "none (headline methods reproduce the unmodified config exactly)") + "\n")
     # cross-task (tasks = units of equal weight, patients as sign-flip units; Spine has no ladder)
     ours, comps = "auglabAug_v26_6_2_train050_val000", [k for k, _ in COLS if k not in ("palette_alone",
-                                                         "auglabAug_v26_6_2_train050_val000")]
+                                                         "auglabAug_v26_6_2_train050_val000")] + ["srcsm_srcmatch"]
     xl = ["", f"### Cross-task (tasks: {', '.join(t['name'] for t in xt)}; same test as tab:meta's p column)", ""]
     for metric in ("dice", "hd95"):
         hb = metric == "dice"

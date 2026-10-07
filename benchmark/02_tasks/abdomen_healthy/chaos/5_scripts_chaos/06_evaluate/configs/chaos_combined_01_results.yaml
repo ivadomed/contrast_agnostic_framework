@@ -47,6 +47,7 @@ modalities:
       synthseg_EM: chaos_t1in_synthseg_EM_train100_val000_20260611_120000
       auglab_default: chaos_t1in_auglab_default_20260611_120000
       srcsm: chaos_t1in_srcsm_20260710_011817
+      srcsm_srcmatch: chaos_t1in_srcsm_20260710_011817_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
       auglabAug_v26_6_2_train050_val000: chaos_t1in_auglabAug_v26_6_2_train050_val000_20260615_213615
       auglabAug_v26_6_2_train050_val100: chaos_t1in_auglabAug_v26_6_2_train050_val100_20260616_112420
   - name: t2spir
@@ -65,6 +66,7 @@ modalities:
       synthseg_EM: chaos_t2spir_synthseg_EM_20260620_112357
       auglab_default: chaos_t2spir_auglab_default_20260620_112240
       srcsm: chaos_t2spir_srcsm_20260709_121945
+      srcsm_srcmatch: chaos_t2spir_srcsm_20260709_121945_srcmatch   # SRCSM + its test-time source matching (2026-10-07)
       auglabAug_v26_6_2_train050_val000: chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202
       auglabAug_v26_6_2_train050_val100: chaos_t2spir_auglabAug_v26_6_2_train050_val100_20260723_194053
 
