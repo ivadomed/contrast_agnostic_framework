@@ -149,7 +149,16 @@ def run_pipeline(img_slice: np.ndarray, lbl_slice: np.ndarray, device="cpu"):
     km_lbl = panel_b.clone()            # (c) k-means regions + labels, flat
     vor_lbl = panel_c.clone()           # (d) + Voronoi sub-regions, flat
     panel_e = step3_texture.clone()     # (e) same partition, real texture
-    label_draws = []                    # (mask, mu_ell) per label, reused by the noise-fill panel
+    # (n) the fill swap's NOISE arm, for fig:fill-swap-example: the SAME k-means classes, Voronoi sub-regions, region
+    # target means mu_c and label-remap draws (mu_l, alpha_l) as (e); only the within-region fill differs (Gaussian
+    # noise mu_c + sigma_c*N(0,1), sigma_c ~ U(0.05, 0.25), instead of the remapped real intensities), so the two
+    # panels isolate noise vs texture. (The trained rung 4 also refills each label with noise in its own Voronoi
+    # cells, palette_noisefill.py label_voronoi; the figure keeps the partition identical on purpose.)
+    # Separate generator, and the label loop draws once per label whatever the number of buffers, so the global
+    # draw sequence -- hence panels (a)-(e) and the next case's panels -- is unchanged.
+    g = torch.Generator().manual_seed(1)
+    sig_c = torch.rand(R, generator=g) * 0.20 + 0.05
+    panel_n = (mu_c[rid] + sig_c[rid] * torch.randn(N, generator=g)).clamp(0, 1) * flat_m
     for ell in unique_labels:
         ell_mask = (lbl_flat == ell).float()
         if ell_mask.sum() < 4:
@@ -159,30 +168,9 @@ def run_pipeline(img_slice: np.ndarray, lbl_slice: np.ndarray, device="cpu"):
         sign_ell = 1.0 if torch.rand(1).item() > 0.5 else -1.0
         alpha_ell = mag_ell * sign_ell
         m = ell_mask.bool()
-        label_draws.append((m, mu_ell))
-        for buf in (km_lbl, vor_lbl, panel_e):
+        for buf in (km_lbl, vor_lbl, panel_e, panel_n):
             mean_ell = (buf * ell_mask).sum() / ell_mask.sum().clamp(min=eps)
             buf.copy_(torch.where(m, (mu_ell + alpha_ell * (buf - mean_ell)).clamp(0, 1), buf))
-
-    # (n) the ladder's NOISE FILL on the same partition and the same target means (rung 4,
-    # palette_noisefill.py with label_fill_noise=True, label_voronoi=True -- the 2026-10-07 lblvor config):
-    # every sub-region mu_c + sigma_c*N(0,1), sigma_c ~ U(0.05, 0.25); then every label is refilled
-    # SynthSeg-style, split into its own Voronoi cells seeded inside the label (forced on, like the
-    # sub-parcellation above), each cell with its own mu + sigma*N(0,1).
-    # Separate generator / forked global RNG, so the global draw sequence -- hence panels (a)-(e),
-    # and the next case's panels -- is unchanged.
-    g = torch.Generator().manual_seed(1)
-    sig_c = torch.rand(R, generator=g) * 0.20 + 0.05
-    panel_n = (mu_c[rid] + sig_c[rid] * torch.randn(N, generator=g)).clamp(0, 1) * flat_m
-    with torch.random.fork_rng():
-        torch.manual_seed(1)
-        for m, _ in label_draws:
-            cell, n_cell = _voronoi_region_ids(coords, torch.zeros(N, dtype=torch.long), m.float(), 1,
-                                               torch.device(device), force_split=True)
-            mu_cell = torch.rand(n_cell, generator=g)
-            sd_cell = torch.rand(n_cell, generator=g) * 0.20 + 0.05
-            fill = (mu_cell[cell] + sd_cell[cell] * torch.randn(N, generator=g)).clamp(0, 1)
-            panel_n = torch.where(m, fill, panel_n)
 
     # method order (Sec. 3.1, 2026-10-07): (b) k-means regions flat, (v) + Voronoi sub-regions flat, (t) signed affine
     # remap of the real intensities (step 3, no label step), (e) + label remap = PALETTE output. Ablation-order previews

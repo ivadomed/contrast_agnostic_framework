@@ -20,7 +20,7 @@ from make_method_figure import FIG, ROWS, load  # noqa: E402
 
 OUT = FIG / "fill_swap_example"
 # zoom window as fractions of the (radiologically oriented) slice: (row0, row1, col0, col1)
-ZOOM = (0.36, 0.64, 0.30, 0.58)   # deep grey matter around the ventricles (caudate, thalamus, internal capsule)
+ZOOM = (0.33, 0.61, 0.64, 0.92)   # lateral cortex: highest within-region texture of the slice (scratch zoom_search.py, 2026-10-08)
 plt.rcParams.update({"font.size": 8, "font.family": "sans-serif"})
 
 
