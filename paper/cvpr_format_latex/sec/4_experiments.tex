@@ -153,22 +153,22 @@ lowest on six of the eight tasks and significantly better than every
 competitor with all tasks pooled; it ties Auglab on Breast and trails Auglab
 and nnU-Net on Mandible.
 
-\subsection{Causal ablation: when does texture matter?}
+\subsection{Causal ablation of texture preservation}
 \label{subsec:e-ablation}
 
 Does keeping the real texture help beyond PALETTE-Aug's partition, and on
 which targets? We test this with a ladder:
 nnU-Net $\rightarrow$ $+k$-means $\rightarrow$ $+$label remap $\rightarrow$
 $+$Voronoi $\rightarrow$ real-intensity fill $\rightarrow$ $+$Auglab. The
-first rung is nnU-Net with its default augmentation. The next four rungs share
-one pipeline (\cref{sec:method}) whose only other augmentation is spatial
-(with flips), so the first step also drops nnU-Net's intensity augmentation;
-from there on, each rung adds one ingredient. The three partition rungs fill
+first rung is nnU-Net with its default augmentation, as in \cref{tab:meta}.
+The next four rungs share one pipeline (\cref{sec:method}), and each adds one
+ingredient. The three partition rungs fill
 every region with SynthSeg-style Gaussian noise. The
 step from $+$Voronoi to real fill, the \emph{fill swap}, changes only the fill:
 partition, sub-region count, target-mean distribution and both blur passes are
 unchanged (inside labels, the noise arm draws its own Voronoi cells). Any change at this step therefore comes from keeping the real
-within-region intensity structure instead of noise.
+within-region intensity structure instead of filling the region with noise,
+the same Gaussian noise as SynthSeg.
 
 \begin{figure}[t]
 \centering
@@ -209,19 +209,22 @@ task where the swap significantly hurts ($-0.7$ Dice), with sessions as units. I
 the only task labeling nearly the whole brain; with one such task, we cannot
 tell whether that is why.
 
-\paragraph{Does the fill swap change texture?}
+\paragraph{The fill swap changes texture.}
 The ladder shows that the fill swap changes Dice, not that it changes texture.
 We check this without any segmentation, with the normalized-gradient-field
 (NGF) similarity~\cite{haber2006ngf} between each augmented volume and its
 source scan. NGF measures how well image gradients align: it is $1$ when all
-edges and fine structure are kept and about $1/3$ for isotropic noise.
+edges and fine structure are kept and about $1/3$ for isotropic noise, the
+mean squared cosine between independent random 3-D directions.
 \Cref{fig:ngf-methods} reports it for every method on the seven ablation tasks.
 The noise fill keeps only the partition edges (mean NGF $0.44$); the real fill,
 on the same partition, raises it to $0.83$, the highest of all methods.
 PALETTE alone keeps more texture than every competitor on six tasks and ties
 with Auglab on Brain (\cref{tab:ngf}). SynthSeg keeps little ($0.50$ with EM,
-$0.37$ without, near the noise floor). PALETTE-Aug keeps less ($0.70$): it
-applies PALETTE in half of its draws, on top of Auglab.
+$0.37$ without, near the noise floor). PALETTE-Aug keeps less ($0.70$) than
+both PALETTE alone and Auglab ($0.74$): Auglab's operators act on the
+remapped image, and together they remove more texture than either alone. It
+still keeps more than SRCSM ($0.64$) and both SynthSeg variants.
 
 \begin{figure}[t]
 \centering

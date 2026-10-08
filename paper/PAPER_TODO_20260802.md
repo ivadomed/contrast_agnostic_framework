@@ -7,6 +7,9 @@
   DualVal. Pro-RandConv (CVPR 2023) reports compute + inference time in its discussion: a model for where it goes.
 - Spine subject-level split: stated for all tasks in 4.1; verified for the other seven (ON-Harmony: 4 test subjects disjoint
   from the 16 training subjects of all three training modalities), Spine came from a separate pipeline -> confirm.
+- HEADS-UP (Paul, 2026-10-08): the ablation narrative will likely change to "training contrast harder than eval contrast
+  ==> texture doesn't help much or hurts" once the rung-4 lblvor retrain finishes; Paul has not reviewed the 4.3 results
+  prose yet -- don't polish the current one-way-claim wording further until then.
 - Naming: the transform is called "PALETTE-Aug" in the abstract/intro/3.1 title, but "PALETTE alone" = transform without Auglab
   and "PALETTE-Aug" = transform inside Auglab (3.2 now defines both). Option: call the transform PALETTE everywhere.
 

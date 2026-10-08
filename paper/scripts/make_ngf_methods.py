@@ -36,7 +36,7 @@ TASKS = [("glioma", "Glioma", True), ("ms", "MS", True), ("breast", "Breast", Tr
          ("mandible", "Mandible", False), ("pelvis", "Pelvis", False)]   # True = appearance-defined target
 METHODS = [("palette", "PALETTE alone"), ("ours_train050", "PALETTE-Aug"), ("auglab_default", "Auglab"),
            ("srcsm", "SRCSM"), ("synthseg_EM", "SynthSeg-EM"), ("synthseg_noEM", "SynthSeg-noEM"),
-           ("noisefill", "noise fill")]
+           ("noisefill_lblvor", "noise fill")]   # rung 4 since 2026-10-07 (label_voronoi); the retired arm is key "noisefill"
 REF = "palette"
 REAL, REAL_LIGHT, NOISE, OTHER = "#2f7d6b", "#8fc4b4", "#8a8a8a", "#5b7083"
 NOISE_FLOOR = 1 / 3
@@ -85,7 +85,7 @@ def figure(s: pd.DataFrame, tm: pd.DataFrame) -> None:
     labels = []
     for i, (m, name) in enumerate(METHODS):
         y = len(METHODS) - 1 - i
-        col = REAL if m == REF else REAL_LIGHT if m == "ours_train050" else NOISE if m == "noisefill" else OTHER
+        col = REAL if m == REF else REAL_LIGHT if m == "ours_train050" else NOISE if m == "noisefill_lblvor" else OTHER
         v = ax.violinplot(s[s.method == m].ngf_all.values, positions=[y], vert=False, widths=0.82,
                           showextrema=False)
         for b in v["bodies"]:
@@ -151,8 +151,9 @@ def table(tm: pd.DataFrame, r: pd.DataFrame) -> None:
               "(1 = all texture kept, $\\approx\\!1/3$ = isotropic noise) on the seven tasks with a ladder "
               "(Spine has none), mean over contrasts of the mean over "
               f"scans ($16$--$20$ per contrast, $5$ draws each). PALETTE alone is the ladder's real-fill rung. "
-              "PALETTE-Aug stacks PALETTE (in half of the draws) on the full Auglab chain, so its draws also "
-              f"lose what the Auglab augmentations remove. {claim} (paired one-sided Wilcoxon over scans, "
+              "PALETTE-Aug applies PALETTE in half of its draws, first in the Auglab chain, whose operators then "
+              "act on the remapped image: the combination keeps less texture than either PALETTE alone or Auglab. "
+              f"{claim} (paired one-sided Wilcoxon over scans, "
               f"Holm-corrected over the ${len(r)}$ comparisons; largest significant $p={tex_p(worst_p)}$).}}",
               "\\label{tab:ngf}", "\\end{table}"]
     TEX.write_text("\n".join(lines) + "\n")
