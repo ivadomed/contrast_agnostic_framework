@@ -34,7 +34,7 @@ RUNGS = [
     ("+label_remap", "+ label remap",
      "ablations/open-ms_t1w_baseline_kmeans_label_remap_train050_val000_20260805_020311"),
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
-     "ablations/open-ms_t1w_baseline_kmeans_label_remap_voronoi_train050_val000_20260805_020341"),
+     "ablations/nnUNet_open-ms_t1w_baseline_kmeans_label_remap_voronoi_train050_val000_lblvor_20261007_170941"),
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
      "ablations/open-ms_t1w_v26_6_2_train050_val000_20261005_222621"),   # val000 (real-image checkpoint selection, like rung 4) 2026-10-06; was ..._val100_20260708_083641 (flat)
     ("+AugLab (val000)", "+ full AugLab recipe on top",

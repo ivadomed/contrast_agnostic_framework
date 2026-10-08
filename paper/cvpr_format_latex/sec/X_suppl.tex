@@ -221,7 +221,7 @@ do not move significantly. Per-setting numbers: \cref{tab:dissociation-hd95}.}
 \end{figure*}
 
 % GENERATED rows: paper/scripts/compute_dissociation_pvalues.py --metric dice / hd95 (val000 rung 5; rung 4 = lblvor noise fill for
-% Abdomen, Mandible, Pelvis, Breast, 2026-10-08; Glioma, MS, Brain printed \pending via LADDER_PENDING until their lblvor
+% Abdomen, Mandible, Pelvis, Breast, MS, 2026-10-08; Glioma, Brain printed \pending via LADDER_PENDING until their lblvor
 % retrains land, their old raw p still in the Holm family) -- regenerate, do not hand-edit.
 \begin{table}[t]
 \centering
@@ -251,9 +251,9 @@ Task / setting & noise & $\Delta$ & rel.\ (\%) & $p$ \\
 \quad Glioma T1c & \pending & \pending & \pending & \pending \\
 \quad Glioma T2w & \pending & \pending & \pending & \pending \\
 \quad Glioma FLAIR & \pending & \pending & \pending & \pending \\
-\textbf{MS} (all settings) & \pending & \pending & \pending & \pending \\
-\quad MS FLAIR & \pending & \pending & \pending & \pending \\
-\quad MS T1w & \pending & \pending & \pending & \pending \\
+\textbf{MS} (all settings) & 24.4 & $+9.24^{*}$ & $+37.8$ & 0.023 \\
+\quad MS FLAIR & 16.4 & $+10.89$ & $+66.5$ & 0.0078 \\
+\quad MS T1w & 32.4 & $+7.58$ & $+23.4$ & 0.0078 \\
 \textbf{Breast} (all settings) & 34.3 & $+1.53^{*}$ & $+4.5$ & 2.2e-16 \\
 \quad Breast T1-CE & 29.2 & $+0.41$ & $+1.4$ & 0.0032 \\
 \quad Breast T2w & 39.3 & $+2.65$ & $+6.8$ & 1.1e-20 \\
@@ -294,7 +294,7 @@ Task / setting & noise & $\Delta$ (mm) & rel.\ (\%) & $p$ \\
 \quad Brain DWI & \pending & \pending & \pending & \pending \\
 \textbf{Mandible} (all settings) & 33.8 & $-0.69^{*}$ & $-2.1$ & 0.031 \\
 \quad Mandible CBCT$^\ddagger$ & 33.8 & $-0.69$ & $-2.1$ & 0.0093 \\
-\textbf{Pelvis} (all settings) & 61.6 & $-5.21$ & $-8.5$ & 0.47 \\
+\textbf{Pelvis} (all settings) & 61.6 & $-5.21$ & $-8.5$ & 0.62 \\
 \quad Pelvis CT & 67.0 & $-3.48$ & $-5.2$ & 0.19 \\
 \quad Pelvis MRI & 56.3 & $-4.62$ & $-8.2$ & 0.75 \\
 \midrule
@@ -304,9 +304,9 @@ Task / setting & noise & $\Delta$ (mm) & rel.\ (\%) & $p$ \\
 \quad Glioma T1c & \pending & \pending & \pending & \pending \\
 \quad Glioma T2w & \pending & \pending & \pending & \pending \\
 \quad Glioma FLAIR & \pending & \pending & \pending & \pending \\
-\textbf{MS} (all settings) & \pending & \pending & \pending & \pending \\
-\quad MS FLAIR & \pending & \pending & \pending & \pending \\
-\quad MS T1w & \pending & \pending & \pending & \pending \\
+\textbf{MS} (all settings) & 26.4 & $-1.18$ & $-4.5$ & 0.62 \\
+\quad MS FLAIR & 31.1 & $-2.62$ & $-8.4$ & 0.15 \\
+\quad MS T1w & 21.6 & $+0.27$ & $+1.2$ & 0.38 \\
 \textbf{Breast} (all settings) & 53.6 & $-1.03^{*}$ & $-1.9$ & 0.016 \\
 \quad Breast T1-CE & 67.5 & $-0.83$ & $-1.2$ & 0.044 \\
 \quad Breast T2w & 39.6 & $-1.23$ & $-3.1$ & 8.2e-5 \\
@@ -344,8 +344,8 @@ Voronoi's own marginal contribution is
 task-dependent rather than uniformly positive. A separate paired
 significance check on all-contrast Dice (the estimand of \cref{tab:mechanism},
 not the OOD slice above) shows that Voronoi
-significantly \emph{helps} MS FLAIR and (by a small margin) Brain
-T1w, and significantly \emph{hurts} Glioma T1n and, by a small margin, Abdomen
+(by a small margin) \emph{helps} Brain T1w, is flat on MS FLAIR
+($34.6\to34.1$, $p=0.25$, eight patients), and significantly \emph{hurts} Glioma T1n and, by a small margin, Abdomen
 T1in ($87.7\to86.9$, $p=2\times10^{-4}$, 24 patients; its OOD step above is a
 small significant decrease too). The full method is still best on Glioma T1n
 (\cref{tab:suppl-dice}; not significantly ahead of Auglab): whatever Voronoi costs there is more than recovered by
@@ -365,8 +365,8 @@ Rung & Glioma & Glioma & Glioma & Glioma & MS & MS & Breast & Breast \\
 nnU-Net & 16.5 & 15.9 & 6.0 & 11.0 & 2.4 & 1.1 & 23.7 & 33.5 \\
 +$k$-means & $38.4^{***}$ & $29.6^{***}$ & $38.6^{***}$ & $26.1^{***}$ & $11.2^{*}$ & $9.8^{*}$ & $28.8^{***}$ & $37.0^{***}$ \\
 +label remap & $41.8^{***}$ & 30.3 & $40.2^{**}$ & 26.4 & $17.5^{*}$ & $22.4^{*}$ & 28.5 & $38.8^{***}$ \\
-+Voronoi & \pending & \pending & \pending & \pending & \pending & \pending & 29.2 & 39.3 \\
-real fill & \pending & \pending & \pending & \pending & \pending & \pending & $29.6^{**}$ & $41.9^{***}$ \\
++Voronoi & \pending & \pending & \pending & \pending & 16.4 & $32.4^{*}$ & 29.2 & 39.3 \\
+real fill & \pending & \pending & \pending & \pending & $27.3^{*}$ & $40.0^{*}$ & $29.6^{**}$ & $41.9^{***}$ \\
 +Auglab & 46.9 & 44.2 & $46.8^{***}$ & $40.9^{***}$ & 30.6 & $36.4^{*}{\downarrow}$ & $34.7^{***}$ & 41.9 \\
 +Auglab, s.v. & $47.6^{*}$ & $46.5^{***}$ & 46.9 & 41.2 & 31.3 & 34.7 & --- & --- \\
 \bottomrule

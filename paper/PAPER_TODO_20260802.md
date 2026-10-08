@@ -18,7 +18,9 @@ The noise-fill rung (rung 4) was retrained so noise-refilled labels keep Voronoi
 each label one noise level, so the fill swap also added Voronoi inside labels). All 18 settings retrain on Vulcan.
 - DONE (lblvor rung 4, ladders regenerated): Abdomen T1in/T2spir, Breast T1-CE/T2w (+ the 10 Duke/I-SPY1/ACRIN companion
   ladders), Mandible CBCT, Pelvis CT/MRI. Pancreas T2w done, T1-CE finishing (add_pancreas_test session owns those ladders).
-- PENDING retrain: Glioma (x4), MS (x2), Brain (x3). Regenerate with `LADDER_PENDING=` emptied once they land:
+- MS DONE 2026-10-08 16:22 (ladders 06_18/06_19 re-pointed, regenerated: FLAIR swap +10.89, T1w +7.58, task +9.24; MS FLAIR Voronoi
+  all-contrast step now flat: 34.6->34.1, p=0.25, was +1.49 p=0.0078).
+- PENDING retrain: Glioma (x4), Brain (x3). Regenerate with `LADDER_PENDING=` emptied once they land:
   `scripts/cluster/rung5_val000/run_ladders.sh <keys>` (re-point each script's rung-4 key to the `*_lblvor_*` run first),
   then paper/scripts `compute_dissociation_pvalues.py --metric dice|hd95`, `compute_ladder_significance.py`,
   `make_per_contrast_curves.py`, `make_fill_swap_pairs_table.py` (gen job: $SCRATCH/rung4_lblvor/paper_gen/gen.sh).
