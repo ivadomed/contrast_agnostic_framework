@@ -195,6 +195,13 @@ CASES = [
     ("onharmony", "benchmark/02_tasks/brain_healthy/on-harmony/2_nnUNet_on-harmony/raw/Dataset031_OnHarmonyT1w31/imagesTr/sub-03286_ses-NOT2ING001_T1w_0000.nii.gz",
      "benchmark/02_tasks/brain_healthy/on-harmony/2_nnUNet_on-harmony/raw/Dataset031_OnHarmonyT1w31/labelsTr/sub-03286_ses-NOT2ING001_T1w.nii.gz"),
 ]
+# fig:fill-swap-example (Paul, 2026-10-08): a BraTS glioma T1c training case, large ring-enhancing tumor with a heterogeneous
+# core (picked among the largest tumors of 40 random training cases x T2w/T1c/FLAIR). Run AFTER the Fig 1 cases with its
+# own seed, so Fig 1's draws are untouched. The label slice is saved too (the figure zooms on the tumor).
+EXAMPLE_CASES = [
+    ("brats_t1c", "benchmark/02_tasks/brain_tumor/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset054_BraTS2024GliomaT1c/imagesTr/BraTSGLI02520101_0000.nii.gz",
+     "benchmark/02_tasks/brain_tumor/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset054_BraTS2024GliomaT1c/labelsTr/BraTSGLI02520101.nii.gz", 0),
+]
 
 def main():
     for slug, img_rel, lbl_rel in CASES:
@@ -206,6 +213,15 @@ def main():
             out = OUT_DIR / f"{slug}_{letter}.png"
             save_panel(arr, out)
             print(f"-> {out}")
+    for slug, img_rel, lbl_rel, seed in EXAMPLE_CASES:
+        img_slice, lbl_slice = load_slice(REPO / img_rel, REPO / lbl_rel)
+        img_slice, lbl_slice = crop_to_foreground(img_slice, lbl_slice)
+        torch.manual_seed(seed)
+        panels = run_pipeline(normalize01(img_slice), lbl_slice)
+        for letter in ("a", "n", "e"):
+            save_panel(panels[letter], OUT_DIR / f"{slug}_{letter}.png")
+        np.save(OUT_DIR / f"{slug}_lbl.npy", lbl_slice)
+        print(f"-> {OUT_DIR}/{slug}_[a,n,e].png + _lbl.npy")
 
 
 # Guarded so run_pipeline() can be imported and reused (it is, by

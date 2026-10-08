@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Small figure for the causal ablation (fig:fill-swap-example): the ablation's NOISE fill next to PALETTE's REAL fill on
-the same partition and the same region target means, on the ON-Harmony T1w slice of fig:method-pipeline, each with a
+the same partition and the same region target means, on a BraTS glioma T1c training slice, each with a
 magnified crop so the texture difference is visible at column width. One row:
     [noise fill, box] [noise zoom] [real zoom] [real fill, box]
-Panels come from generate_method_figure_panels.py (onharmony_n.png, onharmony_e.png); the noise fill is not part of the
+Panels come from generate_method_figure_panels.py (brats_t1c_n.png, brats_t1c_e.png, brats_t1c_lbl.npy); the noise fill is not part of the
 method, so it is kept out of fig:method-pipeline.
 
 Usage:  .venv/bin/python paper/scripts/make_fill_swap_example_figure.py
@@ -16,19 +16,26 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import ConnectionPatch, Rectangle  # noqa: E402
 
-from make_method_figure import FIG, ROWS, load  # noqa: E402
+import numpy as np  # noqa: E402
+
+from make_method_figure import FIG, PANELS, load  # noqa: E402
 
 OUT = FIG / "fill_swap_example"
-# zoom window as fractions of the (radiologically oriented) slice: (row0, row1, col0, col1)
-ZOOM = (0.33, 0.61, 0.64, 0.92)   # lateral cortex: highest within-region texture of the slice (scratch zoom_search.py, 2026-10-08)
+SLUG = "brats_t1c"                 # BraTS glioma T1c training case (generate_method_figure_panels.py EXAMPLE_CASES)
+ORIENT = lambda a: a.T[::-1]       # noqa: E731  LAS array (rows x=L, cols y=A) -> anterior up, patient left on image right
+CORE = (1, 3, 4)                   # BraTS-GLI NCR, ET, RC: the tumor core (SNFH = 2, the edema, spans most of the hemisphere)
+MARGIN = 0.05                      # zoom = tumor-core bounding box grown by this fraction per side, then squared
 plt.rcParams.update({"font.size": 8, "font.family": "sans-serif"})
 
 
 def main():
-    slug, _, orient = next(r for r in ROWS if r[0] == "onharmony")
-    noise, real = load(slug, "n", orient), load(slug, "e", orient)
+    noise, real = load(SLUG, "n", ORIENT), load(SLUG, "e", ORIENT)
     h, w = noise.shape
-    r0, r1, c0, c1 = int(ZOOM[0] * h), int(ZOOM[1] * h), int(ZOOM[2] * w), int(ZOOM[3] * w)
+    ys, xs = np.where(np.isin(ORIENT(np.load(PANELS / f"{SLUG}_lbl.npy")), CORE))
+    cy, cx = (ys.min() + ys.max()) / 2, (xs.min() + xs.max()) / 2
+    half = max(ys.max() - ys.min(), xs.max() - xs.min()) * (0.5 + MARGIN)
+    r0, r1 = int(max(cy - half, 0)), int(min(cy + half, h))
+    c0, c1 = int(max(cx - half, 0)), int(min(cx + half, w))
     zw = (c1 - c0) / (r1 - r0)                                   # zoom aspect (w/h)
 
     ph = 1.25                                                    # panel height, inches
