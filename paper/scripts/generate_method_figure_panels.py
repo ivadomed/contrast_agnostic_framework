@@ -165,15 +165,24 @@ def run_pipeline(img_slice: np.ndarray, lbl_slice: np.ndarray, device="cpu"):
             buf.copy_(torch.where(m, (mu_ell + alpha_ell * (buf - mean_ell)).clamp(0, 1), buf))
 
     # (n) the ladder's NOISE FILL on the same partition and the same target means (rung 4,
-    # palette_noisefill.py with label_fill_noise=True): every sub-region mu_c + sigma_c*N(0,1),
-    # sigma_c ~ U(0.05, 0.25), then every label refilled the same way with its own mu_ell.
-    # Separate generator, so the global draw sequence -- hence panels (a)-(e) -- is unchanged.
+    # palette_noisefill.py with label_fill_noise=True, label_voronoi=True -- the 2026-10-07 lblvor config):
+    # every sub-region mu_c + sigma_c*N(0,1), sigma_c ~ U(0.05, 0.25); then every label is refilled
+    # SynthSeg-style, split into its own Voronoi cells seeded inside the label (forced on, like the
+    # sub-parcellation above), each cell with its own mu + sigma*N(0,1).
+    # Separate generator / forked global RNG, so the global draw sequence -- hence panels (a)-(e),
+    # and the next case's panels -- is unchanged.
     g = torch.Generator().manual_seed(1)
     sig_c = torch.rand(R, generator=g) * 0.20 + 0.05
     panel_n = (mu_c[rid] + sig_c[rid] * torch.randn(N, generator=g)).clamp(0, 1) * flat_m
-    for m, mu_ell in label_draws:
-        sig = torch.rand(1, generator=g).item() * 0.20 + 0.05
-        panel_n = torch.where(m, (mu_ell + sig * torch.randn(N, generator=g)).clamp(0, 1), panel_n)
+    with torch.random.fork_rng():
+        torch.manual_seed(1)
+        for m, _ in label_draws:
+            cell, n_cell = _voronoi_region_ids(coords, torch.zeros(N, dtype=torch.long), m.float(), 1,
+                                               torch.device(device), force_split=True)
+            mu_cell = torch.rand(n_cell, generator=g)
+            sd_cell = torch.rand(n_cell, generator=g) * 0.20 + 0.05
+            fill = (mu_cell[cell] + sd_cell[cell] * torch.randn(N, generator=g)).clamp(0, 1)
+            panel_n = torch.where(m, fill, panel_n)
 
     # method order (Sec. 3.1, 2026-10-07): (b) k-means regions flat, (v) + Voronoi sub-regions flat, (t) signed affine
     # remap of the real intensities (step 3, no label step), (e) + label remap = PALETTE output. Ablation-order previews

@@ -184,7 +184,7 @@ from there on, each rung adds one ingredient. The three partition rungs fill
 every region with SynthSeg-style Gaussian noise. The
 step from $+$Voronoi to real fill, the \emph{fill swap}, changes only the fill:
 partition, sub-region count, target-mean distribution and both blur passes are
-unchanged. Any change at this step therefore comes from keeping the real
+unchanged (inside labels, the noise arm draws its own Voronoi cells). Any change at this step therefore comes from keeping the real
 within-region intensity structure instead of noise.
 
 \begin{figure}[t]
