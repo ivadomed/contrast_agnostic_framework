@@ -31,17 +31,15 @@ Holm-corrected~\cite{holm1979} (\cref{sec:suppl-stats}).
 % TODO(Paul): confirm the subject-level split for Spine (separate pipeline); verified for the other seven tasks.
 
 \paragraph{Compared methods.} We compare against five methods
-(\cref{tab:methods}), each run as its authors propose, with its own
-augmentation recipe on every training iteration: \emph{nnU-Net} with its
-default augmentation; SynthSeg~\cite{billot2023synthseg} as released
-(\emph{SynthSeg-noEM}); its EM label-subdivision variant
-(\emph{SynthSeg-EM}), developed for cardiac MRI~\cite[\S5.4]{billot2023synthseg}
-and re-implemented here since its code was not released;
-SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab} in
-its default configuration (\cref{tab:suppl-aug-probs}). The SynthSeg variants
-receive each task's training labels. SynthSeg-noEM synthesizes from the label
-map alone and was designed for dense labels, which only Brain provides.
-SynthSeg and SRCSM run without the Auglab pipeline, as published
+(\cref{tab:methods}), each run as its authors propose. \emph{nnU-Net} uses its
+default augmentation. \emph{SynthSeg-noEM} is SynthSeg~\cite{billot2023synthseg}
+as released. \emph{SynthSeg-EM} is its EM label-subdivision variant, developed
+for cardiac MRI~\cite[\S5.4]{billot2023synthseg}; its code was not released,
+so we re-implemented it. Both SynthSeg variants receive each task's training
+labels; SynthSeg-noEM synthesizes from the label map alone and was designed
+for dense labels, which only Brain provides. \emph{SRCSM}~\cite{thaler2025semrandconv}
+and \emph{Auglab}~\cite{molinier2026auglab} use their default configurations
+(\cref{tab:suppl-aug-probs}). SynthSeg and SRCSM run without the Auglab pipeline, as published
 (\cref{sec:discussion}).
 
 \begin{table}[t]
