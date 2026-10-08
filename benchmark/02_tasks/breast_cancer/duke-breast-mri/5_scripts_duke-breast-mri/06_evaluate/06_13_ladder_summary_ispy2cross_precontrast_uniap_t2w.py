@@ -36,7 +36,7 @@ RUNGS = [
     ("+label_remap", "+ label remap",
      f"ablations/precontrast_uniap/ispy2_t2w_baseline_kmeans_label_remap_{TS}"),
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
-     f"ablations/precontrast_uniap/ispy2_t2w_baseline_kmeans_label_remap_voronoi_{TS}"),
+     f"ablations/precontrast_uniap/ispy2_t2w_baseline_kmeans_label_remap_voronoi_lblvor_20261007_171431"),
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
      "ablations/precontrast_uniap/ispy2_t2w_v26_6_2_train050_val000_20261005_222952"),   # val000 (2026-10-07; was ..._val100_{TS})
     ("+AugLab (val000)", "+ full AugLab recipe on top",

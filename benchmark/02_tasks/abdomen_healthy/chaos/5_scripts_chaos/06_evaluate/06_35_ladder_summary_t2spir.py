@@ -50,7 +50,7 @@ RUNGS = [
     ("+label_remap", "+ label remap",
      "ablations/baseline_kmeans_label_remap_train050_val000"),
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
-     "ablations/baseline_kmeans_label_remap_voronoi_train050_val000"),
+     "ablations/nnUNet_chaos_t2spir_baseline_kmeans_label_remap_voronoi_train050_val000_lblvor_20261007_171048"),
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
      "ablations/chaos_t2spir_v26_6_2_train050_val000_20261005_222654"),   # val000 (real-image checkpoint selection, like rung 4) 2026-10-06; was ..._val100_20261003_123018
     ("+AugLab (val000)", "+ full AugLab recipe on top",

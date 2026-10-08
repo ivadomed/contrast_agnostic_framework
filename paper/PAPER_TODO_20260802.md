@@ -1,4 +1,37 @@
-# Paper TODO — CURRENT STATUS (2026-10-07, evening). Everything below this block is history.
+# Paper TODO — CURRENT STATUS (2026-10-08, rung-4 lblvor update IN PROGRESS). Everything below the next block is history.
+
+## Rung 4 retrained with label_voronoi (lblvor) -- paper partly updated (2026-10-08)
+The noise-fill rung (rung 4) was retrained so noise-refilled labels keep Voronoi cells (`label_voronoi`; old rung 4 gave
+each label one noise level, so the fill swap also added Voronoi inside labels). All 18 settings retrain on Vulcan.
+- DONE (lblvor rung 4, ladders regenerated): Abdomen T1in/T2spir, Breast T1-CE/T2w (+ the 10 Duke/I-SPY1/ACRIN companion
+  ladders), Mandible CBCT, Pelvis CT/MRI. Pancreas T2w done, T1-CE finishing (add_pancreas_test session owns those ladders).
+- PENDING retrain: Glioma (x4), MS (x2), Brain (x3). Regenerate with `LADDER_PENDING=` emptied once they land:
+  `scripts/cluster/rung5_val000/run_ladders.sh <keys>` (re-point each script's rung-4 key to the `*_lblvor_*` run first),
+  then paper/scripts `compute_dissociation_pvalues.py --metric dice|hd95`, `compute_ladder_significance.py`,
+  `make_per_contrast_curves.py`, `make_fill_swap_pairs_table.py` (gen job: $SCRATCH/rung4_lblvor/paper_gen/gen.sh).
+- Updated in the .tex: fig:fill-swap-example (lblvor panel) + noise-fill definition (3.3) + experiments clause; fig:ladder /
+  fig:ladder-hd95; tab:dissociation(-hd95) rows (pending tasks print \pending; their OLD raw p is still in the 7-task Holm
+  family, so every Holm p is provisional); tab:ladder-full (+Voronoi / real-fill cells of pending columns = \pending);
+  tab:fill-swap-pairs; tab:mechanism Abdomen +Voronoi 87.2 -> 86.9 (CHAOS-only all-contrast, other columns \pending); the
+  Voronoi-is-flat-on-Abdomen-T1in sentence (now significantly negative, p=2e-4); full-ladder prose (Breast T1-CE no longer
+  a fill-swap decrease; Mandible's maximum is now the noise-fill rung 69.8); finished-task numbers in abstract/intro/
+  experiments/discussion (Breast +0.5 -> +1.5, T1-CE -1.2 -> +0.4, T2w +2.1 -> +2.7; Pelvis CT +4.8 -> +5.9, start 35 -> 34%;
+  Abdomen +2.6 -> +3.5; Pelvis +3.5 -> +3.1; Mandible +0.1 -> -1.6 and NOT significant).
+- HELD until all ladders land (cross-task claims; the Glioma/MS/Brain deltas will move):
+  * abstract/intro/conclusion "at most +3.5 on interface-bounded tasks" (Abdomen is now exactly +3.5) and the MS/Glioma
+    task numbers (+6.8/+4.6); intro "four largest gains" list vs "at most +5.9 in any interface-bounded setting" -- Pelvis CT
+    +5.86 now sits just below MS T1w +5.94 / Glioma T1n +5.98 (old values): re-check the ranking claim.
+  * experiments "each of these tasks passes the correction except Mandible" + "ranking at the top is unchanged" (relative).
+  * discussion limitations: "all interface-bounded rows but one start above 63%, every appearance-defined row below 42%";
+    permutation test on the seven per-task gains (p=0.2) -- recompute.
+  * "Breast gains only slightly" framing (+1.5 now); Brain "only task where the swap significantly hurts".
+  * suppl: Voronoi all-contrast check for MS FLAIR / Brain T1w / Glioma T1n; tab:mechanism pending cells (CHAOS-only style
+    all-contrast series for MS/Glioma/Brain = all_dice of their within-dataset ladders); fig:ladder-hd95 caption sentence.
+  * NGF: noise-fill row recomputed with the lblvor config for all 7 tasks (method key `noisefill_lblvor`,
+    config `..._NoiseFillV2LblVorGPUTransform.json` in AugLab); ngf_dose_response_openms_flair still on the OLD rung (its own
+    rank CSVs + MS ladder) -- redo after MS lands.
+
+# (previous status, 2026-10-07), evening)
 
 ## State
 - Builds clean (pdflatex -> bibtex -> pdflatex x2), 0 errors / 0 undefined refs; main text ends on p8 with ~1-2 lines of

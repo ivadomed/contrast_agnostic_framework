@@ -49,7 +49,7 @@ RUNGS = [
     ("+label_remap", "+ label remap",
      "nnUNet_chaos_t1in_baseline_kmeans_label_remap_train050_val000_20260715_081919"),
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
-     "nnUNet_chaos_t1in_baseline_kmeans_label_remap_voronoi_train050_val000_20260715_081959"),
+     "nnUNet_chaos_t1in_baseline_kmeans_label_remap_voronoi_train050_val000_lblvor_20261007_171014"),
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
      "nnUNet_chaos_t1in_v26_6_2_train050_val000_20260715_082040"),
     ("+AugLab (val000)", "+ full AugLab recipe on top",

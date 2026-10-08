@@ -103,7 +103,10 @@ SPATIAL = ("FlipTransform", "AffineTransform", "nnUNetSpatialTransform")
 # method key -> (source json, mode)   mode "only:<Key>" keep only that block active
 METHODS = {
     "palette":        ("transform_params_gpu_VALsynthonly_ImageContrastV26_6_2GPUTransform.json", None),
+    # retired rung 4 (one noise level per label); building it now needs AUGLAB_ALLOW_LEGACY_NOISEFILL=1
     "noisefill":      ("transform_params_gpu_VALsynthonly_ImageContrastV26_6_2NoiseFillV2GPUTransform.json", None),
+    # current rung 4 (2026-10-07, label_voronoi: Voronoi cells inside noise-refilled labels)
+    "noisefill_lblvor": ("transform_params_gpu_VALsynthonly_ImageContrastV26_6_2NoiseFillV2LblVorGPUTransform.json", None),
     "kmeans":         ("transform_params_gpu_VALsynthonly_kmeans.json", None),
     "kmeans_remap":   ("transform_params_gpu_VALsynthonly_kmeans_label_remap.json", None),
     "auglab_default": ("transform_params_gpu_default01-23.json", None),

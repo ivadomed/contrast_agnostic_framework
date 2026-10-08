@@ -29,7 +29,7 @@ RUNGS = [
     ("+kmeans", "+ K-means intensity clustering", "ct_baseline_kmeans_20260916_072434"),
     ("+label_remap", "+ label remap", "ct_baseline_kmeans_label_remap_20260916_072434"),
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
-     "ct_baseline_kmeans_label_remap_voronoi_20260916_072434"),
+     "totalseg-pelvic_ct_baseline_kmeans_label_remap_voronoi_lblvor_20261007_171504"),
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
      "totalseg-pelvic_ct_v26_6_2_train050_val000_20261005_223025"),   # val000 (2026-10-06; was ct_v26_6_2_train050_val100_20260916_072434)
     ("+AugLab (OURS)", "+ full AugLab recipe on top", "ct_ours_20260916_072434"),

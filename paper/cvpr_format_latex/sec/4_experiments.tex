@@ -210,11 +210,11 @@ target, but not every appearance-defined target shows one
 pooling its training modalities (\cref{sec:suppl-stats}); the per-setting
 values are a breakdown of that test. Pooled per task, the swap adds $+6.8$
 Dice on MS (all eight test patients improve) and $+4.6$ on Glioma, against
-$+3.5$ on Pelvis, $+2.6$ on Abdomen, $+0.1$ on Mandible and $-0.7$ on Brain; each of these tasks passes the correction, Mandible with a
-negligible gain and Brain with a loss. The four largest per-setting gains are Glioma T1c ($+12.7$
+$+3.5$ on Abdomen, $+3.1$ on Pelvis, $-0.7$ on Brain and $-1.6$ on Mandible; each of these tasks passes the correction except
+Mandible, Brain with a loss. The four largest per-setting gains are Glioma T1c ($+12.7$
 Dice), MS FLAIR ($+7.7$), Glioma T1n ($+6.0$) and MS T1w ($+5.9$); no
-interface-bounded setting gains more than $+4.8$ (Pelvis CT). Breast gains
-only $+0.5$, all from T2w training ($+2.1$; T1-CE training loses $1.2$), and
+interface-bounded setting gains more than $+5.9$ (Pelvis CT). Breast gains
+only $+1.5$, mostly from T2w training ($+2.7$; T1-CE training $+0.4$), and
 Glioma T2w and FLAIR show no gain ($+1.1$, $-1.3$). Relative to the noise-fill
 Dice (\cref{fig:ladder}) the ranking at the top is unchanged.
 

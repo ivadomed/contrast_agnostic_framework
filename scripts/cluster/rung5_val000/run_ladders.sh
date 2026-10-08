@@ -11,6 +11,8 @@ rc=0
 for k in "$@"; do
   echo "=== ${k} $(date +%T)"
   case "$k" in
+    abdomen_t1in)   ( source $T/abdomen_healthy/chaos/5_scripts_chaos/00_utils/env.sh
+                      .venv/bin/python $T/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_34_ladder_summary_t1in.py ) ;;
     abdomen_t2spir) ( source $T/abdomen_healthy/chaos/5_scripts_chaos/00_utils/env_t2spir.sh
                       .venv/bin/python $T/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/06_35_ladder_summary_t2spir.py ) ;;
     mandible)       ( source $T/mandible_healthy/toothfairy2/5_scripts_toothfairy2/00_utils/env.sh
