@@ -65,22 +65,20 @@ ImageNet-trained CNNs classify more by texture than by shape, and training
 them on style-randomized images shifts them toward shape and improves
 robustness~\cite{geirhos2019texturebias}; how strong this texture bias is
 depends mostly on the training data and
-augmentation~\cite{hermann2020texturebias}. SynthSeg-style randomization
+augmentation~\cite{hermann2020texturebias}; relying on either cue alone costs
+accuracy~\cite{li2021shapetexture}, and stylization's robustness gain does not
+come from shape bias~\cite{mummadi2021shapebias}. SynthSeg-style randomization
 pulls the same lever on medical images: replacing texture with noise forces
 the network onto shape. We ask what that costs when the target is itself
 defined by its appearance. In medical images, texture carries such
 information: second-order gray-level statistics discriminate image content
 beyond intensity~\cite{haralick1973texture}, and texture features from tumor
 regions carry prognostic signal across CT, MRI and
-PET~\cite{lambin2012radiomics}. Closer to our setting, Kang et al.\
-disentangle structure from texture in cross-domain image translation with a
-texture co-occurrence loss, targeting the same failure mode we do --- naive
-translation distorts fine texture and degrades downstream
-segmentation~\cite{kang2023structurepreserving}; a texture-fidelity loss has
-likewise been added to GAN-based lesion augmentation~\cite{guan2022texture}.
-For diffuse white-matter lesions, it has been argued directly that the lack of
-a sharp edge defeats boundary-based methods and favors texture-based
-segmentation~\cite{kruggel2008texture}. None of
+PET~\cite{lambin2012radiomics}. Kang et al.\ preserve texture in
+cross-domain translation with a co-occurrence loss, since distorted texture
+degrades downstream segmentation~\cite{kang2023structurepreserving}.
+For diffuse white-matter lesions, the lack of a sharp edge has been argued to
+favor texture-based over boundary-based segmentation~\cite{kruggel2008texture}. None of
 this prior work, to our knowledge, connects texture preservation in an
 \emph{augmentation} to \emph{which} segmentation targets it helps; that
 connection, tested causally, is our contribution.
@@ -96,9 +94,7 @@ pipeline~\cite{molinier2026auglab,isensee2021nnunet} is one such
 GPU-accelerated framework and is the strongest competitor across our tasks,
 and BigAug stacks a comparable set of coarse intensity, quality
 and spatial perturbations under the same single-source DG protocol we
-use~\cite{zhang2020bigaug}. Our method inserts the PALETTE-Aug transform as one
-additional operator inside the Auglab pipeline, so the comparison against
-Auglab directly isolates PALETTE-Aug's contribution. Closer to our operator are
+use~\cite{zhang2020bigaug}. Closer to our operator are
 random-filter methods, which vary appearance with an untrained nonlinear
 filter: GIN applies randomly re-initialized convolutions for label-free
 appearance variants~\cite{ouyang2022gin}; related variants establish the random-filter principle for
@@ -106,6 +102,9 @@ natural images, perturb intensities per class using the task mask, add
 learned diffusion generators, or perturb the Fourier amplitude spectrum
 instead of the image
 itself~\cite{xu2021randconv,su2023slaug,chen2024diffusionsdg,zhao2024morestyle,li2024raffesdg,qiao2024ras}.
+In natural images, style randomization rescales feature statistics, keeping
+spatial structure~\cite{huang2017adain,zhou2021mixstyle,li2022dsu}, and Fourier
+methods change amplitude, keeping phase~\cite{xu2021fact}.
 Our operator
 instead partitions the foreground into intensity classes and Voronoi
 sub-regions and applies a signed \emph{affine} remap of the real intensities
