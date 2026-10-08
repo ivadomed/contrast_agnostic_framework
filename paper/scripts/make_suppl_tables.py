@@ -45,7 +45,7 @@ TASKS = [   # tab:tasks order: appearance-defined, then interface-bounded
     ("Spine",      "healthy-spine-tum", "spine_healthy", {"ct": "CT", "inphase": "Dixon in-phase"}),
     ("Pelvis",     "totalseg-pelvic", "pelvis_healthy", {"ct": "CT", "mri": "MRI"}),
 ]
-METHODS = [("baseline", "Baseline"), ("synthseg_noEM", r"\makecell{SynthSeg\\-noEM}"),
+METHODS = [("baseline", "nnU-Net"), ("synthseg_noEM", r"\makecell{SynthSeg\\-noEM}"),
            ("synthseg_EM", r"\makecell{SynthSeg\\-EM}"), ("srcsm", "SRCSM"), ("auglab_default", "Auglab"),
            ("auglabAug_v26_6_2_train050_val000", r"\makecell{\textbf{PALETTE-}\\\textbf{Aug}}")]
 REF = "auglabAug_v26_6_2_train050_val000"

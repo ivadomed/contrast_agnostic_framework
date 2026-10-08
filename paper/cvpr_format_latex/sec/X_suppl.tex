@@ -158,8 +158,8 @@ HD95 counterpart of \cref{tab:meta}. Across tasks PALETTE-Aug is significantly
 better than every competitor, Auglab included. Per task it has the lowest HD95
 on Glioma, Abdomen, Brain, MS, Spine and Pelvis (on Abdomen the gap to
 SRCSM is not significant); it ties Auglab on Breast without a significant gap; and on Mandible it
-is significantly behind Auglab and the baseline, the
-one task where the baseline beats PALETTE-Aug. PALETTE alone, shown for
+is significantly behind Auglab and nnU-Net, the
+one task where nnU-Net beats PALETTE-Aug. PALETTE alone, shown for
 reference, has the lowest HD95 on Breast. When HD95 disagrees with Dice for a
 method (a noticeably better HD95 than its Dice would predict), the usual
 explanation is low recall: a method that predicts only a small, confident,
@@ -175,7 +175,7 @@ Dice is a warning sign rather than evidence of competitiveness.
 \toprule
  & Glioma & MS & Breast & Abdomen & Brain & Mandible & Spine & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 44.8 & 35.2 & 58.5 & 122.1 & 30.3 & \textbf{21.7} & 49.9 & 149.3 & $2\times10^{-47}$ \\
+nnU-Net         & 44.8 & 35.2 & 58.5 & 122.1 & 30.3 & \textbf{21.7} & 49.9 & 149.3 & $2\times10^{-47}$ \\
 SynthSeg-noEM   & 78.0 & 41.9 & 101.1 &  80.6 &  8.8 & 32.9 & 111.8 & 261.8 & $2\times10^{-58}$ \\
 SynthSeg-EM     & 17.9 & 24.7 & 60.9 &  23.7 &  5.3 & 24.9 & 4.0 & 34.0 & $2.7\times10^{-6}$ \\
 SRCSM           & 21.7 & 25.4 & 92.4 & 25.6 &  5.3 & 21.9 & --- & 39.6 & $1\times10^{-43}$ \\
@@ -192,7 +192,7 @@ PALETTE alone (ours) & 16.6 & 23.3 & 56.3 & 24.9 & 4.9 & 22.3 & --- & 35.2 & $0.
 \caption{Task-level HD95 (mm, $\downarrow$). Same pooling and test as
 \cref{tab:meta}, and likewise no cross-task average; the bottom row counts the
 competitors PALETTE-Aug beats within each task (on Mandible, Auglab and
-the baseline are significantly ahead of it). Spine has no SRCSM run and no
+nnU-Net are significantly ahead of it). Spine has no SRCSM run and no
 ladder. PALETTE alone: the transform without Auglab, left out of the bolding;
 $^\S$PALETTE-Aug against PALETTE alone over the seven tasks with both.
 SRCSM includes its test-time source matching.}
@@ -362,7 +362,7 @@ pipeline is positive even though one internal component is not.
 Rung & Glioma & Glioma & Glioma & Glioma & MS & MS & Breast & Breast \\
      & T1n & T1c & T2w & FLAIR & FLAIR & T1w & T1-CE & T2w \\
 \midrule
-base & 16.5 & 15.9 & 6.0 & 11.0 & 2.4 & 1.1 & 23.7 & 33.5 \\
+nnU-Net & 16.5 & 15.9 & 6.0 & 11.0 & 2.4 & 1.1 & 23.7 & 33.5 \\
 +$k$-means & $38.4^{***}$ & $29.6^{***}$ & $38.6^{***}$ & $26.1^{***}$ & $11.2^{*}$ & $9.8^{*}$ & $28.8^{***}$ & $37.0^{***}$ \\
 +label remap & $41.8^{***}$ & 30.3 & $40.2^{**}$ & 26.4 & $17.5^{*}$ & $22.4^{*}$ & 28.5 & $38.8^{***}$ \\
 +Voronoi & \pending & \pending & \pending & \pending & \pending & \pending & 29.2 & 39.3 \\
@@ -380,7 +380,7 @@ real fill & \pending & \pending & \pending & \pending & \pending & \pending & $2
 Rung & Abdomen & Abdomen & Brain & Brain & Brain & Mandible & Pelvis & Pelvis \\
      & T1in & T2spir & T1w & T2w & DWI & CBCT & CT & MRI \\
 \midrule
-base & 17.0 & 19.7 & 13.6 & 26.4 & 34.6 & 39.4 & 0.7 & 10.0 \\
+nnU-Net & 17.0 & 19.7 & 13.6 & 26.4 & 34.6 & 39.4 & 0.7 & 10.0 \\
 +$k$-means & $82.2^{***}$ & $77.4^{***}$ & $62.2^{*}$ & $63.3^{*}$ & $60.5^{*}$ & $64.6^{***}$ & $22.6^{***}$ & $55.9^{***}$ \\
 +label remap & $86.1^{***}$ & $81.4^{***}$ & 62.9 & 63.2 & $63.6^{*}$ & $65.6^{***}$ & $30.0^{***}$ & $63.3^{***}$ \\
 +Voronoi & $85.3^{***}{\downarrow}$ & $80.5^{***}{\downarrow}$ & \pending & \pending & \pending & $69.8^{***}$ & $34.1^{*}$ & $65.0^{**}$ \\
@@ -396,9 +396,9 @@ it (``s.v.'', synthetic-contrast validation, against real-contrast
 validation): $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$ (Holm-corrected paired
 Wilcoxon on patients, within each ladder; \cref{tab:dissociation} tests the
 fill swap once per task instead); $\downarrow$ marks a significant
-\emph{decrease}. Rungs: baseline, $+k$-means, $+$label remap, $+$Voronoi
+\emph{decrease}. Rungs: nnU-Net, $+k$-means, $+$label remap, $+$Voronoi
 (noise fill), real fill (PALETTE alone), $+$Auglab (PALETTE-Aug); \cref{fig:ladder}
-abbreviates them base, +km, +lbl, +vor, +real, +Auglab. MS and Brain have eight
+abbreviates them nnU-Net, +km, +lbl, +vor, +real, +Auglab. MS and Brain have eight
 test units each, so their smallest attainable $p$ after correction is just under
 $0.05$. Breast and Pelvis have no synthetic-validation arm. Mandible's held-out
 contrasts all come from external cohorts.}

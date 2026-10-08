@@ -1,5 +1,15 @@
 # Paper TODO — CURRENT STATUS (2026-10-08, rung-4 lblvor update IN PROGRESS). Everything below the next block is history.
 
+## Open items from Paul's section-4 review (2026-10-08)
+- LATENCY (TODO in 4_experiments.tex, "Training and evaluation"): report PALETTE's training cost (per-iteration GPU time of
+  the transform, wall time per fold vs Auglab). The DualVal trainer (synthetic-validation pass) roughly doubles wall time
+  (PanSegData H100 probe: OURS DualVal 16.8-17.1 h vs auglab_default 6.2-7.6 h per 2000-epoch fold); state the cost without
+  DualVal. Pro-RandConv (CVPR 2023) reports compute + inference time in its discussion: a model for where it goes.
+- Spine subject-level split: stated for all tasks in 4.1; verified for the other seven (ON-Harmony: 4 test subjects disjoint
+  from the 16 training subjects of all three training modalities), Spine came from a separate pipeline -> confirm.
+- Naming: the transform is called "PALETTE-Aug" in the abstract/intro/3.1 title, but "PALETTE alone" = transform without Auglab
+  and "PALETTE-Aug" = transform inside Auglab (3.2 now defines both). Option: call the transform PALETTE everywhere.
+
 ## Rung 4 retrained with label_voronoi (lblvor) -- paper partly updated (2026-10-08)
 The noise-fill rung (rung 4) was retrained so noise-refilled labels keep Voronoi cells (`label_voronoi`; old rung 4 gave
 each label one noise level, so the fill swap also added Voronoi inside labels). All 18 settings retrain on Vulcan.

@@ -1,70 +1,48 @@
 \section{Experiments}
 \label{sec:experiments}
 
-\subsection{Setup}
+\subsection{Experimental setup}
 \label{subsec:e-setup}
 
-\paragraph{Protocol.} Each model trains on one real source modality and is
-tested on every modality of the same task, the protocol Auglab uses for
-spine~\cite{molinier2026auglab}, here over eight tasks and with external
-cohorts wherever one exists. No target-domain data is seen in training. All
-methods share one nnU-Net~\cite{isensee2021nnunet} configuration and schedule
-and differ only in input augmentation; the epoch budget is fixed per dataset
-(\cref{sec:suppl-config}). Our full method adds the PALETTE-Aug transform as
-one operator to the Auglab pipeline~\cite{molinier2026auglab}, so it and Auglab
-differ by exactly that transform. Each method is trained on three
-train/validation folds, and all three models are scored on the same held-out
-test set. Significance tests are paired, use the patient (for Brain, the session)
-as the unit, and are
+\paragraph{Tasks and data.} \Cref{tab:tasks} lists the eight tasks, their
+cohorts, the modalities each is trained on and the contrasts it is tested on,
+across MRI, CT and dental CBCT. Every (task, training modality) pair is one
+\emph{setting}, eighteen in all; each setting trains its own models, which are
+tested on every contrast of the task, the training contrast included.
+\emph{Out-of-domain} (OOD) results exclude every scan of the training
+contrast, whichever cohort it comes from. External cohorts add held-out test
+contrasts to their task; they are not separate tasks.
+
+\paragraph{Training and evaluation.} Each model trains on one real source
+modality and is tested on every modality of its task, the protocol Auglab uses
+for spine~\cite{molinier2026auglab}, here over eight tasks. Splits are by
+subject: every scan of a test subject, in any modality, is held out of
+training, and no target-domain data is seen in training. All methods share
+the same 3D nnU-Net~\cite{isensee2021nnunet} configuration, optimizer,
+learning-rate schedule and per-task epoch budget (\cref{sec:suppl-config}),
+and differ only in input augmentation. Each method trains three models on
+three train/validation folds, all scored on the same held-out test set.
+PALETTE's configuration is set once and never tuned to a task
+(\cref{sec:suppl-config}). Significance tests are paired over patients and
 Holm-corrected~\cite{holm1979} (\cref{sec:suppl-stats}).
+% TODO(Paul): latency -- report PALETTE's training cost (per-iteration GPU time of the transform, wall time per fold
+% vs Auglab). Without the DualVal synthetic-validation pass it should be close to Auglab; the DualVal runs roughly
+% double the wall time (PanSegData H100 probe: OURS DualVal 16.8-17.1 h vs auglab_default 6.2-7.6 h per 2000-epoch fold).
+% TODO(Paul): confirm the subject-level split for Spine (separate pipeline); verified for the other seven tasks.
 
-\paragraph{Datasets.} \Cref{tab:tasks} lists the eight tasks, the modalities
-each is trained on and the contrasts it is tested on, across MRI, CT and dental
-CBCT. Every (task, training modality) pair is one \emph{setting}, eighteen in
-all; each setting trains its own models and is tested on every contrast of its
-task, the training contrast included. \emph{Out-of-domain} (OOD) results exclude
-the training contrast, also in external cohorts. The training cohorts are, in
-table order, BraTS2024-GLI~\cite{deverdier2024brats2024},
-Open-MS~\cite{lesjak2018openms}, I-SPY2~\cite{li2022ispy2},
-CHAOS~\cite{kavur2021chaos}, ON-Harmony~\cite{warrington2025onharmony},
-ToothFairy2~\cite{bolelli2025toothfairy2}, a CT/Dixon spine cohort and
-TotalSegmentator~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}. The
-external test cohorts are Duke~\cite{saha2018duke,garrucho2025mamamia},
-I-SPY1~\cite{hylton2012ispy1} and ACRIN-6698~\cite{partridge2018acrin6698}
-(Breast), AMOS~\cite{ji2022amos} and SLIVER07~\cite{heimann2009comparison}
-(Abdomen), HaN-Seg~\cite{podobnik2023hanseg} and
-PDDCA~\cite{raudaschl2017pddca} (Mandible), and
-SPIDER~\cite{vandergraaf2024spider} (Spine); they are extra held-out test
-columns of their task, not separate tasks (sources per contrast:
-\cref{tab:datasets}). ON-Harmony's reference labels are silver-standard
-FreeSurfer~\cite{fischl2012freesurfer} parcellations of the T1w, registered to
-the other contrasts. External volumes that image more of the body than the
-training cohort are cropped to its field of view before prediction, identically
-for every method (\cref{sec:suppl-data}).
-
-
-% TODO(Paul): cite the Spine task's CT/Dixon training cohort ("SG"/"spinegan"
-% in the imported results) -- no citable source for it exists in the repo.
-
-
-\paragraph{Baselines.} \Cref{tab:methods} compares the five competitors:
-nnU-Net with its default augmentation (\emph{Baseline}),
-SynthSeg~\cite{billot2023synthseg} as released, developed for the brain
-(\emph{SynthSeg-noEM}), and its EM label-subdivision variant, developed for
-cardiac MRI~\cite[\S5.4]{billot2023synthseg} and re-implemented here since its
-code was not released (\emph{SynthSeg-EM}), both given each
-task's training labels, which are a dense parcellation only on Brain;
-SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab}, a
-competitor in its own right. Each competitor is run as its authors propose:
-the SynthSeg variants and SRCSM synthesize on every training iteration with
-their own augmentation recipe, and Auglab uses its default configuration
-(\cref{tab:suppl-aug-probs}). SRCSM's published pipeline also
-histogram-matches each test image to the average source histogram, part of
-the method as published, so we apply it.
-On sparse task labels, SynthSeg-noEM (designed for dense labels) is a
-reference point for synthesizing from labels alone, not a tuned competitor. Our method adds one
-operator to Auglab, so comparing the two tests that operator; the other
-competitors run without the Auglab pipeline (\cref{sec:discussion}).
+\paragraph{Compared methods.} We compare against five methods
+(\cref{tab:methods}), each run as its authors propose, with its own
+augmentation recipe on every training iteration: \emph{nnU-Net} with its
+default augmentation; SynthSeg~\cite{billot2023synthseg} as released
+(\emph{SynthSeg-noEM}); its EM label-subdivision variant
+(\emph{SynthSeg-EM}), developed for cardiac MRI~\cite[\S5.4]{billot2023synthseg}
+and re-implemented here since its code was not released;
+SRCSM~\cite{thaler2025semrandconv}; and Auglab~\cite{molinier2026auglab} in
+its default configuration (\cref{tab:suppl-aug-probs}). The SynthSeg variants
+receive each task's training labels. SynthSeg-noEM synthesizes from the label
+map alone and was designed for dense labels, which only Brain provides.
+SynthSeg and SRCSM run without the Auglab pipeline, as published
+(\cref{sec:discussion}).
 
 \begin{table}[t]
 \centering
@@ -75,7 +53,7 @@ competitors run without the Auglab pipeline (\cref{sec:discussion}).
 \toprule
 Method & Intensities & Varied per & \makecell{No dense\\labels} & \makecell{Real\\texture} \\
 \midrule
-Baseline       & real                & ---           & \checkmark & \checkmark \\
+nnU-Net        & real                & ---           & \checkmark & \checkmark \\
 SynthSeg-noEM  & Gaussian            & label         & $\times$   & $\times$ \\
 SynthSeg-EM    & Gaussian            & EM sub-label  & \checkmark & $\times$ \\
 SRCSM          & random convolution  & label         & \checkmark & $\sim$ \\
@@ -102,7 +80,7 @@ Augmentation probabilities: \cref{tab:suppl-aug-probs}.}
 \toprule
  & Glioma & MS & Breast & Abdomen & Brain & Mandible & Spine & Pelvis & $p$ vs ours \\
 \midrule
-Baseline        & 23.4 & 21.0 & 35.0 & 29.5 & 34.5 & 59.2 & 48.5 & 29.8 & $3\times10^{-75}$ \\
+nnU-Net         & 23.4 & 21.0 & 35.0 & 29.5 & 34.5 & 59.2 & 48.5 & 29.8 & $3\times10^{-75}$ \\
 SynthSeg-noEM   &  8.8 &  4.3 & 16.5 & 60.9 & 64.1 & 53.6 & 47.5 & 15.0 & $2\times10^{-86}$ \\
 SynthSeg-EM     & 43.1 & 33.9 & 39.6 & 84.0 & 66.1 & 76.3 & 80.6 & 62.5 & $1\times10^{-35}$ \\
 SRCSM           & 36.9 & 27.5 & 14.7 & 85.6 & 66.5 & \textbf{79.8} & --- & 62.9 & $8\times10^{-66}$ \\
@@ -122,62 +100,69 @@ weighting contrast groups equally so a modality with several external sources
 does not outvote one with fewer (\cref{sec:suppl-stats}). $p$: Holm-corrected one-sided sign-flip test on
 the macro-averaged per-patient difference, stratified by task with tasks weighted equally. We print no cross-task mean
 Dice, since whole-liver and breast-lesion Dice are not on a common scale. The bottom row counts the competitors PALETTE-Aug beats
-within each task alone (same test). SRCSM includes its test-time source
-matching (\cref{subsec:e-setup}). Spine has no SRCSM run
+within each task alone (same test). SRCSM includes its published test-time
+source matching. Spine has no SRCSM run
 (\cref{tab:datasets}). PALETTE alone: the PALETTE transform without the Auglab pipeline (the ladder's real-fill rung, \cref{subsec:e-ablation}), left out of the bolding; Spine has no ladder. $^\S$Same test, PALETTE-Aug against PALETTE alone, over the seven tasks with both. HD95 is in \cref{tab:meta-hd95}.}
 \label{tab:meta}
 \end{table*}
 
 \paragraph{PALETTE-Aug is the best method overall.} PALETTE-Aug has the best
-Dice on seven of the eight tasks. Across tasks it is significantly better than every
-competitor (\cref{tab:meta}): $p=1.1\times10^{-13}$ against Auglab, the
-closest, and $p\le10^{-35}$ against the others. Within single tasks it
-significantly outperforms every competitor on five tasks (Glioma, MS, Breast,
-Spine, Pelvis), all but SRCSM on Abdomen ($85.6$ vs.\ $85.9$), and three of five
-on Brain and Mandible. The cross-task test generalizes to new patients on these eight tasks, not to
-new tasks. Counting each task as one unit instead, PALETTE-Aug beats Auglab on seven of
-eight tasks (one-sided sign test $p=0.035$) and SRCSM on six of the
-seven tasks where SRCSM was run ($p=0.063$).
+Dice on seven of the eight tasks (\cref{tab:meta}). We test its advantage at
+two levels. Within each individual task (bottom row), it significantly
+outperforms every competitor on five tasks (Glioma, MS, Breast, Spine,
+Pelvis), all but SRCSM on Abdomen ($85.6$ vs.\ $85.9$), and three of five on
+Brain and Mandible. Pooling the test patients of all eight tasks, each task
+weighted equally, it is significantly better than every competitor:
+$p=1.1\times10^{-13}$ against Auglab, the closest, and $p\le10^{-35}$ against
+the others. With patients as the unit, this pooled test generalizes to new
+patients of these eight tasks, not to new tasks; with the task as the unit,
+PALETTE-Aug beats Auglab on seven of eight tasks (one-sided sign test
+$p=0.035$) and SRCSM on six of the seven tasks where SRCSM was run
+($p=0.063$).
 
-SynthSeg-noEM falls below the baseline on the six sparse-label tasks; on Brain,
+SynthSeg-noEM falls below nnU-Net on the six sparse-label tasks; on Brain,
 the one dense-label task, it is within $2.6$ Dice of PALETTE-Aug.
 
-\paragraph{No competitor is reliably second.} The best competitor alternates
-between Auglab (Glioma, MS, Breast, Spine, Pelvis) and SRCSM (Abdomen, Brain,
-Mandible), and SRCSM fails on Breast ($14.7$ Dice).
-Picking the right one would require knowing the answer in advance.
+\paragraph{No competitor is reliably second.} The best competitor depends on
+the task: Auglab on Glioma, MS, Breast, Spine and Pelvis, SRCSM on Abdomen,
+Brain and Mandible. SRCSM is also the weakest method on Breast ($14.7$ Dice).
+Picking the right competitor would require knowing the answer in advance;
 PALETTE-Aug is first on every task but Mandible.
 
-\paragraph{Where PALETTE-Aug does not win.} The one-sided test above cannot show
-that a competitor is ahead, so on Mandible we also ran the reverse test on
-the same patient-level design (Holm-corrected across competitors within the
-task). There Auglab is significantly ahead ($+0.6$ Dice, $p=3\times10^{-3}$),
-SRCSM leads by $2.1$ but not significantly ($p=0.15$), and PALETTE-Aug is
-third; PALETTE alone matches Auglab ($78.3$).
+\paragraph{Where PALETTE-Aug does not win.} On Mandible, SRCSM is first
+($79.8$), Auglab second ($78.3$) and PALETTE-Aug third ($77.7$). The one-sided
+test above cannot show that a competitor is ahead, so we also ran the reverse
+test (same design, Holm-corrected across competitors within the task): only
+Auglab is significantly ahead of PALETTE-Aug ($+0.6$ Dice,
+$p=3\times10^{-3}$); SRCSM's $+2.1$ is not significant ($p=0.15$).
+Interestingly, PALETTE alone ties Auglab ($78.3$).
 
-\paragraph{PALETTE without Auglab.} The transform alone (the ladder's
-real-fill rung) is as strong as the full method: over the seven tasks with
-both, it is significantly better than every competitor, Auglab included (Dice
-$p=4\times10^{-5}$), and does not differ from PALETTE-Aug (two-sided
-$p=0.60$). PALETTE-Aug's margin over the competitors therefore does not come
-from the Auglab pipeline. Adding Auglab raises task Dice on Glioma and Breast,
-lowers it on MS (significantly), Abdomen and Mandible and leaves Pelvis
-unchanged (\cref{tab:meta}); we have not identified which Auglab operator is
-responsible.
+\paragraph{PALETTE without Auglab.} PALETTE alone
+(\cref{subsec:m-training}) is as strong as the full method: over the seven
+tasks with both, it is significantly better than every competitor, Auglab
+included (Dice $p=4\times10^{-5}$), and does not differ significantly from
+PALETTE-Aug (two-sided $p=0.60$). PALETTE-Aug's margin over the competitors
+therefore does not come from the Auglab pipeline. Per task, adding Auglab
+raises Dice on Glioma and Breast, lowers it on MS (significantly) and slightly
+on Abdomen, Brain and Mandible, and leaves Pelvis unchanged (\cref{tab:meta}).
+PALETTE thus composes with a full augmentation pipeline without losing its
+advantage, but which operators help alongside it depends on the task, and
+choosing them per task may add more; we have not identified which Auglab
+operator is responsible for the losses.
 
 \paragraph{Boundary distance.} On HD95 (\cref{tab:meta-hd95}), PALETTE-Aug is
 lowest on six of the eight tasks and significantly better than every
-competitor across tasks; it ties Auglab on Breast and trails Auglab and the
-baseline on Mandible.
+competitor with all tasks pooled; it ties Auglab on Breast and trails Auglab
+and nnU-Net on Mandible.
 
 \subsection{Causal ablation: when does texture matter?}
 \label{subsec:e-ablation}
 
 Does keeping the real texture help beyond PALETTE-Aug's partition, and on
 which targets? We test this with a ladder:
-baseline $\rightarrow$ $+k$-means $\rightarrow$ $+$label remap $\rightarrow$
+nnU-Net $\rightarrow$ $+k$-means $\rightarrow$ $+$label remap $\rightarrow$
 $+$Voronoi $\rightarrow$ real-intensity fill $\rightarrow$ $+$Auglab. The
-baseline is nnU-Net with its default augmentation. The next four rungs share
+first rung is nnU-Net with its default augmentation. The next four rungs share
 one pipeline (\cref{sec:method}) whose only other augmentation is spatial
 (with flips), so the first step also drops nnU-Net's intensity augmentation;
 from there on, each rung adds one ingredient. The three partition rungs fill

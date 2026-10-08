@@ -110,7 +110,7 @@ PANELS = [
 
 N_RUNGS = 6
 FILL = 4                      # index of "v26_6_2 (real fill)"; step is FILL-1 -> FILL
-RUNG_SHORT = ["base", "+km", "+lbl", "+vor", "+real", "+Auglab"]
+RUNG_SHORT = ["nnU-Net", "+km", "+lbl", "+vor", "+real", "+Auglab"]
 IMPROVE, WORSEN, FLAT = "#2f7d6b", "#c0392b", "#8a8a8a"
 IMPROVE_LIGHT, WORSEN_LIGHT = "#8fc4b4", "#e2988c"
 NEUTRAL = "#b5b5b5"

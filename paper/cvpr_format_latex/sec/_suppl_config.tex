@@ -63,7 +63,7 @@ the same folds, schedule and epoch budget as above.
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{llcccccc}
 \toprule
- & Transform & Baseline & SynthSeg-noEM & SynthSeg-EM & SRCSM & Auglab & PALETTE-Aug \\
+ & Transform & nnU-Net & SynthSeg-noEM & SynthSeg-EM & SRCSM & Auglab & PALETTE-Aug \\
 \midrule
 Synthesis & SynthSeg generator & -- & 1.0 & 1.0 & -- & -- & -- \\
  & semantic random convolution & -- & -- & -- & 1.0 & -- & -- \\
@@ -92,7 +92,7 @@ Spatial & rotation / scaling & 0.2 / 0.2 & 0.2 / 0.2 & 0.2 / 0.2 & -- & 0.2 / 0.
 applied). The synthesis rows are each method's own contrast step: the SynthSeg
 variants and SRCSM synthesize on every iteration, as in their original papers,
 PALETTE-Aug on half of them. The remaining rows are the method's generic
-augmentation pipeline: nnU-Net's defaults for the baseline, Auglab's for the
+augmentation pipeline: nnU-Net's defaults for nnU-Net, Auglab's for the
 Auglab-based methods (the SynthSeg variants switch off Auglab's
 appearance-randomizing operators, which would otherwise act on top of the
 synthetic image), and SRCSM's own spatial recipe. $^a$nnU-Net mirroring, each

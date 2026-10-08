@@ -2,8 +2,8 @@
 
 To attribute the gain of the full method to its individual components,
 rather than to synthetic-contrast augmentation in general, we build an
-additive ablation ladder on top of the nnU-Net baseline (\emph{Base},
-\cref{subsec:e-setup}): first the unsupervised $k$-means intensity partition
+additive ablation ladder on top of nnU-Net with its default augmentation
+(\cref{subsec:e-setup}): first the unsupervised $k$-means intensity partition
 alone (\S\ref{subsec:m-transform}, step~1); then the anatomical label-remap
 step (step~2); then the Voronoi spatial sub-parcellation (step~3); and
 finally the real fill through the signed affine remap of \cref{eq:affine} (step~4), which
@@ -28,7 +28,7 @@ contrast at validation time).
 Component & Abdomen & MS & Glioma & Brain \\
           & T1in  & FLAIR   & T1n       & T1w \\
 \midrule
-Baseline (nnU-Net default)            & 36.1 & 25.2 & 26.0 & 26.4 \\
+nnU-Net (default augmentation)       & 36.1 & 25.2 & 26.0 & 26.4 \\
 \quad + $k$-means partition           & 84.8 & 30.6 & 41.7 & 67.4 \\
 \quad + label remap                   & 87.7 & 34.6 & 44.3 & 68.0 \\
 \quad + Voronoi sub-parcellation      & 86.9 & \pending & \pending & \pending \\
@@ -46,7 +46,7 @@ only. Dice (\%) over all test
 contrasts of the setting, the training contrast included, with equal weight per
 contrast (the all-contrast series of the same ladders as
 \cref{tab:ladder-full}, which reports the held-out contrasts only). Abdomen T1in:
-CHAOS's own test contrasts only, without the external cohorts. The baseline
+CHAOS's own test contrasts only, without the external cohorts. The nnU-Net
 and PALETTE-Aug rows are the runs of \cref{tab:suppl-dice}; their values can
 differ slightly from it (Glioma), because the ladder averages over the labels
 present in each case before averaging cases, whereas \cref{tab:suppl-dice}
