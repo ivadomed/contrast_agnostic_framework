@@ -23,7 +23,12 @@ DICE_ROWS = ["baseline", "synthseg_noEM", "synthseg_EM", "auglab_default", "srcs
 LABEL = {"baseline": "baseline (nnU-Net default; = source ref)", "synthseg_noEM": "SynthSeg-noEM",
          "synthseg_EM": "SynthSeg-EM", "auglab_default": "Auglab", "srcsm": "SRCSM",
          "ours_train050": "PALETTE-Aug (Ours, train050)", "palette": "PALETTE alone (real fill)",
-         "noisefill": "noise-fill (Voronoi, rung 4)", "kmeans_remap": "K-means+remap (noise fill, rung 3)",
+         "noisefill": "noise-fill (Voronoi, retired rung 4: one noise level per label)",
+         "noisefill_lblvor": "noise-fill (Voronoi, rung 4, label_voronoi)",
+         "palette_train050": "PALETTE alone, real use (synthesis p=0.5)",
+         "noisefill_lblvor_train050": "noise-fill rung 4, real use (p=0.5)",
+         "kmeans_remap_train050": "K-means+remap rung 3, real use (p=0.5)",
+         "kmeans_train050": "K-means rung 2, real use (p=0.5)", "kmeans_remap": "K-means+remap (noise fill, rung 3)",
          "kmeans": "K-means (noise fill, rung 2)", "identity": "source (identity)", "noise": "isotropic-noise floor"}
 # task key (our) -> Dice-table column, appearance-defined?
 TASKCOL = {"glioma": ("brats2024-glioma", True), "ms": ("open-ms", True), "breast": ("ispy2", True),
@@ -92,7 +97,7 @@ def main(variant="noblur"):
     for var in sorted(set(summ.variant)):
         t = tasklevel(var)
         tasks = [k for k in TASK_ORDER if k in set(t.task)]
-        meths = ["identity", "palette", "noisefill", "kmeans_remap", "kmeans", "auglab_default", "synthseg_EM", "synthseg_noEM",
+        meths = ["identity", "palette_train050", "noisefill_lblvor_train050", "kmeans_remap_train050", "kmeans_train050", "palette", "noisefill_lblvor", "noisefill", "kmeans_remap", "kmeans", "auglab_default", "synthseg_EM", "synthseg_noEM",
                  "srcsm", "ours_train050", "noise"]
         md.append(f"\n## Mean NGF per method x task  [variant = `{var}`, ROI = foreground eroded x3; mean over contrasts of the "
                   f"per-contrast mean over scans (each scan first averaged over draws); +- = mean over contrasts of the "

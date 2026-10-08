@@ -107,6 +107,13 @@ METHODS = {
     "noisefill":      ("transform_params_gpu_VALsynthonly_ImageContrastV26_6_2NoiseFillV2GPUTransform.json", None),
     # current rung 4 (2026-10-07, label_voronoi: Voronoi cells inside noise-refilled labels)
     "noisefill_lblvor": ("transform_params_gpu_VALsynthonly_ImageContrastV26_6_2NoiseFillV2LblVorGPUTransform.json", None),
+    # REAL USE (2026-10-08, Paul): the ladder rungs measured with their exact TRAINING configs, i.e. the synthesis applied with
+    # its training probability (0.5; the other draws are the source with spatial transforms zeroed, NGF 1), like every
+    # competitor and PALETTE-Aug above. The VALsynthonly keys force the synthesis on every draw (probability 1).
+    "palette_train050":          ("transform_params_gpu_v26_6_2_synth_spatialDA_train050.json", None),
+    "noisefill_lblvor_train050": ("transform_params_gpu_baseline_kmeans_label_remap_voronoi_lblvor_spatialDA_train050.json", None),
+    "kmeans_remap_train050":     ("transform_params_gpu_baseline_kmeans_label_remap_spatialDA_train050.json", None),
+    "kmeans_train050":           ("transform_params_gpu_baseline_kmeans_spatialDA_train050.json", None),
     "kmeans":         ("transform_params_gpu_VALsynthonly_kmeans.json", None),
     "kmeans_remap":   ("transform_params_gpu_VALsynthonly_kmeans_label_remap.json", None),
     "auglab_default": ("transform_params_gpu_default01-23.json", None),

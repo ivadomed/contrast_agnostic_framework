@@ -34,10 +34,15 @@ TESTS = PAPER / "generated_results/ngf_all_methods/ngf_methods_tests.csv"
 TASKS = [("glioma", "Glioma", True), ("ms", "MS", True), ("breast", "Breast", True),
          ("abdomen", "Abdomen", False), ("brain_healthy", "Brain", False),
          ("mandible", "Mandible", False), ("pelvis", "Pelvis", False)]   # True = appearance-defined target
-METHODS = [("palette", "PALETTE alone"), ("ours_train050", "PALETTE-Aug"), ("auglab_default", "Auglab"),
+METHODS = [("palette_train050", "PALETTE alone"), ("ours_train050", "PALETTE-Aug"), ("auglab_default", "Auglab"),
            ("srcsm", "SRCSM"), ("synthseg_EM", "SynthSeg-EM"), ("synthseg_noEM", "SynthSeg-noEM"),
-           ("noisefill_lblvor", "noise fill")]   # rung 4 since 2026-10-07 (label_voronoi); the retired arm is key "noisefill"
-REF = "palette"
+           ("noisefill_lblvor_train050", "noise fill")]
+# REAL USE (Paul, 2026-10-08): every row is measured with the method's TRAINING configuration, synthesis probability
+# included -- PALETTE alone and the noise fill (rung 4, label_voronoi) at their training probability 0.5 (keys *_train050),
+# like PALETTE-Aug (0.5) and the competitors (their own recipes). The forced-synthesis keys (palette, noisefill_lblvor:
+# probability 1) stay in the per-draw data for reference only. REFS = the two reference rows written per scan.
+REFS = [("identity", "source image (no augmentation)"), ("noise", "isotropic noise")]
+REF = "palette_train050"
 REAL, REAL_LIGHT, NOISE, OTHER = "#2f7d6b", "#8fc4b4", "#8a8a8a", "#5b7083"
 NOISE_FLOOR = 1 / 3
 plt.rcParams.update({"font.size": 7.5, "font.family": "sans-serif", "axes.edgecolor": "#555555",
@@ -52,6 +57,15 @@ def load() -> pd.DataFrame:
     if missing:
         sys.exit(f"missing (task, method) in {SRC}: {sorted(missing)}")
     return s
+
+
+def ref_task_means() -> pd.DataFrame:
+    """Task means of the per-scan reference rows (variant 'ref'): identity = NGF of the source to itself (1 by
+    construction), noise = i.i.d. uniform noise (the isotropic floor, ~1/3)."""
+    d = pd.read_csv(SRC)
+    d = d[(d.variant == "ref") & (d.roi == "fg") & d.method.isin([m for m, _ in REFS])]
+    s = d.groupby(["task", "contrast", "scan", "method"], as_index=False).ngf_all.mean()
+    return task_means(s)
 
 
 def task_means(s: pd.DataFrame) -> pd.DataFrame:
@@ -85,7 +99,7 @@ def figure(s: pd.DataFrame, tm: pd.DataFrame) -> None:
     labels = []
     for i, (m, name) in enumerate(METHODS):
         y = len(METHODS) - 1 - i
-        col = REAL if m == REF else REAL_LIGHT if m == "ours_train050" else NOISE if m == "noisefill_lblvor" else OTHER
+        col = REAL if m == REF else REAL_LIGHT if m == "ours_train050" else NOISE if m == "noisefill_lblvor_train050" else OTHER
         v = ax.violinplot(s[s.method == m].ngf_all.values, positions=[y], vert=False, widths=0.82,
                           showextrema=False)
         for b in v["bodies"]:
@@ -100,11 +114,14 @@ def figure(s: pd.DataFrame, tm: pd.DataFrame) -> None:
                 transform=ax.get_yaxis_transform())
         labels.append(name)
     ax.axvline(NOISE_FLOOR, color=NOISE, ls=":", lw=0.9)
+    ax.axvline(1.0, color=REAL, ls=":", lw=0.9)
+    ax.text(1.0 - 0.004, len(METHODS) - 2.5, "source image (no aug.)", color=REAL, fontsize=6,
+            rotation=90, ha="right", va="center")
     ax.text(NOISE_FLOOR - 0.004, len(METHODS) - 2.5, "isotropic-noise floor", color=NOISE, fontsize=6,
             rotation=90, ha="right", va="center")
     ax.set_yticks(range(len(METHODS))); ax.set_yticklabels(labels[::-1])
     ax.get_yticklabels()[-1].set_fontweight("bold")
-    ax.set_xlim(0.28, 1.0); ax.set_ylim(-0.6, len(METHODS) - 0.2)
+    ax.set_xlim(0.28, 1.005); ax.set_ylim(-0.6, len(METHODS) - 0.2)
     ax.set_xlabel("NGF to the source scan (1 = texture fully kept)")
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
@@ -146,11 +163,20 @@ def table(tm: pd.DataFrame, r: pd.DataFrame) -> None:
         mean = tm[m].mean()
         cells.append(f"\\textbf{{{mean:.3f}}}" if m == REF else f"{mean:.3f}")
         lines.append(f"{name} & " + " & ".join(cells) + " \\\\")
+    rt = ref_task_means()
+    lines.append("\\midrule")
+    for m, name in REFS:
+        lines.append(f"\\emph{{{name}}} & " + " & ".join(f"{rt.loc[t, m]:.3f}" for t, _, _ in TASKS)
+                     + f" & {rt[m].mean():.3f} \\\\")
     lines += ["\\bottomrule", "\\end{tabular}}",
               "\\caption{Texture fidelity per task: NGF similarity of the augmented volume to its source scan "
               "(1 = all texture kept, $\\approx\\!1/3$ = isotropic noise) on the seven tasks with a ladder "
               "(Spine has none), mean over contrasts of the mean over "
-              f"scans ($16$--$20$ per contrast, $5$ draws each). PALETTE alone is the ladder's real-fill rung. "
+              f"scans ($16$--$20$ per contrast, $5$ draws each). Every method is measured as used in training, synthesis "
+              "probability included: PALETTE alone (the ladder's real-fill rung), the noise fill and PALETTE-Aug "
+              "synthesize in half of the draws, SRCSM and SynthSeg in every draw; a draw without synthesis keeps the "
+              "source intensities (PALETTE alone, noise fill) or gets Auglab's own operators (PALETTE-Aug). Reference "
+              "rows: the source image itself (no augmentation) and i.i.d. noise. "
               "PALETTE-Aug applies PALETTE in half of its draws, first in the Auglab chain, whose operators then "
               "act on the remapped image: the combination keeps less texture than either PALETTE alone or Auglab. "
               f"{claim} (paired one-sided Wilcoxon over scans, "
