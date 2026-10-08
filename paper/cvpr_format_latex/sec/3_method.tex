@@ -140,9 +140,10 @@ by anatomy; the texture hypothesis predicts a larger gain on the latter.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/fill_swap_example}
-\caption{The two arms of the fill swap on a glioma training slice (BraTS
-T1c), sharing every partition and remap draw (inside labels too, for
-illustration): Gaussian noise (left) or the remapped real intensities,
-PALETTE's output (right). Insets: the tumor core, magnified.}
+\caption{One partition and one set of remap draws (shared inside labels
+too, for illustration) on a glioma training slice (BraTS T1c), zoomed on the
+enhancing ring and filled three ways: Gaussian noise (the ablation's noise
+fill), each region's target mean (flat: the partition alone), or the
+remapped real intensities (PALETTE's real fill).}
 \label{fig:fill-swap-example}
 \end{figure}

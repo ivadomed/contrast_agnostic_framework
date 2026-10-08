@@ -218,10 +218,10 @@ def main():
         img_slice, lbl_slice = crop_to_foreground(img_slice, lbl_slice)
         torch.manual_seed(seed)
         panels = run_pipeline(normalize01(img_slice), lbl_slice)
-        for letter in ("a", "n", "e"):
+        for letter in ("a", "n", "d", "e"):   # input, noise fill, flat fill (same partition + label remap), real fill
             save_panel(panels[letter], OUT_DIR / f"{slug}_{letter}.png")
         np.save(OUT_DIR / f"{slug}_lbl.npy", lbl_slice)
-        print(f"-> {OUT_DIR}/{slug}_[a,n,e].png + _lbl.npy")
+        print(f"-> {OUT_DIR}/{slug}_[a,n,d,e].png + _lbl.npy")
 
 
 # Guarded so run_pipeline() can be imported and reused (it is, by
