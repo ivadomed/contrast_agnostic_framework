@@ -26,6 +26,12 @@ SLUG = "brats_t1c"                 # BraTS glioma T1c training case (generate_me
 ORIENT = lambda a: a.T[::-1]       # noqa: E731  LAS array (rows x=L, cols y=A) -> anterior up, patient left on image right
 ZOOM_LABELS = (3,)                 # BraTS-GLI ET: the enhancing ring (NCR = 1, SNFH = 2 the edema, RC = 4)
 MARGIN = 0.12                      # zoom = ring bounding box grown by this fraction per side, then squared
+# red arrows on the real-fill zoom: (label, target and arrow tail as fractions (x, y) of the zoom). Targets placed by eye
+# on the texture to show, then snapped to the nearest pixel of the named label. Both are ENHANCING TUMOR (ET) in the
+# ground truth: on T1c the whitish mottled area under the cavity and the grey band on the ring's left are ET; the edema
+# (SNFH) is the greyer outer region (checked with a label overlay, 2026-10-08).
+ARROWS = [(3, (0.60, 0.72), (0.80, 0.90)),   # whitish mottled ET under the cavity
+          (3, (0.33, 0.45), (0.10, 0.32))]   # grey band of the ring, left side
 plt.rcParams.update({"font.size": 8, "font.family": "sans-serif"})
 
 
@@ -61,6 +67,13 @@ def main():
     for ry, zy in ((r0, 0), (r1, r1 - r0)):                      # magnifier lines from the box to the first zoom
         fig.add_artist(ConnectionPatch(xyA=(c1, ry), coordsA=ax_src.transData, xyB=(-0.5, zy - 0.5),
                                        coordsB=zooms[0].transData, color="#f2c14e", linewidth=0.7))
+    lbl_z = ORIENT(np.load(PANELS / f"{SLUG}_lbl.npy"))[r0:r1, c0:c1]
+    zh, zwp = lbl_z.shape
+    for lab, (fx, fy), (tx_, ty_) in ARROWS:
+        ys_, xs_ = np.where(lbl_z == lab)
+        k = int(np.argmin((xs_ - fx * zwp) ** 2 + (ys_ - fy * zh) ** 2))
+        zooms[2].annotate("", xy=(xs_[k], ys_[k]), xytext=(tx_ * zwp, ty_ * zh),
+                          arrowprops=dict(arrowstyle="-|>", color="#e3242b", lw=1.3, mutation_scale=7))
     top = (ph + head - 0.02) / (ph + head)
     titles = ("Input", "Noise fill", "Flat fill", "Real fill")
     x = 0.0
