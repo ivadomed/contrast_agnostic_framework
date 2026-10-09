@@ -30,6 +30,6 @@ while read -r rid; do
   name="r45post_${rid}"; name="${name:0:120}"
   squeue -u "$USER" -h -o '%j' | grep -qxF "${name}" && { echo "[r45-onh] ${rid}: controller already queued"; continue; }
   run_job --name "${name}" --gpus 0 --cpus 8 --mem 64G --time 16:00:00 \
-      --log "${SCRATCH}/rung45_flat/post/${rid}.job.log" -- bash scripts/cluster/rung45_flat/post_run.sh "${rid}"
+      --log "${SCRATCH}/rung45_flat/post/${rid}.job.log" -- bash scripts/cluster/rung45_flat/post_run.sh "${rid}" < /dev/null
   sleep 2
 done < "${IDS}"
