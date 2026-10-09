@@ -4,9 +4,8 @@ A segmentation model trained on **one** MRI contrast or imaging modality that st
 modalities it has never seen (T1w, T2w, FLAIR, DWI, GRE, EPI, CT, CBCT), with no retraining, no per-contrast
 tuning, and no target domain chosen in advance.
 
-[![PALETTE-Aug in 71 seconds: click to play the video (with sound)](docs/readme/video_poster.png)](docs/readme/palette_aug.mp4)
+[![PALETTE-Aug in 71 seconds: click to play the video](docs/readme/video_poster.png)](docs/readme/palette_aug.mp4)
 
-<p align="center"><em>▶ Click the image to play the 71-second overview (<a href="docs/readme/palette_aug.mp4">mp4</a>, 1920×1080, with sound).</em></p>
 
 ## Why
 
