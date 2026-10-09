@@ -23,8 +23,10 @@ import ramp_out_of_sample as ro  # noqa: E402
 from stat_tests import holm  # noqa: E402
 REPO = THIS.parents[6]; T2 = REPO / "benchmark/02_tasks"; DATA = THIS.parent / "outputs/data"; TAB = THIS.parent / "outputs/tables"
 MAXC = 40
-RUNG4 = os.environ.get("RUNG4", "")   # "" = the ladder json's rung 4; "lblvor" = the 2026-10-07 retrained rung 4
-TAG = "_lblvor" if RUNG4 == "lblvor" else ""
+RUNG4 = os.environ.get("RUNG4", "")   # "" = the ladder json's rung 4; "lblvor" = the 2026-10-07 retrained rung 4; "flatfill" = rung 4.5 (flat fill, 2026-10-08)
+assert RUNG4 in ("", "lblvor", "flatfill"), RUNG4
+TAG = f"_{RUNG4}" if RUNG4 else ""
+BASE_CSV = {"": None, "lblvor": "visibility_sign_rule_cells.csv", "flatfill": "visibility_sign_rule_cells_lblvor.csv"}[RUNG4]   # comparison column
 
 
 def _nn(base, i, l):
@@ -122,11 +124,11 @@ def ladder_cells():
             for rung, key in (("noise", d["run_keys"][ir - 1]), ("real", d["run_keys"][ir])):
                 name = Path(key).name
                 c = [p for p in mroot.rglob(f"*{name}") if p.is_dir() and (p / "fold0/eval_all.csv").exists() and (not src or f"/{src}/" in str(p) + "/")]
-                if rung == "noise" and RUNG4 == "lblvor":   # 2026-10-08: retrained rung 4 (label_voronoi) wherever it exists, else drop the cell
-                    c = [p for p in mroot.rglob("*baseline_kmeans_label_remap_voronoi*lblvor*") if p.is_dir() and (p / "fold0/eval_all.csv").exists()
+                if rung == "noise" and RUNG4:   # 2026-10-08: retrained rung 4 (lblvor) or rung 4.5 (flatfill) wherever it exists, else drop the cell
+                    c = [p for p in mroot.rglob(f"*baseline_kmeans_label_remap_voronoi*{RUNG4}*") if p.is_dir() and (p / "fold0/eval_all.csv").exists()
                          and len(list(p.glob("fold[0-2]/eval_all.csv"))) == 3 and (not src or f"/{src}/" in str(p) + "/")]
                     if not c:
-                        print("no lblvor rung 4 yet:", f); dirs = None; break
+                        print(f"no {RUNG4} rung yet:", f); dirs = None; break
                 if not c:
                     print("missing rung dir", f, name); dirs = None; break
                 dirs[rung] = c[0]
@@ -162,7 +164,7 @@ def ladder_cells():
     # external mandible sources (no per-source ladder json): toothfairy2 cbct model on hanseg ct / mrt1 and pddca ct
     for ds, root in (("hanseg", T2 / "mandible_healthy/hanseg/8_results_hanseg/02_metrics/toothfairy2_model/cbct/ablations"),
                      ("pddca", T2 / "mandible_healthy/pddca/8_results_pddca/02_metrics/toothfairy2_model/cbct/ablations")):
-        r4 = sorted(root.glob("*baseline_kmeans_label_remap_voronoi" + ("*lblvor*" if RUNG4 == "lblvor" else "_2*"))); r5 = sorted(root.glob("*_v26_6_2_train050_val000_*"))
+        r4 = sorted(root.glob("*baseline_kmeans_label_remap_voronoi" + (f"*{RUNG4}*" if RUNG4 else "_2*"))); r5 = sorted(root.glob("*_v26_6_2_train050_val000_*"))
         if not r4 or not r5:
             print("mandible source missing", ds, RUNG4); continue
         per = {}
@@ -202,7 +204,7 @@ def score():
     x = c.merge(v_tr[["train_key", "label_id", "vis_train"]], on=["train_key", "label_id"], how="left").merge(v_ev[["eval_key", "label_id", "vis_eval"]], on=["eval_key", "label_id"], how="left")
     x["gap"] = x.vis_eval - x.vis_train; x["pred"] = np.where(x.gap >= 0, 1, -1); x["actual"] = np.sign(x.delta); x["hit"] = x.pred == x.actual; x["sig"] = x.p_holm < 0.05
     x.to_csv(DATA / f"visibility_sign_rule_cells{TAG}.csv", index=False)
-    L = [f"# Visibility sign rule across all ladders, per label (val000 rung 5{', RETRAINED rung 4 (lblvor)' if RUNG4 else ''})", "",
+    L = [f"# Visibility sign rule across all ladders, per label (val000 rung 5{', noise arm = ' + ('rung 4.5 FLAT fill' if RUNG4 == 'flatfill' else 'RETRAINED rung 4 (lblvor)') if RUNG4 else ''})", "",
          "Rule (frozen): real-fill helps iff vis_eval >= vis_train (label-vs-ring AUC, mean over <=40 cases). Per-label Δ from each ladder's own rung 4/5 metrics "
          "(own-source test items; breast companions via their own per-source ladders; chaos/pansegdata external pools not included), Holm within dataset. "
          f"Cells: {len(x)}; with both visibilities: {int(x.gap.notna().sum())}.", ""]
@@ -219,11 +221,12 @@ def score():
         for r in sel.sort_values(["dataset", "train_key", "eval_key", "label"]).itertuples():
             L.append(f"| {r.dataset} | {r.train_key} | {r.eval_key} | {r.label} | {r.n} | {r.vis_train:.3f} | {r.vis_eval:.3f} | {r.gap:+.3f} | {'real' if r.pred > 0 else 'noise'} | {r.delta:+.2f} | {r.p_holm:.2g}{'*' if r.sig else ''} | {'YES' if r.hit else 'no'} |")
         L.append("")
-    if RUNG4 == "lblvor" and (DATA / "visibility_sign_rule_cells.csv").exists():
-        o = pd.read_csv(DATA / "visibility_sign_rule_cells.csv"); o = o[o.label == "POOLED"][["train_key", "eval_key", "delta", "p_holm", "hit"]].rename(columns={"delta": "delta_old", "p_holm": "p_old", "hit": "hit_old"})
+    if BASE_CSV and (DATA / BASE_CSV).exists():
+        o = pd.read_csv(DATA / BASE_CSV); o = o[o.label == "POOLED"][["train_key", "eval_key", "delta", "p_holm", "hit"]].rename(columns={"delta": "delta_old", "p_holm": "p_old", "hit": "hit_old"})
         cmp_ = x[x.label == "POOLED"].merge(o, on=["train_key", "eval_key"], how="left")
-        L += ["## Before / after the rung-4 retrain (pooled cells with a visibility value)", "",
-              "| dataset | train | eval | gap | pred | Δ old rung4 | p old | hit old | Δ new rung4 | p new | hit new |", "|---|---|---|--:|:--:|--:|--:|:--:|--:|--:|:--:|"]
+        old, new = ("rung4 lblvor", "rung4.5 flat") if RUNG4 == "flatfill" else ("old rung4", "new rung4")
+        L += [f"## Noise arm = {old} vs {new} (pooled cells with a visibility value)", "",
+              f"| dataset | train | eval | gap | pred | Δ {old} | p | hit | Δ {new} | p | hit |", "|---|---|---|--:|:--:|--:|--:|:--:|--:|--:|:--:|"]
         for r in cmp_.sort_values(["dataset", "train_key", "eval_key"]).itertuples():
             L.append(f"| {r.dataset} | {r.train_key} | {r.eval_key} | {r.gap:+.3f} | {'real' if r.pred > 0 else 'noise'} | {r.delta_old:+.2f} | {r.p_old:.2g} | {'YES' if r.hit_old else 'no'} | {r.delta:+.2f} | {r.p_holm:.2g}{'*' if r.sig else ''} | {'YES' if r.hit else 'no'} |")
         L.append("")
