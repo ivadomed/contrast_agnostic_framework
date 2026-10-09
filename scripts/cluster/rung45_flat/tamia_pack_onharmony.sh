@@ -9,6 +9,13 @@
 #   export PYTHONPATH='<SCRIPTS_DIR>:${PYTHONPATH:-}'
 # i.e. it appends whatever the pack job INHERITS from the submitting shell (sbatch --export=ALL), so the pin must be
 # exported when submitting (done below in check/submit; CE_EXTRA_PYTHONPATH at record time does NOT reach the job).
+# !! CORRECTION 2026-10-09 (verify-running caught it): the recorded line sits inside bash -c $'...' with \' quotes, i.e.
+#    export PYTHONPATH='<SCRIPTS_DIR>:${PYTHONPATH:-}' in SINGLE quotes -> NOT expanded; the trainers get the literal string
+#    and import TamIA's own editable AugLab, not the pin (the check job emulated the expansion, so it could not see this).
+#    Impact for THIS config: none -- TamIA's AugLab differs from the pin in 2 of 25 .py files only (palette_noisefill.py,
+#    transforms.py), and only by the label_voronoi branch + its legacy guard, both inert with label_fill_noise=false and
+#    label_voronoi=false (same code path, same RNG draws); flatfill config byte-identical. The 9 folds were NOT cancelled.
+#    A future pack that really needs a pin must put it in the recorded cmd itself (or patch the venv .pth), not inherit it.
 # After start, `verify-running` reads a live trainer process's environment on its node. Repo-side training code (shared drivers, on-harmony env/trainers) is
 # md5-identical to Vulcan's; nnU-Net plans/splits/dataset.json on TamIA scratch are md5-identical to Vulcan's.
 #   cd /project/aip-jcohen/paulh/mri_synthesis_project
