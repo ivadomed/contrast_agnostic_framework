@@ -42,7 +42,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 def _load_script(name: str) -> ModuleType:
-    path = PROJECT_ROOT / "scripts" / f"{name}.py"
+    path = PROJECT_ROOT / "scripts" / "legacy_synthesis" / f"{name}.py"
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
     sys.modules[name] = mod
