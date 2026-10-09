@@ -107,13 +107,25 @@ if [ "${MODE}" = submit ]; then
   exit 0
 fi
 if [ "${MODE}" = verify-running ]; then
-  # each running r45 pack job: PYTHONPATH + auglab module of every live nnUNetv2_train process on its node
+  # (a) every live nnUNetv2_train process of each running r45 pack job: PYTHONPATH must be <SCRIPTS_DIR>:<PIN>..., and
+  #     the flatfill config; (b) every started fold's saved transform_params_gpu_used_for_training.json == the config.
+  bad=0
   for j in $(squeue -u "${USER}" -h -n r45flat_onharmony -t R -o %i); do
     echo "== job $j"
-    srun --jobid="$j" --overlap -N1 -n1 bash -c 'for p in $(pgrep -u $USER -f "nnUNetv2_train" | head -12); do
-        e=$(tr "\0" "\n" < /proc/$p/environ 2>/dev/null | grep -E "^(PYTHONPATH|AUGLAB_PARAMS_GPU_JSON|CUDA_VISIBLE_DEVICES)=" | tr "\n" " ");
-        m=$(grep -m1 -o "[^ ]*palette_noisefill[^ ]*" /proc/$p/maps 2>/dev/null); echo "$p $e"; done' 2>&1 | sort -u | head -30
+    out="$(srun --jobid="$j" --overlap -N1 -n1 bash -c 'for p in $(pgrep -u $USER -f "nnUNetv2_train"); do
+        tr "\0" "\n" < /proc/$p/environ 2>/dev/null | grep -E "^(PYTHONPATH|AUGLAB_PARAMS_GPU_JSON)=" | tr "\n" " "; echo; done' 2>&1 | sort -u | grep -v "^$")"
+    echo "${out}"
+    n=$(grep -c "PYTHONPATH=" <<<"${out}" || true)
+    [ "$n" -gt 0 ] || { echo "  no trainer process seen"; bad=1; }
+    grep "PYTHONPATH=" <<<"${out}" | grep -vq "5_scripts_on-harmony:${PIN}" && { echo "  PIN NOT RIGHT AFTER SCRIPTS_DIR"; bad=1; }
+    grep "PYTHONPATH=" <<<"${out}" | grep -vq "${CFG}" && { echo "  WRONG CONFIG IN A PROCESS"; bad=1; }
   done
+  nj=0
+  for f in $(find "${SCRATCH}/on-harmony/8_results/01_predictions/on_harmony_model" -path '*_flatfill_*' -name transform_params_gpu_used_for_training.json 2>/dev/null); do
+    nj=$((nj+1)); cmp -s "$f" "${PIN}/auglab/configs/${CFG}" && echo "  json OK   $f" || { echo "  json DIFF $f"; bad=1; }
+  done
+  echo "saved configs checked: ${nj}"
+  [ "$bad" = 0 ] && echo "VERIFY-RUNNING PASSED" || echo "VERIFY-RUNNING FAILED -- cancel the chain (scancel) before it burns node time"
   exit 0
 fi
 echo "unknown mode ${MODE}"; exit 2

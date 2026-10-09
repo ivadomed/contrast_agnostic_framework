@@ -149,6 +149,18 @@ def pooled(ladders, metric, hib, pair=None):
     return mpc.wilcoxon_p(x, y), delta, len(x)
 
 
+def consistent(name, full, nr, tx) -> bool:
+    """Once rung 4.5 has metrics, both steps must use the SAME units as the fill swap and add up to it. A source
+    (e.g. a cross-dataset companion) missing rung-4.5 metrics would otherwise silently narrow the 4.5 pools."""
+    if nr is None or tx is None or not nr[2] or not tx[2]:
+        return True                           # pending / no metrics yet: nothing to compare
+    ok = nr[2] == tx[2] == full[2] and abs(nr[1] + tx[1] - full[1]) < 1e-6
+    if not ok:
+        print(f"  !! {name}: units 4->4.5 {nr[2]}, 4.5->5 {tx[2]}, 4->5 {full[2]}; "
+              f"noise {nr[1]:+.4f} + texture {tx[1]:+.4f} != fill swap {full[1]:+.4f} -- a pool differs (missing 4.5 source?)")
+    return ok
+
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--metric", default="dice", choices=["dice", "hd95"]); a = ap.parse_args()
     metric, hib = a.metric, a.metric == "dice"
@@ -167,14 +179,16 @@ def main():
         bad += not ok
         nr = pooled(ladders, metric, hib, pair=lambda d: (d["run_keys"][mpc.FILL - 1], flat_key(d["run_keys"][mpc.FILL - 1])))
         tx = pooled(ladders, metric, hib, pair=lambda d: (flat_key(d["run_keys"][mpc.FILL - 1]), d["run_keys"][mpc.FILL]))
+        bad += not consistent(title, full, nr, tx)
         print(f"{title:9s} {fmt(full)}   {fmt(nr)}   {fmt(tx)}   {full[2]:5d}  "
               f"[{'ok' if ok else 'MISMATCH'}: panel_pooled {ref_d:+.2f} p={ref_p:.2g}]")
         for (lab, _), d in zip(entries, ladders):
             f1 = pooled([d], metric, hib)
             n1 = pooled([d], metric, hib, pair=lambda d: (d["run_keys"][mpc.FILL - 1], flat_key(d["run_keys"][mpc.FILL - 1])))
             t1 = pooled([d], metric, hib, pair=lambda d: (flat_key(d["run_keys"][mpc.FILL - 1]), d["run_keys"][mpc.FILL]))
+            bad += not consistent(f"{title}/{lab}", f1, n1, t1)
             print(f"  {lab:7s} {fmt(f1)}   {fmt(n1)}   {fmt(t1)}   {f1[2]:5d}")
-    print("SELF-CHECK", "PASSED" if not bad else f"FAILED on {bad} panel(s)")
+    print("SELF-CHECK", "PASSED" if not bad else f"FAILED ({bad} problem(s): panel_pooled mismatch or inconsistent 4.5 pools)")
     sys.exit(1 if bad else 0)
 
 
