@@ -18,8 +18,8 @@ WORKER (this file): sharded (--rank/--world-size), resumable -- appends one row-
 (pair, case) to this shard's own CSVs, skips cases already done on rerun. Crops every
 volume to the GT bounding box (+pad) before any distance transform -- breast tumours are
 tiny relative to the full FOV, so this is the dominant speedup over the first (timed-out)
-version. Subsamples to <=40 cases per (train, eval_source, eval_item) row (seed 0), per
-Doppel's instruction, since most wall-clock is large-image I/O.
+version. Subsamples to <=40 cases per (train, eval_source, eval_item) row (seed 0),
+since most wall-clock is large-image I/O.
 
 Usage (CPU-only Vulcan Slurm job via run_job, never the login node):
   .venv/bin/python breast_texture_analysis.py --rank R --world-size W

@@ -11,10 +11,11 @@
 # pooled): the mrt1 arm additionally carries residual registration error in the IMAGE,
 # so a perfect model cannot reach 100% there.
 #
-# Predictions are 3-class (mandible/lower_teeth/pharynx) while HaN-Seg GT is a single
-# Bone_Mandible that INCLUDES the lower dentition, so 05_20_merge_mandible_union.py
-# collapses the prediction to that union first. Scoring `mandible` alone would count
-# every lower tooth as a false negative.
+# Predictions are 3-class (mandible/lower_teeth/pharynx). HaN-Seg's Bone_Mandible EXCLUDES
+# the teeth (Brouwer 2015 guidelines; verified in 06_03_eval_mandible_only.sh), so the raw
+# prediction is scored mandible-only: label 1 = mandible, teeth/pharynx count as background.
+# (The older mandible+teeth union scoring is retired; its merge script is archived in
+# benchmark/03_archive/toothfairy2_mandible_superseded_eval_20260918/.)
 #
 # Writes <item>_metrics.csv + eval_all.csv + eval_summary.md per fold under
 #   8_results_hanseg/02_metrics/toothfairy2_model/cbct/<CATEGORY>_<RUN_ID>/fold{F}/
@@ -57,14 +58,11 @@ for F in ${FOLDS}; do
         GT_DIR='${nnUNet_raw}'/labelsTs_ct
         [ -d \"\${PRED_DIR}\" ] || { echo \"  skip fold\${F}/\${item}: no preds\"; continue; }
         [ -d \"\${GT_DIR}\" ]   || { echo \"  skip fold\${F}/\${item}: no GT (\${GT_DIR})\"; continue; }
-        MERGED=\"\${PRED_DIR}_mandible_union\"
-        .venv/bin/python benchmark/02_tasks/mandible_healthy/hanseg/5_scripts_hanseg/05_predict/05_20_merge_mandible_union.py \
-            --pred_dir \"\${PRED_DIR}\" --out_dir \"\${MERGED}\"
         OUT_CSV='${OUT_BASE}'/fold\${F}/\${item}_metrics.csv
         mkdir -p \"\$(dirname \"\${OUT_CSV}\")\"
         echo \"[\$(date '+%H:%M:%S')] eval ${RUN_ID} fold\${F} \${item}\"
         .venv/bin/python benchmark/02_tasks/mandible_healthy/hanseg/5_scripts_hanseg/06_evaluate/06_00_evaluate.py \
-            --pred_dir \"\${MERGED}\" --gt_dir \"\${GT_DIR}\" \
+            --pred_dir \"\${PRED_DIR}\" --gt_dir \"\${GT_DIR}\" \
             --label_map '{\"mandible\": [1, 1]}' \
             --name \"\${item}\" --out_csv \"\${OUT_CSV}\" --workers 8
     done

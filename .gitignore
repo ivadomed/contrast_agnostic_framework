@@ -72,9 +72,6 @@ benchmark/_script_backups/
 *.md
 !**/*[Rr][Ee][Aa][Dd][Mm][Ee].md
 
-# Local tool config.
-.claude/
-
 # The manuscript is not part of this repo (paper/scripts + paper/generated_results are).
 paper/cvpr_format_latex/
 paper/cvpr_format_latex_archive/
@@ -85,3 +82,8 @@ docs/*.pdf
 
 # Per-patient source metadata shipped with a dataset release: stays with the raw data.
 benchmark/02_tasks/abdomen_healthy/amos/0_raw_amos/labeled_data_meta.csv
+# Internal working docs (handoffs, status notes, ops guides, retirement logs): local only.
+docs/*.md
+dashboard/README.md
+benchmark/03_archive/*_retired_*/README.md
+benchmark/03_archive/legacy_eval_configs_*/README.md

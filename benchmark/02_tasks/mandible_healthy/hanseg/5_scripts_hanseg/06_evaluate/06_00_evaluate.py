@@ -8,10 +8,9 @@ hanseg scores ONE label, `mandible`.
 ⚠️ CORRECTED 2026-09-17: HaN-Seg's Bone_Mandible **EXCLUDES the teeth**, so it does NOT
 equal toothfairy2's mandible ∪ lower_teeth. Current scoring is MANDIBLE-ONLY — the RAW
 3-class prediction is passed straight in with --label_map '{"mandible": [1, 1]}' (labels
-2/3 score as background) by 06_03_eval_mandible_only.sh. The older union path
-(05_predict/05_20_merge_mandible_union.py, which collapses predictions to binary first)
-is kept only to reproduce the superseded union view; re-scoring changed no conclusion,
-but the union is wrong on the facts. See benchmark/02_tasks/mandible_healthy/toothfairy2/RESULTS_NOTES.md.
+2/3 score as background) by 06_01_evaluate_run.sh and 06_03_eval_mandible_only.sh. The older
+union path (merge predictions to mandible+teeth first) is retired; its merge script is archived
+in benchmark/03_archive/toothfairy2_mandible_superseded_eval_20260918/.
 """
 import sys
 from pathlib import Path

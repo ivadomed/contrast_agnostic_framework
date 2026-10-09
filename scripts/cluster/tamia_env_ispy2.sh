@@ -1,6 +1,6 @@
 # Source AFTER benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2/00_utils/env.sh (or env_t2w.sh), to
 # point ispy2's OWN training/prediction at scratch-resident data on tamia. Mirrors
-# scripts/cluster/tamia_env_ambl.sh's pattern (own-training override, TWO training
+# benchmark/03_archive/retired_cluster_env/tamia_env_ambl.sh's pattern (own-training override, TWO training
 # contrasts via TRAINING_CONTRAST -- t1wce default, t2w via env_t2w.sh).
 #
 # REWRITTEN 2026-09-04 (pivot): this file previously supported ispy2's OLD role

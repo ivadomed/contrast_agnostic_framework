@@ -1,7 +1,7 @@
 # Source AFTER benchmark/02_tasks/breast_cancer/duke-breast-mri/5_scripts_duke-breast-mri/00_utils/env.sh,
 # to run the ispy2 -> duke-breast-mri cross-dataset predict/evaluate direction
 # entirely on tamia scratch. Mirrors
-# scripts/cluster/tamia_env_ambl_ispy2_target.sh's pattern exactly (same
+# benchmark/03_archive/retired_cluster_env/tamia_env_ambl_ispy2_target.sh's pattern exactly (same
 # /project file-count quota lesson from that file's header applies here:
 # ~291 cases x up to 12 runs x 3 folds x 1 item is a large file count, keep
 # duke's own predict/metrics OUTPUT on scratch, not /project).

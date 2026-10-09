@@ -50,7 +50,6 @@ CT grid only).
 > correction of this size moved nothing, a further ~2% refinement is very unlikely to matter.
 > The 3-class task reduction is unaffected (it rests on the independent annotation-gap audit).
 
-Shared class with toothfairy2: `mandible` — which equals toothfairy2's
-`mandible` ∪ `lower_teeth` (HaN-Seg's Bone_Mandible includes the lower dentition).
-Predictions must be collapsed by `05_predict/05_20_merge_mandible_union.py` before
-evaluation.
+Shared class with toothfairy2: `mandible`. HaN-Seg's Bone_Mandible excludes the teeth, so
+predictions are scored mandible-only: the raw 3-class prediction with label 1 = mandible
+(lower teeth and pharynx count as background), see `06_evaluate/06_03_eval_mandible_only.sh`.

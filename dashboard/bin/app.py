@@ -4,8 +4,8 @@ Streamlit dashboard for the mri_synthesis_project: cross-cluster (vulcan +
 killarney) training/prediction/evaluation status, queue/storage/allocation
 health, and an interactive per-case Dice plotter.
 
-From the repo root on the vulcan login node (see dashboard/README.md for launch + SSH
-tunnel instructions):
+From the repo root on the login node (launch behind an SSH
+tunnel):
     .venv/bin/streamlit run \\
         dashboard/bin/app.py \\
         --server.port 8765 --server.address 127.0.0.1
