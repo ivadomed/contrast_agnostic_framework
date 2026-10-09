@@ -53,6 +53,11 @@ def _ids(paths):
 R4 = _ids([R4_IDS])
 R45 = _ids(R45_IDS)
 
+# Pancreas is not a paper panel (make_per_contrast_curves.PANELS) but has a rung 4.5 (2026-10-09, boundary-defined negative
+# control): same grouped ladders, same test.
+_PZ = "benchmark/02_tasks/pancreas_disease/pansegdata/8_results_pansegdata/02_metrics/pansegdata_model/{}/ablations/ladder_series.json"
+EXTRA_PANELS = [("Pancreas", "interface", [("T1WCE", _PZ.format("t1wce")), ("T2w", _PZ.format("t2w"))])]
+
 
 def flat_key(r4_key: str):
     """rung-4 key -> rung-4.5 key (None if no flatfill run is registered for that setting)."""
@@ -169,7 +174,7 @@ def main():
     print(f"{'task':9s} {'fill swap 4->5':>22s}   {'noise removal 4->4.5':>22s}   {'texture 4.5->5':>22s}   units  [self-check vs panel_pooled]")
     fmt = lambda r: ("pending (rung 4)" if r is None else "no 4.5 metrics yet" if not r[2]
                      else f"{r[1]:+7.2f} (p={r[0]:.2g})").rjust(22)
-    for title, _kind, entries in mpc.PANELS:
+    for title, _kind, entries in mpc.PANELS + EXTRA_PANELS:
         ladders = [mpc.load(rel) for _, rel in entries]
         if any(d is None for d in ladders):
             print(f"{title:9s} ladder JSON missing"); continue

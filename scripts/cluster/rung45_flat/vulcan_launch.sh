@@ -11,6 +11,8 @@ OUT="${SCRATCH:?}/rung45_flat"; mkdir -p "${OUT}"
 export RUN_JOB_ACCOUNT=aip-jcohen RUN_JOB_GPU_TYPE=l40s
 export RUN_JOB_EXCLUDE_NODES="${RUN_JOB_EXCLUDE_NODES:-rack02-06}"   # CUDA init failures there (2026-10-06)
 T=benchmark/02_tasks
+PIN_PANSEG=/project/aip-jcohen/paulh/pansegdata_auglab_7b761b5/AugLab   # pansegdata: same pinned AugLab as its rungs 2-5 (differs from
+# the current AugLab only by the opt-in partial-volume code in fromSeg.py/transforms.py, pv_prob=0 -> no effect, no extra RNG)
 ROWS=(
 "brain_tumor/brats2024-glioma|t1n|36:00:00" "brain_tumor/brats2024-glioma|t2w|36:00:00"
 "brain_tumor/brats2024-glioma|t2f|36:00:00" "brain_tumor/brats2024-glioma|t1c|36:00:00"
@@ -20,6 +22,7 @@ ROWS=(
 "mandible_healthy/toothfairy2|cbct|36:00:00"
 "breast_cancer/ispy2|t1wce|30:00:00" "breast_cancer/ispy2|t2w|30:00:00"
 "pelvis_healthy/totalseg-pelvic|ct|10:00:00" "pelvis_healthy/totalseg-pelvic|mri|10:00:00"
+"pancreas_disease/pansegdata|t1wce|34:00:00" "pancreas_disease/pansegdata|t2w|34:00:00"   # added 2026-10-09 (rung-4 lblvor limits)
 )
 if [ "${MODE}" = --record ]; then
   squeue -u "$USER" -h -o '%i|%j|%T' | awk -F'|' '$2 ~ /^fold[0-9]_.*_flatfill_[0-9]+_[0-9]+$/' | sort -t'|' -k2 > "${OUT}/jobs.tsv"
@@ -40,6 +43,7 @@ for row in "${ROWS[@]}"; do IFS='|' read -r ds tag tl <<<"${row}"
   printf "[r45] %-18s %-7s %-55s time=%s\n" "${ds##*/}" "${tag}" "${w[0]##*/}" "${tl}"
   n=$((n+1)); [ "${MODE}" = --launch ] || continue
   ( export RUN_JOB_TIME_DEFAULT="${tl}"
+    [ "${ds##*/}" = pansegdata ] && export CE_EXTRA_PYTHONPATH="${PIN_PANSEG}"
     bash "${w[0]}" ) < /dev/null 2>&1 | tee -a "${OUT}/launch.log" \
     && echo "${w[0]}" >> "${OUT}/launched.txt" \
     || { echo "[r45] LAUNCH FAILED: ${w[0]##*/}" | tee -a "${OUT}/launch.log"; FAILED=$((FAILED+1)); }

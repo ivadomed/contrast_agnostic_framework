@@ -191,7 +191,7 @@ pansegdata_*)
   audit "${M}/${tc}/ablations/*pansegdata_${tc}_baseline_kmeans_label_remap_voronoi_${OLD}" "${M}/${tc}/ablations/${CAT}_${RID}" "pansegdata_${tc}_own"
   for comp in totalsegmri-pancreas amos-pancreas msd-pancreas; do
     CS="${PZ}/${comp}/5_scripts_${comp}"
-    ( export PANSEG_TRAINING_CONTRAST=${tc} PANSEG_DATASET_ID=${DS} METHOD=baseline_kmeans_label_remap_voronoi_lblvor TRAINER=${TR} CATEGORY=${CAT}
+    ( export PANSEG_TRAINING_CONTRAST=${tc} PANSEG_DATASET_ID=${DS} METHOD=baseline_kmeans_label_remap_voronoi_flatfill TRAINER=${TR} CATEGORY=${CAT}
       bash "${CS}/05_predict/05_01_predict_pansegdata_common.sh" "${RID}" all ) > "${OUTD}/${RID}.predict_${comp}.log" 2>&1 || { fail "predict ${comp}"; continue; }
     ev "export LADDER=1 EVAL_MEM=64G EVAL_TIME=3:00:00; bash ${CS}/06_evaluate/06_01_evaluate_run.sh ${RID} ${CAT} ${tc}"
     CM="${PZ}/${comp}/8_results_${comp}/02_metrics/pansegdata_model/${tc}"

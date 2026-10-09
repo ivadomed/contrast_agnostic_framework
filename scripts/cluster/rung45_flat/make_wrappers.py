@@ -30,7 +30,8 @@ OLD_CFG = "transform_params_gpu_baseline_kmeans_label_remap_voronoi_lblvor_spati
 NEW_CFG = "transform_params_gpu_baseline_kmeans_label_remap_voronoi_flatfill_spatialDA_train050.json"
 OLD_SUFFIX, NEW_SUFFIX = "_lblvor", "_flatfill"
 
-# (task dir, dataset, contrast tag) -- the 16 paper ladder settings (pansegdata is not in the paper)
+# (task dir, dataset, contrast tag) -- the 16 paper ladder settings + pansegdata (not in the paper; added 2026-10-09 as the
+# boundary-defined negative control for the noise-vs-texture split)
 SETTINGS = [
     ("brain_tumor", "brats2024-glioma", "t1n"), ("brain_tumor", "brats2024-glioma", "t2w"),
     ("brain_tumor", "brats2024-glioma", "t2f"), ("brain_tumor", "brats2024-glioma", "t1c"),
@@ -40,6 +41,7 @@ SETTINGS = [
     ("mandible_healthy", "toothfairy2", "cbct"),
     ("breast_cancer", "ispy2", "t1wce"), ("breast_cancer", "ispy2", "t2w"),
     ("pelvis_healthy", "totalseg-pelvic", "ct"), ("pelvis_healthy", "totalseg-pelvic", "mri"),
+    ("pancreas_disease", "pansegdata", "t1wce"), ("pancreas_disease", "pansegdata", "t2w"),
 ]
 
 
