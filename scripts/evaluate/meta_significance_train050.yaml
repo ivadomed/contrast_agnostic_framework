@@ -15,7 +15,7 @@ competitors:
   srcsm: "srcsm"
 metric: dice
 exclude_in_domain: true
-output_md: "${PROJECT_ROOT}/paper/meta_significance_train050_val000.md"
+output_md: "${PROJECT_ROOT}/benchmark/01_commun_results/meta_significance_train050_val000.md"
 
 experiments:
   - {name: "chaos t1in",     dataset: chaos,            config: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/06_evaluate/configs/chaos_t1in_03_results.yaml"}

@@ -72,18 +72,21 @@ benchmark/_script_backups/
 *.md
 !**/*[Rr][Ee][Aa][Dd][Mm][Ee].md
 
-# The manuscript is not part of this repo (paper/scripts + paper/generated_results are).
-paper/cvpr_format_latex/
-paper/cvpr_format_latex_archive/
-paper/notes/
+# The paper (manuscript, figure scripts, generated tables, video project) lives outside this repo.
+paper/
+# Scripts that only run against the paper's figure code.
+scripts/evaluate/run_reverse_significance.sh
+scripts/cluster/rung5_val000/dissoc_compare.py
+scripts/cluster/rung5_val000/panel_compare.py
 
 # Third-party papers: cite/link them, don't redistribute.
 docs/*.pdf
 
 # Per-patient source metadata shipped with a dataset release: stays with the raw data.
 benchmark/02_tasks/abdomen_healthy/amos/0_raw_amos/labeled_data_meta.csv
-# Internal working docs (handoffs, status notes, ops guides, retirement logs): local only.
+# Internal working docs (handoffs, status notes, ops guides, retirement logs) and the
+# cluster-monitoring dashboard: local only.
 docs/*.md
-dashboard/README.md
+dashboard/
 benchmark/03_archive/*_retired_*/README.md
 benchmark/03_archive/legacy_eval_configs_*/README.md

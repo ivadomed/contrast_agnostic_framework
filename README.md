@@ -91,9 +91,11 @@ benchmark/
   01_commun_results/     cross-dataset comparison tables, incl. the headline task-level heatmap
   02_tasks/<task>/<dataset>/   one folder per benchmark dataset, grouped by anatomy/pathology
   03_archive/            excluded or superseded datasets, kept for history
-scripts/                 cluster job submission (run_job), venv setup, cross-cutting tooling
-sub-workspaces/          AugLab (external GPU augmentation library this method builds on)
-paper/                   figure/table generation scripts and the README video (manuscript kept elsewhere)
+scripts/                 cluster job submission (run_job), venv setup, cross-dataset evaluation drivers, utilities
+  legacy_synthesis/      the earlier generator/segmenter pipeline (v1-v28), kept for reference
+tests/                   unit tests for src/ (run in CI with the benchmark tests)
+docs/readme/             figures and video used by this README
+sub-workspaces/          SRCSM augmentation port for AugLab (AugLab itself is installed separately, see below)
 ```
 
 Every dataset under `benchmark/02_tasks/` follows the same structure — raw data, BIDS, nnU-Net

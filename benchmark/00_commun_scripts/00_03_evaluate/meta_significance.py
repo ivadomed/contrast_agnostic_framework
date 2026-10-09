@@ -38,7 +38,7 @@ Meta-config YAML:
     srcsm: "srcsm"
   metric: dice                 # dice (higher better) | hd95 (lower better)
   exclude_in_domain: true      # exclude each config's in_domain_contrast from the OOD effect
-  output_md: "${PROJECT_ROOT}/paper/meta_significance.md"
+  output_md: "${PROJECT_ROOT}/benchmark/01_commun_results/meta_significance.md"
   experiments:
     - {name: "chaos t1in",  dataset: chaos,  config: "benchmark/02_tasks/abdomen_healthy/chaos/.../chaos_t1in_03_results.yaml"}
     - ...
