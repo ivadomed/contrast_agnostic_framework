@@ -222,7 +222,7 @@ def generate_micro_anchored_targets(
         input_images=input_images,
         num_bins=int(hist_module.num_bins),
         num_chunks=num_peaks,
-        dark_threshold=dark_threshold,
+        dark_threshold=background_threshold,
         hist_module=hist_module,
     )
 

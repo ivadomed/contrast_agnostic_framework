@@ -6,7 +6,7 @@ identical mask, confirmed by direct comparison before writing this) -- so
 duke's cross-dataset eval can be scored on a FOV that matches the training
 distribution I-SPY2's t1wce direction mostly saw (82% of I-SPY2's own t1wce
 training pool is unilateral-cropped; duke is ~100% bilateral-width -- see
-CLAUDE.md's "Breast task" section). Applied uniformly to every eval source
+the project notes' "Breast task" section). Applied uniformly to every eval source
 with bilateral volumes (Paul's explicit condition to avoid result-hacking) --
 this is duke's half of that; I-SPY2's own bilateral test cases already have a
 matching derived-unilateral case in the test set today (see
@@ -54,7 +54,6 @@ Run:  bash 02_nnunet/02_03_derive_unilateral_crop.sh   (submits via run_job --
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
 
 import nibabel as nib

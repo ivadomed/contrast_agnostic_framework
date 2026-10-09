@@ -91,7 +91,7 @@ export TRAINING_CONTRAST="${TRAINING_CONTRAST:-ct}"
 # different scale problem) or toothfairy2's 1000.
 export NNUNET_NUM_EPOCHS_DEFAULT="${NNUNET_NUM_EPOCHS_DEFAULT:-200}"
 
-# Training runs on TamIA (whole-node H100) per project standing default — see CLAUDE.md
+# Training runs on TamIA (whole-node H100) per project standing default — see the project notes
 # "Slurm jobs go to TamIA, not Vulcan." Placeholder walltime; RE-TIME from a real
 # per-epoch measurement (sizing probe) before trusting this — pelvic-region CT/MRI crops
 # are smaller than autopet's whole-body volumes but this project has no direct precedent

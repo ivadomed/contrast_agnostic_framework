@@ -4,7 +4,7 @@ Texture-advantage analysis — quantify WHERE an image-driven augmentation (v26+
 beats a label-driven generative one (SynthSeg EM), and by how much, per structure and
 per test-contrast.
 
-Motivation (see also benchmark/<ds> CLAUDE.md notes): SynthSeg renders each label region
+Motivation (see also the per-dataset READMEs): SynthSeg renders each label region
 as `mean + std*N(0,1)` (flat mean + white noise; EM only subdivides the mosaic), so it is
 structurally TEXTURE-BLIND. v26+auglab instead applies an affine remap `y = mu + a*(x-mean)`
 to the REAL image, preserving within-region texture / gradients / fine structure. The

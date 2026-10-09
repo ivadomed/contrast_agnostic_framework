@@ -1,15 +1,15 @@
 # Source AFTER benchmark/02_tasks/mandible_healthy/hanseg/5_scripts_hanseg/00_utils/env.sh on tamia.
 # hanseg is TEST-ONLY: its own dirs hold the prepared CT test inputs, while the
 # TF2_* vars must point at the toothfairy2 TRAINED model, which on tamia lives only
-# under /scratch/p/paulh/toothfairy2 (CLAUDE.md: bulk data on tamia is scratch-only).
+# under /scratch/${USER:0:1}/${USER}/toothfairy2 (the project notes: bulk data on tamia is scratch-only).
 # Override outright — common_env's ${VAR:-default} guards have already fired.
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 # ⚠️ Underscore-prefixed, dataset-qualified names ON PURPOSE. This file is SOURCED
 # into a caller's shell, so any short generic name it sets silently overwrites the
 # caller's variable of the same name. Earlier versions used bare `HS` and `TF2`,
 # which clobbered the script-directory variables of the same names in
 # toothfairy2's 05_31 predict+evaluate job — every hanseg predict wrapper then
-# resolved to "/scratch/p/paulh/hanseg/05_predict/..." instead of the repo path,
+# resolved to "/scratch/${USER:0:1}/${USER}/hanseg/05_predict/..." instead of the repo path,
 # and the ENTIRE cross-modality half of the run recorded zero tasks while the
 # in-domain half succeeded. It failed loudly in a side log but the job carried on,
 # which is exactly how a half-empty results table gets produced. Never introduce a

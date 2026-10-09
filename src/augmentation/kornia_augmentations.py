@@ -358,7 +358,7 @@ class KorniaMRIAugmentation3D(nn.Module):
         scale_delta = tuple(float(v) for v in aug_cfg.affine_scale_range)
         scale = tuple((1.0 - delta, 1.0 + delta) for delta in scale_delta)
         affine_prob = float(aug_cfg.affine_prob)
-        if task == "generator" and str(cfg.version) == "v8":
+        if task == "generator" and str(cfg.get("version", "")) == "v8":
             # v8 robustness hotfix: avoid Kornia affine path that can trigger cuSOLVER failures
             # in warp_affine3d homography inversion on some driver/runtime combinations.
             affine_prob = 0.0

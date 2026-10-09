@@ -5,7 +5,7 @@
 #   source benchmark/03_archive/atlas-liver-hcc/5_scripts_atlas-liver-hcc/00_utils/env.sh
 #   source scripts/cluster/tamia_env_atlas-liver-hcc.sh
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 ATLAS_SCRATCH="$SCRATCH/atlas-liver-hcc"
 
 export nnUNet_raw="$ATLAS_SCRATCH/2_nnUNet/raw"

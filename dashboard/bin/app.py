@@ -4,10 +4,10 @@ Streamlit dashboard for the mri_synthesis_project: cross-cluster (vulcan +
 killarney) training/prediction/evaluation status, queue/storage/allocation
 health, and an interactive per-case Dice plotter.
 
-Run on the vulcan login node (see dashboard/README.md for launch + SSH
+From the repo root on the vulcan login node (see dashboard/README.md for launch + SSH
 tunnel instructions):
-    /project/aip-jcohen/paulh/mri_synthesis_project/.venv/bin/streamlit run \\
-        /project/aip-jcohen/paulh/mri_synthesis_project/dashboard/bin/app.py \\
+    .venv/bin/streamlit run \\
+        dashboard/bin/app.py \\
         --server.port 8765 --server.address 127.0.0.1
 """
 import json
@@ -21,14 +21,14 @@ import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from dice_loader import load_multi_run_dice, RemoteCsvUnavailable, filter_domain  # noqa: E402
+from dice_loader import load_multi_run_dice, filter_domain  # noqa: E402
 from dashboard_common import (  # noqa: E402
     STALL_THRESHOLD_SECONDS, METHOD_PRESETS, ABLATION_LADDER_SIMPLE, ABLATION_LADDER_FULL,
     ABLATION_LADDER_FULL_DATASETS, resolve_preset_regex, resolve_preset_label, TRAIN_FRACTION_CHOICES,
     VAL_CONFIG_CHOICES, DEFAULT_TRAIN_FRACTION, DEFAULT_VAL_CONFIG, DATASET_CONTRASTS,
 )
 
-PROJECT_ROOT = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_DIR = PROJECT_ROOT / "dashboard"
 STATUS_COMBINED = DASHBOARD_DIR / "status_combined.json"
 THIS_CLUSTER = "vulcan"  # this app is only ever launched on vulcan's login node

@@ -12,7 +12,7 @@
 # atlas-liver-hcc (liver tumour, HCC) REMOVED 2026-09-02: the whole
 # atlas-liver-hcc extension (training set + its two eval-only companions
 # lld-mmri-hcc/lld-mmri-malignant + liverhccseg) is excluded from the paper
-# entirely -- see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)" for the
+# entirely -- see the project notes "Atlas-Liver-HCC exclusion (2026-09-02)" for the
 # full rationale (LLD-MMRI's redistribution terms block the git-annex
 # reproducibility path; the causal-ablation ladder's OOD contrast pool
 # turned out to hinge on an ambiguous contrast -- Dixon out-of-phase reads as

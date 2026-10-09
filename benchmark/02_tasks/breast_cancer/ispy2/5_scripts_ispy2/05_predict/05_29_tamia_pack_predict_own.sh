@@ -20,7 +20,7 @@
 # rejects a plain run_job/sbatch single-GPU request -- must record via
 # RUN_JOB_PACK_DIR and run a bounded worker pool across the node's 4 GPUs).
 # Evaluate is done SEPARATELY, CPU-only, via 06_evaluate/06_01_evaluate_own_run.sh
-# (never on a GPU node -- see CLAUDE.md's aggregation/eval resource-usage rule).
+# (never on a GPU node -- see the project notes' aggregation/eval resource-usage rule).
 set -uo pipefail
 HERE="/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/breast_cancer/ispy2/5_scripts_ispy2"
 PROJECT_ROOT="/project/aip-jcohen/paulh/mri_synthesis_project"

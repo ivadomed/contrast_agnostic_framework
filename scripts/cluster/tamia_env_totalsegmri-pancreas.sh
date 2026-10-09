@@ -1,6 +1,6 @@
 # Source AFTER .../totalsegmri-pancreas/5_scripts_totalsegmri-pancreas/00_utils/env.sh on TamIA: points totalsegmri-pancreas's test data / results at scratch and the SOURCE (pansegdata) models at ITS scratch copy.
 # Override every path OUTRIGHT (a ${VAR:-} guard here is a no-op: env.sh already fired its guards). RUN_JOB_MEM_PER_GPU is in GiB (115G), never raw MB.
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 export nnUNet_raw="$SCRATCH/totalsegmri-pancreas/2_nnUNet/raw"
 export PREDICTIONS_ROOT="$SCRATCH/totalsegmri-pancreas/8_results/01_predictions"
 export METRICS_ROOT="$SCRATCH/totalsegmri-pancreas/8_results/02_metrics"

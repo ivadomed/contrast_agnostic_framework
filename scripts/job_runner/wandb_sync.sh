@@ -8,7 +8,7 @@
 # (installed here: wandb==0.25.1) — not re-verified live via `wandb --help`
 # in this pass because the project .venv's python interpreter is currently
 # broken (dangling symlink from the machine this repo was copied from; see
-# CLAUDE.md). Re-check once that's fixed.
+# the project notes). Re-check once that's fixed.
 set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${PROJECT_ROOT}"

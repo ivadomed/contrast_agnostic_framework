@@ -69,7 +69,7 @@ contrast_groups:
       - {column: amos_ct, label: left_kidney}
       - {column: amos_ct, label: right_kidney}
 
-# Canonical method order (CLAUDE.md): baseline, auglab_default, synthseg_noEM,
+# Canonical method order (project convention): baseline, auglab_default, synthseg_noEM,
 # synthseg_EM, v26_6_2 (alone), srcsm (7th arm), OURS val000, OURS val100.
 # Updated 2026-07-29: OURS was pointing at the stale pre-dual-val
 # train025_val100 checkpoint -- now the current train050_val000/val100 pair.

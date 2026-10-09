@@ -44,7 +44,6 @@ import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-import nibabel as nib
 import numpy as np
 import pandas as pd
 import SimpleITK as sitk

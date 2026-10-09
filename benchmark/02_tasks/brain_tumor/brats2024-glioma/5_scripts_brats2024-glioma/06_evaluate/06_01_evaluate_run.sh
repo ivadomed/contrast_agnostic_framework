@@ -18,7 +18,7 @@
 #     <CATEGORY>_<RUN_ID>_<tag> dir so it never collides with checkpoint_best.
 #   METRICS_SUBDIR   unset (default) writes to the normal flat METRICS_ROOT/.../<contrast>/
 #     layout. Set to e.g. "ablations" to write to METRICS_ROOT/.../<contrast>/ablations/
-#     instead — for non-headline result sets (see CLAUDE.md's "Within 02_metrics/<model>/
+#     instead — for non-headline result sets (see the project notes' "Within 02_metrics/<model>/
 #     <contrast>/, a non-headline result set gets its own dedicated subdir" convention),
 #     so ad-hoc/ablation runs never mix into the flat headline layout. Predictions are
 #     read from the normal (non-subdir) path either way — only the metrics OUTPUT moves.

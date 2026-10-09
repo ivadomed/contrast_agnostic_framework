@@ -4,7 +4,7 @@ Download the Duke-Breast-Cancer-MRI subset of MAMA-MIA (Synapse syn60868042):
 for each of the 291 DUKE_* cases with an expert tumour mask, pull all 5
 DCE-MRI channels (_0000.._0004) + the expert mask.
 
-Run on the VULCAN LOGIN NODE (compute nodes have no internet -- see CLAUDE.md).
+Run on the VULCAN LOGIN NODE (compute nodes have no internet -- see the project notes).
 Per org policy this must never block the login node indefinitely, so:
   - every single Synapse download is wrapped in a SIGINT-safe per-call
     alarm-based timeout (default 180s) -- a hung request is aborted and
@@ -18,20 +18,19 @@ Per org policy this must never block the login node indefinitely, so:
 Launch with nohup + background (never as a blocking foreground call):
   SYNAPSE_AUTH_TOKEN=... nohup .venv/bin/python \
     benchmark/02_tasks/breast_cancer/duke-breast-mri/0_raw_duke-breast-mri/download_duke.py \
-    > /scratch/paulh/duke_download/download.log 2>&1 &
+    > $SCRATCH/duke_download/download.log 2>&1 &
 """
 from __future__ import annotations
 
 import json
 import os
 import signal
-import sys
 import time
 from pathlib import Path
 
 import synapseclient
 
-STAGE = Path("/scratch/paulh/duke_download")
+STAGE = Path(os.environ["SCRATCH"]) / "duke_download"
 RAW = STAGE / "raw"
 MANIFEST_PATH = STAGE / "duke_full_manifest.json"
 PER_CALL_TIMEOUT_S = 180

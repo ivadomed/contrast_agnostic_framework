@@ -37,7 +37,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import make_per_contrast_curves as mpc  # noqa: E402
 
-SCRATCH = Path(os.environ.get("SCRATCH", "/scratch/paulh"))
+SCRATCH = Path(os.environ["SCRATCH"])
 R4_IDS = SCRATCH / "rung4_lblvor/run_ids.txt"
 R45_IDS = [SCRATCH / "rung45_flat/run_ids.txt", SCRATCH / "rung45_flat/run_ids_tamia.txt"]
 

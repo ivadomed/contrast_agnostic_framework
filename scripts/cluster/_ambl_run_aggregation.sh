@@ -4,7 +4,7 @@
 #SBATCH --time=00:30:00
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G
-#SBATCH --output=/scratch/paulh/ambl_aggregate_%j.out
+#SBATCH --output=/scratch/${USER}/ambl_aggregate_%j.out
 # One-off driver: run the ambl aggregation/significance/combined/ladder summary
 # steps on Vulcan (metrics already rsynced onto the project-relative path).
 set -euo pipefail

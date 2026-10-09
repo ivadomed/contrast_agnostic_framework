@@ -11,12 +11,12 @@
 # died mid-run with `OSError: [Errno 122] Disk quota exceeded`, producing
 # SILENTLY PARTIAL prediction dirs (some folds 0/69 or a handful of cases) that
 # looked like ordinary job output until file-count verification caught it. The
-# partial tree was moved to /scratch/p/paulh/ambl/_toDelete/ (not deleted
+# partial tree was moved to /scratch/${USER:0:1}/${USER}/ambl/_toDelete/ (not deleted
 # outright) and the malignant-only test set itself was relocated from /project
-# to /scratch/p/paulh/ambl/2_nnUNet/raw/ to relieve pressure on the shared
+# to /scratch/${USER:0:1}/${USER}/ambl/2_nnUNet/raw/ to relieve pressure on the shared
 # quota. Both ambl's own paths AND the ISPY2_* source vars now point at
 # scratch -- unlike ambl's OLD training-role tamia_env_ambl.sh (still points
-# at /scratch/p/paulh/ambl/... too, for the abandoned training role -- either
+# at /scratch/${USER:0:1}/${USER}/ambl/... too, for the abandoned training role -- either
 # file's override for ambl's OWN raw/results ends up at the same scratch host,
 # but do not source that file here, it does not set the ISPY2_* vars this
 # cross-dataset direction needs).
@@ -25,10 +25,10 @@
 #   source scripts/cluster/tamia_env_ambl_ispy2_target.sh
 #
 # Override every path outright (not with a ${VAR:-default} guard) -- see
-# CLAUDE.md's TamIA section: env.sh's own ${VAR:-default} guards already fired
+# the project notes' TamIA section: env.sh's own ${VAR:-default} guards already fired
 # by the time this file sources, so a guard here would be a no-op.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 ISPY2_SCRATCH="$SCRATCH/ispy2"
 AMBL_SCRATCH="$SCRATCH/ambl"
 

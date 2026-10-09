@@ -11,12 +11,12 @@ scratch). This script accepts the run directories explicitly so it works against
 
 Usage (see the two provided wrapper invocations at the bottom of this docstring):
   .venv/bin/python error_characterization_general.py --train t1n \
-      --noise-run /scratch/paulh/brats_ladder_preds/t1n/auglab/brats2024-glioma_t1n_baseline_kmeans_label_remap_voronoi_20260730_200711 \
-      --real-run  /scratch/paulh/brats_ladder_preds/t1n/nnUNet/brats2024-glioma_t1n_v26_6_2_train050_val100_20260730_200711
+      --noise-run $SCRATCH/brats_ladder_preds/t1n/auglab/brats2024-glioma_t1n_baseline_kmeans_label_remap_voronoi_20260730_200711 \
+      --real-run  $SCRATCH/brats_ladder_preds/t1n/nnUNet/brats2024-glioma_t1n_v26_6_2_train050_val100_20260730_200711
 
   .venv/bin/python error_characterization_general.py --train t2f \
-      --noise-run /scratch/paulh/brats_ladder_preds/t2f/auglab/brats2024-glioma_t2f_baseline_kmeans_label_remap_voronoi_20260917_094019 \
-      --real-run  /scratch/paulh/brats_ladder_preds/t2f/nnUNet/brats2024-glioma_t2f_v26_6_2_train050_val100_20260917_113412
+      --noise-run $SCRATCH/brats_ladder_preds/t2f/auglab/brats2024-glioma_t2f_baseline_kmeans_label_remap_voronoi_20260917_094019 \
+      --real-run  $SCRATCH/brats_ladder_preds/t2f/nnUNet/brats2024-glioma_t2f_v26_6_2_train050_val100_20260917_113412
 
 Outputs (never overwrites the original t2w-only outputs, which keep their unsuffixed names):
   outputs/data/error_characterization_<train>_per_fold.csv
@@ -42,7 +42,7 @@ sys.path.insert(0, str(PROJECT / "benchmark" / "00_commun_scripts" / "00_00_util
 sys.path.insert(0, str(THIS_DIR))
 from stat_tests import wilcoxon_p  # noqa: E402
 from compute_cross_contrast_ngf import FOLDS, LABELS_DIR  # noqa: E402
-from error_characterization import load, metrics, LABELS, REGIONS  # noqa: E402
+from error_characterization import load, metrics, REGIONS  # noqa: E402
 
 OUT = THIS_DIR.parent / "outputs"
 EVALS = ("t1n", "t1c", "t2f", "t2w")

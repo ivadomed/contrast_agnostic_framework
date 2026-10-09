@@ -8,7 +8,7 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 # whole-node H100: 12 CPUs + 115 GiB per GPU (GiB, never raw MB); set BEFORE env.sh (common_env freezes run_job defaults)
 export RUN_JOB_CPUS_PER_GPU=12 RUN_JOB_MEM_PER_GPU=115G
 source "${HERE}/../00_utils/env.sh"

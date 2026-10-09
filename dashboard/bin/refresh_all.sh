@@ -10,7 +10,7 @@
 #      Streamlit app can also just read the two per-cluster files directly).
 set -uo pipefail
 
-PROJECT_ROOT="${PROJECT_ROOT:-/project/aip-jcohen/paulh/mri_synthesis_project}"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 BIN_DIR="$PROJECT_ROOT/dashboard/bin"
 DASHBOARD_DIR="$PROJECT_ROOT/dashboard"
 

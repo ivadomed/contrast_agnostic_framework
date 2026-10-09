@@ -12,7 +12,7 @@
 set -uo pipefail
 : "${ROW:?}" "${OUT:?}"
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 source "${ROSTER:-scripts/cluster/tamia_rung6_pv_runs.sh}"   # run table (default: rung 6)
 T=benchmark/02_tasks
 export RUN_JOB_INLINE=1

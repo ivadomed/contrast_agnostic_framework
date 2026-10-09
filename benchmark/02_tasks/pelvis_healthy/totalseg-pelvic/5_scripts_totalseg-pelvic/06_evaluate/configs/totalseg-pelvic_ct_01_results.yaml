@@ -6,13 +6,13 @@
 # ⚠️ TEMPLATE — RUN_IDs below are placeholders. Fill in the real RUN_ID for each method
 # once 04_07_run_all_ct.sh has actually produced them (each 04_0X_train_ct_*.sh prints its
 # RUN_ID; DualVal produces the val000 RUN_ID directly, val100 is its materialized sibling
-# — see CLAUDE.md's DualVal note, both from the SAME run).
+# — see the project notes' DualVal note, both from the SAME run).
 title: "totalseg-pelvic CT-trained — cross-contrast results"
 output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
 output_prefix: "01_results"
 # Our RUN_IDs are short (e.g. "ct_ours_...") and don't embed the full descriptive method
 # name the way chaos's do (e.g. "chaos_t1in_auglabAug_v26_6_2_train050_val000_...") — the
-# REF_SUBSTR auto-detection can't match, so sig_ref is set explicitly (per CLAUDE.md's own
+# REF_SUBSTR auto-detection can't match, so sig_ref is set explicitly (per the project notes' own
 # override instructions for exactly this case). Do NOT remove sig_ref to "clean up" this
 # config — without it, REF_SUBSTR can never match these short RUN_IDs and the "sig. vs
 # ref" column silently disappears.
@@ -32,7 +32,7 @@ sources:
 # dataset (chaos/toothfairy2/brats2024-glioma) keeps the headline runs list to exactly
 # the canonical method suite — baseline, auglab_default, synthseg_noEM, synthseg_EM,
 # srcsm, OURS val000, OURS val100 — and puts ladder rungs in a dedicated ablations/
-# subdir instead (see CLAUDE.md's "Standardized output layout" note on 02_metrics/
+# subdir instead (see the project notes' "Standardized output layout" note on 02_metrics/
 # <model>/<contrast>/ablations/). This wrong method set + order is what broke the
 # combined heatmap. See configs/totalseg-pelvic_ct_ablations.yaml for the ladder rungs.
 runs:

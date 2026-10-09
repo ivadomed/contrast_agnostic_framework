@@ -2,7 +2,7 @@
 # Predict every toothfairy2 CBCT run on the FOV-matched PDDCA CT test set (TamIA).
 #
 # Records all 11 runs x 3 folds into ONE node-pack and submits it, so the 4 H100s on a
-# whole-node allocation are all used (CLAUDE.md: a job that exercises 1 of 4 GPUs wastes
+# whole-node allocation are all used (the project notes: a job that exercises 1 of 4 GPUs wastes
 # the other 3 for the whole wall clock, and this account has already been warned).
 #
 # PDDCA is CT-only (no MR arm), so there is a single item. The union merge step that the

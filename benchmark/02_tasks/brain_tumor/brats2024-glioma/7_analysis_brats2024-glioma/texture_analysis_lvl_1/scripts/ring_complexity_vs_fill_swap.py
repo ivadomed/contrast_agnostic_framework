@@ -18,7 +18,7 @@ from __future__ import annotations
 import glob
 from pathlib import Path
 import numpy as np, pandas as pd
-from scipy.stats import spearmanr, wilcoxon, mannwhitneyu
+from scipy.stats import spearmanr, wilcoxon
 OUT = Path(__file__).resolve().parent.parent / "outputs"; D = OUT / "data"; T = OUT / "tables"
 FEATS = ("dog_slope", "ms_ratio", "vario_slope", "fd", "lstd_cv", "lstd_ent")
 MIN_N = 20

@@ -5,7 +5,7 @@
 # real-intensity remap (transform_params_gpu_v26_6_2_pv_synth_spatialDA_train050.json).
 # Replaces the *_v26_6_2_pv_train050_val100.sh wrapper, whose ValSynth trainer selected
 # checkpoint_best on synthetic validation images (2026-10-05).
-# CAUSAL LADDER (totalseg-pelvic CT), rung 4 — K-means + label remap + Voronoi sub-parcellation, NOISE FILL. Left side of the key rung4-vs-rung5 one-variable comparison. Do not pre-judge the causal-ablation result here — this is a musculoskeletal (boundary-defined, not appearance/texture-defined) target, closer to chaos organs than open-ms/brats lesions per CLAUDE.md's texture-preservation framing — measure it like every other rung, do not assume the pattern transfers.
+# CAUSAL LADDER (totalseg-pelvic CT), rung 4 — K-means + label remap + Voronoi sub-parcellation, NOISE FILL. Left side of the key rung4-vs-rung5 one-variable comparison. Do not pre-judge the causal-ablation result here — this is a musculoskeletal (boundary-defined, not appearance/texture-defined) target, closer to chaos organs than open-ms/brats lesions per the project notes' texture-preservation framing — measure it like every other rung, do not assume the pattern transfers.
 # 3 folds (0 1 2), 1 GPU/fold, 200 epochs.
 source "$(dirname "$0")/../00_utils/env.sh"
 

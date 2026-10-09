@@ -1,7 +1,7 @@
 # Source AFTER benchmark/03_archive/ms3seg/5_scripts_ms3seg/00_utils/env.sh (or env_t1w.sh), to
 # point ms3seg's cross-dataset (open-ms-model) prediction at scratch-resident data on
 # tamia. Mirrors tamia_env_mslesseg_openmscross.sh exactly.
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 
 # NOTE: PREDICTIONS_ROOT (and METRICS_ROOT where set) point at TamIA $SCRATCH
 # because TamIA's $PROJECT has a hard file-COUNT quota and a prediction tree is

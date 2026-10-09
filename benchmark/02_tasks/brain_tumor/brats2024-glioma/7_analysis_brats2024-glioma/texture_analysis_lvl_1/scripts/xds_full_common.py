@@ -25,7 +25,7 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 THIS = Path(__file__).resolve().parent
 sys.path.insert(0, str(THIS))
-REPO = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
+REPO = Path(__file__).resolve().parents[7]
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
 import ladder_ood_common as loc  # noqa: E402
 

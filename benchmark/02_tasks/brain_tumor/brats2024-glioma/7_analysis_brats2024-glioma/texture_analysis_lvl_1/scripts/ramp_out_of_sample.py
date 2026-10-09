@@ -53,7 +53,7 @@ PRE-REGISTERED (written before computing any R value, 2026-09-24 continuation se
   Spearman(R_eval - R_train, Delta) over the same pairs.
   Not adjusted after seeing outcomes; extras beyond this list are labelled exploratory.
 
-Usage (Slurm CPU job only -- see the docstring's CLAUDE.md hard cluster rules):
+Usage (Slurm CPU job only -- see the docstring's the project notes hard cluster rules):
   .venv/bin/python ramp_out_of_sample.py manifest
   .venv/bin/python ramp_out_of_sample.py extract --key open-ms:flair
   .venv/bin/python ramp_out_of_sample.py aggregate
@@ -77,7 +77,7 @@ try:
 except ImportError:
     nib = None
 
-REPO = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
+REPO = Path(__file__).resolve().parents[7]
 THIS_DIR = Path(__file__).resolve().parent
 OUT = THIS_DIR.parent / "outputs"
 DATA, TABLES = OUT / "data", OUT / "tables"
@@ -397,7 +397,7 @@ def do_aggregate():
          f"outcomes actually vary in sign (open-ms, chaos, ispy2): the rule gets {n_hit_var}/{n_tot_var} "
          f"(exploratory one-sided binomial p={bt_var.pvalue:.3g} -- not pre-registered, reported "
          "because the primary result is otherwise dataset-composition-confounded).",
-         "", f"Per-dataset hit counts: " + ", ".join(f"{ds} {int(r['sum'])}/{int(r['count'])}"
+         "", "Per-dataset hit counts: " + ", ".join(f"{ds} {int(r['sum'])}/{int(r['count'])}"
                                                         for ds, r in per_ds.iterrows()), "",
          "## Per-dataset predictions vs. actual outcomes", "",
          "| dataset | train | eval | R_train (n) | R_eval (n) | R_gap | pred | Delta (pts) | p | actual | hit |",

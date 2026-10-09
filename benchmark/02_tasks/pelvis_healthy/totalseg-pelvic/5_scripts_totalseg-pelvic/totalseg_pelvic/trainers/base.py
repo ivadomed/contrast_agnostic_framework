@@ -12,7 +12,7 @@ CT and MRI are UNPAIRED cohorts (different patients) with independent splits und
 which modality it's training on.
 
 N_EXPECTED_FOLDS = 3 — this project's permanent fold policy (folds 0/1/2 only, see
-CLAUDE.md "FOLD POLICY"), not a copy of any other dataset's file.
+the project notes "FOLD POLICY"), not a copy of any other dataset's file.
 """
 from __future__ import annotations
 

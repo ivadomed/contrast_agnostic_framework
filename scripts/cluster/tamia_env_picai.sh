@@ -7,7 +7,7 @@
 # tamia's /project is at 492K/500K FILES (file count, not space, is the binding quota there),
 # so every bulk path below must live on $SCRATCH. Only the repo + venv stay in /project.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 PICAI_SCRATCH="$SCRATCH/picai-prostate"
 
 # Raw + BIDS: picai-prostate downloads and BIDSifies ~27 GB of MHA on this cluster

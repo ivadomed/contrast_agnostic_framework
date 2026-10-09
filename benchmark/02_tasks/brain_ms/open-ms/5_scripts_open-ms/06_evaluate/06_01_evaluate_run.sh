@@ -37,7 +37,7 @@ _PRED_SUBDIR=""; [ "${CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${CKPT_TAG}/"
 _OUT_SUFFIX=""; [ "${CKPT_TAG}" != "best" ] && _OUT_SUFFIX="_${CKPT_TAG}"
 # METRICS_SUBDIR (optional): unset (default) writes to the normal flat METRICS_ROOT/.../
 # <contrast>/ layout. Set to e.g. "ablations" to write to METRICS_ROOT/.../<contrast>/
-# ablations/ instead — for non-headline result sets (CLAUDE.md's "Within 02_metrics/
+# ablations/ instead — for non-headline result sets (the project notes' "Within 02_metrics/
 # <model>/<contrast>/, a non-headline result set gets its own dedicated subdir"
 # convention; mirrors chaos's/brats2024-glioma's/on-harmony's 06_01_evaluate_run.sh).
 METRICS_SUBDIR="${METRICS_SUBDIR:-}"
@@ -52,7 +52,7 @@ if [ "${FOLD_ARG}" = "all" ]; then FOLDS="0 1 2"; else FOLDS="${FOLD_ARG}"; fi
 # Metric computation (MONAI Dice+HD95, ~60s per fold×contrast) is real CPU work — too
 # slow for the login node. Route through run_job as one CPU-only compute-node job per
 # invocation, matching the "never run substantial work on a login node" rule (see
-# CLAUDE.md). --log goes under OUT_BASE (shared storage), not /tmp, for the same reason
+# the project notes). --log goes under OUT_BASE (shared storage), not /tmp, for the same reason
 # the training/predict logs were moved there.
 mkdir -p "${OUT_BASE}/_logs"
 run_job --name "openms_eval_${CATEGORY}_${RUN_ID}${_OUT_SUFFIX}" --gpus 0 --cpus 8 --mem 16G --time "${EVAL_TIME:-1:00:00}" \

@@ -8,7 +8,7 @@ single-hanseg-source or pre-orientation-fix numbers are ever needed for comparis
 Pools TWO independent CT cohorts (HaN-Seg + PDDCA) plus HaN-Seg's MR arm, all
 ORIENTATION-CORRECTED (ToothFairy2's released volumes are S-I flipped at source —
 external arms are flipped into the training convention before prediction, see
-project CLAUDE.md's ToothFairy2 orientation note). Scoring is MANDIBLE-ONLY
+project the project notes' ToothFairy2 orientation note). Scoring is MANDIBLE-ONLY
 throughout (Bone_Mandible excludes teeth — the 2026-09-17 union-bug correction).
 
 ⚠️⚠️ POOLING IS THE WHOLE POINT, AND IT IS NOT OPTIONAL.

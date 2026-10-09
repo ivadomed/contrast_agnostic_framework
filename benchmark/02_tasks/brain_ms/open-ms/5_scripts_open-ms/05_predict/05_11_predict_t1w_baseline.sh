@@ -8,5 +8,5 @@ METHOD="baseline"
 TRAINER="nnUNetTrainerOpenMSBaseline"
 DATASET_ID="71"
 CATEGORY="nnUNet"
-export PREDICT_FOLDS="0 1 2"        # 3-fold models (CLAUDE.md fold policy)
+export PREDICT_FOLDS="0 1 2"        # 3-fold models (the project notes fold policy)
 source "$(dirname "$0")/05_01_predict_common.sh" "$@"

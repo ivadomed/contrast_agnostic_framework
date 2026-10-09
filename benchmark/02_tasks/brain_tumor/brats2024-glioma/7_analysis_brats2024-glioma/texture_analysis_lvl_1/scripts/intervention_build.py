@@ -57,18 +57,19 @@ Run inside a CPU run_job (--gpus 0) — no GPU needed, this is pure numpy/nibabe
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
-from scipy.ndimage import distance_transform_edt, gaussian_filter
+from scipy.ndimage import distance_transform_edt
 
 THIS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(THIS_DIR))
 from compute_region_surround_texture import highpass  # noqa: E402  (HP_SIGMA=2.0 baked in)
 
-PROJECT = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
+PROJECT = Path(__file__).resolve().parents[7]
 DS = PROJECT / "benchmark" / "02_tasks" / "brain_tumor" / "brats2024-glioma"
 RAW051 = DS / "2_nnUNet_brats2024-glioma" / "raw" / "Dataset051_BraTS2024GliomaT1n"
 RAW052 = DS / "2_nnUNet_brats2024-glioma" / "raw" / "Dataset052_BraTS2024GliomaT2w"
@@ -77,7 +78,7 @@ LABELS_DIR = RAW051 / "labelsTr"  # content-identical to RAW052's labelsTr (veri
 OUT_DATA = DS / "7_analysis_brats2024-glioma" / "texture_analysis_lvl_1" / "outputs" / "data"
 PATIENT_CSV = OUT_DATA / "patient_region_deltas.csv"
 
-SCRATCH_ROOT = Path("/scratch/paulh/brats_intervention")
+SCRATCH_ROOT = Path(os.environ["SCRATCH"]) / "brats_intervention"
 INPUTS_ROOT = SCRATCH_ROOT / "inputs"
 
 SNFH = 2

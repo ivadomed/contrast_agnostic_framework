@@ -24,7 +24,6 @@ import argparse
 import csv
 import json
 import logging
-from pathlib import Path
 
 import nibabel as nib
 import numpy as np

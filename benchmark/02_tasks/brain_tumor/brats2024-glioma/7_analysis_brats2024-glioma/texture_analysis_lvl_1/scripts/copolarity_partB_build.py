@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import re
 import sys
+import os
 from pathlib import Path
 
 import nibabel as nib
@@ -57,7 +58,7 @@ sys.path.insert(0, str(THIS_DIR))
 from intervention_build import RAW051, OUT_DATA, PATIENT_CSV, SNFH, N_PATIENTS, load_case, load_label, brain_mask  # noqa: E402
 from intervention_step_build import feather_mask, ring_mask, s_add  # noqa: E402
 
-INPUTS_ROOT = Path("/scratch/paulh/brats_intervention/inputs")
+INPUTS_ROOT = Path(os.environ["SCRATCH"]) / "brats_intervention/inputs"
 NCR, ET = 1, 3
 
 

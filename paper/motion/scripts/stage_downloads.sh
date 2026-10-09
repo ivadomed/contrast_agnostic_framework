@@ -2,9 +2,9 @@
 # Login-node staging (downloads only, no compilation): npm packages, Remotion's headless Chrome, fonts.
 # TamIA compute nodes have no internet, so tamia_build_render.sh expects these to exist already.
 set -euo pipefail
-cd /scratch/p/paulh/palette_motion
+cd /scratch/${USER:0:1}/${USER}/palette_motion
 module load StdEnv/2023 nodejs/20.16.0
-export npm_config_cache=/scratch/p/paulh/.npm_cache
+export npm_config_cache=/scratch/${USER:0:1}/${USER}/.npm_cache
 mkdir -p public/fonts
 if [ ! -d node_modules/@remotion/cli ] && [ -f package-lock.json ]; then
   npm ci --no-audit --no-fund --ignore-scripts   # pinned versions (remotion 4.0.532)

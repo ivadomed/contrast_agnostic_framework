@@ -30,7 +30,7 @@ ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
 PACK_METHODS="${PACK_METHODS:-baseline auglab_default synthseg_noEM synthseg_EM srcsm ours}"
 PACK_TAG="${PACK_TAG:-suite}"
-PACK_DIR="${PACK_DIR:-/scratch/p/paulh/toothfairy2/_packruns/${PACK_TAG}_$(date +%Y%m%d_%H%M%S)}"
+PACK_DIR="${PACK_DIR:-/scratch/${USER:0:1}/${USER}/toothfairy2/_packruns/${PACK_TAG}_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "${PACK_DIR}"
 echo "[tamia-pack] PACK_DIR=${PACK_DIR}"
 echo "[tamia-pack] methods: ${PACK_METHODS}"

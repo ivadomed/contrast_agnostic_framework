@@ -3,7 +3,7 @@
 #  I-SPY2 prediction — OWN trained models on I-SPY2's OWN held-out test cases.
 #  This is the headline ispy2-internal cross-contrast eval (2026-09-04/05
 #  pivot): I-SPY2 is now the primary breast-cancer TRAINING dataset (see
-#  CLAUDE.md/00_utils/env.sh's DATASET_ROLE="both"). A t1wce- (or t2w-) trained
+#  the project notes/00_utils/env.sh's DATASET_ROLE="both"). A t1wce- (or t2w-) trained
 #  model predicts on I-SPY2's own held-out test cases for BOTH modalities
 #  (see 4_splits_ispy2/splits_final.json + test_cases.json) -- matched-contrast
 #  in-domain AND cross-contrast OOD, same pattern as chaos/brats2024-glioma/

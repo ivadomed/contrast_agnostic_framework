@@ -39,7 +39,7 @@ STRATIFICATION (two keys)
    evenly-spaced burden ranks so the held-out set spans low->high burden, same
    approach as ambl/atlas-liver-hcc.
 
-FOLDS: 3, not 4. CLAUDE.md's fold policy is "folds 0 1 2 only, permanently"; the
+FOLDS: 3, not 4. the project notes' fold policy is "folds 0 1 2 only, permanently"; the
 shared drivers (`train_common.sh` TRAIN_FOLDS, `predict_common.sh` PREDICT_FOLDS,
 `eval_folds.py`) all default to `0 1 2`. Older datasets carry a 4-fold file whose
 fold 3 is never trained — for a NEW split there is no reason to emit a fold nobody

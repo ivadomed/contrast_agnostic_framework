@@ -21,12 +21,10 @@ import torch
 
 from src.synthesis.v26_6_synthesis import (
     BLUR_SIGMAS,
-    C_CHOICES,
     DARK_THRESHOLD,
     N_KMEANS_SUBSAMPLE,
     _gaussian_blur_3d,
     _kmeans_1d,
-    _signed_alpha,
     _voronoi_region_ids,
     synthesize_batch_fast,
 )

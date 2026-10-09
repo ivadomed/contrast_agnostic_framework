@@ -217,7 +217,7 @@ def main():
     sig_sign = np.sign(y[sig_idx])
     fail_n = int((sig_sign < 0).sum())
     print(f"cells={len(t)} sig={len(sig_idx)} failures={fail_n} regions={sorted(t['region'].unique())}", flush=True)
-    L = [f"# Regression: can image predictors predict the noise->real fill-swap change? (BraTS)", "",
+    L = ["# Regression: can image predictors predict the noise->real fill-swap change? (BraTS)", "",
          f"36 OOD cells; 14 Holm-significant (10 helps / {fail_n} fails; always-helps sign accuracy = {np.mean(sig_sign > 0):.2f}). "
          f"sklearn used; permutation nulls re-run the full model+CV pipeline. Run {time.strftime('%Y-%m-%d')}.", ""]
 

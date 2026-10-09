@@ -15,7 +15,7 @@
 # 12 methods x 3 folds x 4 contrasts x 95 cases) and the BRATS_* source-model vars
 # need overriding.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 
 # NOTE: PREDICTIONS_ROOT (and METRICS_ROOT where set) point at TamIA $SCRATCH
 # because TamIA's $PROJECT has a hard file-COUNT quota and a prediction tree is
@@ -40,7 +40,7 @@ export BRATS_NNUNET_PREPROCESSED="$BRATS_DATASET_ROOT/2_nnUNet/preprocessed"
 # BRATS_DATASET_ID/_DS_NAME/_TRAINING_CONTRAST: leave at whatever env.sh/env_t2w.sh already
 # set (t1n/051 by default, t2w/052 if env_t2w.sh was sourced first) -- do NOT override here.
 
-# run_job overrides for tamia (whole-node H100, see CLAUDE.md "TamIA" section).
+# run_job overrides for tamia (whole-node H100, see the project notes "TamIA" section).
 export RUN_JOB_ACCOUNT="aip-jcohen"
 export RUN_JOB_GPU_TYPE="h100"
 

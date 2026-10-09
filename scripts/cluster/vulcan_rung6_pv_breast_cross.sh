@@ -20,7 +20,7 @@ MODELS=(
   "t2w|ispy2_t2w_v26_6_2_pv_train050_val100_20261003_111217|Dataset101_ISPY2T2w|05_21_predict_ispy2_t2w_v26_6_2_train050_val100.sh"
 )
 VULCAN_PRED="${BC}/ispy2/8_results_ispy2/01_predictions/ispy2_model"
-TAMIA_PRED=/scratch/p/paulh/ispy2/8_results/01_predictions/ispy2_model
+TAMIA_PRED=/scratch/${USER:0:1}/${USER}/ispy2/8_results/01_predictions/ispy2_model
 
 if [ "${MODE}" = fetch ]; then
   for m in "${MODELS[@]}"; do IFS='|' read -r tc rid ds _w <<<"$m"

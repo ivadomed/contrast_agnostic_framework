@@ -14,7 +14,7 @@
 #   placement and GPU memory BEFORE the real launch.
 set -euo pipefail
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 T=benchmark/02_tasks
 STATE="${SCRATCH}/_packruns_rung7_auglab_pv_root${PROBE:+_probe}.txt"
 MODE="${1:?usage: record|submit [PACK...]}"; shift

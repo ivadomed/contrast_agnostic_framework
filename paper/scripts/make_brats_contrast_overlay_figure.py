@@ -50,7 +50,6 @@ from scipy import ndimage
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
 
 REPO = Path(__file__).resolve().parent.parent.parent
 BIDS = (REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma"
@@ -59,7 +58,7 @@ OUT_DIR = REPO / "paper" / "cvpr_format_latex" / "figures"
 PANEL_DIR = OUT_DIR / "FRQ_illustration"
 STEM = "brats_contrast_overlay_illustration"
 
-# Reuse the real PALETTE pass rather than reimplementing it — CLAUDE.md's
+# Reuse the real PALETTE pass rather than reimplementing it — the project notes'
 # shared-layer rule. generate_method_figure_panels.py is a sibling script, so
 # it is imported by path.
 sys.path.insert(0, str(Path(__file__).resolve().parent))

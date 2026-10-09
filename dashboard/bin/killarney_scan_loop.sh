@@ -8,7 +8,7 @@
 # Check it's alive with: pgrep -af killarney_scan_loop
 # Stop it with:          pkill -f killarney_scan_loop.sh
 set -u
-PROJECT_ROOT="${PROJECT_ROOT:-/project/aip-jcohen/paulh/mri_synthesis_project}"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 INTERVAL_SECONDS="${INTERVAL_SECONDS:-900}"   # 15 minutes
 PY="${PY:-python3}"
 

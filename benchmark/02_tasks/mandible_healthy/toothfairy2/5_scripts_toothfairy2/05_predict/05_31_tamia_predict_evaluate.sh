@@ -28,7 +28,7 @@
 #   sbatch --dependency=afterany:<trainjob> --export=ALL,...,TF2_ONLY="ours rung5" 05_31_...
 #
 # ⚠️ A run whose training has NOT finished is SKIPPED, loudly, not predicted from a
-# partial checkpoint — CLAUDE.md's stale-RUN_ID / partial-metrics lesson (a TamIA pack
+# partial checkpoint — the project notes' stale-RUN_ID / partial-metrics lesson (a TamIA pack
 # once silently truncated 14/48 fold-metrics and it was only caught by a human noticing
 # "OURS looks worse"). Every fold is required to have checkpoint_final.pth AND every
 # predict dir is verified to hold EXACTLY the expected case count before evaluation.
@@ -185,7 +185,7 @@ echo "[pp] predict phase complete"
 # ── Phase 3+4: verify exact counts, then evaluate ───────────────────────────
 # Evaluation calls the evaluator PYTHON DIRECTLY rather than going through
 # 06_01_evaluate_run.sh. Those wrappers dispatch via run_job -> sbatch, i.e. a NESTED
-# job submission from inside this compute node, which CLAUDE.md records as unreliable
+# job submission from inside this compute node, which the project notes records as unreliable
 # on TamIA (CPU-only submission there has failed and succeeded on identical scripts).
 # Same reason ispy2/ambl's 05_20 evaluates inline. The metrics layout written here is
 # byte-identical to what the wrappers produce, so aggregation is unaffected.

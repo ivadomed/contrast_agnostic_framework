@@ -9,7 +9,6 @@ import pytorch_lightning as pl
 from monai.apps import DecathlonDataset
 from monai.data import DataLoader, CacheDataset
 from omegaconf import DictConfig
-from torch.utils.data import Subset
 
 from src.training.data_registry import get_dataset_spec
 from src.training.dataset import get_preprocessing_transforms, normalize_contrast_name

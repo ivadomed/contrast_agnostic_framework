@@ -3,7 +3,7 @@
 One PNG per subject in 9_tests_pansegdata/look_<case>.png. Row 1 = T1WCE: axial as header-LPS, axial corrected, coronal corrected. Row 2 = T2W: axial, coronal, sagittal
 (corrected). Arrays are LPS; axial drawn with anterior UP and patient-left on the image RIGHT (labels A/P/R/L drawn on the panel).
 Usage: python 02_11_look_closely.py <case> [<case> ...]   (default: a fixed list)"""
-import csv, json, sys
+import csv, sys
 from pathlib import Path
 import numpy as np, nibabel as nib
 from nibabel.orientations import axcodes2ornt, io_orientation, ornt_transform, apply_orientation

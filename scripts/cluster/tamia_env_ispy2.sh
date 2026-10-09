@@ -17,10 +17,10 @@
 # env.sh/env_t2w.sh export nnUNet_results/PREDICTIONS_ROOT/METRICS_ROOT/SPLITS_DIR
 # via common_env.sh's ${VAR:-default} guards -- by the time THIS file sources (second),
 # those guards have already fired with the git-repo-relative default, so a ${VAR:-...}
-# guard HERE would be a no-op (CLAUDE.md's TamIA section gotcha). Override every path
+# guard HERE would be a no-op (the project notes' TamIA section gotcha). Override every path
 # outright.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 ISPY2_SCRATCH="$SCRATCH/ispy2"
 
 export nnUNet_raw="$ISPY2_SCRATCH/2_nnUNet/raw"

@@ -73,7 +73,7 @@ _PRED_SUBDIR=""; [ "${_CKPT_TAG}" != "best" ] && _PRED_SUBDIR="${_CKPT_TAG}/"
 _OUT_SUFFIX=""; [ "${_CKPT_TAG}" != "best" ] && _OUT_SUFFIX="_${_CKPT_TAG}"
 # METRICS_SUBDIR (optional): unset (default) writes to the normal flat METRICS_ROOT/.../
 # <contrast>/ layout. Set to e.g. "ablations" to write to METRICS_ROOT/.../<contrast>/
-# ablations/ instead — for non-headline result sets (CLAUDE.md's "Within 02_metrics/
+# ablations/ instead — for non-headline result sets (the project notes' "Within 02_metrics/
 # <model>/<contrast>/, a non-headline result set gets its own dedicated subdir"
 # convention; mirrors chaos's/brats2024-glioma's 06_01_evaluate_run.sh). Only the
 # metrics OUTPUT path moves; predictions stay in the normal (flat) location.

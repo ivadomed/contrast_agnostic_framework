@@ -4,12 +4,12 @@
 #SBATCH --time=01:30:00
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=96G
-#SBATCH --output=/scratch/p/paulh/palette_motion/logs/%x_%j.out
+#SBATCH --output=/scratch/${USER:0:1}/${USER}/palette_motion/logs/%x_%j.out
 # Build + render the PALETTE-Aug motion video on TamIA (CPU only).
 #   STAGE=all (default): npm install (once), fonts (once), extract assets, QC stills, full render
 #   STAGE=stills: skip the full render
 set -euo pipefail
-export SCRATCH=/scratch/p/paulh
+export SCRATCH=/scratch/${USER:0:1}/${USER}
 W=$SCRATCH/palette_motion
 REPO=/project/aip-jcohen/paulh/mri_synthesis_project
 STAGE=${STAGE:-all}

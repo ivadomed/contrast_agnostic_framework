@@ -11,7 +11,7 @@ export nnUNet_results="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/8_res
 # Same 1000-epoch horizon as t1wce (see env.sh) — DEFERRED to a TamIA sizing
 # probe: re-time per-modality once real epoch costs are measured on ispy2's
 # actual (much larger than ambl's) cohort — don't assume ambl's ~14-35s/epoch
-# transfers, per CLAUDE.md's "measure, don't assume" rule.
+# transfers, per the project notes' "measure, don't assume" rule.
 export RUN_JOB_TIME_DEFAULT="${RUN_JOB_TIME_DEFAULT:-48:00:00}"
 
 source "$(dirname "${BASH_SOURCE[0]}")/env.sh"

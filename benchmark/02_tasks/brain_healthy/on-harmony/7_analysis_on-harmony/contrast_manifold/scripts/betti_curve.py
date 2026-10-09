@@ -71,7 +71,6 @@ from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.spatial.distance import pdist, squareform
 
 from plot_umap_joint import (
-    META_COLS,
     _save_mpl,
     apply_feature_filter,
     build_matrix,

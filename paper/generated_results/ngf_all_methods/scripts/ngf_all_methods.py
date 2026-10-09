@@ -270,10 +270,10 @@ def main():
         img_t, lbl_t = src[None, None], lab_t[None, None]
 
         def score(gen, method, variant, draw):
-            for rname, m in rois.items():
+            for rname, m in rois.items():  # noqa: F821  (closure; del only after the last score() call)
                 if int(m.sum()) < 50:
                     continue
-                a, e, nv = ngf_scores(src, gen, m)
+                a, e, nv = ngf_scores(src, gen, m)  # noqa: F821
                 rows.append(dict(task=task, dataset=dataset, contrast=contrast, variant=variant, method=method,
                                  scan=cid, draw=draw, roi=rname, n_vox=nv, flat_frac=flat_frac, ngf_all=a, ngf_edge=e))
 

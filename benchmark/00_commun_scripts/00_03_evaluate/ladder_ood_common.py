@@ -14,7 +14,7 @@ started to drift -- Open-MS's copy in particular had fallen out of date with a
 different rung set, no HD95, and no OOD/in-domain split, which is what produced
 a transcription error in the paper's causal-ablation table (an HD95 delta for
 one task was accidentally copied from a different task's Dice column). Per
-CLAUDE.md's shared-layer rule ("if you catch yourself writing eval/aggregate
+the project notes' shared-layer rule ("if you catch yourself writing eval/aggregate
 logic inline, stop -- it belongs in 00_commun_scripts"), this is that shared
 layer; per-dataset scripts should now be thin wrappers that only declare
 METRICS_ROOT / IN_DOMAIN / OOD_CONTRASTS / RUNGS and call run_ladder() (or

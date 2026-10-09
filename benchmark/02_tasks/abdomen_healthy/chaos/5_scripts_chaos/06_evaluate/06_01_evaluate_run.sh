@@ -82,7 +82,7 @@ fi
 # METRICS_SUBDIR (optional, independent of the translation experiment above): unset
 # (default) writes to the normal flat METRICS_ROOT/.../<contrast>/ layout. Set to e.g.
 # "ablations" to write to METRICS_ROOT/.../<contrast>/ablations/ instead — for
-# non-headline result sets (CLAUDE.md's "Within 02_metrics/<model>/<contrast>/, a
+# non-headline result sets (the project notes' "Within 02_metrics/<model>/<contrast>/, a
 # non-headline result set gets its own dedicated subdir" convention). Only the metrics
 # OUTPUT path moves; predictions are still read from the normal (non-exp) location.
 METRICS_SUBDIR="${METRICS_SUBDIR:-${EXP_SUBDIR}}"

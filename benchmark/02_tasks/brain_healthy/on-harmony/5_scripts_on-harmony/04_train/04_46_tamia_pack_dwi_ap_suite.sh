@@ -37,7 +37,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 S5="${ROOT}/benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony"
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 source "${S5}/00_utils/env_dwi.sh"
 source "${ROOT}/scripts/cluster/tamia_env_onharmony.sh"
 cd "${ROOT}"

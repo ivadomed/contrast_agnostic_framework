@@ -17,7 +17,6 @@ Usage: python3 combine_status.py --project-root /path/to/mri_synthesis_project
 """
 import argparse
 import json
-import re
 from pathlib import Path
 from datetime import datetime, timezone
 

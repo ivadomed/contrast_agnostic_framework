@@ -26,9 +26,8 @@ REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ladder_ood_common import (rung_means, _labelled_case_values, resolve_run_dir,  # noqa: E402
-                               load_case_means, _src_key, _patient_key, _merge_by)
-from stat_tests import wilcoxon_p, holm  # noqa: E402
+from ladder_ood_common import (_labelled_case_values, resolve_run_dir,  # noqa: E402
+                               load_case_means, _patient_key)
 import compute_dissociation_pvalues as C  # noqa: E402
 
 os.environ.setdefault("PROJECT_ROOT", str(REPO))

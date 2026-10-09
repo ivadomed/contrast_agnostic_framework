@@ -4,7 +4,7 @@
 #   bash scripts/cluster/tamia_rung7_probe_check.sh
 set -uo pipefail
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-R="$(cat /scratch/p/paulh/_packruns_rung7_auglab_pv_root_probe.txt)"
+R="$(cat /scratch/${USER:0:1}/${USER}/_packruns_rung7_auglab_pv_root_probe.txt)"
 bad=0; n=0
 for idx in "$R"/*/index.tsv; do
   while IFS=$'\t' read -r cmd log name done_; do

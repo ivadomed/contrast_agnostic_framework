@@ -1,9 +1,9 @@
 # Source AFTER benchmark/02_tasks/brain_stroke/isles2022/5_scripts_isles2022/00_utils/env.sh (or env_flair.sh) to point
 # isles2022 training/prediction at scratch-resident data on TamIA. Override every path OUTRIGHT (a ${VAR:-} guard here
-# is a no-op: common_env.sh has already fired its own guards -- CLAUDE.md TamIA gotcha).
+# is a no-op: common_env.sh has already fired its own guards -- the project notes TamIA gotcha).
 #   source benchmark/02_tasks/brain_stroke/isles2022/5_scripts_isles2022/00_utils/env.sh   # or env_flair.sh
 #   source scripts/cluster/tamia_env_isles2022.sh
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 ISLES2022_SCRATCH="$SCRATCH/isles2022"
 
 export nnUNet_raw="$ISLES2022_SCRATCH/2_nnUNet/raw"

@@ -4,7 +4,7 @@
 # duke-breast-mri (291 cases, UNILATERAL crop) -- ISPY2 T1WCE-trained models.
 # FOV-matched sibling of duke_t1wce_01_results.yaml: duke's t1wce test images
 # are ~100% bilateral-width, while I-SPY2's own t1wce training pool is only
-# 18% bilateral (82% unilateral-cropped) -- see CLAUDE.md's "Breast task"
+# 18% bilateral (82% unilateral-cropped) -- see the project notes' "Breast task"
 # section. 02_nnunet/02_03_derive_unilateral_crop.py crops each duke case to
 # the lesion-side half (axis 0 only), matching the dominant training FOV,
 # applied uniformly across all 6 methods (same comparability rule as

@@ -58,6 +58,7 @@ cores and sham masks here are identical to the earlier runs').
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 import nibabel as nib
@@ -72,7 +73,7 @@ from intervention_build import (  # noqa: E402
 )
 from intervention_leakage_build import erode_core, MIN_CORE_VOX  # noqa: E402
 
-INPUTS_ROOT = Path("/scratch/paulh/brats_intervention/inputs")
+INPUTS_ROOT = Path(os.environ["SCRATCH"]) / "brats_intervention/inputs"
 
 
 def t_swap(target: np.ndarray, donor: np.ndarray, core: np.ndarray) -> tuple[np.ndarray, int]:

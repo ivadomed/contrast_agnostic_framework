@@ -1,11 +1,10 @@
-import sys; sys.path.insert(0,"/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/brain_tumor/brats2024-glioma/7_analysis_brats2024-glioma/texture_analysis_lvl_1/scripts")
-import xds_full_common as C, numpy as np
+import os, sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import xds_full_common as C
 MAN=C.manifest()
 specs=C.dev_specs(); print("dev cells",len(specs), {f:sum(s['fam']==f for s in specs) for f in set(s['fam'] for s in specs)})
 for k in C.dev_feature_keys()+C.TEST_KEYS:
     cs=MAN[k][1]()[:C.CAP]; print("MAN",k,len(MAN[k][1]()),[c[0] for c in cs[:2]])
 R=C.load_rad(); print("rad rows",R.shape); 
-import collections
 print({k:int((R.index.get_level_values(0)==k).sum()) for k in C.dev_feature_keys()+C.TEST_KEYS})
 for s in specs:
     d,m=C.targets(s)

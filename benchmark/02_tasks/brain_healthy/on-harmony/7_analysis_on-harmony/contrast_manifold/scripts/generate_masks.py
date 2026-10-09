@@ -26,7 +26,6 @@ Usage (run inside tmux):
 
 import argparse
 import logging
-import re
 import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path

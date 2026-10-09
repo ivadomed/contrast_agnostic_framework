@@ -2,12 +2,12 @@
 # GPU inference for the co-polarity intervention (C-FLIP alone, combined with S-ADD, + sham).
 # Usage: bash run_copolarity_partB_predict.sh <model_key>  (t2w_noise|t2w_real only)
 set -euo pipefail
-cd /project/aip-jcohen/paulh/mri_synthesis_project
+cd "$(dirname "${BASH_SOURCE[0]}")/../../../../../../.."
 source benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/00_utils/env.sh
 
 MODEL_KEY="${1:?model_key required: t2w_noise|t2w_real}"
 
-SCRATCH_ROOT=/scratch/paulh/brats_intervention
+SCRATCH_ROOT=/scratch/${USER}/brats_intervention
 INPUTS_ROOT="${SCRATCH_ROOT}/inputs"
 PREDS_ROOT="${SCRATCH_ROOT}/preds"
 LOGS_DIR="${SCRATCH_ROOT}/logs"
@@ -17,12 +17,12 @@ SETS="corefeather_t1n corefeather_sadd_t1n sham_corefeather_t1n sham_corefeather
 
 case "${MODEL_KEY}" in
   t2w_noise)
-    NNUNET_RESULTS="/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659"
+    NNUNET_RESULTS="${PWD}/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659"
     DATASET_ID=52
     TRAINER="nnUNetTrainerBraTS2024GliomaT2wAugLabDefault"
     ;;
   t2w_real)
-    NNUNET_RESULTS="/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217"
+    NNUNET_RESULTS="${PWD}/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217"
     DATASET_ID=52
     TRAINER="nnUNetTrainerBraTS2024GliomaT2wV26_6_2_train050_val100"
     ;;

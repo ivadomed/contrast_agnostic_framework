@@ -37,6 +37,7 @@ from __future__ import annotations
 import json
 import shutil
 import sys
+import os
 from pathlib import Path
 from collections import Counter
 
@@ -48,9 +49,9 @@ REPO_ROOT = DATASET_ROOT.parents[3]
 sys.path.insert(0, str(REPO_ROOT / "benchmark" / "00_commun_scripts" / "00_00_utils"))
 from orient import TARGET_AXCODES, reorient_file  # noqa: E402
 
-RAW_STAGE = Path("/scratch/paulh/duke_download/raw")   # login-node download staging area
+RAW_STAGE = Path(os.environ["SCRATCH"]) / "duke_download/raw"   # login-node download staging area
 OUT = DATASET_ROOT / "2_nnUNet_duke-breast-mri" / "raw"
-MANIFEST_IN = Path("/scratch/paulh/duke_download/duke_full_manifest.json")
+MANIFEST_IN = Path(os.environ["SCRATCH"]) / "duke_download/duke_full_manifest.json"
 
 PRECONTRAST_CHAN = "_0000.nii.gz"
 POSTCONTRAST_CHAN = "_0001.nii.gz"   # used only for the enhancement sanity check

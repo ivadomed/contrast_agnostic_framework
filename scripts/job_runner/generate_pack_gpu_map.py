@@ -6,7 +6,7 @@ tamia_pack launcher doesn't have to hand-derive the placement by counting
 rows itself.
 
 Rule (generalizes the hand-derived brats2024-glioma 04_60 Pack C placement,
-documented in CLAUDE.md's TamIA section): rows whose 'name' column (3rd col
+documented in the project notes' TamIA section): rows whose 'name' column (3rd col
 of index.tsv) matches one of --heavy's substrings each get ONE GPU to
 themselves, round-robin across as many GPUs as are available (wrapping if
 there are more heavy rows than GPUs -- a degenerate case, best effort).

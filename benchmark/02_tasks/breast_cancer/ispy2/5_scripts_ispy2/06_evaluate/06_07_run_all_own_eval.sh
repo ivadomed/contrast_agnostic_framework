@@ -31,7 +31,7 @@ for j in "${JOBS[@]}"; do
   bash "${HERE}/06_01_evaluate_own_run.sh" "${run_id}" "${category}" "${ds_id}" all
 done
 
-# Ladder rungs -> dedicated ablations/ subdir (CLAUDE.md convention: non-headline
+# Ladder rungs -> dedicated ablations/ subdir (the project notes convention: non-headline
 # result sets get their own subdir under 02_metrics/<model>/<contrast>/).
 declare -a LADDER_JOBS=(
   "ispy2_t1wce_baseline_kmeans_${TS} auglab 100"

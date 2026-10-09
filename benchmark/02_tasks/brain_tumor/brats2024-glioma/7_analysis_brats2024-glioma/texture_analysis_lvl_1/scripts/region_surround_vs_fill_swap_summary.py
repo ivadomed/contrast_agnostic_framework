@@ -39,7 +39,7 @@ from scipy.stats import spearmanr
 
 THIS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(THIS_DIR))
-from compute_region_surround_texture import ACF_COLS, LAGS  # noqa: E402
+from compute_region_surround_texture import LAGS  # noqa: E402
 from ranking_within_train import kendall_S, pooled_p  # noqa: E402
 
 OUT = THIS_DIR.parent / "outputs"

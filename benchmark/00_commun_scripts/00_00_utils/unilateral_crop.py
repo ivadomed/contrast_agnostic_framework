@@ -1,6 +1,6 @@
 """
 Lesion-side unilateral (single-breast) crop -- the breast task's standard eval
-FOV since 2026-09-17 (CLAUDE.md "Breast task" section: unilateral-crop is the
+FOV since 2026-09-17 (the project notes "Breast task" section: unilateral-crop is the
 only reported breast evaluation).
 
 Same rule duke-breast-mri's 02_nnunet/02_03_derive_unilateral_crop.py applies

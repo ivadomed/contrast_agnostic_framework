@@ -1,7 +1,7 @@
 #!/bin/bash
 # ispy2 -> nnU-Net raw, t2w modality (see 02_00_convert_lib.py for the design).
 # Submitted through run_job: ~1.7k volumes are copied and every mask is
-# decompressed/rewritten, well past the login-node exception in CLAUDE.md.
+# decompressed/rewritten, well past the login-node exception in the project notes.
 #
 #   bash 02_02_convert_t2w.sh
 set -euo pipefail

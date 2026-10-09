@@ -2,7 +2,7 @@
 # Build the Duke-Breast-Cancer-MRI (MAMA-MIA expert-mask subset) test-only
 # nnU-Net set (291 patients, precontrast/DCE-native only). Submitted through run_job:
 # ~582 volumes (pre + post-contrast) are copied/reoriented -- well past the
-# login-node exception in CLAUDE.md.
+# login-node exception in the project notes.
 #
 #   bash 02_02_convert_test_precontrast.sh
 #

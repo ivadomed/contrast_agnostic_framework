@@ -7,7 +7,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${HERE}/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
-HS_STAGE="${HS_STAGE:-${SCRATCH:-/scratch/p/paulh}/hanseg}"
+HS_STAGE="${HS_STAGE:-${SCRATCH:-/scratch/${USER:0:1}/${USER}}/hanseg}"
 export HANSEG_ZIP="${HANSEG_ZIP:-${HS_STAGE}/0_raw/HaN-Seg.zip}"
 [ -f "${HANSEG_ZIP}" ] || { echo "missing ${HANSEG_ZIP}" >&2; exit 1; }
 [ -d "${nnUNet_raw}/imagesTs_ct" ] || { echo "CT arm must exist first (imagesTs_ct)" >&2; exit 1; }

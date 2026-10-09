@@ -6,7 +6,7 @@
 # are never forked. Mirrors tamia_env_{amos,sliver07}_chaoscross.sh's pattern (same
 # section-14 cross-dataset shape, just OPENMS_* instead of CHAOS_*).
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 
 # MSLesSeg's own paths (inputs for cross-mode predict + this dataset's own output tree).
 export nnUNet_raw="$SCRATCH/mslesseg/2_nnUNet_mslesseg/raw"
@@ -32,7 +32,7 @@ export OPENMS_NNUNET_RAW="$OPENMS_DATASET_ROOT/2_nnUNet_open-ms/raw"
 export OPENMS_NNUNET_PREPROCESSED="$OPENMS_DATASET_ROOT/2_nnUNet_open-ms/preprocessed"
 export OPENMS_DATASET_JSON="$OPENMS_NNUNET_RAW/${OPENMS_DS_NAME:-Dataset070_OpenMS_FLAIR}/dataset.json"
 
-# run_job overrides for tamia (whole-node H100, see CLAUDE.md "TamIA" section).
+# run_job overrides for tamia (whole-node H100, see the project notes "TamIA" section).
 export RUN_JOB_ACCOUNT="aip-jcohen"
 export RUN_JOB_GPU_TYPE="h100"
 

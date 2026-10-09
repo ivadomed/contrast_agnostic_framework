@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # TAMIA SIZING PROBE for toothfairy2 — REQUIRED before the real pack launches.
 #
-# CLAUDE.md mandates measuring rather than assuming, and a project memory records
+# the project notes mandates measuring rather than assuming, and a project memory records
 # the specific way this goes wrong: a probe that runs N folds on N IDLE GPUs is
 # 2.6-8.5x too optimistic versus the real launch, because the real launch puts
 # several folds on the SAME GPU. So this probe reproduces the intended contention
@@ -27,7 +27,7 @@ source "${HERE}/../00_utils/env.sh"
 
 PROBE_EPOCHS="${PROBE_EPOCHS:-6}"
 PROBE_TIME="${PROBE_TIME:-01:30:00}"
-PROBE_BASE="${PROBE_BASE:-${SCRATCH:-/scratch/p/paulh}/toothfairy2/_probe_$(date +%Y%m%d_%H%M%S)}"
+PROBE_BASE="${PROBE_BASE:-${SCRATCH:-/scratch/${USER:0:1}/${USER}}/toothfairy2/_probe_$(date +%Y%m%d_%H%M%S)}"
 PACK_DIR="${PROBE_BASE}/pack"
 mkdir -p "${PACK_DIR}"
 

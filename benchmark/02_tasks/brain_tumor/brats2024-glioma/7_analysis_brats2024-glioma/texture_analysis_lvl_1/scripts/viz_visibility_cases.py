@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 THIS = Path(__file__).resolve().parent; REPO = THIS.parents[6]; T2 = REPO / "benchmark/02_tasks"; sys.path.insert(0, str(REPO)); sys.path.insert(0, str(THIS))
 from auglab.transforms.gpu.transforms import AugTransformsGPU  # noqa: E402
 from trainme_build import zscore, patch_box, zoom_box, CFG, ARMS  # noqa: E402
-from viz_visibility_examples import show, inset, dice, WIN  # noqa: E402
+from viz_visibility_examples import show, inset, dice  # noqa: E402
 OUT = THIS.parent / "outputs/plots/visibility_cases"; OUT.mkdir(parents=True, exist_ok=True)
 rng = np.random.default_rng(7)
 
@@ -51,7 +51,7 @@ CELLS = [
          train_img=lambda c: RB / "imagesTs_t2w" / f"{c}_0000.nii.gz", train_gt=lambda c: RB / "labelsTr" / f"{c}.nii.gz",
          eval_img=lambda c: RB / "imagesTs_t1n" / f"{c}_0000.nii.gz", eval_gt=lambda c: RB / "labelsTr" / f"{c}.nii.gz",
          pred=lambda arm, c: B / "8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab" / {"noise": "brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659", "real": "brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300"}[arm] / "fold0/t1n" / f"{c}.nii.gz",
-         metrics=lambda arm: B / "8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations" / {"noise": "auglab_brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659", "real": "auglab_brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300"}[arm] / "fold0/t1n" / f"{c}.nii.gz" if False else B / "8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations" / {"noise": "auglab_brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659", "real": "auglab_brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300"}[arm] / "fold0/eval_all.csv", group="t1n", label="SNFH"),
+         metrics=lambda arm: B / "8_results_brats2024-glioma/02_metrics/brats2024_glioma_model/t2w/ablations" / {"noise": "auglab_brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659", "real": "auglab_brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300"}[arm] / "fold0/eval_all.csv", group="t1n", label="SNFH"),
 ]
 
 

@@ -8,7 +8,7 @@
 # exactly (see that file's note on the "2_nnUNet/" vs "2_nnUNet_atlas-liver-hcc/" naming
 # quirk and the baseline-checkpoint symlink).
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 
 # LiverHccSeg's own paths (inputs for cross-mode predict + this dataset's own output tree).
 # METRICS_ROOT intentionally left at common_env.sh's default (under $PROJECT, NOT

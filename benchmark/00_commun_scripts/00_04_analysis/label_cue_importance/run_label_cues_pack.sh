@@ -5,7 +5,7 @@
 # Why this exists rather than calling each dataset's run_*.sh: on TamIA allocation is WHOLE-NODE
 # (4x H100), so submitting 8 one-GPU branches as 8 jobs would idle 3 GPUs per job for the whole
 # wall-clock duration -- exactly the under-utilisation Alliance staff have already warned this
-# account about (CLAUDE.md). This packs every branch onto the node at PACK_PER_GPU per GPU.
+# account about (project convention). This packs every branch onto the node at PACK_PER_GPU per GPU.
 #
 # Runs the branches listed in a branch file, one line per branch:
 #   <dataset>|<modality>|<imagesDir>|<labelsDir>|<dataset.json>|<imageSuffix>|<labelSuffix>|<unionIds>|<unionName>

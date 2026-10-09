@@ -32,7 +32,7 @@ from skimage.feature import graycomatrix, local_binary_pattern
 warnings.filterwarnings("ignore")
 THIS = Path(__file__).resolve().parent
 sys.path.insert(0, str(THIS))
-from compute_cross_contrast_ngf import CONTRAST_SUFFIX, LABEL_IDS, load_patient, region_masks  # noqa: E402
+from compute_cross_contrast_ngf import CONTRAST_SUFFIX, load_patient, region_masks  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)

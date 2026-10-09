@@ -8,7 +8,7 @@
 # Verifies every file by md5 (no short transfers).
 set -euo pipefail
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-T=benchmark/02_tasks; SC=/scratch/p/paulh
+T=benchmark/02_tasks; SC=/scratch/${USER:0:1}/${USER}
 SEL="${*:-open-ms toothfairy2 hanseg pddca totalseg-pelvic brats2024-glioma chaos amos sliver07 ispy2 on-harmony}"
 TS=20261003_111216; TS_OMS=20261003_111215; TS_PEL=20261003_120315
 # <dataset>|TamIA metrics dir (under ${SC})|Vulcan metrics dir (under ${T})

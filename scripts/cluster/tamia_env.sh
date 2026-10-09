@@ -3,7 +3,7 @@
 #   source scripts/cluster/tamia_env.sh
 # Cluster differences are expressed as env overrides only - run_job.sh is never forked.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 BRATS_SCRATCH="$SCRATCH/brats2024-glioma"
 
 export nnUNet_raw="$BRATS_SCRATCH/2_nnUNet/raw"

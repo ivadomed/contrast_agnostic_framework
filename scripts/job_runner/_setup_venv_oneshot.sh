@@ -76,7 +76,7 @@ echo "=== registering AugLab trainers into nnunetv2 ==="
 auglab_add_nnunettrainer -t nnUNetTrainerDAExt --overwrite
 auglab_add_nnunettrainer -t nnUNetTrainerTest --overwrite
 
-echo "=== restoring this project's nnunetv2 patches (see CLAUDE.md) ==="
+echo "=== restoring this project's nnunetv2 patches (see the project notes) ==="
 SITE_PKGS="$(python -c 'import nnunetv2, os; print(os.path.dirname(os.path.dirname(nnunetv2.__file__)))')"
 cp src/nnunet/patches/nnunet_logger.py "${SITE_PKGS}/nnunetv2/training/logging/nnunet_logger.py"
 

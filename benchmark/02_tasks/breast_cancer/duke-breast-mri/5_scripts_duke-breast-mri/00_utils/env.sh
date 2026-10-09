@@ -15,7 +15,7 @@
 # Annotation_Boxes.csv (those are 3D bounding boxes only, no per-voxel mask).
 # License: CC BY-NC 4.0 (Duke-Breast-Cancer-MRI's own TCIA license, inherited by
 # MAMA-MIA). Fine for this project's research use (same precedent as ATLAS-Liver-
-# HCC's CC BY-NC-SA 4.0 being ruled "fine" -- see CLAUDE.md's Atlas-Liver-HCC
+# HCC's CC BY-NC-SA 4.0 being ruled "fine" -- see the project notes' Atlas-Liver-HCC
 # exclusion section) but NOT eligible for the project's public CC-BY-only
 # git-annex redistribution list -- flag permanently, do not silently include it
 # there later.

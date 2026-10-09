@@ -58,7 +58,7 @@ OUT = REPO / "paper" / "cvpr_format_latex" / "figures" / "per_contrast_curves"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Same figure, PNG, in the repo's cross-dataset roll-up dir -- the home
-# CLAUDE.md gives to summaries that span every task at once (it already holds
+# the project notes gives to summaries that span every task at once (it already holds
 # meta_task_heatmap_*). The ablation ladders are exactly that: one panel per
 # task, and the only place all of them are visible side by side. Keeping a copy
 # here means reading the cross-task result does not require building the paper.

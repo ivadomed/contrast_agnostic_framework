@@ -7,14 +7,14 @@
 #   auglabAug_v26_6_2_noisefill_v2    -> auglab_kmeans_label_remap_voronoi
 #
 # Run on Vulcan's LOGIN NODE (plain mv on 8 dirs, well under the ~10 CPU-min exception in
-# CLAUDE.md — no sbatch needed). Dry-run by default; pass --execute to actually rename.
+# the project notes — no sbatch needed). Dry-run by default; pass --execute to actually rename.
 #
 # Usage:
 #   bash rename_openms_flair_ablation_vulcan.sh            # dry run (lists + checks only)
 #   bash rename_openms_flair_ablation_vulcan.sh --execute   # actually mv
 set -euo pipefail
 
-REPO="${REPO:-/project/aip-jcohen/paulh/mri_synthesis_project}"
+REPO="${REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 EXECUTE=0
 [[ "${1:-}" == "--execute" ]] && EXECUTE=1
 

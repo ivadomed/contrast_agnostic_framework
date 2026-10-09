@@ -8,7 +8,7 @@
 #
 # Everything reads the zip in place and stages single cases through $SLURM_TMPDIR,
 # so this needs no 109 GB scratch staging area. TF2_ZIP defaults to the TamIA
-# download location (CLAUDE.md: "Slurm jobs go to TamIA, not Vulcan").
+# download location (the project notes: "Slurm jobs go to TamIA, not Vulcan").
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${HERE}/env.sh"

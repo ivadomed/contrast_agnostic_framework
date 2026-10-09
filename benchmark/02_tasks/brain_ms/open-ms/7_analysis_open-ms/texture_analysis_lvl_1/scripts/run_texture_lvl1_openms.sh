@@ -30,7 +30,7 @@ mkdir -p "${DATA}" "${TABLES}" "${PLOTS}" "${LOGDIR}"
 source "${REPO}/benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/00_utils/env.sh"
 PY="${REPO}/.venv/bin/python"
 # torch's default thread count (= nproc) causes severe contention on a shared, thread-starved
-# login/compute node — same class of issue as the blosc2 gotcha in CLAUDE.md. Cap it.
+# login/compute node — same class of issue as the blosc2 gotcha in the project notes. Cap it.
 export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2
 
 echo "== Step 0: metric self-test =="

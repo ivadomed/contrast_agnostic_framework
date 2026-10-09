@@ -11,7 +11,7 @@
 # scripts/cluster/tamia_env_atlas-liver-hcc.sh (the script that originally staged it
 # there) and /project/aip-jcohen/paulh/copy_atlas_liver_hcc_to_tamia.sh.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 
 # LLD-MMRI-HCC's own paths (inputs for cross-mode predict + this dataset's own output tree).
 # METRICS_ROOT intentionally left at common_env.sh's default (under $PROJECT, NOT
@@ -41,7 +41,7 @@ export ATLAS_DATASET_JSON="$ATLAS_NNUNET_RAW/$ATLAS_DS_NAME/dataset.json"
 export ATLAS_TRAINING_CONTRAST="t1w"
 export ATLAS_MODEL_TYPE="atlas_liver_hcc_model"
 
-# run_job overrides for tamia (whole-node H100, see CLAUDE.md "TamIA" section).
+# run_job overrides for tamia (whole-node H100, see the project notes "TamIA" section).
 export RUN_JOB_ACCOUNT="aip-jcohen"
 export RUN_JOB_GPU_TYPE="h100"
 

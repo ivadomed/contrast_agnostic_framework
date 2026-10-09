@@ -16,7 +16,7 @@ set -euo pipefail
 DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 export RUN_JOB_CPUS_PER_GPU=12 RUN_JOB_MEM_PER_GPU=115G        # whole-node H100: 48 CPUs / 4 GPUs; GiB, never raw MB
 FOLDS_PER_PACK="${FOLDS_PER_PACK:-12}"; PACK_CHAIN="${PACK_CHAIN:-3}"; PACK_TIME="${PACK_TIME:-23:59:00}"
 PACKROOT="${PACKROOT:-${SCRATCH}/isles2022/_packruns}"; mkdir -p "${PACKROOT}"

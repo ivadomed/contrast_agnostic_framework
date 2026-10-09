@@ -7,17 +7,17 @@
 #
 # env.sh (via common_env.sh) exports every path with a ${VAR:-default} guard, and by
 # the time THIS file runs those guards have already fired with the git-repo-relative
-# default — so a ${VAR:-...} guard HERE would be a silent no-op (CLAUDE.md's TamIA
+# default — so a ${VAR:-...} guard HERE would be a silent no-op (the project notes' TamIA
 # gotcha). Override outright.
 #
 # ⚠️ BIDS_ROOT is overridden too, unlike ispy2's override file. toothfairy2's BIDS
 # tree is ~480 volumes of resampled CBCT; on TamIA, $PROJECT is under a binding
-# FILE-COUNT quota and CLAUDE.md's standing rule is that all bulk imaging data on
+# FILE-COUNT quota and the project notes' standing rule is that all bulk imaging data on
 # this cluster lives on $SCRATCH only. Treat the scratch copy as re-creatable
 # (purge-on-inactivity): 00_utils/00_00_extract_and_bidsify.sh rebuilds it from the
 # release zip.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 TF2_SCRATCH="$SCRATCH/toothfairy2"
 
 export BIDS_ROOT="$TF2_SCRATCH/1_BIDS/maxillofacial-toothfairy2"

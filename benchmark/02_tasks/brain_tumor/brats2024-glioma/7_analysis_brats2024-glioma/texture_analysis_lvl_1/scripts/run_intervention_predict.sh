@@ -9,12 +9,12 @@
 # sequentially on the same allocation. Usage: bash run_intervention_predict.sh <model_key>
 #   model_key in {t1n_noise, t1n_real, t2w_noise, t2w_real}
 set -euo pipefail
-cd /project/aip-jcohen/paulh/mri_synthesis_project
+cd "$(dirname "${BASH_SOURCE[0]}")/../../../../../../.."
 source benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/00_utils/env.sh
 
 MODEL_KEY="${1:?model_key required: t1n_noise|t1n_real|t2w_noise|t2w_real}"
 
-SCRATCH_ROOT=/scratch/paulh/brats_intervention
+SCRATCH_ROOT=/scratch/${USER}/brats_intervention
 INPUTS_ROOT="${SCRATCH_ROOT}/inputs"
 PREDS_ROOT="${SCRATCH_ROOT}/preds"
 LOGS_DIR="${SCRATCH_ROOT}/logs"
@@ -22,28 +22,28 @@ mkdir -p "${LOGS_DIR}"
 
 case "${MODEL_KEY}" in
   t1n_noise)
-    NNUNET_RESULTS="/scratch/paulh/brats_ladder_models/t1n_noise"
+    NNUNET_RESULTS="/scratch/${USER}/brats_ladder_models/t1n_noise"
     DATASET_ID=51
     TRAINER="nnUNetTrainerBraTS2024GliomaAugLabDefault"
     SETS="orig_t2f e1_flatten_t2f sham_flatten_t2f"
     TIME="00:30:00"
     ;;
   t1n_real)
-    NNUNET_RESULTS="/scratch/paulh/brats_ladder_models/t1n_real"
+    NNUNET_RESULTS="/scratch/${USER}/brats_ladder_models/t1n_real"
     DATASET_ID=51
     TRAINER="nnUNetTrainerBraTS2024GliomaV26_6_2_train050_val100"
     SETS="orig_t2f e1_flatten_t2f sham_flatten_t2f"
     TIME="00:30:00"
     ;;
   t2w_noise)
-    NNUNET_RESULTS="/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659"
+    NNUNET_RESULTS="${PWD}/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/auglab/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659"
     DATASET_ID=52
     TRAINER="nnUNetTrainerBraTS2024GliomaT2wAugLabDefault"
     SETS="orig_t2f e1_flatten_t2f sham_flatten_t2f orig_t2w e2_flatten_t2w sham_flatten_t2w orig_t1n e3_ramp_t1n_donor_t2w sham_ramp_t1n"
     TIME="02:00:00"
     ;;
   t2w_real)
-    NNUNET_RESULTS="/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217"
+    NNUNET_RESULTS="${PWD}/benchmark/02_tasks/brain_tumor/brats2024-glioma/8_results_brats2024-glioma/01_predictions/brats2024_glioma_model/t2w/nnUNet/brats2024-glioma_t2w_v26_6_2_train050_val100_20260620_125217"
     DATASET_ID=52
     TRAINER="nnUNetTrainerBraTS2024GliomaT2wV26_6_2_train050_val100"
     SETS="orig_t2f e1_flatten_t2f sham_flatten_t2f orig_t2w e2_flatten_t2w sham_flatten_t2w orig_t1n e3_ramp_t1n_donor_t2w sham_ramp_t1n"

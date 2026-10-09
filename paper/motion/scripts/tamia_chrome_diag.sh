@@ -4,9 +4,9 @@
 #SBATCH --time=00:30:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16G
-#SBATCH --output=/scratch/p/paulh/palette_motion/logs/%x_%j.out
+#SBATCH --output=/scratch/${USER:0:1}/${USER}/palette_motion/logs/%x_%j.out
 # Find a Chrome launch configuration that works on a TamIA compute node.
-cd /scratch/p/paulh/palette_motion
+cd /scratch/${USER:0:1}/${USER}/palette_motion
 module load StdEnv/2023 nodejs/20.16.0
 export TMPDIR=$SLURM_TMPDIR XDG_CACHE_HOME=$SLURM_TMPDIR/cache XDG_CONFIG_HOME=$SLURM_TMPDIR/config
 mkdir -p $XDG_CACHE_HOME $XDG_CONFIG_HOME

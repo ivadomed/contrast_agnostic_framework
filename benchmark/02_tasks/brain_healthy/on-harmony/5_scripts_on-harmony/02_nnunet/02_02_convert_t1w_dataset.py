@@ -39,7 +39,6 @@ BIDS_ROOT    = PROJECT_ROOT / "data" / "ON-Harmony"
 MASKS_ROOT   = BIDS_ROOT / "derivatives" / "labels"
 SPLITS_JSON  = PROJECT_ROOT / "data" / "splits" / "onharmony_splits.json"
 import argparse
-import sys
 
 # ── Label set selection ────────────────────────────────────────────────────────
 # Set via --label-set CLI arg or NNUNET_LABEL_SET env var.

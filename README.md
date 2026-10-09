@@ -93,14 +93,14 @@ benchmark/
   03_archive/            excluded or superseded datasets, kept for history
 scripts/                 cluster job submission (run_job), venv setup, cross-cutting tooling
 sub-workspaces/          AugLab (external GPU augmentation library this method builds on)
-paper/                   CVPR paper source
+paper/                   figure/table generation scripts and the README video (manuscript kept elsewhere)
 ```
 
 Every dataset under `benchmark/02_tasks/` follows the same structure — raw data, BIDS, nnU-Net
 conversion, splits, pipeline scripts, checkpoints, results, tests — so all datasets train, predict,
 evaluate and aggregate identically. This is deliberate: it's what makes the numbers above directly
-comparable across 8 completely different anatomical structures. See `CLAUDE.md` for the full
-convention if you're adding a new dataset or method.
+comparable across 8 completely different anatomical structures. See
+`benchmark/00_commun_scripts/README.md` for the full convention if you're adding a new dataset or method.
 
 ## Installation
 
@@ -155,10 +155,15 @@ layout and the canonical script-numbering convention across every dataset):
 ```
 
 **This project runs on shared HPC clusters (Vulcan / TamIA / Killarney via the Digital Research
-Alliance of Canada).** All heavy compute goes through Slurm, never a login node — see `CLAUDE.md`
-for cluster-specific submission, storage and GPU policy if you're running this on one of them.
+Alliance of Canada).** All heavy compute goes through Slurm, never a login node — see the Alliance
+documentation (https://docs.alliancecan.ca) for submission, storage and GPU policy if you're running this
+on one of them.
 
 ## Citation
 
-Paper source and build instructions are under `paper/`. Citation details will be added once
-published.
+Citation details will be added once the paper is published.
+
+## License
+
+The code is released under the MIT License (see `LICENSE`). The benchmark datasets are not
+redistributed here; each is subject to its own provider's terms (see the dataset READMEs).

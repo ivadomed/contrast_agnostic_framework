@@ -22,7 +22,7 @@ Refuses to overwrite existing files unless --force.
   (identity check: --dataset isles2022 --task brain_stroke --contrasts dwi flair --dataset-ids 140 141 --out-root <tmp>)
 """
 from __future__ import annotations
-import argparse, re, shutil, sys
+import argparse, re, sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent

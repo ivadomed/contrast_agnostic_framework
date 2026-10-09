@@ -21,7 +21,7 @@ make_per_contrast_curves.py or its fill_swap_per_contrast.pdf.
 
 ATLAS-Liver-HCC was a 5th panel here (deliberately left OOD-only/unchanged,
 since it had no single in-domain contrast) until 2026-09-02, when the whole
-atlas-liver-hcc extension was excluded from the paper -- see CLAUDE.md
+atlas-liver-hcc extension was excluded from the paper -- see the project notes
 "Atlas-Liver-HCC exclusion (2026-09-02)".
 
 Usage:
@@ -43,8 +43,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_03_evaluate"))
 from ladder_ood_common import (  # noqa: E402
-    load_case_means, resolve_run_dir, rung_means, _per_contrast_rung_means,
-    _cross_dataset_contrast_labels, _per_contrast_rung_means_cross_dataset, _dataset_name,
+    load_case_means, resolve_run_dir, rung_means, _cross_dataset_contrast_labels, _per_contrast_rung_means_cross_dataset, _dataset_name,
 )
 from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402
 
@@ -69,7 +68,7 @@ WRAPPERS = [
     ("BraTS-GLI T2w", "benchmark/02_tasks/brain_tumor/brats2024-glioma/5_scripts_brats2024-glioma/06_evaluate/06_14_ladder_summary_t2w.py"),
     ("Open-MS T1w", "benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/06_evaluate/06_18_ladder_summary_t1w.py"),
     # ATLAS-Liver-HCC REMOVED 2026-09-02 -- dataset excluded from the paper
-    # entirely, see CLAUDE.md "Atlas-Liver-HCC exclusion (2026-09-02)".
+    # entirely, see the project notes "Atlas-Liver-HCC exclusion (2026-09-02)".
 ]
 
 FILL_SWAP_IDX = 4
@@ -88,7 +87,7 @@ PANELS = [
 T1_FAMILY = {"BraTS-GLI T1n", "Open-MS T1w", "CHAOS T1in", "ON-Harmony T1w"}
 # Dead since 2026-09-02 (ATLAS-Liver-HCC, the only cross-dataset-ladder task
 # with no single in-domain contrast, was excluded from the paper -- see
-# CLAUDE.md "Atlas-Liver-HCC exclusion"). Left empty rather than removing the
+# the project notes "Atlas-Liver-HCC exclusion"). Left empty rather than removing the
 # cross-dataset branches below wholesale, since every remaining task uses
 # the within-dataset path unconditionally.
 CROSS_DATASET_TASKS = set()

@@ -61,7 +61,7 @@ they can never be mixed with the new Dataset-scoped test sets. They remain
 regenerable by re-running 05_00_build_test_inputs.py.
 
 ORIENTATION: every written image and label is checked to be project-canonical
-LPS via nib.aff2axcodes -- a hard requirement in this project (CLAUDE.md,
+LPS via nib.aff2axcodes -- a hard requirement in this project (the project notes,
 "Verify orientation on onboarding"). A non-LPS file aborts the conversion.
 """
 from __future__ import annotations

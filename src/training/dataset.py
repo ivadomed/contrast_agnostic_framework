@@ -9,11 +9,6 @@ from monai.transforms import (
     Spacingd,
     Orientationd,
     SpatialPadd,
-    RandAffined,
-    Rand3DElasticd,             # <-- ADDED IMPORT
-    RandSimulateLowResolutiond,
-    RandGaussianNoised,
-    RandGaussianSmoothd,
     ScaleIntensityd,
     RandSpatialCropd,
     Lambdad,

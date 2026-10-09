@@ -9,7 +9,7 @@
 #
 # Usage: bash 06_01_evaluate_own_run.sh <RUN_ID> <CATEGORY:nnUNet|auglab> <DATASET_ID:100|101> [FOLD(default all)]
 # Optional env: CKPT_TAG (default "best") -- checkpoint_best is the project
-#   default (see CLAUDE.md); "final" reads fold{F}/<tag>/<item> predictions
+#   default (see the project notes); "final" reads fold{F}/<tag>/<item> predictions
 #   instead (predict with CHECKPOINT=checkpoint_final.pth first).
 set -euo pipefail
 source "$(dirname "$0")/../00_utils/env.sh"
@@ -24,7 +24,7 @@ CKPT_TAG="${CKPT_TAG:-best}"
 # TRAINING_CONTRAST must match the DATASET_ID passed (own-model results are
 # stored under PREDICTIONS_ROOT/<MODEL_TYPE>/<TRAINING_CONTRAST>/<CATEGORY>/) --
 # derive it here rather than trusting env.sh's t1wce default, since this script
-# is called for both training contrasts (CLAUDE.md's "DATASET_ID/CATEGORY must
+# is called for both training contrasts (the project notes' "DATASET_ID/CATEGORY must
 # be passed explicitly for non-primary contrast" gotcha).
 case "${DATASET_ID}" in
     100) export TRAINING_CONTRAST="t1wce" ;;

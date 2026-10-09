@@ -66,7 +66,6 @@ class _Block:
 
 def load_real_volume():
     import blosc2
-    from batchgenerators.utilities.file_and_folder_operations import load_json
     cands = sorted((PREP / "nnUNetPlans_3d_fullres").glob("*_T1w.b2nd"))
     f = cands[0]
     data = np.asarray(blosc2.open(urlpath=str(f), mode="r"))

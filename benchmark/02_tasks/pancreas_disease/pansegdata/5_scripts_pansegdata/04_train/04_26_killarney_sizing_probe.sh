@@ -7,7 +7,7 @@
 #   PROBE_GPU_TYPE=h100 bash 04_26_killarney_sizing_probe.sh   # same probe on H100 (run both to choose the GPU class)
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export SCRATCH="${SCRATCH:-/scratch/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER}}"
 GPU="${PROBE_GPU_TYPE:-l40s}"
 # cluster-specific run_job overrides (set BEFORE env.sh: common_env freezes the run_job defaults). Account/gres come from run_job_slurm.sh.
 export RUN_JOB_ACCOUNT="${RUN_JOB_ACCOUNT:-aip-jcohen}" RUN_JOB_GPU_TYPE="${GPU}"

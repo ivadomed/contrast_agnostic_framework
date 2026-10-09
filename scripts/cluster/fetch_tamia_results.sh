@@ -25,7 +25,7 @@
 # predictions. Run this after ANY TamIA predict/evaluate pack job.
 #
 # Requires a live TamIA ssh relay from this Vulcan session (Duo 2FA, see
-# CLAUDE.md "TamIA"). Verifies exact file counts and refuses to report success
+# the project notes "TamIA"). Verifies exact file counts and refuses to report success
 # on a short transfer.
 set -euo pipefail
 
@@ -34,7 +34,7 @@ MODE="${2:-all}"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TAMIA_HOST="${TAMIA_HOST:-tamia.alliancecan.ca}"
-TAMIA_SCRATCH="${TAMIA_SCRATCH:-/scratch/p/paulh}"
+TAMIA_SCRATCH="${TAMIA_SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 
 LOCAL_RESULTS="${PROJECT_ROOT}/benchmark/${DATASET}/8_results_${DATASET}"
 REMOTE_RESULTS="${TAMIA_SCRATCH}/${DATASET}/8_results_${DATASET}"

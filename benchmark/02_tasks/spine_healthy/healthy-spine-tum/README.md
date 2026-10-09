@@ -2,7 +2,8 @@
 
 > **Re-imported 2026-10-02** from the collaborators' second drop, which adds HD95.
 > The importer is now `5_scripts_healthy-spine-tum/06_evaluate/06_00_import_tum_tsv.py`
-> (replaces the one-off `_import_tum_tsv_20260805.py`, kept for provenance only).
+> (replaces the one-off `_import_tum_tsv_20260805.py`, kept for provenance only in
+> `benchmark/03_archive/healthy-spine-tum_oneoff_import_20260805/`).
 > Two things changed besides HD95, both verified row-by-row:
 > - Folder names: Ours is `ImageContrastV26-05+Paper` and Auglab is `newd` in the
 >   new drop (each reproduces the old folder's Dice exactly on all 4536 rows, and
@@ -24,7 +25,7 @@
 A 6-method comparison, trained on two contrasts (**CT** and **Dixon in-phase MRI**), evaluated
 cross-contrast on two external spine test sets — **spider** (T1w, T2w) and **spinegan** (ct,
 dixon-fat, dixon-inphase, dixon-water) — 3 folds each, mirroring this project's usual
-train-one-modality / evaluate-cross-contrast methodology (see root `CLAUDE.md`).
+train-one-modality / evaluate-cross-contrast methodology (see root the project notes).
 
 ## Method-name mapping (source dir → this project's roster)
 
@@ -60,13 +61,10 @@ not plain Dice/HD95. Per user decision (2026-08-05):
   written as `nan` (same as `evaluate.py` for an empty mask).
 - `group` in `eval_all.csv` = `<test_set>_<test_contrast>`, e.g. `spider_T1w`, `spinegan_dixon_fat`.
 
-Conversion script (one-off, not part of the repo's script layers — see root CLAUDE.md's "put new
+Conversion script (one-off, not part of the repo's script layers — see the project notes' "put new
 code in the right one" rule; kept here for provenance only, not intended to be re-run as-is):
-`_import_tum_tsv_20260805.py` (in this dataset's root — deliberately outside the numbered
-`5_scripts_*` convention since that skeleton doesn't exist for this dataset yet).
-If more TUM spine batches arrive in this same TSV shape, rewrite this as a proper
-`5_scripts_healthy-spine-tum/06_evaluate/06_00_import_tum_tsv.py` once the rest of the dataset
-skeleton exists.
+`benchmark/03_archive/healthy-spine-tum_oneoff_import_20260805/_import_tum_tsv_20260805.py`,
+superseded by `5_scripts_healthy-spine-tum/06_evaluate/06_00_import_tum_tsv.py`.
 
 ## Layout produced
 

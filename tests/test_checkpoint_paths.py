@@ -11,7 +11,6 @@ from types import ModuleType
 from unittest.mock import MagicMock
 import importlib
 import importlib.util
-import pytest
 from omegaconf import OmegaConf
 
 # ── Mock heavy deps before any script import ───────────────────────────────────

@@ -27,7 +27,7 @@ sources:
 
 # No contrast_groups block: with only one source, there is nothing to pool.
 
-# 8-method suite (CLAUDE.md canonical order + srcsm 7th arm): baseline, auglab_default,
+# 8-method suite (the project notes canonical order + srcsm 7th arm): baseline, auglab_default,
 # synthseg_noEM, synthseg_EM, v26_6_2-alone (train050_val100), srcsm, and OURS as the
 # CURRENT val000/val100 pair.
 runs:

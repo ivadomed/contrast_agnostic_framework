@@ -15,7 +15,7 @@
 # Predict/eval are separate jobs (tamia_rung5_predict_job.sh / tamia_rung5_eval_job.sh); metrics go to ablations/.
 set -euo pipefail
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 T=benchmark/02_tasks
 STATE="${SCRATCH}/_packruns_rung5_retrain_root.txt"
 MODE="${1:?usage: record|submit|queue-post}"

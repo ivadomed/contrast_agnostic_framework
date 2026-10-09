@@ -32,7 +32,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 EVAL = REPO / "benchmark/00_commun_scripts/00_03_evaluate"
 sys.path.insert(0, str(REPO / "benchmark/00_commun_scripts/00_00_utils"))
 sys.path.insert(0, str(EVAL))
-from stat_tests import holm, macro_perm_design, ENUM_UNITS, _unit_totals, fmt_p  # noqa: E402
+from stat_tests import macro_perm_design, ENUM_UNITS, _unit_totals, fmt_p  # noqa: E402
 
 spec = importlib.util.spec_from_file_location("meta_task_heatmap", EVAL / "meta_task_heatmap.py")
 MT = importlib.util.module_from_spec(spec)

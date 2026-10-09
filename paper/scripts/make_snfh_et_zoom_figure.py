@@ -116,5 +116,5 @@ fig.savefig(OUT, dpi=300)
 print("wrote", OUT)
 
 # print the population-level numbers this figure illustrates, for the caption
-print(f"SNFH: n=70, Delta Dice (voronoi->real) = -9.8, p=4.5e-05 (significant worsening)")
-print(f"ET:   n=70, Delta Dice (voronoi->real) = +0.9, p=0.38 (not significant)")
+print("SNFH: n=70, Delta Dice (voronoi->real) = -9.8, p=4.5e-05 (significant worsening)")
+print("ET:   n=70, Delta Dice (voronoi->real) = +0.9, p=0.38 (not significant)")

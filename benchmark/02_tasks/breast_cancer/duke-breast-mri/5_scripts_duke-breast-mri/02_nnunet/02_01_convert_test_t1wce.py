@@ -7,7 +7,7 @@ benchmark/03_archive/ambl/5_scripts_ambl/02_nnunet/02_03_convert_test_malignant.
 
 Source (staged from Synapse syn60868042 via
 benchmark/02_tasks/breast_cancer/duke-breast-mri/0_raw_duke-breast-mri/download_duke.py, run on the
-Vulcan login node per CLAUDE.md -- compute nodes have no internet):
+Vulcan login node per the project notes -- compute nodes have no internet):
   <RAW_STAGE>/DUKE_XXX/DUKE_XXX_000{0..4}.nii.gz   (5-channel MAMA-MIA nnU-Net
                                                      preprocessing: pre-contrast
                                                      + 4 post-contrast DCE phases)
@@ -21,7 +21,7 @@ first post-contrast phase (standard DCE-MRI acquisition order); this script
 checks that mean intra-tumour intensity is higher in _0001 than _0000 (contrast
 enhancement) for every case and reports the count/exceptions rather than
 silently trusting the channel index -- this is the same "verify, don't assume"
-requirement CLAUDE.md flags for orientation.
+requirement the project notes flags for orientation.
 
 Output layout (eval-only convention, same as ambl's malignant test set):
   2_nnUNet_duke-breast-mri/raw/imagesTs_t1wce/duke_XXX_0000.nii.gz
@@ -45,6 +45,7 @@ from __future__ import annotations
 import json
 import shutil
 import sys
+import os
 from pathlib import Path
 from collections import Counter
 
@@ -56,9 +57,9 @@ REPO_ROOT = DATASET_ROOT.parents[3]
 sys.path.insert(0, str(REPO_ROOT / "benchmark" / "00_commun_scripts" / "00_00_utils"))
 from orient import TARGET_AXCODES, reorient_file  # noqa: E402
 
-RAW_STAGE = Path("/scratch/paulh/duke_download/raw")   # login-node download staging area
+RAW_STAGE = Path(os.environ["SCRATCH"]) / "duke_download/raw"   # login-node download staging area
 OUT = DATASET_ROOT / "2_nnUNet_duke-breast-mri" / "raw"
-MANIFEST_IN = Path("/scratch/paulh/duke_download/duke_full_manifest.json")
+MANIFEST_IN = Path(os.environ["SCRATCH"]) / "duke_download/duke_full_manifest.json"
 
 PRECONTRAST_CHAN = "_0000.nii.gz"
 POSTCONTRAST_CHAN = "_0001.nii.gz"   # first post-contrast phase -- verified below, not assumed

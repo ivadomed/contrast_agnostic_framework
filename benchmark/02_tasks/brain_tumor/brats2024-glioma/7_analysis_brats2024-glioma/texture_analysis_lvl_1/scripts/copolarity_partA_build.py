@@ -82,7 +82,6 @@ Run as a CPU job (--gpus 0).
 """
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path
 
@@ -91,7 +90,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-PROJECT = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
+PROJECT = Path(__file__).resolve().parents[7]
 AUGLAB = PROJECT / "sub-workspaces/auglab_workspace/AugLab"
 sys.path.insert(0, str(AUGLAB))
 from auglab.transforms.gpu.fromSeg import _kmeans_1d, _voronoi_region_ids  # noqa: E402

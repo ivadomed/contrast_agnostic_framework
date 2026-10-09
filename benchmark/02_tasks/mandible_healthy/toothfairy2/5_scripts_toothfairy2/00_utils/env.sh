@@ -16,7 +16,7 @@
 # bone against air/soft tissue, enamel against pulp, sinus air against bone. That
 # is deliberately the opposite pole from open-ms lesions / brats tumour
 # sub-regions, and it is the arm the paper's causal-ablation dissociation table
-# needs more of (see CLAUDE.md, "The causal-ablation ladder": the rung-4→5
+# needs more of (see the project notes, "The causal-ablation ladder": the rung-4→5
 # noise-fill→real-fill step is large on texture-defined targets and near-zero on
 # boundary-defined ones — chaos organs is currently the ONLY boundary-defined
 # ladder, so a second, independent one is worth a lot).
@@ -35,7 +35,7 @@
 #
 # LICENSE: CC BY-SA 4.0 (ToothFairy2 challenge, Univ. of Modena and Reggio Emilia
 # + Radboud UMC). Redistributable with attribution + share-alike — so unlike
-# LLD-MMRI (the DUA that helped sink the liver-HCC extension, see CLAUDE.md's
+# LLD-MMRI (the DUA that helped sink the liver-HCC extension, see the project notes'
 # atlas-liver-hcc exclusion), this one is a legitimate future git-annex upload
 # candidate and qualitative figures showing its images are unambiguously fine.
 #

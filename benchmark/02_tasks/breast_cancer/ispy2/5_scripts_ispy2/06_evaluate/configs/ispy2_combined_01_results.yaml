@@ -19,7 +19,7 @@
 # 2026-09-17: duke's columns point at the UNILATERAL-CROP metrics dirs
 # (t1wce_uniap / precontrast_uniap), not the original bilateral ones -- unilateral
 # crop is now the standard and only reported duke evaluation (see
-# benchmark/02_tasks/breast_cancer/duke-breast-mri/.../02_03_derive_unilateral_crop.py and CLAUDE.md's
+# benchmark/02_tasks/breast_cancer/duke-breast-mri/.../02_03_derive_unilateral_crop.py and the project notes'
 # "Breast task" section). The original bilateral tables are archived at
 # benchmark/03_archive/{duke-breast-mri,ispy2}_bilateral_eval_20260917/, not deleted.
 # 2026-09-30: + ispy1 (I-SPY1/MAMA-MIA, 167 pts, t1wce + precontrast, natively

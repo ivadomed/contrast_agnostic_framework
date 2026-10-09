@@ -8,7 +8,7 @@ Find the pure-code (no logic change) ceiling for the network step:
 Run: run_job --gpus 1 --slot 0 --wait -- .venv/bin/python scripts/experiments/profile_compile_modes.py
 """
 from __future__ import annotations
-import os, sys, time, copy
+import os, sys, time
 from pathlib import Path
 import torch
 

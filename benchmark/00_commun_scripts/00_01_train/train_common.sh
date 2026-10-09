@@ -215,7 +215,7 @@ elif [ "${GPUS_PER_FOLD}" = "1" ]; then
         PIDS[0]=$!
     else
         # TRAIN_FOLDS (optional, default "0 1 2"): space-separated fold list. Project
-        # policy is 3 folds only — we never train fold 3 (see CLAUDE.md "FOLD POLICY").
+        # policy is 3 folds only — we never train fold 3 (see the project notes "FOLD POLICY").
         # Override explicitly only for a one-off (e.g. TRAIN_FOLDS="0 1 2 3").
         read -ra _FOLDS <<< "${TRAIN_FOLDS:-0 1 2}"
         _n_folds=${#_FOLDS[@]}

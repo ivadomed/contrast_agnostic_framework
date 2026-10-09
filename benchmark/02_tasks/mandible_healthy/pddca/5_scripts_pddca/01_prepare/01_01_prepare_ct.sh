@@ -10,7 +10,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${HERE}/../00_utils/env.sh"
 cd "${PROJECT_ROOT}"
-PD_STAGE="${PD_STAGE:-${SCRATCH:-/scratch/p/paulh}/pddca}"
+PD_STAGE="${PD_STAGE:-${SCRATCH:-/scratch/${USER:0:1}/${USER}}/pddca}"
 export PDDCA_ZIP_DIR="${PDDCA_ZIP_DIR:-${PD_STAGE}/0_raw}"
 ls "${PDDCA_ZIP_DIR}"/part*.zip >/dev/null 2>&1 || { echo "missing part*.zip in ${PDDCA_ZIP_DIR}" >&2; exit 1; }
 LOG_DIR="${HERE}/logs"; mkdir -p "${LOG_DIR}" "${BIDS_ROOT}"

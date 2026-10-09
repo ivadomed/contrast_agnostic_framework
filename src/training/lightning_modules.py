@@ -1110,7 +1110,6 @@ class MRISegmenterLightning(pl.LightningModule):
                 num_bins=int(self.cfg.model.segmenter.num_bins),
                 num_chunks=int(self.cfg.model.segmenter.num_chunks),
                 dark_threshold=float(self.cfg.model.segmenter.dark_threshold),
-                labels=labels,
                 hist_module=self.hist_module,
                 return_guidance_map=True,
                 gen_version=gen_version,
@@ -1122,7 +1121,6 @@ class MRISegmenterLightning(pl.LightningModule):
                 num_bins=int(self.cfg.model.segmenter.num_bins),
                 num_chunks=int(self.cfg.model.segmenter.num_chunks),
                 dark_threshold=float(self.cfg.model.segmenter.dark_threshold),
-                labels=labels,
                 hist_module=self.hist_module,
                 gen_version=gen_version,
             )

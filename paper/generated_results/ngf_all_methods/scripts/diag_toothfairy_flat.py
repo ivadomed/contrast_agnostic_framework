@@ -1,9 +1,9 @@
 import sys, numpy as np, torch, nibabel as nib
-sys.path.insert(0,"/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/brain_ms/open-ms/7_analysis_open-ms/texture_analysis_lvl_1/scripts")
-from compute_ngf_texture import ngf_map, gradient_3d
+R = __import__("pathlib").Path(__file__).resolve().parents[4]; sys.path.insert(0, str(R / "benchmark/02_tasks/brain_ms/open-ms/7_analysis_open-ms/texture_analysis_lvl_1/scripts"))
+from compute_ngf_texture import ngf_map
 from compute_texture_metrics_openms import erode
 import glob
-f=sorted(glob.glob("/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/mandible_healthy/toothfairy2/1_BIDS_toothfairy2/maxillofacial-toothfairy2/sub-*/anat/*_ct.nii.gz"))[300]
+f=sorted(glob.glob(str(R / "benchmark/02_tasks/mandible_healthy/toothfairy2/1_BIDS_toothfairy2/maxillofacial-toothfairy2/sub-*/anat/*_ct.nii.gz")))[300]
 a=torch.from_numpy(nib.load(f).get_fdata(dtype=np.float32)); print(f.split('/')[-1],a.shape,"min/max/p1/p50/p99",[float(x) for x in (a.min(),a.max(),*torch.quantile(a.flatten()[::5],torch.tensor([.01,.5,.99])))])
 print("n unique values", len(torch.unique(a)), "most common value frac", float((a==torch.mode(a.flatten()).values).float().mean()), "mode",float(torch.mode(a.flatten()).values))
 s=(a-a.mean())/a.std(); fg=a>0.1*torch.quantile(a.flatten()[::5],.99); m=erode(fg,3)

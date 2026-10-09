@@ -6,7 +6,7 @@
 # Cluster differences are expressed as env overrides only — run_job.sh / predict_common.sh
 # are never forked. Mirrors scripts/cluster/tamia_env_cirrmri-liver_chaoscross.sh's pattern.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 
 # KIDNEY-T2W's own paths (inputs for cross-mode predict + this dataset's own output tree).
 # METRICS_ROOT is intentionally left at common_env.sh's default (under $PROJECT,
@@ -31,7 +31,7 @@ export CHAOS_PREDICTIONS_ROOT="$CHAOS_DATASET_ROOT/8_results_chaos/01_prediction
 export CHAOS_NNUNET_RAW="$CHAOS_DATASET_ROOT/2_nnUNet_chaos/raw"
 export CHAOS_NNUNET_PREPROCESSED="$CHAOS_DATASET_ROOT/2_nnUNet_chaos/preprocessed"
 
-# run_job overrides for tamia (whole-node H100, see CLAUDE.md "TamIA" section).
+# run_job overrides for tamia (whole-node H100, see the project notes "TamIA" section).
 export RUN_JOB_ACCOUNT="aip-jcohen"
 export RUN_JOB_GPU_TYPE="h100"
 

@@ -36,7 +36,7 @@ tasks:
     dataset: totalseg-pelvic
     config: "${PROJECT_ROOT}/benchmark/02_tasks/pelvis_healthy/totalseg-pelvic/5_scripts_totalseg-pelvic/06_evaluate/configs/totalseg-pelvic_combined_01_results.yaml"
   # atlas-liver-hcc REMOVED 2026-09-02 -- excluded from the paper and all
-  # meta-evaluation/aggregation. See CLAUDE.md "Atlas-Liver-HCC exclusion
+  # meta-evaluation/aggregation. See the project notes "Atlas-Liver-HCC exclusion
   # (2026-09-02)" for the full rationale (LLD-MMRI redistribution/git-annex
   # block, outphase in-domain ambiguity, ATLAS's own CE-T1w phase mix). The
   # dataset itself moved to benchmark/03_archive/atlas-liver-hcc (+ its two

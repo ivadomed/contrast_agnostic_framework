@@ -9,7 +9,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
 
-PACK_DIR="${PACK_DIR:-/scratch/p/paulh/ispy2/_packruns/ladder_t2w_$(date +%Y%m%d_%H%M%S)}"
+PACK_DIR="${PACK_DIR:-/scratch/${USER:0:1}/${USER}/ispy2/_packruns/ladder_t2w_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "${PACK_DIR}"
 echo "[tamia-pack] PACK_DIR=${PACK_DIR}"
 

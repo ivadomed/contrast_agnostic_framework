@@ -21,7 +21,7 @@
 #    apparent winner. Concretely, mandible-only: Ours beats synthseg_EM by +0.6 on `all`,
 #    but is 0.2 BEHIND it on OOD alone (Ours 76.9/56.4 vs EM 76.6/57.1). The +0.6 is bought
 #    entirely by in-domain (98.0 vs 96.0), which is not the paper's claim.
-#    CLAUDE.md is explicit that cross-contrast generalization IS the headline result, and the
+#    the project notes is explicit that cross-contrast generalization IS the headline result, and the
 #    headline significance test already excludes the training contrast — this table matches
 #    that estimand so the two cannot drift apart.
 #
