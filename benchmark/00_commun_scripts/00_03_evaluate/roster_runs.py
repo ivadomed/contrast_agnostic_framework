@@ -4,13 +4,13 @@ Used by write_configs_from_roster.py and ladder_from_roster.py so configs/ladder
 from __future__ import annotations
 from pathlib import Path
 
-# Canonical headline order (CLAUDE.md "7-method suite"): the 6 usual methods + the DualVal val100 mirror of OURS.
+# Canonical headline order (the project notes "7-method suite"): the 6 usual methods + the DualVal val100 mirror of OURS.
 HEADLINE_METHODS = [
     "baseline", "synthseg_noEM", "synthseg_EM", "auglab_default", "srcsm",
     "auglabAug_v26_6_2_train050_val000", "auglabAug_v26_6_2_train050_val100",
 ]
 OURS = "auglabAug_v26_6_2_train050_val000"
-# Causal-ablation ladder (CLAUDE.md): rungs 2-5 live in <contrast>/ablations/, rungs 1/6/7 in the headline dir.
+# Causal-ablation ladder (project convention): rungs 2-5 live in <contrast>/ablations/, rungs 1/6/7 in the headline dir.
 LADDER = [
     ("baseline (floor)", "— (no augmentation at all)", "baseline", False),
     ("+kmeans", "+ K-means intensity clustering", "baseline_kmeans", True),

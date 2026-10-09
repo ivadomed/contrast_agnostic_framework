@@ -92,16 +92,18 @@ benchmark/
   01_commun_results/     cross-dataset comparison tables, incl. the headline task-level heatmap
   02_tasks/<task>/<dataset>/   one folder per benchmark dataset, grouped by anatomy/pathology
   03_archive/            excluded or superseded datasets, kept for history
-scripts/                 cluster job submission (run_job), venv setup, cross-cutting tooling
-sub-workspaces/          AugLab (external GPU augmentation library this method builds on)
-paper/                   CVPR paper source
+scripts/                 cluster job submission (run_job), venv setup, cross-dataset evaluation drivers, utilities
+  legacy_synthesis/      the earlier generator/segmenter pipeline (v1-v28), kept for reference
+tests/                   unit tests for src/ (run in CI with the benchmark tests)
+docs/readme/             figures and video used by this README
+sub-workspaces/          SRCSM augmentation port for AugLab (AugLab itself is installed separately, see below)
 ```
 
 Every dataset under `benchmark/02_tasks/` follows the same structure — raw data, BIDS, nnU-Net
 conversion, splits, pipeline scripts, checkpoints, results, tests — so all datasets train, predict,
 evaluate and aggregate identically. This is deliberate: it's what makes the numbers above directly
-comparable across 8 completely different anatomical structures. See `CLAUDE.md` for the full
-convention if you're adding a new dataset or method.
+comparable across 8 completely different anatomical structures. See
+`benchmark/00_commun_scripts/README.md` for the full convention if you're adding a new dataset or method.
 
 ## Installation
 
@@ -156,10 +158,15 @@ layout and the canonical script-numbering convention across every dataset):
 ```
 
 **This project runs on shared HPC clusters (Vulcan / TamIA / Killarney via the Digital Research
-Alliance of Canada).** All heavy compute goes through Slurm, never a login node — see `CLAUDE.md`
-for cluster-specific submission, storage and GPU policy if you're running this on one of them.
+Alliance of Canada).** All heavy compute goes through Slurm, never a login node — see the Alliance
+documentation (https://docs.alliancecan.ca) for submission, storage and GPU policy if you're running this
+on one of them.
 
 ## Citation
 
-Paper source and build instructions are under `paper/`. Citation details will be added once
-published.
+Citation details will be added once the paper is published.
+
+## License
+
+The code is released under the MIT License (see `LICENSE`). The benchmark datasets are not
+redistributed here; each is subject to its own provider's terms (see the dataset READMEs).

@@ -6,7 +6,7 @@
 #   source benchmark/02_tasks/abdomen_healthy/chaos/5_scripts_chaos/00_utils/env_t2spir.sh
 #   source scripts/cluster/tamia_env_chaos.sh
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 CHAOS_SCRATCH="$SCRATCH/chaos"
 
 export nnUNet_raw="$CHAOS_SCRATCH/2_nnUNet_chaos/raw"

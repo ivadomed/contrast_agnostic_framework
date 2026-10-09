@@ -10,7 +10,7 @@
 set -uo pipefail
 MODE="${1:?gpu|cpu}"; : "${ROOT:?}"
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 source "${ROOT}/RUN_IDS.env"
 export SKIP="onharmony brats"
 FOVDIR="${ROOT}/fovcrop"

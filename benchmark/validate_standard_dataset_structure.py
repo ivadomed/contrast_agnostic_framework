@@ -34,7 +34,7 @@ Naming rules:
   - Script files:    NN_NN_name.ext   (both parts two-digit)
   - 00_utils/ is exempt from file naming rules (config/helper dir)
   - *Trainers.py files are exempt (nnU-Net registration shims must keep this
-    exact name for recursive_find_python_class discovery — see CLAUDE.md)
+    exact name for recursive_find_python_class discovery — see the project notes)
   - No unnumbered items at dataset root or inside 5_scripts_*/
 
 Cross-dataset shared code lives in benchmark/00_commun_scripts/ — it is NOT a
@@ -93,7 +93,7 @@ REQUIRED_NNUNET_SUBDIRS   = {"raw", "preprocessed"}
 # predict/eval pipeline at all, e.g. healthy-spine-tum's externally-imported
 # results) legitimately rebases the whole block down by 1. These are advisory
 # checks (WARN, not hard-fail) since real exceptions exist and more may show
-# up that aren't foreseen here -- see CLAUDE.md's "How experiments work".
+# up that aren't foreseen here -- see the project notes' "How experiments work".
 EVAL_ROLE_PATTERNS = {
     "shim":          re.compile(r"^06_(\d{2})_evaluate(_\w+)?\.py$"),
     "evaluate_run":  re.compile(r"^06_(\d{2})_(evaluate_run|evaluate_own_run|evaluate_testset|evaluate_\w+_run)\b"),
@@ -275,7 +275,7 @@ def validate_dataset(ds_path: Path) -> list[str]:
                 if f.suffix in DATA_EXTS:
                     continue
                 # nnU-Net trainer registration shims must keep their exact class-derived
-                # name (recursive_find_python_class scans by filename) — see CLAUDE.md.
+                # name (recursive_find_python_class scans by filename) — see the project notes.
                 if f.name.endswith("Trainers.py"):
                     continue
                 if not SCRIPT_FILE_RE.match(f.name):

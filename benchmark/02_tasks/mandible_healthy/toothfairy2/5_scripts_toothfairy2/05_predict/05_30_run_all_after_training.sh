@@ -12,7 +12,7 @@
 #   5. build the causal-ablation ladder table
 #
 # Safe to re-run: every stage skips work that already exists. Ladder-only runs are
-# routed to the `ablations/` metrics subdir via METRICS_SUBDIR, per CLAUDE.md's
+# routed to the `ablations/` metrics subdir via METRICS_SUBDIR, per the project notes'
 # convention that non-headline result sets get their own subdir.
 #
 # REQUIRES (run ON tamia): env.sh + scripts/cluster/tamia_env_toothfairy2.sh sourced.

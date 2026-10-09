@@ -3,7 +3,7 @@
 ispy1 cross-dataset (ISPY2 T1WCE-trained) causal-ablation ladder on the I-SPY1
 `t1wce` test item (167 MAMA-MIA-expert-masked cases, natively unilateral -- see
 02_nnunet/02_01_convert_test.py). Mirrors duke-breast-mri's 06_1X ladder scripts.
-SAME-contrast / cross-DATASET arm (t1wce-trained model on I-SPY1 t1wce) -- NOT held-out-contrast evidence; supplementary only, never pooled into an OOD bucket (CLAUDE.md ladder gotcha).
+SAME-contrast / cross-DATASET arm (t1wce-trained model on I-SPY1 t1wce) -- NOT held-out-contrast evidence; supplementary only, never pooled into an OOD bucket (the project notes ladder gotcha).
 Layout: rungs 1 and 6 (baseline, +AugLab val000) live at <root>/t1wce/<run_id>;
 rungs 2-5 at <root>/ablations/t1wce/<run_id> (06_01_evaluate_run.sh LADDER=1).
 

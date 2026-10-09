@@ -2,7 +2,7 @@
 # Whole-node PREDICT job body for the rung-5 retrains (chaos t2spir, on-harmony T1w, brats t2w).
 # Submitted by tamia_pack_rung5_retrain.sh queue-post (ROOT exported; dependency/time on the sbatch line).
 # (1) refuse unless every run has checkpoint_best + checkpoint_final for folds 0-2, (2) RECORD each run's
-# predict wrapper into its OWN dataset-qualified pack dir (never share one -- see CLAUDE.md PACK_DIR rule),
+# predict wrapper into its OWN dataset-qualified pack dir (never share one -- see the project notes PACK_DIR rule),
 # (3) run the 9 fold-commands pinned round-robin over the 4 GPUs, (4) AUDIT per-item prediction counts against
 # the OLD rung-5 runs' counts (measured 2026-10-03 on Vulcan).
 #SBATCH --account=aip-jcohen
@@ -13,7 +13,7 @@
 set -uo pipefail
 : "${ROOT:?}"
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 source "${ROOT}/RUN_IDS.env"
 T=benchmark/02_tasks
 

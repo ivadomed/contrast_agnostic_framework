@@ -7,7 +7,7 @@
 # this just launches the wrappers in sequence (sequential avoids GPU contention on the set_slot
 # backend; harmless on Slurm, where each wrapper just fires its fold jobs and returns).
 #
-# Fold policy (CLAUDE.md): caps at 3 folds — exports TRAIN_FOLDS="0 1 2" by default so every wrapper
+# Fold policy (project convention): caps at 3 folds — exports TRAIN_FOLDS="0 1 2" by default so every wrapper
 # inherits it. Override by exporting TRAIN_FOLDS before sourcing.
 #
 # Optional first arg: --start-from <substring>  → skip wrappers until one matches (resume a suite).
@@ -17,7 +17,7 @@
 #   source "${PROJECT_ROOT}/benchmark/00_commun_scripts/00_01_train/run_all_train_common.sh" "$@"
 set -euo pipefail
 
-: "${TRAIN_FOLDS:=0 1 2}"; export TRAIN_FOLDS      # 3-fold cap (see CLAUDE.md "FOLD POLICY")
+: "${TRAIN_FOLDS:=0 1 2}"; export TRAIN_FOLDS      # 3-fold cap (see the project notes "FOLD POLICY")
 
 START_FROM=""
 if [ "${1:-}" = "--start-from" ]; then START_FROM="${2:?--start-from needs a value}"; shift 2; fi

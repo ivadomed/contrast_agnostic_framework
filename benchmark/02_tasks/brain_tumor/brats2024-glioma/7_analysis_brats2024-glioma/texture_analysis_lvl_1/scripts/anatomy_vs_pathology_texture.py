@@ -136,7 +136,7 @@ for k, m in res.items():
         L.append(f"| {r.contrast} | {r.region} | {r.n:.0f} | {r.PC:.2f} | {r.AC:.2f} | {r.SI:.2f} | {r.pull:.2f} | {r.mantel_rho:+.2f} | {r.mantel_p:.3f} |")
     P = preds[k]
     L.append(f"\n**P1** SNFH SI t1n/t1c mean {P['P1_low']:.2f} vs t2w/t2f {P['P1_high']:.2f} -> {'supported' if P['P1_ok'] else 'NOT supported'}")
-    L.append(f"\n**P2** SNFH Mantel rho: " + ", ".join(f"{c} {P['P2_rho'][c]:+.2f} (p={P['P2_p'][c]:.3f})" for c in CONTRASTS) + f" -> {'all positive' if P['P2_ok'] else 'NOT all positive'}")
+    L.append("\n**P2** SNFH Mantel rho: " + ", ".join(f"{c} {P['P2_rho'][c]:+.2f} (p={P['P2_p'][c]:.3f})" for c in CONTRASTS) + f" -> {'all positive' if P['P2_ok'] else 'NOT all positive'}")
     L.append("\n**P3** delta vs SI (36 OOD cells):\n\n| SI used | Spearman rho | p | pooled Kendall S (12 rows) | pooled p |\n|---|---|---|---|---|")
     for kk in ("SI_train", "SI_eval", "SI_min"):
         rho, p, S, nr, pp = P[kk]

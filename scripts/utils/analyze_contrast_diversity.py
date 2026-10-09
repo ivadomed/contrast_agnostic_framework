@@ -95,7 +95,7 @@ for subj in subjects_5:
 
 all_scores = [r["inv_score"] for r in all_results]
 n_t2w = sum(1 for s in all_scores if s < 0)
-print(f"\nSUMMARY (Part 2):")
+print("\nSUMMARY (Part 2):")
 print(f"  Total images analyzed: {len(all_scores)}")
 print(f"  Inversion score range: [{min(all_scores):.4f}, {max(all_scores):.4f}]")
 print(f"  Mean inversion score: {np.mean(all_scores):.4f} ± {np.std(all_scores):.4f}")
@@ -244,7 +244,7 @@ bins = np.linspace(inv_scores_sim.min(), inv_scores_sim.max(), 21)
 hist_vals, bin_edges = np.histogram(inv_scores_sim, bins=bins)
 print("ASCII histogram of inversion scores (simulation):")
 print(f"  x-axis: [{inv_scores_sim.min():.4f}, {inv_scores_sim.max():.4f}]")
-print(f"  (negative = T2w-like, positive = T1w-like)")
+print("  (negative = T2w-like, positive = T1w-like)")
 print()
 max_bar = 40
 for j in range(len(hist_vals)):

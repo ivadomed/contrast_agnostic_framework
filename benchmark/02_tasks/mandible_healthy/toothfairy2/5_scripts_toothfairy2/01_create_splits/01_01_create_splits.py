@@ -29,7 +29,7 @@ STRATIFICATION: COHORT, THEN DENTITION BURDEN
    method effect. Same evenly-spaced-rank approach ambl / atlas-liver-hcc / ispy2
    use for tumour burden.
 
-FOLDS: 3, per CLAUDE.md's permanent fold policy (folds 0 1 2 only). This is a new
+FOLDS: 3, per the project notes' permanent fold policy (folds 0 1 2 only). This is a new
 split, so it emits exactly 3 — no legacy 4th fold that nobody will ever train.
 
 OUTPUTS (4_splits_toothfairy2/)
@@ -177,7 +177,7 @@ def main() -> None:
     lines = ["# ToothFairy2 splits", "",
              f"- cases: {len(cases)}  test: {len(test)}  train-pool: {len(pool)}",
              f"- excluded (no mandible): {len(excluded)} {excluded if excluded else ''}",
-             f"- folds: {N_FOLDS} (CLAUDE.md fold policy: 0 1 2 only)",
+             f"- folds: {N_FOLDS} (the project notes fold policy: 0 1 2 only)",
              f"- stratifier: cohort (F/P) then lower-teeth voxel count; "
              f"median burden test={med(test):.0f} "
              f"pool={med(pool):.0f}", "",

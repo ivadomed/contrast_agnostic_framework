@@ -6,7 +6,7 @@ package's training/nnUNetTrainer/ dir, so this file must be copied there after e
 fresh venv/nnunetv2 install, ON EVERY CLUSTER (Vulcan and TamIA separately):
   cp benchmark/02_tasks/pancreas_disease/pansegdata/5_scripts_pansegdata/02_nnunet/PANSEGDATATrainers.py \
      .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/
-(The venv-setup script auto-discovers *Trainers.py under benchmark/02_tasks; see CLAUDE.md.)
+(The venv-setup script auto-discovers *Trainers.py under benchmark/02_tasks; see the project notes.)
 
 It imports the real implementations from the `pansegdata` package
 (PROJECT_ROOT/benchmark/02_tasks/pancreas_disease/pansegdata/5_scripts_pansegdata/), resolved via the

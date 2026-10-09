@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore")
 sys.path.insert(0, str(os.path.dirname(os.path.abspath(__file__))))
 import bigfeat_classifier as bc  # noqa: E402
 import bigfeat_classifier_v2 as bv  # noqa: E402
-from radiomics_common import DATA, PLOTS, TABLES, prune_corr  # noqa: E402
+from radiomics_common import DATA, prune_corr  # noqa: E402
 
 K = int(os.environ.get("BF_K", 30))
 NJ = int(os.environ.get("BF_NJOBS", 8))

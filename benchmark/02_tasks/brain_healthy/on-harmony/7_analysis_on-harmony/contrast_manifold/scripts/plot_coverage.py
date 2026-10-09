@@ -37,7 +37,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.spatial import ConvexHull, Delaunay
+from scipy.spatial import Delaunay
 from scipy.stats import gaussian_kde
 from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer

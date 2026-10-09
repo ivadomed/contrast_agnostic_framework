@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Which array is rotated? For same-shape T1WCE/T2W pairs (both reoriented to LPS with their own image affine) compute the mutual information between the
 T1 IMAGE and the T2 IMAGE as stored and with the T2 image flipped along A-P / L-R / both (MI is sequence-agnostic, so it can register T1 to T2).
-Cross-tab with the mask-based best variant from 02_06_pair_flip_test (pair_flip_test.tsv):
+Cross-tab with the mask-based best variant from 02_06_pair_flip_check (pair_flip_test.tsv):
   image best == mask best != orig  -> T2 image AND mask are rotated together relative to T1 (a header/orientation problem of the T2 acquisition)
   image best == orig, mask best != orig -> only the T2 MASK is misplaced relative to its own image (a labelling problem)
 Writes 9_tests_pansegdata/t2_vs_t1_mi.tsv and prints the cross-tab per center."""

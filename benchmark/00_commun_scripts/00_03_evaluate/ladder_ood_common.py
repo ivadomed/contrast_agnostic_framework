@@ -14,7 +14,7 @@ started to drift -- Open-MS's copy in particular had fallen out of date with a
 different rung set, no HD95, and no OOD/in-domain split, which is what produced
 a transcription error in the paper's causal-ablation table (an HD95 delta for
 one task was accidentally copied from a different task's Dice column). Per
-CLAUDE.md's shared-layer rule ("if you catch yourself writing eval/aggregate
+the project notes' shared-layer rule ("if you catch yourself writing eval/aggregate
 logic inline, stop -- it belongs in 00_commun_scripts"), this is that shared
 layer; per-dataset scripts should now be thin wrappers that only declare
 METRICS_ROOT / IN_DOMAIN / OOD_CONTRASTS / RUNGS and call run_ladder() (or
@@ -48,7 +48,7 @@ from stat_tests import holm, wilcoxon_p, fmt_p  # noqa: E402 — shared math, se
 from eval_folds import filter_fold_dirs  # noqa: E402 — single source of truth, see eval_folds.py
 
 # ── plot styling, matched to the paper's fig:ladder ───────────────────────────
-# (paper/scripts/make_per_contrast_curves.py). The per-dataset plots below and
+# (the paper's make_per_contrast_curves.py (kept outside this repo)). The per-dataset plots below and
 # the paper figure now read the same way: only the real-fill step is coloured by
 # significance, everything else is neutral context, and the pooled mean carries
 # the ladder's own fill-swap p-value. Keep the two in sync when either changes.
@@ -341,7 +341,7 @@ def _fill_swap_significance(pairs_by_contrast):
     tab:dissociation does over its 8 rows. Expect this figure to read as more
     significant than the paper's for the same task (e.g. CHAOS T1in: 1.7e-4
     here vs 6.9e-4 corrected) -- that is the correction, not a disagreement.
-    paper/scripts/compute_dissociation_pvalues.py owns the corrected numbers.
+    the paper's compute_dissociation_pvalues.py (kept outside this repo) owns the corrected numbers.
 
     2026-09-21: the pooled test now merges same-PATIENT pairs across contrasts first
     (see _merge_patient_pairs) — a case id recurring in two of this ladder's OOD

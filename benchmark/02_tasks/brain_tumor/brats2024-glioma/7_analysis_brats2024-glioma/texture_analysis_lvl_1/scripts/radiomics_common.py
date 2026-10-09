@@ -47,7 +47,6 @@ def _sitk(a, spacing=(1.0, 1.0, 1.0)):
 
 
 def run_ex(ex, z, mask, prefix):
-    import SimpleITK as sitk
     img = _sitk(z.astype(np.float32))
     m = _sitk(mask.astype(np.uint8))
     r = ex.execute(img, m, label=1)

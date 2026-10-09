@@ -6,7 +6,7 @@
 # — just skip_sub_parc_prob=1.0 instead of the headline's 0.4, i.e. Voronoi
 # sub-parcellation turned off). Isolates Voronoi's contribution on the REAL
 # mechanism (the NoiseFill-based rungs isolate the same step on a fill
-# mechanism the paper doesn't otherwise use). Per CLAUDE.md this is an EXTRA
+# mechanism the paper doesn't otherwise use). Per the project notes this is an EXTRA
 # arm, not a replacement for the standard 6-method suite.
 #
 # Uses nnUNetTrainerCHAOSAugLabDualVal: ONE training run produces BOTH

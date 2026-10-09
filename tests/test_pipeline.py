@@ -63,7 +63,7 @@ def test_full_pipeline():
     
     # Generate Target Histogram and Permutations
     print("1. Generating unified targets...")
-    target_hist, perms = generate_unified_targets(
+    target_hist, perms, _ = generate_unified_targets(
         input_images=dummy_input,
         num_bins=num_bins,
         num_chunks=num_chunks,

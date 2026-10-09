@@ -47,8 +47,8 @@ DATASET_ROOT = Path(os.environ["DATASET_ROOT"]) if "DATASET_ROOT" in os.environ 
     Path(__file__).resolve().parents[2]
 SPLITS_ROOT = DATASET_ROOT / "4_splits_totalseg-pelvic"
 
-CT_ZIP = Path(os.environ.get("TOTALSEG_CT_ZIP", "/scratch/paulh/totalseg_preflight/ct_full.zip"))
-MRI_ZIP = Path(os.environ.get("TOTALSEG_MRI_ZIP", "/scratch/paulh/totalseg_preflight/mri.zip"))
+CT_ZIP = Path(os.environ.get("TOTALSEG_CT_ZIP", os.path.expandvars("$SCRATCH/totalseg_preflight/ct_full.zip")))
+MRI_ZIP = Path(os.environ.get("TOTALSEG_MRI_ZIP", os.path.expandvars("$SCRATCH/totalseg_preflight/mri.zip")))
 
 
 def _case_ids_from_zip(local_path: Path, url: str) -> list[str]:

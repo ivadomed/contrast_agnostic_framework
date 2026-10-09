@@ -10,6 +10,7 @@ Writes:
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 import matplotlib
@@ -19,7 +20,7 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 
-PROJECT = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
+PROJECT = Path(__file__).resolve().parents[7]
 DS = PROJECT / "benchmark" / "02_tasks" / "brain_tumor" / "brats2024-glioma"
 LABELS_DIR = DS / "2_nnUNet_brats2024-glioma" / "raw" / "Dataset051_BraTS2024GliomaT1n" / "labelsTr"
 ANALYSIS_DIR = DS / "7_analysis_brats2024-glioma" / "texture_analysis_lvl_1"
@@ -29,7 +30,7 @@ OUT_PLOTS = ANALYSIS_DIR / "outputs" / "plots"
 sys.path.insert(0, str(PROJECT / "benchmark/00_commun_scripts/00_00_utils"))
 from stat_tests import wilcoxon_p  # noqa: E402
 
-SCRATCH_ROOT = Path("/scratch/paulh/brats_intervention")
+SCRATCH_ROOT = Path(os.environ["SCRATCH"]) / "brats_intervention"
 PREDS_ROOT = SCRATCH_ROOT / "preds"
 SNFH = 2
 

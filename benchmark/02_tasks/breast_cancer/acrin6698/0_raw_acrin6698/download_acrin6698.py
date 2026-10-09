@@ -31,7 +31,7 @@ Phase 2 downloads the chosen series as NBIA zips and unpacks them under
 Run on the VULCAN LOGIN NODE (compute nodes have no internet), in background,
 as 3 shards (~1 min/patient/process), then merge:
   for i in 0 1 2; do nohup .venv/bin/python .../download_acrin6698.py --shard-index $i --shard-count 3 \
-    > /scratch/paulh/acrin6698_download/download_shard$i.log 2>&1 & done
+    > $SCRATCH/acrin6698_download/download_shard$i.log 2>&1 & done
   .venv/bin/python .../download_acrin6698.py --merge
 """
 from __future__ import annotations
@@ -42,10 +42,11 @@ import re
 import time
 import urllib.request
 import zipfile
+import os
 from pathlib import Path
 
 API = "https://services.cancerimagingarchive.net/nbia-api/services/v1"
-STAGE = Path("/scratch/paulh/acrin6698_download")
+STAGE = Path(os.environ["SCRATCH"]) / "acrin6698_download"
 SERIES_DIR = STAGE / "series"
 RAW = STAGE / "raw"
 SELECTION = STAGE / "t0_selection.json"   # merged view; shards write t0_selection_shard<i>.json

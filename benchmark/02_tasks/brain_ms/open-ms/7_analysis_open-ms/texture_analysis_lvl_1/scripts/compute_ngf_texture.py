@@ -60,7 +60,7 @@ sys.path.insert(0, str(THIS_DIR))
 from compute_texture_metrics_openms import (   # reuse I/O + ROI discovery, UNCHANGED
     list_source_keys, foreground_mask, _load, _load_lesion, erode,
     CONTRASTS, GENERATED_METHODS, CONTROL_METHODS, GAMMA_VALUES, make_control,
-    DEFAULT_GENERATED, PROJECT_ROOT,
+    DEFAULT_GENERATED,
 )
 
 EPS = 1e-5          # numerical stability only, NOT an edge-sensitivity knob (see docstring)

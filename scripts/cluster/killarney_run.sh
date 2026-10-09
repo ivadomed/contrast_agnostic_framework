@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # General-purpose runner for Killarney (directly reachable, no relay needed unlike
-# TamIA), always cd'd into the repo (see CLAUDE.md: remote commands should carry
+# TamIA), always cd'd into the repo (see the project notes: remote commands should carry
 # an explicit cd rather than relying on the login shell's default directory).
 #
 # Mirrors scripts/cluster/tamia_run.sh: gives every Killarney call the same fixed

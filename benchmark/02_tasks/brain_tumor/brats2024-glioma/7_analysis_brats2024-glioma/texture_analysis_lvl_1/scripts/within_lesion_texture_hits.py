@@ -318,7 +318,7 @@ def main() -> int:
     for (qn, hn, nn_), (qr, hr, nr_) in zip(q_noise, q_real):
         lines.append(f"| Q{qn} | {hn:.4f} | {nn_} | {hr:.4f} | {nr_} |")
     lines.append("")
-    lines.append(f"Full per-patient table: `outputs/tables/within_lesion_texture_hits_per_patient.csv`")
+    lines.append("Full per-patient table: `outputs/tables/within_lesion_texture_hits_per_patient.csv`")
     (TABLE_DIR / "within_lesion_texture_hits.md").write_text("\n".join(lines) + "\n")
     log.info("Wrote table.")
 

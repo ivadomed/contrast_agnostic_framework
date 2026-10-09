@@ -9,7 +9,7 @@ this was caught and fixed):
   cp benchmark/02_tasks/mandible_healthy/toothfairy2/5_scripts_toothfairy2/02_nnunet/ToothFairy2Trainers.py \
      .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/
 
-(See CLAUDE.md's "registration shims" section — same mechanism as
+(See the project notes' "registration shims" section — same mechanism as
 BraTS2024GliomaTrainers.py / CHAOSTrainers.py / OnHarmonyTrainers.py /
 AMBLTrainers.py.)
 

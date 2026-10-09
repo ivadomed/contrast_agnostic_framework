@@ -16,7 +16,7 @@
 # the SAME 42 patients imaged in both modalities. That means the CT-vs-MR
 # comparison is a clean modality contrast with cohort and annotator held fixed —
 # not two different datasets glued together, which is the failure mode that
-# helped sink the liver-HCC extension (see CLAUDE.md's atlas-liver-hcc exclusion).
+# helped sink the liver-HCC extension (see the project notes' atlas-liver-hcc exclusion).
 #
 # SHARED CLASS: `mandible` only.
 # ⚠️ CORRECTED 2026-09-17: HaN-Seg's `Bone_Mandible` **EXCLUDES the teeth** (Brouwer

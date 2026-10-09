@@ -44,7 +44,7 @@ def get_freesurfer_label_path(sub: str, ses: str) -> Path:
     if direct.exists():
         return direct
     # Fallback: look in data/splits/synthseg_labels (any fold)
-    for fold_dir in (ROOT / "data/splits/synthseg_labels").glob("fold_*"):
+    for fold_dir in (PROJECT_ROOT / "data/splits/synthseg_labels").glob("fold_*"):
         for f in fold_dir.glob(f"{sub}_{ses}_*.nii.gz"):
             return f
     return None

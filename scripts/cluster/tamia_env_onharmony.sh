@@ -6,7 +6,7 @@
 #   source benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony/00_utils/env_t2w.sh
 #   source scripts/cluster/tamia_env_onharmony.sh
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 ONHARMONY_SCRATCH="$SCRATCH/on-harmony"
 
 export nnUNet_raw="$ONHARMONY_SCRATCH/2_nnUNet/raw"

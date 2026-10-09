@@ -28,7 +28,7 @@
 #   sbatch --dependency=afterany:<trainjob> --export=ALL,...,TF2_ONLY="ours rung5" 05_31_...
 #
 # ⚠️ A run whose training has NOT finished is SKIPPED, loudly, not predicted from a
-# partial checkpoint — CLAUDE.md's stale-RUN_ID / partial-metrics lesson (a TamIA pack
+# partial checkpoint — the project notes' stale-RUN_ID / partial-metrics lesson (a TamIA pack
 # once silently truncated 14/48 fold-metrics and it was only caught by a human noticing
 # "OURS looks worse"). Every fold is required to have checkpoint_final.pth AND every
 # predict dir is verified to hold EXACTLY the expected case count before evaluation.
@@ -185,7 +185,7 @@ echo "[pp] predict phase complete"
 # ── Phase 3+4: verify exact counts, then evaluate ───────────────────────────
 # Evaluation calls the evaluator PYTHON DIRECTLY rather than going through
 # 06_01_evaluate_run.sh. Those wrappers dispatch via run_job -> sbatch, i.e. a NESTED
-# job submission from inside this compute node, which CLAUDE.md records as unreliable
+# job submission from inside this compute node, which the project notes records as unreliable
 # on TamIA (CPU-only submission there has failed and succeeded on identical scripts).
 # Same reason ispy2/ambl's 05_20 evaluates inline. The metrics layout written here is
 # byte-identical to what the wrappers produce, so aggregation is unaffected.
@@ -216,9 +216,13 @@ for row in "${SELECTED[@]}"; do
   done
 done
 
-echo "[pp] ==== PHASE 3+4b: hanseg CT (CROSS-MODALITY), mandible union ===="
+echo "[pp] ==== PHASE 3+4b: hanseg CT (CROSS-MODALITY), mandible only ===="
+# Mandible-only scoring is the standard (HaN-Seg's Bone_Mandible excludes the teeth, see
+# hanseg 06_03_eval_mandible_only.sh): the raw 3-class prediction is scored with label 1 =
+# mandible, written to the same mandible_only/ tree 06_03 uses. The retired union merge is in
+# benchmark/03_archive/toothfairy2_mandible_superseded_eval_20260918/.
 HS_PRED=/scratch/p/paulh/hanseg/8_results/01_predictions/toothfairy2_model/cbct
-HS_METRICS=/scratch/p/paulh/hanseg/8_results/02_metrics/toothfairy2_model/cbct
+HS_METRICS=/scratch/p/paulh/hanseg/8_results/02_metrics/toothfairy2_model/cbct/mandible_only
 for row in "${SELECTED[@]}"; do
   IFS=: read -r TOK OWNW HSW RID CAT SUB <<< "${row}"
   for F in 0 1 2; do
@@ -232,11 +236,8 @@ for row in "${SELECTED[@]}"; do
     EXP=${HS_N[$IT]}
     n=$(find "$D" -name '*.nii.gz' 2>/dev/null | wc -l)
     if [ "$n" != "$EXP" ]; then echo "[pp] BAD HANSEG COUNT ${n}/${EXP}: $D" >&2; fail=1; continue; fi
-    M="${D}_mandible_union"
-    "$PY" "${HS_DIR}/05_predict/05_20_merge_mandible_union.py" --pred_dir "$D" --out_dir "$M" >/dev/null 2>&1 \
-      || { echo "[pp] union merge FAILED ${RID} fold${F} ${IT}" >&2; fail=1; continue; }
     OUT="${HS_METRICS}${SUB:+/${SUB}}/${CAT}_${RID}/fold${F}"; mkdir -p "$OUT"
-    "$PY" "${HS_DIR}/06_evaluate/06_00_evaluate.py" --pred_dir "$M" --gt_dir "${HS_RAW}/labelsTs_ct" \
+    "$PY" "${HS_DIR}/06_evaluate/06_00_evaluate.py" --pred_dir "$D" --gt_dir "${HS_RAW}/labelsTs_ct" \
       --label_map '{"mandible": [1, 1]}' --name "${IT}" \
       --out_csv "${OUT}/${IT}_metrics.csv" --workers 6 > "${OUT}/${IT}_eval.log" 2>&1 \
       || { echo "[pp] hanseg eval FAILED ${RID} fold${F} ${IT}" >&2; fail=1; continue; }

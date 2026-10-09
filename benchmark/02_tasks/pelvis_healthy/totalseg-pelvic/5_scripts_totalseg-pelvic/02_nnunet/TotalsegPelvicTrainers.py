@@ -4,7 +4,7 @@ Registration shim — makes totalseg-pelvic custom trainers discoverable by nnU-
 nnU-Net's recursive_find_python_class() only searches inside the installed nnunetv2
 package's training/nnUNetTrainer/ dir, so this file must be copied there after every
 fresh venv/nnunetv2 install, ON EVERY CLUSTER (Vulcan and TamIA separately — see
-CLAUDE.md's "registration shims" section; same mechanism as AutoPETTrainers.py /
+the project notes' "registration shims" section; same mechanism as AutoPETTrainers.py /
 CHAOSTrainers.py / OnHarmonyTrainers.py / ToothFairy2Trainers.py):
   cp benchmark/02_tasks/pelvis_healthy/totalseg-pelvic/5_scripts_totalseg-pelvic/02_nnunet/TotalsegPelvicTrainers.py \
      .venv/lib/python3.*/site-packages/nnunetv2/training/nnUNetTrainer/

@@ -573,10 +573,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_5_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_5_guidance_lhc" / ft
-             / f"synthetic_v26_5_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_5_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_5_guidance_lhc" / ft
-             / f"synthetic_v26_5_guidance_lhc_features.csv"
+             / "synthetic_v26_5_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_5_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -586,10 +586,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_6_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_6_guidance_lhc" / ft
-             / f"synthetic_v26_6_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_6_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v26_6_guidance_lhc" / ft
-             / f"synthetic_v26_6_guidance_lhc_features.csv"
+             / "synthetic_v26_6_guidance_lhc_features.csv"
          for ft in ("regional_hist_64", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v26_6_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -599,10 +599,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_15_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_15_guidance_lhc" / ft
-             / f"synthetic_v26_15_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_15_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_15_guidance_lhc" / ft
-             / f"synthetic_v26_15_guidance_lhc_features.csv"
+             / "synthetic_v26_15_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_15_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -613,10 +613,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v28", "v28_2_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v28_2_guidance_lhc" / ft
-             / f"synthetic_v28_2_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v28_2_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v28_2_guidance_lhc" / ft
-             / f"synthetic_v28_2_guidance_lhc_features.csv"
+             / "synthetic_v28_2_guidance_lhc_features.csv"
          for ft in ("regional_hist_64", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v28_2_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -626,10 +626,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v28", "v28_3_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v28_3_guidance_lhc" / ft
-             / f"synthetic_v28_3_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v28_3_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v28_3_guidance_lhc" / ft
-             / f"synthetic_v28_3_guidance_lhc_features.csv"
+             / "synthetic_v28_3_guidance_lhc_features.csv"
          for ft in ("regional_hist_64", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v28_3_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -639,10 +639,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v28", "v28_4_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v28_4_guidance_lhc" / ft
-             / f"synthetic_v28_4_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v28_4_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v28_4_guidance_lhc" / ft
-             / f"synthetic_v28_4_guidance_lhc_features.csv"
+             / "synthetic_v28_4_guidance_lhc_features.csv"
          for ft in ("regional_hist_64", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v28_4_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -652,10 +652,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v28", "v28_1_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v28_1_guidance_lhc" / ft
-             / f"synthetic_v28_1_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v28_1_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v28_1_guidance_lhc" / ft
-             / f"synthetic_v28_1_guidance_lhc_features.csv"
+             / "synthetic_v28_1_guidance_lhc_features.csv"
          for ft in ("regional_hist_64", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v28_1_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -665,10 +665,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_14_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_14_guidance_lhc" / ft
-             / f"synthetic_v26_14_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_14_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_14_guidance_lhc" / ft
-             / f"synthetic_v26_14_guidance_lhc_features.csv"
+             / "synthetic_v26_14_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_14_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -678,10 +678,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_11_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_11_guidance_lhc" / ft
-             / f"synthetic_v26_11_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_11_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_11_guidance_lhc" / ft
-             / f"synthetic_v26_11_guidance_lhc_features.csv"
+             / "synthetic_v26_11_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_11_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -691,10 +691,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_12_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_12_guidance_lhc" / ft
-             / f"synthetic_v26_12_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_12_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_12_guidance_lhc" / ft
-             / f"synthetic_v26_12_guidance_lhc_features.csv"
+             / "synthetic_v26_12_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_12_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -704,10 +704,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_13_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_13_guidance_lhc" / ft
-             / f"synthetic_v26_13_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_13_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_13_guidance_lhc" / ft
-             / f"synthetic_v26_13_guidance_lhc_features.csv"
+             / "synthetic_v26_13_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_13_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -717,10 +717,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_8_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_8_guidance_lhc" / ft
-             / f"synthetic_v26_8_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_8_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_8_guidance_lhc" / ft
-             / f"synthetic_v26_8_guidance_lhc_features.csv"
+             / "synthetic_v26_8_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_8_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -730,10 +730,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_9_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_9_guidance_lhc" / ft
-             / f"synthetic_v26_9_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_9_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_9_guidance_lhc" / ft
-             / f"synthetic_v26_9_guidance_lhc_features.csv"
+             / "synthetic_v26_9_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_9_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -743,10 +743,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_10_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_10_guidance_lhc" / ft
-             / f"synthetic_v26_10_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_10_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_10_guidance_lhc" / ft
-             / f"synthetic_v26_10_guidance_lhc_features.csv"
+             / "synthetic_v26_10_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_10_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -756,10 +756,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v26", "v26_7_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v26_7_guidance_lhc" / ft
-             / f"synthetic_v26_7_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v26_7_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_7_guidance_lhc" / ft
-             / f"synthetic_v26_7_guidance_lhc_features.csv"
+             / "synthetic_v26_7_guidance_lhc_features.csv"
          for ft in ("regional_hist_64",)},
         {ft: DATA_ROOT / "synthetic_v26_7_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -769,10 +769,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v27", "v27a_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v27a_guidance_lhc" / ft
-             / f"synthetic_v27a_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v27a_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "regional_hist_13_64", "histogram_256", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v27a_guidance_lhc" / ft
-             / f"synthetic_v27a_guidance_lhc_features.csv"
+             / "synthetic_v27a_guidance_lhc_features.csv"
          for ft in ("regional_hist_64", "regional_hist_13_64", "histogram_256", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v27a_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -782,10 +782,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "v27", "v27a_bis_guidance_lhc_r1",
         {ft: DATA_ROOT / "synthetic_v27a_bis_guidance_lhc" / ft
-             / f"synthetic_v27a_bis_guidance_lhc_features_normalized_combined_feat_selected.csv"
+             / "synthetic_v27a_bis_guidance_lhc_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "regional_hist_13_64", "histogram_256", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v27a_bis_guidance_lhc" / ft
-             / f"synthetic_v27a_bis_guidance_lhc_features.csv"
+             / "synthetic_v27a_bis_guidance_lhc_features.csv"
          for ft in ("regional_hist_64", "regional_hist_13_64", "histogram_256", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_v27a_bis_guidance_lhc" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -795,10 +795,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "synthseg", "synthseg_modeA_r1",
         {ft: DATA_ROOT / "synthetic_synthseg_modeA" / ft
-             / f"synthetic_synthseg_modeA_features_normalized_combined_feat_selected.csv"
+             / "synthetic_synthseg_modeA_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "regional_hist_13_64", "histogram_256", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_synthseg_modeA" / ft
-             / f"synthetic_synthseg_modeA_features.csv"
+             / "synthetic_synthseg_modeA_features.csv"
          for ft in ("regional_hist_64", "regional_hist_13_64", "histogram_256", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_synthseg_modeA" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"
@@ -808,10 +808,10 @@ VERSIONS: list[tuple[str, str, dict[str, Path], dict[str, Path]]] = [
     (
         "synthseg", "synthseg_modeB_em_r1",
         {ft: DATA_ROOT / "synthetic_synthseg_modeB_em" / ft
-             / f"synthetic_synthseg_modeB_em_features_normalized_combined_feat_selected.csv"
+             / "synthetic_synthseg_modeB_em_features_normalized_combined_feat_selected.csv"
          for ft in ("regional_hist_64", "regional_hist_13_64", "histogram_256", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_synthseg_modeB_em" / ft
-             / f"synthetic_synthseg_modeB_em_features.csv"
+             / "synthetic_synthseg_modeB_em_features.csv"
          for ft in ("regional_hist_64", "regional_hist_13_64", "histogram_256", "hog_972", "hog3d_512")},
         {ft: DATA_ROOT / "synthetic_synthseg_modeB_em" / ft
              / "on_harmony_features_normalized_combined_downsampled100_feat_selected.csv"

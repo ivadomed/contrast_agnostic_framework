@@ -1,4 +1,4 @@
-import json, subprocess, time, os, re
+import json, subprocess, time, re
 
 def get_token():
     out = subprocess.run(

@@ -13,7 +13,7 @@ way; test_cases.json mirrors ambl's format ({"test": [...]}) for this
 contamination guard to read directly.
 
 ⚠️ N_EXPECTED_FOLDS = 3, NOT ambl's 4 — toothfairy2's splits_final.json was written
-with exactly 3 fold entries (CLAUDE.md's permanent fold policy: folds 0/1/2
+with exactly 3 fold entries (the project notes' permanent fold policy: folds 0/1/2
 only; ambl's file carries a legacy 4th, never-trained fold from before that
 policy, which this dataset has no reason to replicate). Copying ambl's value
 verbatim would hard-crash training with "Expected 4 folds, got 3" — verified

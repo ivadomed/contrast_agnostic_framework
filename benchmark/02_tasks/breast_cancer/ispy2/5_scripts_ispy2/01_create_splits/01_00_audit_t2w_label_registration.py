@@ -18,7 +18,7 @@ followed by nearest-neighbour resampling.
 That registration is unnecessary AND failure-prone here:
   * UNNECESSARY — the DCE and T2w series share the same DICOM FrameOfReferenceUID
     (verified directly on the staged raw DICOM at
-    /scratch/paulh/ispy2_staging/raw_dicom/ISPY2-*/{dce_cropped,t2}/), and their
+    $SCRATCH/ispy2_staging/raw_dicom/ISPY2-*/{dce_cropped,t2}/), and their
     ImagePositionPatient/ImageOrientationPatient values place them consistently in
     that one scanner frame. The BIDS affines faithfully reproduce those DICOM
     positions (checked to <0.5 mm). So the correct T1wce->T2w mapping is simply the

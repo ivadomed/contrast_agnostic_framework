@@ -15,7 +15,7 @@ Images are byte-copied from the zips (faithful: mixed orientations LPI/LPS/RAS a
 Labels are re-written as uint8 {0,1}; where the label header disagrees with its image (66 MCF T1 cases: RAI/RAS vs LPS) the IMAGE affine is
 written instead - the voxel arrays were verified aligned (gallery overlays + intensity contrast) - and the case is flagged in participants.tsv.
 Re-runnable: existing outputs are kept (tmp + os.replace)."""
-import csv, gzip, io, json, os, re, shutil, sys, zipfile, collections
+import csv, gzip, json, os, re, shutil, zipfile, collections
 from pathlib import Path
 import numpy as np, nibabel as nib
 

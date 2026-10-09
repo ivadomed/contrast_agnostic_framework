@@ -184,7 +184,7 @@ def significance_column(runs_ordered: list, ref_key: str, all_contrasts: list, m
     reverse=True tests the OTHER direction ("competitor better") on the identical
     design, groups and patient units. The default one-sided column cannot answer
     "does the method that leads us do so significantly?" -- a p of 1.0 there only
-    means ref cannot be shown better. paper/scripts/compute_reverse_significance.py
+    means ref cannot be shown better. the paper's compute_reverse_significance.py (kept outside this repo)
     used to answer that with its own copy of the test; that copy fell behind when
     this function moved to patient-level units, so the direction is now a flag on
     the one implementation instead.

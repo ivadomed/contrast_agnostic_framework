@@ -9,7 +9,7 @@ benchmark/02_tasks/breast_cancer/duke-breast-mri/0_raw_duke-breast-mri/download_
 which is what makes I-SPY1's labels directly compatible with Duke's and I-SPY2's.
 
 Case lists (folder + mask Synapse ids) come from the cached MAMA-MIA listing
-already staged for the Duke download (/scratch/paulh/duke_download/
+already staged for the Duke download ($SCRATCH/duke_download/
 {images_folders_all,expert_seg_entities}.json), filtered to ISPY1_/NACT_ and
 written to <STAGE>/ispy1_nact_{image_folders,masks}.json.
 
@@ -18,18 +18,19 @@ the existing ~/.synapseConfig (synapseclient default) -- no token on the
 command line or in any file here. Resumable (skips non-empty files already on
 disk), per-call alarm timeout, manifest written after every case:
   nohup .venv/bin/python benchmark/02_tasks/breast_cancer/ispy1/0_raw_ispy1/download_mamamia_ispy1_nact.py \
-    > /scratch/paulh/ispy1_download/download.log 2>&1 &
+    > $SCRATCH/ispy1_download/download.log 2>&1 &
 """
 from __future__ import annotations
 
 import json
 import signal
 import time
+import os
 from pathlib import Path
 
 import synapseclient
 
-STAGE = Path("/scratch/paulh/ispy1_download")
+STAGE = Path(os.environ["SCRATCH"]) / "ispy1_download"
 RAW = STAGE / "raw"
 MANIFEST_PATH = STAGE / "ispy1_nact_manifest.json"
 CHANNELS = ("_0000.nii.gz", "_0001.nii.gz")   # pre-contrast, first post-contrast

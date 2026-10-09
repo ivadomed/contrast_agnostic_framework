@@ -26,6 +26,14 @@ def _base_cfg(*, affine_prob: float, elastic_prob: float) -> object:
                         "elastic_prob": elastic_prob,
                         "elastic_sigma_range": [4.0, 4.0],
                         "elastic_magnitude_range": [2.0, 2.0],
+                        # Later pipeline stages, off here so these tests isolate affine/elastic.
+                        "low_res_prob": 0.0,
+                        "low_res_zoom_range": [1.0, 1.0],
+                        "noise_prob": 0.0,
+                        "noise_mean": 0.0,
+                        "noise_std": 0.0,
+                        "smooth_prob": 0.0,
+                        "smooth_sigma_range": [0.5, 0.5],
                     }
                 }
             }

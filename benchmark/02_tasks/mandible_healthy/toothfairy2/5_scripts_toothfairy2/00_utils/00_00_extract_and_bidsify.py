@@ -3,7 +3,7 @@
 ToothFairy2: unpacked challenge release (nnU-Net-format .mha) -> BIDS NIfTI.
 
 Run via 00_00_extract_and_bidsify.sh (never bare — that wrapper dispatches through
-run_job, per CLAUDE.md's "no heavy compute on a login node").
+run_job, per the project notes' "no heavy compute on a login node").
 
 WHAT THIS DOES, PER CASE
   1. stream imagesTr/<case>_0000.mha + labelsTr/<case>.mha OUT OF THE RELEASE ZIP
@@ -37,13 +37,13 @@ The 26 GB release expands to 109.5 GB of uncompressed .mha. Materialising that o
 $SCRATCH would be ~20% of the whole 1 TB quota for a staging artifact nothing reads
 twice, on a filesystem that purges on inactivity. Instead each worker opens its own
 handle on the zip and extracts ONE case at a time into $SLURM_TMPDIR (node-local
-disk, job lifetime — exactly what CLAUDE.md prescribes for many-small-files work),
+disk, job lifetime — exactly what the project notes prescribes for many-small-files work),
 converts it, and deletes it. Peak extra disk is a few GB, and the network
 filesystem sees only the sequential zip read plus the compressed NIfTI writes.
 
 ⚠️ ORIENTATION IS CHECKED FOR EVERY CASE, NOT SAMPLED. Twice in this project a
 wrong "method failure" conclusion has been traced to an unverified orientation
-(see CLAUDE.md / the liverhccseg bugfix). The audit records aff2axcodes before
+(see the project notes / the liverhccseg bugfix). The audit records aff2axcodes before
 and after; 00_00_verify_bidsify.py fails loudly if any post-conversion case is
 not RAS.
 """

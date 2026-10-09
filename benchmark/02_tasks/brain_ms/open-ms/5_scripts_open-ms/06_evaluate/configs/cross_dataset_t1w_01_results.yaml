@@ -23,7 +23,7 @@ sources:
   - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/brain_ms/open-ms/8_results_open-ms/02_metrics/open_ms_model/t1w"
     column_prefix: "open-ms_"
 
-# 8-method suite (CLAUDE.md canonical order + srcsm 7th arm), T1w-TRAINED checkpoints.
+# 8-method suite (the project notes canonical order + srcsm 7th arm), T1w-TRAINED checkpoints.
 # OURS is the current val000/val100 pair.
 runs:
   - open-ms_t1w_baseline_20260708_083441

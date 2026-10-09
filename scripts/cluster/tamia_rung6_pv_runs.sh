@@ -56,7 +56,7 @@ rung_resolve_run() { echo "$2"; }
 # METRICS_ROOT; brats' tamia_env.sh does not override it and the default is the file-count-limited /project).
 rung6_eval_pre_env() {
     case "$1" in
-        brats:*) export METRICS_ROOT="${SCRATCH:-/scratch/p/paulh}/brats2024-glioma/8_results/02_metrics" ;;
+        brats:*) export METRICS_ROOT="${SCRATCH:-/scratch/${USER:0:1}/${USER}}/brats2024-glioma/8_results/02_metrics" ;;
     esac
 }
 # Prediction env extras per row (flipped mandible arms only).

@@ -31,7 +31,6 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 

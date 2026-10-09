@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Per-label breakdown of the T1n<->T2w cross-contrast transfer asymmetry
-(paper/compute_fillswap_per_contrast.py showed this at the whole-tumour /
+(the paper's compute_fillswap_per_contrast.py showed this at the whole-tumour /
 pooled-OOD level; this asks whether the fill-swap step's effect -- and the
 resulting transfer asymmetry -- is uniform across BraTS labels (NCR, SNFH,
 ET, RC) or concentrated in specific ones).
@@ -83,7 +83,7 @@ def load_per_label(metrics_root: Path, contrast: str) -> dict:
 
 lines = ["# T1n <-> T2w transfer asymmetry, per label", "",
          "Companion to the ladder tables (Tab. 3/9, main paper + supp) and "
-         "`paper/compute_fillswap_per_contrast.py`. Restricted to the single directly-relevant "
+         "`the paper's compute_fillswap_per_contrast.py`. Restricted to the single directly-relevant "
          "eval contrast per direction (t2w when trained on t1n; t1n when trained on t2w). "
          "Kept out of the paper for now -- exploratory.", "",
          "## 1. Absolute OOD Dice (%), deployed real-fill rung",

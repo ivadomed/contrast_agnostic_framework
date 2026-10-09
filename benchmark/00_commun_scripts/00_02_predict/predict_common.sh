@@ -172,7 +172,7 @@ predict_fold() {
     local _mem_args=(); [ -n "${PREDICT_MEM:-}" ] && _mem_args=(--mem "${PREDICT_MEM}")
     # Log to shared storage under _OUT_BASE (always set, unlike the per-dataset
     # RESULTS_DIR var), not /tmp: on Slurm /tmp is node-local and wiped at job end,
-    # silently losing any crash traceback (see CLAUDE.md gotchas — bit us hard on
+    # silently losing any crash traceback (see the project notes gotchas — bit us hard on
     # open-ms's 04_0X_train_*.sh scripts the same way).
     mkdir -p "${_OUT_BASE}/_logs"
     run_job --name "${PREDICT_JOB_PREFIX}_${METHOD}_fold${F}" \
@@ -196,7 +196,7 @@ if [ "$FOLD" = "all" ]; then
     echo "[$(date '+%H:%M:%S')] predict ${METHOD} | run=${RUN_ID} | ALL FOLDS (parallel, fold→slot) | ckpt=${CHECKPOINT}"
     echo "  items: ${ITEMS[*]}"
     # PREDICT_FOLDS (optional, default "0 1 2"): space-separated fold list. Matches the
-    # 3-fold project policy (see TRAIN_FOLDS in train_common.sh + CLAUDE.md "FOLD POLICY").
+    # 3-fold project policy (see TRAIN_FOLDS in train_common.sh + the project notes "FOLD POLICY").
     # Override explicitly (e.g. "0 1 2 3") only to predict a legacy 4-fold model.
     for F in ${PREDICT_FOLDS:-0 1 2}; do predict_fold "$F" "$F" "$F" & done
     wait

@@ -71,7 +71,7 @@ def read_env(pack: Path) -> dict[str, str]:
 # exported by env.sh, but METRICS_ROOT additionally points at SCRATCH on TamIA while
 # aggregation runs on Vulcan against the repo copy — and if it is ever unset, the
 # aggregators write into a directory literally named "${METRICS_ROOT}". That has already
-# happened once in this repo (see CLAUDE.md's cleanup notes: a stray ${METRICS_ROOT}/
+# happened once in this repo (see the project notes' cleanup notes: a stray ${METRICS_ROOT}/
 # holding 4 misfiled *_significance.md files) and the standing instruction is to fix the
 # script that writes it, not just delete the directory.
 HEADLINE = """# toothfairy2 — OWN-model, CBCT-trained headline methods, own held-out CBCT test

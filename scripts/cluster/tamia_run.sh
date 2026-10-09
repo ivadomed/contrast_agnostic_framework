@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # General-purpose runner for TamIA, relayed through Vulcan, always cd'd into the repo
-# (see CLAUDE.md: "Remote commands over the TamIA relay MUST carry an explicit cd").
+# (see the project notes: "Remote commands over the TamIA relay MUST carry an explicit cd").
 #
 # This exists so a TamIA call is always the same fixed local command
 # (`bash scripts/cluster/tamia_run.sh ...`), regardless of how the remote command

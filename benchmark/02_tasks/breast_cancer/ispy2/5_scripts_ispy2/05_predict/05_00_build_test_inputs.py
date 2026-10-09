@@ -25,7 +25,7 @@ Case id = participant label without the sub- prefix (e.g. ispy2105286).
 
 Verifies nib.aff2axcodes for EVERY case/item against the expected ('L','P','S')
 orientation (matches ambl's own training data, confirmed separately) before copying
--- this project has been bitten twice by silently skipping this check (see CLAUDE.md
+-- this project has been bitten twice by silently skipping this check (see the project notes
 "Verify orientation on onboarding").
 
     .venv/bin/python 05_00_build_test_inputs.py

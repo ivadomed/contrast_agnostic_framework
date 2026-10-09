@@ -20,7 +20,7 @@
 #   gpu:h100:8 (kn169-178, 48+ CPU/2060000M/8 GPU) — defaults below target
 #   the l40s nodes (same 16 cpu/gpu, ~110G/gpu math as Vulcan). Re-confirm
 #   with the same commands if this ever looks stale — never trust these
-#   numbers blindly (see CLAUDE.md).
+#   numbers blindly (see the project notes).
 #
 # WandB: Slurm compute nodes have no internet access, so jobs submitted here
 # run with WANDB_MODE=offline. Sync later from the login node with

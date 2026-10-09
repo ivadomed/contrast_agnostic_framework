@@ -9,7 +9,7 @@
 # Usage: bash 06_01_evaluate_run.sh <RUN_ID> <CATEGORY:nnUNet|auglab> [FOLD(default all)]
 #
 # ⚠️ CATEGORY must be passed explicitly and correctly — a wrong CATEGORY does NOT error,
-# it silently writes an empty, _logs-only metrics dir (the open-ms gotcha in CLAUDE.md).
+# it silently writes an empty, _logs-only metrics dir (the open-ms gotcha in the project notes).
 # Check eval_all.csv actually exists before trusting a run finished.
 #
 # ⚠️ TRAINING_CONTRAST must match the model being evaluated (source env.sh for a

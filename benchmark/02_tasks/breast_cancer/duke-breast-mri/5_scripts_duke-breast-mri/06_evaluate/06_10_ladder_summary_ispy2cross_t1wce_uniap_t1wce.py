@@ -8,7 +8,7 @@ since 2026-09-17 (bilateral ladders archived at
 benchmark/03_archive/duke-breast-mri_bilateral_eval_20260917/). Sibling of
 06_11/06_12/06_13_ladder_summary_ispy2cross_*.py (other train-contrast/test-item
 combinations); see 02_nnunet/02_03_derive_unilateral_crop.py for the crop method.
-Same-contrast/cross-DATASET arm for this direction -- NOT held-out-contrast evidence; supplementary only, never pooled into an OOD bucket (see CLAUDE.md ladder gotcha).
+Same-contrast/cross-DATASET arm for this direction -- NOT held-out-contrast evidence; supplementary only, never pooled into an OOD bucket (see the project notes ladder gotcha).
 Layout: rungs 1 and 6 (baseline, +AugLab val000) live at <root>/t1wce_uniap/<run_id>;
 rungs 2-5 at <root>/ablations/t1wce_uniap/<run_id>.
 

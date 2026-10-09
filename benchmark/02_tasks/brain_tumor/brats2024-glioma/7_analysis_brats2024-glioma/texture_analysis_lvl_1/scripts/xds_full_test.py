@@ -25,14 +25,12 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 from scipy.stats import spearmanr
 
 warnings.filterwarnings("ignore")
 THIS = Path(__file__).resolve().parent
 sys.path.insert(0, str(THIS))
 import xds_full_common as C  # noqa: E402
-import xds_full_models as M  # noqa: E402
 
 SMOKE = os.environ.get("SMOKE") == "1"
 SUF = "_SMOKE" if SMOKE else ""
@@ -112,8 +110,8 @@ def main():
          f"- Dev rows {ms['n_rows']} (patient/case x OOD cell), {ms['n_cells']} dev cells; rows per group {ms['groups']}. "
          "Dev groups: BraTS (per-region OOD cells, 3 training contrasts), breast family (ispy2 + duke/ispy1/acrin items), on-harmony, "
          "toothfairy2 (+hanseg/pddca). **No Open-MS or CHAOS row in any fit, selection, pruning or null.**",
-         f"- Target: per-case rung-5 minus rung-4 delta Dice (points), ladder run_keys, folds 0-2, labels pooled per case; "
-         f"<=20 cases per non-BraTS key (feature coverage), all GT-present BraTS patients. Cell weights 1/n_cell.",
+         "- Target: per-case rung-5 minus rung-4 delta Dice (points), ladder run_keys, folds 0-2, labels pooled per case; "
+         "<=20 cases per non-BraTS key (feature coverage), all GT-present BraTS patients. Cell weights 1/n_cell.",
          f"- Features per row: eval-contrast (E), train-contrast (T; same patient if co-registered, else train-key dataset mean; "
          f"{100*fit['matched_frac']:.0f}% of dev rows matched), difference (D); hand-made (105 base -> {ms['n_hand_base'][1]} after label-free "
          f"pruning) and PyRadiomics (R/ring/R-ring/shape, {ms['n_rad_base'][0]} base -> {ms['n_rad_base'][1]}); incl. contrast-identifying whole-brain features.",

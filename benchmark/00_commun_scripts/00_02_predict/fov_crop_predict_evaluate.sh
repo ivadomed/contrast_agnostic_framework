@@ -18,7 +18,7 @@
 # matching chaos's own restricted FOV as an input condition rather than as a
 # scoring rule.
 #
-# Results land in a DEDICATED `fov_crop/` metrics subdir (per CLAUDE.md: a
+# Results land in a DEDICATED `fov_crop/` metrics subdir (per the project notes: a
 # non-headline result set gets its own subdir) so the existing headline
 # masked-eval numbers are never touched.
 #

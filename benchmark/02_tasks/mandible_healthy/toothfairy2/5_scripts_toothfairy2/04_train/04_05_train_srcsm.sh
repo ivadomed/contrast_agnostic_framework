@@ -3,7 +3,7 @@
 # AugLab-category, reuses the auglab_default trainer. 3 folds, 1 GPU/fold, 1000 ep.
 #
 # ⚠️ MEASURE srcsm's per-epoch cost on THIS dataset before packing folds on TamIA.
-# CLAUDE.md is explicit that the ~3x slowdown seen on brats/on-harmony does NOT
+# the project notes is explicit that the ~3x slowdown seen on brats/on-harmony does NOT
 # transfer (atlas-liver-hcc ~1.2x, ambl ~1.5x, one dataset showed none at all). If
 # srcsm IS the straggler here, give it its own GPU via PACK_GPU_MAP rather than
 # letting round-robin pair it with a second fold and hold the whole node open.

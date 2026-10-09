@@ -129,7 +129,7 @@ write_dataset_json(out_dir, channel_names={"0": "..."}, labels={...},
 ```
 Also add `02_nnunet/<Name>Trainers.py` — a registration shim that imports your trainer
 classes (copy chaos's `CHAOSTrainers.py`; the `*Trainers.py` name is **required** by
-nnU-Net's class discovery and is copied into the venv — see CLAUDE.md).
+nnU-Net's class discovery and is copied into the venv — see the project notes).
 
 ### 4. `04_train/04_00_common.sh` — shim over `train_common.sh`
 ```bash

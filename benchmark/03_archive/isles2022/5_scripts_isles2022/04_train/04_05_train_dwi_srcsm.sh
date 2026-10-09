@@ -4,7 +4,7 @@
 # 3 folds (0 1 2), 1 GPU/fold, 2000 epochs.
 #
 # NOTE: measure the srcsm-vs-others per-epoch cost ratio on THIS dataset before
-# assuming ambl's figure transfers (CLAUDE.md TamIA section: brats/on-harmony saw
+# assuming ambl's figure transfers (the project notes TamIA section: brats/on-harmony saw
 # ~3x, atlas-liver-hcc saw only ~1.2x, ambl saw ~1.5x, a since-abandoned dataset saw
 # no slowdown at all) — relevant when packing folds on TamIA later.
 #

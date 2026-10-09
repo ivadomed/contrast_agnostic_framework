@@ -9,7 +9,7 @@
 #
 # ⚠️ CATEGORY must be passed explicitly and correctly. A wrong CATEGORY does NOT
 # error — it silently writes an empty, _logs-only metrics dir (the open-ms gotcha in
-# CLAUDE.md). Check eval_all.csv actually exists before trusting a run finished.
+# the project notes). Check eval_all.csv actually exists before trusting a run finished.
 # Unlike chaos/brats there is no DATASET_ID ambiguity here: toothfairy2 has exactly
 # one training modality, so DATASET_ID is always DATASET_ID_CBCT.
 #

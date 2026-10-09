@@ -7,8 +7,7 @@ import torch.distributed as dist
 import torch.nn.functional as F
 from torch import nn
 
-from src.synthesis.intensity_ops import _shared_rand as _shared_rand_intensity
-from src.synthesis.intensity_ops import _shared_randint as _shared_randint_intensity
+from src.synthesis.histogram_ops import create_range_translation_guidance_map as _create_range_translation_guidance_map
 from src.synthesis.noise_ops import generate_fractal_noise_3d
 
 

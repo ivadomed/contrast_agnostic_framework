@@ -8,16 +8,17 @@ Usage: pv_compare_tasks.py <out_dir> [toothfairy2|brats]   (CPU; toothfairy2 dat
 so run the two halves where their data is; no 2nd arg = both)
 """
 import random, sys
+import os
 from pathlib import Path
 import numpy as np, nibabel as nib, torch
 from scipy.ndimage import zoom
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 
-REPO = Path("/project/aip-jcohen/paulh/mri_synthesis_project")
+REPO = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(REPO / "sub-workspaces/auglab_workspace/AugLab"))
 from auglab.transforms.gpu.fromSeg import RandomV26_6_2ContrastGPU  # noqa: E402
 
-S = Path("/scratch/p/paulh")
+S = Path(os.environ["SCRATCH"])
 BR = REPO / "benchmark/02_tasks/brain_tumor/brats2024-glioma/2_nnUNet_brats2024-glioma/raw/Dataset051_BraTS2024GliomaT1n"   # Vulcan
 TASKS = {
     "ToothFairy2 CBCT (0.6 mm)": dict(img=S / "toothfairy2/2_nnUNet/raw/Dataset110_ToothFairy2CBCT/imagesTr/toothfairy2_ToothFairy2F002_0000.nii.gz",

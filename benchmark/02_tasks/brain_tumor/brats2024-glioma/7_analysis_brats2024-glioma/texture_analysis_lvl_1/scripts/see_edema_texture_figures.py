@@ -34,7 +34,7 @@ import nibabel as nib
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from scipy.ndimage import distance_transform_edt, gaussian_filter, center_of_mass
+from scipy.ndimage import center_of_mass
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -42,10 +42,10 @@ log = logging.getLogger(__name__)
 THIS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(THIS_DIR))
 from compute_cross_contrast_ngf import (  # noqa: E402
-    CONTRAST_SUFFIX, LABEL_IDS, load_patient, region_masks, METRICS_ROOT,
+    LABEL_IDS, load_patient, region_masks, METRICS_ROOT,
 )
 from compute_region_surround_texture import (  # noqa: E402
-    highpass, region_parts, acf_vector, ACF_COLS, LAGS, MIN_VOX,
+    highpass, region_parts, LAGS,
 )
 
 DS_ROOT = THIS_DIR.parents[2]

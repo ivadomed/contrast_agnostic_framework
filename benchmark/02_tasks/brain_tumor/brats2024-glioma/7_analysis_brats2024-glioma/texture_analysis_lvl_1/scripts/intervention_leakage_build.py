@@ -49,6 +49,7 @@ here are byte-identical to the ones used in the original run).
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 import nibabel as nib
@@ -60,11 +61,11 @@ THIS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(THIS_DIR))
 from compute_region_surround_texture import highpass  # noqa: E402
 from intervention_build import (  # noqa: E402
-    RAW051, LABELS_DIR, OUT_DATA, PATIENT_CSV, SNFH, N_PATIENTS, HP_SIGMA, RNG_SEED,
-    load_case, load_label, brain_mask, flatten, make_sham_mask,
+    RAW051, OUT_DATA, PATIENT_CSV, SNFH, N_PATIENTS, RNG_SEED,
+    load_case, load_label, brain_mask, make_sham_mask,
 )
 
-INPUTS_ROOT = Path("/scratch/paulh/brats_intervention/inputs")
+INPUTS_ROOT = Path(os.environ["SCRATCH"]) / "brats_intervention/inputs"
 
 ERODE_DEPTH = 3
 MIN_CORE_VOX = 50

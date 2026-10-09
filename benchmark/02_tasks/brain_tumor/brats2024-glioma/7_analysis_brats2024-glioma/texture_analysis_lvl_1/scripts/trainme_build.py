@@ -14,7 +14,7 @@ Usage (GPU job):  .venv/bin/python trainme_build.py --train t2w --n-train 12 --n
 Output: outputs/trainme/trainme_<train>.html (+ the PNGs next to it).
 """
 from __future__ import annotations
-import argparse, base64, io, json, os, sys
+import argparse, base64, io, json, sys
 from pathlib import Path
 import numpy as np, pandas as pd, nibabel as nib, torch
 import matplotlib

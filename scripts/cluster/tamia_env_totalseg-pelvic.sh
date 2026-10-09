@@ -6,7 +6,7 @@
 #   source benchmark/02_tasks/pelvis_healthy/totalseg-pelvic/5_scripts_totalseg-pelvic/00_utils/env.sh       # or env_mri.sh
 #   source scripts/cluster/tamia_env_totalseg-pelvic.sh
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 TOTALSEG_PELVIC_SCRATCH="$SCRATCH/totalseg-pelvic"
 
 export nnUNet_raw="$TOTALSEG_PELVIC_SCRATCH/2_nnUNet_totalseg-pelvic/raw"

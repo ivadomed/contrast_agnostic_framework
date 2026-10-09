@@ -82,7 +82,7 @@ MIN_REGION_VOX = 50
 FOLDS = ("fold0", "fold1", "fold2")
 RUNG_DIRS = {
     # 2026-10-07: rung 5 -> the val000 retrains (checkpoint_best chosen on REAL validation, like rung 4;
-    # the earlier *_val100_* runs picked it on synthetic validation and are retired, see CLAUDE.md
+    # the earlier *_val100_* runs picked it on synthetic validation and are retired, see the project notes
     # "Rung 5 ... are val000 runs (2026-10-06)"). t1c (4th training contrast, ladder 06_33) added.
     "t1n": {
         "voronoi": "ablations/auglab_brats2024-glioma_t1n_baseline_kmeans_label_remap_voronoi_20260730_200711",
@@ -391,7 +391,7 @@ def merge_and_correlate(data_dir: Path):
     merged.to_csv(merged_csv, index=False)
     log.info("Wrote %d merged (patient-level) rows -> %s", len(merged), merged_csv)
 
-    from scipy.stats import spearmanr, pearsonr
+    from scipy.stats import spearmanr
     print("\n=== Per-(train,eval,region) cross-patient correlation: NGF(train,eval) vs real-fill Dice delta ===")
     print(f"{'train':6s}{'eval':6s}{'region':8s}{'n':>5s}{'mean_delta':>12s}{'spearman_rho':>14s}{'p':>10s}")
     cell_rows = []

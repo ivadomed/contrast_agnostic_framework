@@ -18,7 +18,7 @@ source "${HERE_DIR}/00_utils/t1c_runs.sh"
 LOGDIR="/scratch/p/paulh/brats2024-glioma/_packruns/t1c_eval_${GROUP}_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "${LOGDIR}"
 
-submit() {   # CPU-only sbatch on TamIA is inconsistent about --partition (see CLAUDE.md): try bare, retry with explicit
+submit() {   # CPU-only sbatch on TamIA is inconsistent about --partition (see the project notes): try bare, retry with explicit
   local out
   if out="$(sbatch --parsable "$@" 2>/dev/null)"; then echo "${out}"; return 0; fi
   echo "  (bare sbatch failed — retrying with --partition=cpubase_bynode_b1)" >&2

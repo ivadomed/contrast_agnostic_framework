@@ -6,7 +6,7 @@ Independent post-conversion audit of the two ispy2 nnU-Net raw datasets
 Deliberately re-derives everything from partition.json rather than trusting the
 converter's own prints, and reports REAL COUNTS rather than asserting success
 (this project has been bitten by scripts that "succeeded" while writing empty or
-partial dirs -- see CLAUDE.md's eval stale-skip / truncated-pack gotchas).
+partial dirs -- see the project notes' eval stale-skip / truncated-pack gotchas).
 
 Per Dataset, per subdir (imagesTr/labelsTr, imagesTs_t1wce, imagesTs_t2w):
   * case count vs. the expected list from partition.json (exact set equality --

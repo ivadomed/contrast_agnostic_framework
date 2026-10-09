@@ -83,7 +83,7 @@ from scipy.stats import spearmanr, wilcoxon
 THIS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(THIS_DIR))
 from compute_boundary_profiles import (  # noqa: E402
-    BINS, MAX_BIN, REGIONS, DATA_DIR,
+    BINS, REGIONS, DATA_DIR,
     bin_stats_to_mean_var, normalize_profile, crossing_width, step_stat,
     pooled_mean_std, profile_distance,
 )

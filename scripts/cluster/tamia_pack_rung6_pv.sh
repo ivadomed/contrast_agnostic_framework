@@ -21,7 +21,7 @@
 # `submit`/re-`submit` (to extend a chain) reuse the same recording.
 set -euo pipefail
 cd /project/aip-jcohen/paulh/mri_synthesis_project
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"
 T=benchmark/02_tasks
 STATE="${SCRATCH}/_packruns_rung6_pv_root.txt"
 MODE="${1:?usage: record|submit [PACK...]}"; shift

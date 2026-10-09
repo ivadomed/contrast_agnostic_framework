@@ -12,7 +12,7 @@ level_2_scripts_structure = ["00_utils", "01_create_splits", "02_nnunet", "03_pr
 level_2_results_structure = ["01_predictions", "02_metrics"]
 
 # Canonical 06_evaluate/ entry-point skeleton (established repo-wide 2026-09-27, see
-# CLAUDE.md's "How experiments work" section). Only 06_00-06_03 are dataset-agnostic
+# the project notes' "How experiments work" section). Only 06_00-06_03 are dataset-agnostic
 # enough to template here -- 06_04_combined_modality_summary.sh is deliberately NOT
 # generated: it only applies to a dataset training >=2 of its own modalities, which
 # this script has no way to know, and 06_01_evaluate_run.sh's real body (labels, test

@@ -23,7 +23,7 @@ origin z=-759.0 with 0.558x0.558x2.0 spacing; MR origin z=-98.6 with
 CT grid only. Producing MR ground truth would mean registering 42 CT/MR pairs here
 and trusting the result unvalidated. A registration error would silently displace
 the GT and show up as a "method failure" on the MR arm — precisely the class of bug
-that has twice produced a wrong conclusion in this project (see CLAUDE.md's
+that has twice produced a wrong conclusion in this project (see the project notes'
 orientation-verification note). So the MR arm is left unbuilt and recorded as
 follow-up work rather than fabricated. The CT arm alone is still a genuine
 cross-MODALITY test: CBCT -> conventional CT.

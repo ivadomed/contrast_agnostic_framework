@@ -8,7 +8,7 @@
 # of a legacy cross-dataset predict/evaluate pathway from `ambl`
 # (Advanced-MRI-Breast-Lesions, now archived at benchmark/03_archive/ambl) —
 # ambl was ispy2's original training-set candidate before the 2026-09-04 pivot
-# (see CLAUDE.md's "Breast task" section for the full pivot history). Both
+# (see the project notes' "Breast task" section for the full pivot history). Both
 # roles coexist in this file: DATASET_ROLE="both" below.
 #
 # Legacy ambl -> ispy2 predict/evaluate pathway (kept working, not the primary

@@ -8,7 +8,7 @@
 #SBATCH --time=01:30:00
 set -uo pipefail
 : "${ROOT:?}"; cd /project/aip-jcohen/paulh/mri_synthesis_project
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"; source "${ROOT}/RUN_IDS.env"
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"; source "${ROOT}/RUN_IDS.env"
 D=benchmark/02_tasks/brain_healthy/on-harmony/5_scripts_on-harmony
 ( source "$D/00_utils/env.sh"; source scripts/cluster/tamia_env_onharmony.sh; export TRAINING_CONTRAST=T1w
   base="${PREDICTIONS_ROOT}/${MODEL_TYPE}/T1w/nnUNet/${ONH_RUN}"

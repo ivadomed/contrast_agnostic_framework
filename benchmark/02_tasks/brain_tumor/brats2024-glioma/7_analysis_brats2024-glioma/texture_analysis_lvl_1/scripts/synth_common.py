@@ -45,7 +45,7 @@ CONTRASTS = ("t1n", "t1c", "t2w", "t2f")
 REGIONS = ("NCR", "SNFH", "ET", "RC", "tumor_core", "whole_tumor", "healthy")
 MIN_REGION_VOX = 200
 
-SCRATCH = Path(os.environ.get("SCRATCH") or "/scratch/paulh")
+SCRATCH = Path(os.environ["SCRATCH"])
 CACHE_DIR = SCRATCH / "brats_synth_cache"
 CKPT_DIR = SCRATCH / "brats_synth_checkpoints"
 QC_DIR = SCRATCH / "brats_synth_qc"

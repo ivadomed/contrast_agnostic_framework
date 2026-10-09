@@ -1,7 +1,7 @@
 # Source AFTER benchmark/02_tasks/breast_cancer/duke-breast-mri/5_scripts_duke-breast-mri/00_utils/env.sh,
 # to run the ispy2 -> duke-breast-mri cross-dataset predict/evaluate direction
 # entirely on tamia scratch. Mirrors
-# scripts/cluster/tamia_env_ambl_ispy2_target.sh's pattern exactly (same
+# benchmark/03_archive/retired_cluster_env/tamia_env_ambl_ispy2_target.sh's pattern exactly (same
 # /project file-count quota lesson from that file's header applies here:
 # ~291 cases x up to 12 runs x 3 folds x 1 item is a large file count, keep
 # duke's own predict/metrics OUTPUT on scratch, not /project).
@@ -10,10 +10,10 @@
 #   source scripts/cluster/tamia_env_duke_ispy2_target.sh
 #
 # Override every path outright (not with a ${VAR:-default} guard) -- see
-# CLAUDE.md's TamIA section: env.sh's own ${VAR:-default} guards already fired
+# the project notes' TamIA section: env.sh's own ${VAR:-default} guards already fired
 # by the time this file sources, so a guard here would be a no-op.
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 ISPY2_SCRATCH="$SCRATCH/ispy2"
 DUKE_SCRATCH="$SCRATCH/duke-breast-mri"
 

@@ -19,7 +19,7 @@
 #               Do this first: a real run refuses to re-record, so a late check failure would poison the pack dirs.
 #
 # Usage (on tamia):  bash 04_80_tamia_pack_t1c_full_suite.sh          # PACK_CHAIN=10 to change chain length
-#                    PACKROOT=/scratch/p/paulh/brats2024-glioma/_packruns/_dryrun_t1c T1C_DRYRUN=1 bash 04_80_...
+#                    PACKROOT=/scratch/${USER:0:1}/${USER}/brats2024-glioma/_packruns/_dryrun_t1c T1C_DRYRUN=1 bash 04_80_...
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "${HERE}/../../../../../.." && pwd)"
@@ -27,7 +27,7 @@ source "${HERE}/../00_utils/env_t1c.sh"
 source "${ROOT}/scripts/cluster/tamia_env.sh"
 source "${HERE}/../00_utils/t1c_runs.sh"
 
-PACKROOT="${PACKROOT:-/scratch/p/paulh/brats2024-glioma/_packruns}"
+PACKROOT="${PACKROOT:-/scratch/${USER:0:1}/${USER}/brats2024-glioma/_packruns}"
 declare -A PDIR=( [A]="${PACKROOT}/t1c_suiteA_${T1C_TS}" [B]="${PACKROOT}/t1c_suiteB_${T1C_TS}" [C]="${PACKROOT}/t1c_suiteC_${T1C_TS}" )
 for p in A B C; do
   [ ! -e "${PDIR[$p]}/index.tsv" ] || { echo "ERROR: ${PDIR[$p]} already recorded — refusing to re-record (would duplicate rows)" >&2; exit 1; }
@@ -47,7 +47,7 @@ done
 check_cmd() {   # $1 = cmd file; prints why and returns 1 if it must NOT be submitted
   local f="$1"
   grep -q "nnUNetv2_train 054 " "${f}" || { echo "  REJECT ${f##*/}: not dataset 054" >&2; return 1; }
-  grep -q "/scratch/p/paulh/brats2024-glioma/8_results/01_predictions/brats2024_glioma_model/t1c/" "${f}" || { echo "  REJECT ${f##*/}: results path is not the scratch t1c tree" >&2; return 1; }
+  grep -q "/scratch/${USER:0:1}/${USER}/brats2024-glioma/8_results/01_predictions/brats2024_glioma_model/t1c/" "${f}" || { echo "  REJECT ${f##*/}: results path is not the scratch t1c tree" >&2; return 1; }
   if grep -q "nnUNet_results=[^ ]*/project/" "${f}"; then echo "  REJECT ${f##*/}: results under /project (quota!)" >&2; return 1; fi
   return 0
 }
@@ -67,7 +67,7 @@ echo "[t1c-pack] self-test: each guard must REJECT a corrupted copy of a real re
 first="$(head -1 "${PDIR[A]}/index.tsv" | cut -f1)"; st="$(mktemp -d -p "${PACKROOT}")"
 sed 's/nnUNetv2_train 054 /nnUNetv2_train 053 /' "${first}" > "${st}/wrong_dataset.sh"
 sed 's#/8_results/01_predictions/brats2024_glioma_model/t1c/#/8_results/01_predictions/brats2024_glioma_model/t2f/#g' "${first}" > "${st}/wrong_contrast.sh"
-sed "s#nnUNet_results=\\\\'/scratch/p/paulh/brats2024-glioma/8_results/01_predictions/brats2024_glioma_model/t1c/#nnUNet_results=\\\\'/project/aip-jcohen/x/t1c/#" "${first}" > "${st}/project_path.sh"
+sed "s#nnUNet_results=\\\\'/scratch/${USER:0:1}/${USER}/brats2024-glioma/8_results/01_predictions/brats2024_glioma_model/t1c/#nnUNet_results=\\\\'/project/aip-jcohen/x/t1c/#" "${first}" > "${st}/project_path.sh"
 for bad in wrong_dataset wrong_contrast project_path; do
   cmp -s "${first}" "${st}/${bad}.sh" && { echo "ERROR: self-test mutation '${bad}' changed nothing — the test itself is vacuous" >&2; exit 1; }
   if check_cmd "${st}/${bad}.sh" 2>/dev/null; then echo "ERROR: guard did NOT reject '${bad}'" >&2; exit 1; else echo "  guard rejects '${bad}'  ok"; fi

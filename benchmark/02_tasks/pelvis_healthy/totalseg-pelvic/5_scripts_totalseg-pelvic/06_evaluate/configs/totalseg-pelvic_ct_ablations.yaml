@@ -1,6 +1,6 @@
 # totalseg-pelvic CT-trained — causal-ablation-ladder rungs, split out of the headline
 # totalseg-pelvic_ct_01_results.yaml (fixed 2026-09-21 — see that config's note for why
-# these were removed from there). Per CLAUDE.md's "Standardized output layout": a
+# these were removed from there). Per the project notes' "Standardized output layout": a
 # non-headline result set gets its own dedicated subdir, established convention
 # `ablations/`, not mixed into the flat headline table.
 #

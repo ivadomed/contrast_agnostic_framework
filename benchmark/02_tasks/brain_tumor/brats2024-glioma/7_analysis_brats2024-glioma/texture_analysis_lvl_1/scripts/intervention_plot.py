@@ -11,8 +11,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
-ANALYSIS_DIR = Path("/project/aip-jcohen/paulh/mri_synthesis_project/benchmark/02_tasks/brain_tumor/brats2024-glioma"
-                     "/7_analysis_brats2024-glioma/texture_analysis_lvl_1")
+ANALYSIS_DIR = Path(__file__).resolve().parents[1]  # .../texture_analysis_lvl_1
 DATA = ANALYSIS_DIR / "outputs" / "data" / "intervention_per_patient.csv"
 OUT = ANALYSIS_DIR / "outputs" / "plots" / "intervention_before_after_dice.png"
 

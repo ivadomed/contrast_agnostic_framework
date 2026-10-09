@@ -9,6 +9,14 @@ from conftest import source_env, env_vars  # noqa: E402
 DATASET_ROOT = Path(__file__).parent.parent
 ENV_SH = DATASET_ROOT / "5_scripts_on-harmony/00_utils/env.sh"
 
+# The data/nnUNet/results checks only make sense where the dataset is present (not in a fresh
+# clone or CI); the env.sh/conf/splits checks run everywhere.
+try:
+    HAS_DATA = any(Path(source_env(ENV_SH, "BIDS_ROOT")).glob("sub-*"))
+except Exception:
+    HAS_DATA = False
+needs_data = pytest.mark.skipif(not HAS_DATA, reason="on-harmony data not present on this machine")
+
 # ── env.sh ──────────────────────────────────────────────────────────────────
 
 def test_env_sh_exists():
@@ -28,29 +36,35 @@ def test_env_sh_exports_required_vars():
 
 # ── data source ──────────────────────────────────────────────────────────────
 
+@needs_data
 def test_bids_root_exists():
     p = Path(source_env(ENV_SH, "BIDS_ROOT"))
     assert p.exists(), f"BIDS_ROOT not found: {p}"
 
+@needs_data
 def test_bids_root_has_subjects():
     p = Path(source_env(ENV_SH, "BIDS_ROOT"))
     subjects = list(p.glob("sub-*"))
     assert subjects, f"No sub-* dirs found under BIDS_ROOT: {p}"
 
+@needs_data
 def test_bids_derivatives_exist():
     p = Path(source_env(ENV_SH, "BIDS_ROOT")) / "derivatives"
     assert p.exists(), f"derivatives/ missing under BIDS_ROOT: {p}"
 
 # ── nnUNet ───────────────────────────────────────────────────────────────────
 
+@needs_data
 def test_nnunet_raw_dir_exists():
     p = Path(source_env(ENV_SH, "nnUNet_raw"))
     assert p.exists(), f"nnUNet_raw not found: {p}"
 
+@needs_data
 def test_nnunet_preprocessed_dir_exists():
     p = Path(source_env(ENV_SH, "nnUNet_preprocessed"))
     assert p.exists(), f"nnUNet_preprocessed not found: {p}"
 
+@needs_data
 @pytest.mark.parametrize("dataset_id", [
     "Dataset030_OnHarmonyT1w",
     "Dataset031_OnHarmonyT1w31",
@@ -59,6 +73,7 @@ def test_nnunet_raw_dataset_present(dataset_id):
     raw = Path(source_env(ENV_SH, "nnUNet_raw"))
     assert (raw / dataset_id).exists(), f"Missing in nnUNet_raw: {dataset_id}"
 
+@needs_data
 @pytest.mark.parametrize("dataset_id", [
     "Dataset030_OnHarmonyT1w",
     "Dataset031_OnHarmonyT1w31",
@@ -89,10 +104,12 @@ def test_checkpoints_dir_exists():
     p = Path(source_env(ENV_SH, "CHECKPOINTS_DIR"))
     assert p.exists(), f"CHECKPOINTS_DIR not found: {p}"
 
+@needs_data
 def test_nnunet_results_dir_exists():
     p = Path(source_env(ENV_SH, "nnUNet_results"))
     assert p.exists(), f"nnUNet_results not found: {p}"
 
+@needs_data
 def test_results_subdirs_exist():
     results = DATASET_ROOT / "8_results_on-harmony"
     for sub in ("01_predictions", "02_metrics"):

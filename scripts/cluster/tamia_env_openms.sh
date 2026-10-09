@@ -4,7 +4,7 @@
 #   source benchmark/02_tasks/brain_ms/open-ms/5_scripts_open-ms/00_utils/env_t1w.sh
 #   source scripts/cluster/tamia_env_openms.sh
 
-export SCRATCH="${SCRATCH:-/scratch/p/paulh}"   # tamia: extra /p/ nesting, unset in non-login shells
+export SCRATCH="${SCRATCH:-/scratch/${USER:0:1}/${USER}}"   # tamia: extra /p/ nesting, unset in non-login shells
 OPENMS_SCRATCH="$SCRATCH/open-ms"
 
 export nnUNet_raw="$OPENMS_SCRATCH/2_nnUNet_open-ms/raw"

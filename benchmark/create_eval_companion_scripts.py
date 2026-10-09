@@ -16,7 +16,7 @@ with 00_00_utils/bootstrap_source_pins.py. Trainer class and dataset id come fro
       --model-type ispy2_model --source-contrasts t1wce t2w --items t1wce precontrast --labels tumour [--source-dataset-json <path rel. to source root>]
 """
 from __future__ import annotations
-import argparse, sys
+import argparse
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -297,7 +297,7 @@ def main():
     if not tam.exists() or a.force:
         text = f'''# Source AFTER .../{d}/5_scripts_{d}/00_utils/env.sh on TamIA: points {d}'s test data / results at scratch and the SOURCE ({s}) models at ITS scratch copy.
 # Override every path OUTRIGHT (a ${{VAR:-}} guard here is a no-op: env.sh already fired its guards). RUN_JOB_MEM_PER_GPU is in GiB (115G), never raw MB.
-export SCRATCH="${{SCRATCH:-/scratch/p/paulh}}"
+export SCRATCH="${{SCRATCH:-/scratch/${{USER:0:1}}/${{USER}}}}"
 export nnUNet_raw="$SCRATCH/{d}/2_nnUNet/raw"
 export PREDICTIONS_ROOT="$SCRATCH/{d}/8_results/01_predictions"
 export METRICS_ROOT="$SCRATCH/{d}/8_results/02_metrics"

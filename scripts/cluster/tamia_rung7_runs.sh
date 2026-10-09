@@ -30,7 +30,7 @@ RUNG_ROWS=(
 RUNG_CAT=auglab; RUNG_MSUB=""
 # run id from the pack recording: <PACKS_ROOT>/<pack>/fold0_<prefix>_<timestamp>.sh (unique; error if 0 or >1)
 rung_resolve_run() {
-    local pack="$1" prefix="$2" root; root="$(cat "${SCRATCH:-/scratch/p/paulh}/_packruns_rung7_auglab_pv_root.txt")"
+    local pack="$1" prefix="$2" root; root="$(cat "${SCRATCH:-/scratch/${USER:0:1}/${USER}}/_packruns_rung7_auglab_pv_root.txt")"
     local f; f=( "${root}/${pack}/fold0_${prefix}_"[0-9]*.sh )
     [ -e "${f[0]}" ] && [ "${#f[@]}" = 1 ] || { echo "RESOLVE_FAILED(${prefix})"; return 1; }
     f="$(basename "${f[0]}" .sh)"; echo "${f#fold0_}"

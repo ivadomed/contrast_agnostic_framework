@@ -60,6 +60,7 @@ Run as a CPU job (--gpus 0); reuses intervention_build.py's label/brain-mask/sha
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 import nibabel as nib
@@ -74,7 +75,7 @@ from intervention_build import (  # noqa: E402
     load_case, load_label, brain_mask, make_sham_mask,
 )
 
-INPUTS_ROOT = Path("/scratch/paulh/brats_intervention/inputs")
+INPUTS_ROOT = Path(os.environ["SCRATCH"]) / "brats_intervention/inputs"
 
 FEATHER_SIGMA = 1.5
 RING_LO, RING_HI = 1, 5

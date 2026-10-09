@@ -48,7 +48,7 @@ DEVIATION FROM THE WINNER'S EXACT TOOLING, STATED PLAINLY
 ---------------------------------------------------------
 They used SimpleElastix. Neither `itk-elastix` nor `SimpleITK-SimpleElastix` exists in
 the Alliance wheelhouse, and pulling ITK from PyPI into this project's shared venv is
-a documented fragility (CLAUDE.md: the venv has already been rebuilt once with
+a documented fragility (the project notes: the venv has already been rebuilt once with
 permanent losses). We therefore use SimpleITK's own rigid registration with Mattes
 mutual information — the SAME rigid+MI method class elastix implements. Given the
 measured transform is a near-pure translation with sub-degree-to-3-degree rotation,

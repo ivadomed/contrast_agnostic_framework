@@ -4,7 +4,7 @@
 # the shared runner (00_01_train/run_all_train_common.sh), which caps folds.
 #
 # This is the one-job-per-fold path (Vulcan/Killarney). On TamIA (whole-node H100
-# allocation, the project's standing default for Slurm jobs — see CLAUDE.md "Slurm jobs
+# allocation, the project's standing default for Slurm jobs — see the project notes "Slurm jobs
 # go to TamIA, not Vulcan"), use the pack-mode orchestrator instead once a sizing probe
 # has measured real per-fold cost on this dataset's pelvic-region crops.
 #

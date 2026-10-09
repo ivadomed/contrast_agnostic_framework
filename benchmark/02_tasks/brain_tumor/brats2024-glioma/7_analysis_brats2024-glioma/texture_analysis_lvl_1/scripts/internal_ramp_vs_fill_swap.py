@@ -118,7 +118,7 @@ def main():
          f"- **P2** Spearman ρ(Δ, R_eval − R_train) over 36 cells = {rho2:+.2f}, p(two-sided) = {p2c:.3g}; "
          f"within-row τ(Δ, R_eval) = {p2r[0]:+.2f}, p = {p2r[1]:.3g} → "
          f"**{'holds' if (rho2 > 0 and p2c / 2 < 0.05) else 'does not hold'}**",
-         f"- **P3** edema R by contrast: " + ", ".join(f"{c} {Rc.get((c, 'SNFH'), np.nan):.3f}" for c in ("t2f", "t2w", "t1c", "t1n")),
+         "- **P3** edema R by contrast: " + ", ".join(f"{c} {Rc.get((c, 'SNFH'), np.nan):.3f}" for c in ("t2f", "t2w", "t1c", "t1n")),
          f"- **P4** failures with R_train > R_eval: **{p4}**; successes with R_eval > R_train: "
          f"{int((succ['R_gap'] > 0).sum())}/{len(succ)}", "",
          f"Exploratory: within-row τ(real-fill Dice, −R_eval) = {extra_real[0]:+.2f}, p = {extra_real[1]:.3g}", "",

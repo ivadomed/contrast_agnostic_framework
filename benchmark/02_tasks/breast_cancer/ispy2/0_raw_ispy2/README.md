@@ -144,7 +144,7 @@ first on the onboarding sample and produced a mask covering **99.7% of the
 entire cropped image volume on every single slice, including the crop's own
 edge slices** — physically impossible for a discrete breast tumor, and
 exactly the class of bug this project's onboarding process is designed to
-catch before it reaches training/eval data (see CLAUDE.md's AMBL
+catch before it reaches training/eval data (see the project notes' AMBL
 632-vs-99 precedent). `value==0` gives physiologically sane tumor volumes:
 8.5mL and 24.0mL on the two Philips/GE onboarding samples, 5.2mL on a
 bi-lateral-variant sample — all consistent with the trial's own >=2.5cm-
@@ -162,7 +162,7 @@ regions.
 
 Checked directly via DICOM headers, following the same methodology used to
 catch ATLAS-Liver-HCC's uncontrolled per-patient contrast-phase mix (which
-led to that dataset's exclusion — see CLAUDE.md).
+led to that dataset's exclusion — see the project notes).
 
 - **22 distinct trial sites** confirmed via the `PatientName` field
   (`ISPY2-XXXXXX^Site-YYY`), matching the collection's documented "22+
