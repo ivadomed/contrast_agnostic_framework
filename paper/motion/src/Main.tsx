@@ -482,7 +482,7 @@ const Texture: React.FC = () => (
 //  BENCH: paper tab:meta (= paper/generated_results/meta_task_heatmap_paper_summary.md, 2026-10-07, SRCSM with its
 //         test-time source matching): Dice, PALETTE-Aug val000 minus the best OTHER method per task (PALETTE alone
 //         excluded); mark = that best-other method's own cell (★ Ours significantly better, ▼ significantly worse).
-//  ABL:   paper/scripts/compute_dissociation_pvalues.py task rows (2026-10-09): relative Δ Dice at the fill swap
+//  ABL:   paper/scripts/compute_dissociation_pvalues.py task rows (2026-10-09): Δ Dice (points) at the fill swap
 //         (rung 4 noise fill -> rung 5 PALETTE alone, val000), ★/▼ = Holm p < 0.05 over the 7 tasks. Rung 4 = the
 //         label_voronoi noise-fill retrain everywhere except Brain, whose retrain had not landed (previous rung 4 kept).
 type Bar = {key: string | null; label: string; v: number; mark: '★' | '▼' | ''};
@@ -497,13 +497,13 @@ const BENCH: Bar[] = [
   {key: 'mandible', label: 'Mandible', v: -2.1, mark: ''},
 ];
 const ABL: Bar[] = [
-  {key: 'brain_ms', label: 'MS', v: 37.8, mark: '★'},
-  {key: 'brain_tumor', label: 'Glioma', v: 13.0, mark: '★'},
-  {key: 'breast', label: 'Breast', v: 4.5, mark: '★'},
-  {key: 'pelvis', label: 'Pelvis', v: 6.3, mark: '★'},
-  {key: 'abdomen', label: 'Abdomen', v: 4.2, mark: '★'},
-  {key: 'mandible', label: 'Mandible', v: -2.2, mark: ''},
-  {key: 'brain_healthy', label: 'Brain', v: -1.1, mark: '▼'},
+  {key: 'brain_ms', label: 'MS', v: 9.24, mark: '★'},
+  {key: 'brain_tumor', label: 'Glioma', v: 4.64, mark: '★'},
+  {key: 'breast', label: 'Breast', v: 1.53, mark: '★'},
+  {key: 'pelvis', label: 'Pelvis', v: 3.12, mark: '★'},
+  {key: 'abdomen', label: 'Abdomen', v: 3.51, mark: '★'},
+  {key: 'mandible', label: 'Mandible', v: -1.56, mark: ''},
+  {key: 'brain_healthy', label: 'Brain', v: -0.72, mark: '▼'},
 ];
 
 const BarChart: React.FC<{bars: Bar[]; unit: string; vmax: number; vmin: number; groups?: [string, number][]}> = ({bars, unit, vmax, vmin, groups}) => {
@@ -569,9 +569,9 @@ const Ablation: React.FC = () => (
     <div style={{position: 'absolute', left: 90 + 3 * 170 + 3 * 34 + 70, top: 70, fontFamily: MONO, fontSize: 24, letterSpacing: '0.12em', color: C.muted}}>INTERFACE</div>
     <div style={{position: 'absolute', right: 90, top: 56, textAlign: 'right'}}>
       <div style={{fontFamily: DISPLAY, fontWeight: 700, fontSize: 84, color: C.ink, lineHeight: 1}}>Ablation results</div>
-      <div style={{fontFamily: MONO, fontSize: 22, color: C.muted, marginTop: 12}}>noise → real texture · relative Δ Dice · ★ significant</div>
+      <div style={{fontFamily: MONO, fontSize: 22, color: C.muted, marginTop: 12}}>noise → real texture · Δ Dice · ★ significant</div>
     </div>
-    <BarChart bars={ABL} unit="%" vmax={40} vmin={-14} groups={[['interface', 3]]} />
+    <BarChart bars={ABL} unit="" vmax={10} vmin={-4.5} groups={[['interface', 3]]} />
   </AbsoluteFill>
 );
 
