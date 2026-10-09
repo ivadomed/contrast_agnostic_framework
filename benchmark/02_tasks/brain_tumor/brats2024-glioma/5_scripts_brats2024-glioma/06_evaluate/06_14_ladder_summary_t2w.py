@@ -31,7 +31,7 @@ RUNGS = [
     ("+label_remap", "+ label remap",
      "ablations/brats2024-glioma_t2w_baseline_kmeans_label_remap_20260805_020628"),
     ("+voronoi (noise fill)", "+ Voronoi sub-parcellation, noise fill",
-     "ablations/brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_20260805_020659"),
+     "ablations/auglab_brats2024-glioma_t2w_baseline_kmeans_label_remap_voronoi_lblvor_20261007_170621"),   # label_voronoi noise fill 2026-10-09; was ..._voronoi_20260805_020659
     ("v26_6_2 (real fill)", "same partition, real-intensity fill (PALETTE alone)",
      "ablations/brats2024-glioma_t2w_v26_6_2_train050_val000_20261005_222300"),   # val000 (real-image checkpoint selection, like rung 4) 2026-10-06; was ..._val100_20261003_123018
     ("+AugLab (val000)", "+ full AugLab recipe on top",
