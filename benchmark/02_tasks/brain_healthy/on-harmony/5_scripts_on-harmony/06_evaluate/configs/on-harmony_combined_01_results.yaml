@@ -1,0 +1,54 @@
+# ON-Harmony — combined training modalities (T1w + T2w + dwi_ap pooled), cross-contrast.
+# Consumed by benchmark/00_commun_scripts/00_03_evaluate/combined_modality_summary.py
+# via 06_04_combined_modality_summary.sh. Companion to on-harmony_T1w.yaml /
+# on-harmony_T2w.yaml / on-harmony_dwi_ap.yaml (each ONE training modality) — this
+# pools ALL THREE into one row per method, with an inline significance column
+# (ref = OURS train050_val000) after the usual "all" column.
+#
+# dwi_ap added 2026-09-21 as the 3rd training modality (see project memory
+# project_onharmony_dwi_ap_arm_20260921) — NOT reportable until that training run
+# finishes and its metrics are synced back from TamIA (job chain 475389-475404).
+# Do not aggregate from this config until the dwi_ap/ metrics_dir below is populated
+# for all 7 runs — combined_modality_summary.py silently drops a modality entry whose
+# runs are entirely missing rather than erroring, which would silently understate "all".
+#
+# Same fixed 7-method order as the per-modality configs (no others): baseline,
+# synthseg_noEM, synthseg_EM, auglab_default, srcsm, auglabAug_v26_6_2
+# train050_val000, then train050_val100.
+title: "ON-Harmony — combined training modalities (T1w + T2w + dwi_ap), cross-contrast"
+output_dir: "${METRICS_ROOT}/on_harmony_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [T1w, T2w, bold, dwi_ap, epi_ap, gre_echo1_mag]
+
+modalities:
+  - name: T1w
+    metrics_dir: "${METRICS_ROOT}/on_harmony_model/T1w"
+    runs:
+      baseline: on-harmony_T1w_baseline_20260623_192811
+      synthseg_noEM: on-harmony_T1w_synthseg_noEM_20260623_192811
+      synthseg_EM: on-harmony_T1w_synthseg_EM_20260623_192811
+      auglab_default: on-harmony_T1w_auglab_default_20260623_192811
+      srcsm: on-harmony_T1w_srcsm_20260709_122115_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: on-harmony_T1w_srcsm_20260709_122115)
+      auglabAug_v26_6_2_train050_val000: on-harmony_T1w_auglabAug_v26_6_2_train050_val000_20260727_075205
+      auglabAug_v26_6_2_train050_val100: on-harmony_T1w_auglabAug_v26_6_2_train050_val100_20260727_075205
+  - name: T2w
+    metrics_dir: "${METRICS_ROOT}/on_harmony_model/T2w"
+    runs:
+      baseline: on-harmony_T2w_baseline_20260624_191152
+      synthseg_noEM: on-harmony_T2w_synthseg_noEM_20260624_191418
+      synthseg_EM: on-harmony_T2w_synthseg_EM_20260624_191329
+      auglab_default: on-harmony_T2w_auglab_default_20260625_143115
+      srcsm: on-harmony_T2w_srcsm_20260709_122145_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: on-harmony_T2w_srcsm_20260709_122145)
+      auglabAug_v26_6_2_train050_val000: on-harmony_T2w_auglabAug_v26_6_2_train050_val000_20260710_040443
+      auglabAug_v26_6_2_train050_val100: on-harmony_T2w_auglabAug_v26_6_2_train050_val100_20260727_075205
+  - name: dwi_ap
+    metrics_dir: "${METRICS_ROOT}/on_harmony_model/dwi_ap"
+    runs:
+      baseline: on-harmony_dwi_ap_baseline_20260921_203727
+      synthseg_noEM: on-harmony_dwi_ap_synthseg_noEM_20260921_203727
+      synthseg_EM: on-harmony_dwi_ap_synthseg_EM_20260921_203727
+      auglab_default: on-harmony_dwi_ap_auglab_default_20260921_203727
+      srcsm: on-harmony_dwi_ap_srcsm_20260921_203727_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: on-harmony_dwi_ap_srcsm_20260921_203727)
+      auglabAug_v26_6_2_train050_val000: on-harmony_dwi_ap_auglabAug_v26_6_2_train050_val000_20260921_203727
+      auglabAug_v26_6_2_train050_val100: on-harmony_dwi_ap_auglabAug_v26_6_2_train050_val100_20260921_203727

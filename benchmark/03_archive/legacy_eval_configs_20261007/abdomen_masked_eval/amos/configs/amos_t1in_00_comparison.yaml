@@ -1,0 +1,26 @@
+# AMOS — MR->CT/MRI generalization, chaos-t1in-trained models.
+# Same fixed 7-method order/run-id list as chaos's own
+# chaos_t1in_03_results.yaml -- these are the SAME models, just scored against
+# AMOS's own CT/MRI test set instead of chaos's own test set. A run with no
+# eval data yet still gets a row (blank/"—") rather than being dropped.
+#
+# Per-organ report (liver/right_kidney/left_kidney/spleen), NOT the macro-averaged
+# single-number-per-contrast shape aggregate_from_config.py produces -- see
+# 00_commun_scripts/00_03_evaluate/aggregate_per_organ_from_config.py's own
+# docstring for why this dataset needs its own sibling script rather than the
+# canonical one. GT organ ids are already remapped to chaos's own label
+# convention upstream, in 06_00_evaluate_amos.py's ORGAN_MAP -- this script only
+# reads the resulting eval_all.csv, no remapping happens here.
+title: "AMOS — MR→CT/MRI Generalization Results (chaos-trained models)"
+metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+output_dir: "${METRICS_ROOT}/chaos_model/t1in"
+output_prefix: "01_comparison"
+
+runs:
+  - chaos_t1in_baseline_20260614_153230
+  - chaos_t1in_auglab_default_20260611_120000
+  - chaos_t1in_synthseg_noEM_train100_val000_20260611_120000
+  - chaos_t1in_synthseg_EM_train100_val000_20260611_120000
+  - chaos_t1in_srcsm_20260710_011817
+  - chaos_t1in_auglabAug_v26_6_2_train050_val000_20260615_213615
+  - chaos_t1in_auglabAug_v26_6_2_train050_val100_20260616_112420

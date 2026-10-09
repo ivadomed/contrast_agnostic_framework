@@ -1,0 +1,31 @@
+# 2026-10-07: srcsm = SRC + test-time source matching (as published): run id is <run>_srcmatch; the plain SRC metrics stay next to it (plain run: pansegdata_{t1wce_srcsm_20261004_214055,t2w_srcsm_20261005_201341}).
+# msd-pancreas -- all pansegdata training contrasts pooled, per-item columns (combined_modality_summary.py). GENERATED from the source roster pins.
+title: "msd-pancreas -- combined PANSEGDATA-trained contrasts (t1wce + t2w), cross-dataset"
+output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/pancreas_disease/msd-pancreas/8_results_msd-pancreas/02_metrics/pansegdata_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [ct]
+
+modalities:
+  - name: t1wce
+    sources:
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/pancreas_disease/msd-pancreas/8_results_msd-pancreas/02_metrics/pansegdata_model/t1wce/ct"
+    runs:
+      baseline: pansegdata_t1wce_baseline_20261004_213842
+      synthseg_noEM: pansegdata_t1wce_synthseg_noEM_20261004_213948
+      synthseg_EM: pansegdata_t1wce_synthseg_EM_20261004_214021
+      auglab_default: pansegdata_t1wce_auglab_default_20261004_213915
+      srcsm: pansegdata_t1wce_srcsm_20261004_214055_srcmatch
+      auglabAug_v26_6_2_train050_val000: pansegdata_t1wce_auglabAug_v26_6_2_train050_val000_20261005_201307
+      auglabAug_v26_6_2_train050_val100: pansegdata_t1wce_auglabAug_v26_6_2_train050_val100_20261005_201307
+  - name: t2w
+    sources:
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/pancreas_disease/msd-pancreas/8_results_msd-pancreas/02_metrics/pansegdata_model/t2w/ct"
+    runs:
+      baseline: pansegdata_t2w_baseline_20261004_214413
+      synthseg_noEM: pansegdata_t2w_synthseg_noEM_20261004_214519
+      synthseg_EM: pansegdata_t2w_synthseg_EM_20261004_214552
+      auglab_default: pansegdata_t2w_auglab_default_20261004_214446
+      srcsm: pansegdata_t2w_srcsm_20261005_201341_srcmatch
+      auglabAug_v26_6_2_train050_val000: pansegdata_t2w_auglabAug_v26_6_2_train050_val000_20261005_201414
+      auglabAug_v26_6_2_train050_val100: pansegdata_t2w_auglabAug_v26_6_2_train050_val100_20261005_201414

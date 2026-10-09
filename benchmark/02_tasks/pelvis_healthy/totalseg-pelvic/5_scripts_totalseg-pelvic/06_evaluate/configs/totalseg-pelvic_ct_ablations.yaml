@@ -1,0 +1,32 @@
+# totalseg-pelvic CT-trained — causal-ablation-ladder rungs, split out of the headline
+# totalseg-pelvic_ct_01_results.yaml (fixed 2026-09-21 — see that config's note for why
+# these were removed from there). Per CLAUDE.md's "Standardized output layout": a
+# non-headline result set gets its own dedicated subdir, established convention
+# `ablations/`, not mixed into the flat headline table.
+#
+# ⚠️ PARTIAL LADDER, not the full causal-dissociation study other datasets have
+# (open-ms FLAIR, chaos T1in/T2spir, brats2024-glioma T1n): totalseg-pelvic was never
+# trained with the "v26_6_2-alone, real-fill, non-AugLab" rung that the noise-fill →
+# real-fill dissociation (rung 4→5) depends on, nor is there a dedicated
+# 06_1X_ladder_summary.py for this dataset. This config only reports what data exists —
+# baseline → +K-means intensity clustering → +label-remap → +Voronoi sub-parcellation
+# (noise fill) — plus OURS as the headline endpoint for reference. Do not cite this as
+# the rung-4→5 texture-preservation result; that rung is missing here.
+#
+# sig_ref below is required for the same short-RUN_ID reason as the headline config —
+# do NOT remove it.
+title: "totalseg-pelvic CT-trained — ablation-ladder rungs (partial, no real-fill rung)"
+output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct/ablations"
+output_prefix: "02_ablations"
+sig_ref: ct_ours_20260916_072434
+column_order: [ct, mri]
+
+sources:
+  - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
+
+runs:
+  - ct_baseline_20260916_072434
+  - ct_baseline_kmeans_20260916_072434
+  - ct_baseline_kmeans_label_remap_20260916_072434
+  - ct_baseline_kmeans_label_remap_voronoi_20260916_072434
+  - ct_ours_20260916_072434

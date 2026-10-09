@@ -1,0 +1,17 @@
+# AMOS — MR->CT/MRI generalization, chaos-t2spir-trained models.
+# Same fixed 7-method order/run-id list as chaos's own chaos_t2spir_01_results.yaml.
+# See amos_t1in_00_comparison.yaml's header comment for the full rationale (same
+# per-organ report shape, same upstream label-remap boundary).
+title: "AMOS — MR→CT/MRI Generalization Results (chaos-trained models, t2spir)"
+metrics_dir: "${METRICS_ROOT}/chaos_model/t2spir"
+output_dir: "${METRICS_ROOT}/chaos_model/t2spir"
+output_prefix: "01_comparison"
+
+runs:
+  - chaos_t2spir_baseline_20260620_111146
+  - chaos_t2spir_auglab_default_20260620_112240
+  - chaos_t2spir_synthseg_noEM_20260620_112515
+  - chaos_t2spir_synthseg_EM_20260620_112357
+  - chaos_t2spir_srcsm_20260709_121945
+  - chaos_t2spir_auglabAug_v26_6_2_train050_val000_20260710_054202
+  - chaos_t2spir_auglabAug_v26_6_2_train050_val100_20260723_194053

@@ -1,0 +1,86 @@
+# 2026-10-01: duke + acrin6698 columns/sources switched to the *_uniap items (L-R + skin-anchored
+# A-P crop to I-SPY2 unilateral training geometry); L-R-only versions archived under benchmark/03_archive/.
+# ispy2 -- OWN-model, combined training modalities (t1wce + t2w pooled),
+# cross-contrast. Consumed by
+# benchmark/00_commun_scripts/00_03_evaluate/combined_modality_summary.py via
+# 06_04_combined_modality_summary.sh. Companion to ispy2_t1wce_01_results.yaml /
+# ispy2_t2w_01_results.yaml (each ONE training modality) -- pools BOTH into one
+# row per method, with an inline significance column (ref = OURS
+# train050_val000) after the usual "all" column.
+#
+# Each training modality pools THREE test sources, not one: I-SPY2's own
+# held-out patients plus both arms of the external duke-breast-mri (MAMA-MIA)
+# cohort, which was predicted and evaluated on every method of this suite. Same
+# `sources:` mechanism chaos uses for amos/sliver07 and toothfairy2 uses for
+# hanseg -- an external cohort is a test column here, not a separate task.
+# Prefixed `duke_` so duke's t1wce arm cannot collide with I-SPY2's own t1wce
+# column (they are different cohorts scored on the same contrast name).
+#
+# 2026-09-17: duke's columns point at the UNILATERAL-CROP metrics dirs
+# (t1wce_uniap / precontrast_uniap), not the original bilateral ones -- unilateral
+# crop is now the standard and only reported duke evaluation (see
+# benchmark/02_tasks/breast_cancer/duke-breast-mri/.../02_03_derive_unilateral_crop.py and CLAUDE.md's
+# "Breast task" section). The original bilateral tables are archived at
+# benchmark/03_archive/{duke-breast-mri,ispy2}_bilateral_eval_20260917/, not deleted.
+# 2026-09-30: + ispy1 (I-SPY1/MAMA-MIA, 167 pts, t1wce + precontrast, natively
+# unilateral) and acrin6698 (ACRIN-6698 T0 DWI, lesion-side unilateral crop, a
+# third contrast family) as further external test columns, prefixed so they
+# cannot collide with I-SPY2's/duke's same-named contrasts.
+title: "I-SPY2 own-model -- combined training modalities (t1wce + t2w), cross-contrast"
+output_dir: "${METRICS_ROOT}/ispy2_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [t1wce, t2w, precontrast, dwi]
+
+# Pool by TRUE contrast (2026-10-01, Paul): t1wce is scored on 3 cohorts and precontrast
+# on 2, so one-column-per-source would give t1wce 3 votes in `all` vs dwi/t2w 1. Each key
+# below is ONE displayed column whose list POOLS ALL CASES of that contrast across
+# cohorts ("all pre-contrast together"); `all` = equal weight per contrast. Same
+# estimand as ispy2's ladders (06_10/06_11 OOD_GROUPS). Disable: use_contrast_groups: false.
+contrast_groups:
+  t1wce: [t1wce, duke_t1wce_uniap, ispy1_t1wce]
+  t2w: t2w
+  precontrast: [duke_precontrast_uniap, ispy1_precontrast]
+  dwi: acrin6698_dwi_uniap
+
+modalities:
+  - name: t1wce
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/t1wce_uniap"
+        column_prefix: "duke_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t1wce/precontrast_uniap"
+        column_prefix: "duke_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/ispy1/8_results_ispy1/02_metrics/ispy2_model/t1wce/t1wce"
+        column_prefix: "ispy1_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/ispy1/8_results_ispy1/02_metrics/ispy2_model/t1wce/precontrast"
+        column_prefix: "ispy1_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/acrin6698/8_results_acrin6698/02_metrics/ispy2_model/t1wce/dwi_uniap"
+        column_prefix: "acrin6698_"
+    runs:
+      baseline: ispy2_t1wce_baseline_20260905_163655
+      auglab_default: ispy2_t1wce_auglab_default_20260905_163655
+      synthseg_noEM: ispy2_t1wce_synthseg_noEM_20260905_163655
+      synthseg_EM: ispy2_t1wce_synthseg_EM_20260905_163655
+      srcsm: ispy2_t1wce_srcsm_20260905_163655_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: ispy2_t1wce_srcsm_20260905_163655)
+      auglabAug_v26_6_2_train050_val000: ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
+  - name: t2w
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/t1wce_uniap"
+        column_prefix: "duke_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/duke-breast-mri/8_results_duke-breast-mri/02_metrics/ispy2_model/t2w/precontrast_uniap"
+        column_prefix: "duke_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/ispy1/8_results_ispy1/02_metrics/ispy2_model/t2w/t1wce"
+        column_prefix: "ispy1_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/ispy1/8_results_ispy1/02_metrics/ispy2_model/t2w/precontrast"
+        column_prefix: "ispy1_"
+      - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/breast_cancer/acrin6698/8_results_acrin6698/02_metrics/ispy2_model/t2w/dwi_uniap"
+        column_prefix: "acrin6698_"
+    runs:
+      baseline: ispy2_t2w_baseline_20260905_163655
+      auglab_default: ispy2_t2w_auglab_default_20260905_163655
+      synthseg_noEM: ispy2_t2w_synthseg_noEM_20260905_163655
+      synthseg_EM: ispy2_t2w_synthseg_EM_20260905_163655
+      srcsm: ispy2_t2w_srcsm_20260905_163655_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: ispy2_t2w_srcsm_20260905_163655)
+      auglabAug_v26_6_2_train050_val000: ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

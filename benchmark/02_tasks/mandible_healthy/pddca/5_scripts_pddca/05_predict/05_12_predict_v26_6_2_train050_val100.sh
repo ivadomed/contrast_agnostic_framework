@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Predict on the FOV-matched PDDCA CT test set with the toothfairy2 CBCT-trained
+# ladder rung5 (real fill) model (cross-MODALITY: CBCT -> CT). See 05_01_predict_common.sh.
+# Usage: bash 05_12_predict_v26_6_2_train050_val100.sh <RUN_ID> [FOLD]
+set -euo pipefail
+source "$(dirname "$0")/../00_utils/env.sh"
+METHOD="v26_6_2_train050_val100"
+TRAINER="nnUNetTrainerToothFairy2AugLabValSynth"
+CATEGORY="nnUNet"
+DATASET_ID="${TF2_DATASET_ID}"
+source "$(dirname "$0")/05_01_predict_common.sh" "$@"

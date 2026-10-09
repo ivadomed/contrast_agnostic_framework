@@ -1,0 +1,28 @@
+# acrin6698 (ACRIN-6698 T0 DWI) -- combined ISPY2-trained modalities (t1wce + t2w pooled),
+# cross-dataset; the single dwi_uniap item as the column. Same mechanism as
+# duke-breast-mri's duke_combined_01_results.yaml.
+title: "acrin6698 (ACRIN-6698 T0 DWI) -- combined ISPY2-trained modalities (t1wce + t2w), cross-dataset"
+output_dir: "${METRICS_ROOT}/ispy2_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [dwi_uniap]
+
+modalities:
+  - name: t1wce
+    metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce/dwi_uniap"
+    runs:
+      baseline: ispy2_t1wce_baseline_20260905_163655
+      auglab_default: ispy2_t1wce_auglab_default_20260905_163655
+      synthseg_noEM: ispy2_t1wce_synthseg_noEM_20260905_163655
+      synthseg_EM: ispy2_t1wce_synthseg_EM_20260905_163655
+      srcsm: ispy2_t1wce_srcsm_20260905_163655
+      auglabAug_v26_6_2_train050_val000: ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655
+  - name: t2w
+    metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w/dwi_uniap"
+    runs:
+      baseline: ispy2_t2w_baseline_20260905_163655
+      auglab_default: ispy2_t2w_auglab_default_20260905_163655
+      synthseg_noEM: ispy2_t2w_synthseg_noEM_20260905_163655
+      synthseg_EM: ispy2_t2w_synthseg_EM_20260905_163655
+      srcsm: ispy2_t2w_srcsm_20260905_163655
+      auglabAug_v26_6_2_train050_val000: ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

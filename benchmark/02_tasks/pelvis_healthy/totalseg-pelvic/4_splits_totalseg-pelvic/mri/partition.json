@@ -1,0 +1,9 @@
+{
+  "n_available_total": 298,
+  "n_bids_rejected": 0,
+  "n_usable_final": 183,
+  "n_test": 27,
+  "n_trainval": 156,
+  "seed": 42,
+  "test_fraction": 0.15
+}

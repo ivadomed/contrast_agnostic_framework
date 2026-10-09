@@ -1,0 +1,26 @@
+# Generated as part of the checkpoint_best vs checkpoint_final comparison sweep.
+# Real data for the side that wasn't this dataset's historical on-disk default
+# lives under metrics_dir/checkpoint_comparison/ (keys below are prefixed accordingly); the
+# other side is the pre-existing headline data, untouched, in metrics_dir itself.
+# auglabAug_v26_6_2's val000/val100 DualVal mirrors have genuinely different
+# checkpoint_best.pth so both are kept as separate best rows; checkpoint_final.pth
+# is byte-identical between them (verified via md5sum), so there is one final row.
+title: "BraTS 2024 Glioma T1n — checkpoint_best vs checkpoint_final"
+metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t1n"
+output_prefix: "best_vs_final_ckpt"
+in_domain_contrast: t1n
+
+runs:
+  - nnUNet_brats2024-glioma_t1n_baseline_20260622_044535  # baseline (best)
+  - checkpoint_comparison/nnUNet_brats2024-glioma_t1n_baseline_20260622_044535  # baseline (final)
+  - auglab_brats2024-glioma_t1n_synthseg_noEM_20260622_044535  # synthseg_noEM (best)
+  - checkpoint_comparison/auglab_brats2024-glioma_t1n_synthseg_noEM_20260622_044535  # synthseg_noEM (final)
+  - auglab_brats2024-glioma_t1n_synthseg_EM_20260622_044535  # synthseg_EM (best)
+  - checkpoint_comparison/auglab_brats2024-glioma_t1n_synthseg_EM_20260622_044535  # synthseg_EM (final)
+  - auglab_brats2024-glioma_t1n_auglab_default_20260622_044535  # auglab_default (best)
+  - checkpoint_comparison/auglab_brats2024-glioma_t1n_auglab_default_20260622_044535  # auglab_default (final)
+  - auglab_brats2024-glioma_t1n_srcsm_20260709_122015  # srcsm (best)
+  - checkpoint_comparison/auglab_brats2024-glioma_t1n_srcsm_20260709_122015  # srcsm (final)
+  - auglab_brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val000_20260710_040303  # auglabAug_v26_6_2 val000 (best)
+  - auglab_brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val100_20260725_113540  # auglabAug_v26_6_2 val100 (best)
+  - checkpoint_comparison/auglab_brats2024-glioma_t1n_auglabAug_v26_6_2_train050_20260725_113540  # auglabAug_v26_6_2 (final)

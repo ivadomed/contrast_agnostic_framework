@@ -1,0 +1,106 @@
+title: "CHAOS T1in models — cross-dataset results"
+in_domain_contrast: chaos_t1in
+output_prefix: "02_cross_dataset_t1in"
+output_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/8_results_chaos/02_metrics/chaos_model/t1in"
+
+column_order:
+  - chaos_t1in
+  - chaos_t1out
+  - chaos_t2spir
+  - t2w
+  - CT
+
+sources:
+  # kidney-t2w EXCLUDED 2026-08-01: coronal acquisition, its through-plane
+  # (A-P depth) FOV is fundamentally different from chaos's axial slab, so it is
+  # not a valid cross-CONTRAST comparison. See benchmark/03_archive/kidney-t2w/ACQUISITION_PLANE_INVESTIGATION.md
+  # cirrmri-liver EXCLUDED 2026-08-01: several cases show organ predictions
+  # (liver/kidney/spleen all fragmented, mislabeled, kidneys missing) that are
+  # NOT explained by any pipeline mechanism -- FOV, orientation, intensity/
+  # normalization, trainer-class inference code, patch-tiling, config override,
+  # and resampling/interpolation (tested directly: manually pre-resampled a bad
+  # case with nnU-Net's own resample fn, reducing on-the-fly resampling to a
+  # no-op -- fragmentation persisted unchanged) were all ruled out with direct
+  # evidence. Leading explanation: cirrhosis (this cohort's diagnosis, confirmed
+  # via Radiological Evaluation metadata, Mild/Moderate/Severe) causes portal
+  # hypertension -> splenomegaly (spleen approaching liver size) -- an ANATOMICAL
+  # distortion no augmentation strategy here randomizes (all of them randomize
+  # appearance/contrast, not organ size/shape), so it isn't reliably measuring
+  # contrast generalization for this dataset. Not confirmed by direct
+  # measurement (this dataset's own GT is liver-only, no spleen/kidney label to
+  # check against) -- treated as untrustworthy pending that confirmation.
+  # msd-spleen EXCLUDED 2026-08-29: forgotten exclusion caught during a paper
+  # results-aggregation review -- was never meant to be in this project's
+  # cross-dataset roster. Removed here and from chaos_combined_01_results.yaml.
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/chaos/8_results_chaos/02_metrics/chaos_model/t1in"
+    column_prefix: "chaos_"
+    column_rename:
+      ct: chaos_ct_liver     # chaos CT GT only has liver
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/amos/8_results_amos/02_metrics/chaos_model/t1in/fov_crop"
+    column_prefix: "amos_"
+    # AMOS's "mri" column is one real contrast, not a generic modality bucket --
+    # benchmark/02_tasks/abdomen_healthy/amos/5_scripts_amos/00_utils/00_01_bidsify.py bidsifies it as
+    # `_T2w.nii.gz`. Renamed to `t2w` (2026-08-31) so it reads as the actual
+    # contrast it is, not a dataset-provenance label. Kept as its OWN column
+    # rather than pooled into chaos_t2spir: T2spir is a specific fat-suppressed
+    # sequence, plain T2w is a different acquisition -- same reasoning that
+    # already keeps chaos_t1in/chaos_t1out apart instead of merging them.
+    column_rename:
+      mri: t2w
+  - metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/abdomen_healthy/sliver07/8_results_sliver07/02_metrics/chaos_model/t1in/fov_crop"
+    column_rename:
+      ct: sliver07_ct_liver  # sliver07 GT only has liver
+  # NOTE: TRUSTED intentionally NOT included here. Its US eval is confounded by a
+  # center-bias artifact (per-kidney crop → kidney dead-center; a centered blob scores
+  # ~31% Dice, above every chaos model's US), so its numbers don't belong in the
+  # cross-dataset comparison. TRUSTED's own results live in benchmark/03_archive/trusted/.
+
+# contrast_groups pooling -- feeds BOTH significance_from_config.py AND this file's
+# own aggregate_from_config.py summary table's "all" column/heatmap (corrected
+# 2026-08-31: this comment previously and incorrectly claimed the table/heatmap
+# stayed flat -- it does not; build_summary() reads this same block). Individual
+# per-column cells stay unpooled (raw, for transparency); only "all" is pooled.
+# Without this, "CT" gets 3 independently-weighted OOD votes
+# (chaos_ct_liver, amos_ct, sliver07_ct_liver) against only 1 vote each for
+# t1out/t2spir/amos_mri, AND amos_ct's own vote already silently blends 4 organs
+# (liver+2 kidneys+spleen) into one number. Fix: pool CT into ONE top-level group
+# via a per-organ-then-cross-organ average (average every source's liver-CT
+# together, every source's spleen-CT together, every source's kidney-CT together,
+# THEN average those 3 organ scores into one CT score) -- so CT counts as one
+# modality vote, on equal footing with t1out/t2spir/amos_mri, and no single organ
+# (e.g. amos_ct's spleen, chaos_ct_liver's liver) is silently over/under-
+# represented within it. spleen = amos_ct's spleen label alone (msd-spleen, the
+# only other spleen-CT source, is excluded -- see the sources: comment above).
+# kidney = left_kidney + right_kidney pooled (only amos_ct has kidney GT among
+# the CT sources). MR columns (t1out/t2spir/amos_mri) are left flat/ungrouped --
+# each is a single dataset-source per modality, so there's no cross-source
+# vote-stacking to fix there (their own internal 4-organ blend is the same
+# pre-existing simplification the flat scheme always made, not what this fix
+# targets). Disable by removing this block or setting use_contrast_groups: false.
+contrast_groups:
+  chaos_t1in: chaos_t1in
+  chaos_t1out: chaos_t1out
+  chaos_t2spir: chaos_t2spir
+  t2w: t2w
+  CT:
+    liver:
+      - chaos_ct_liver
+      - {column: amos_ct, label: liver}
+      - sliver07_ct_liver
+    spleen: {column: amos_ct, label: spleen}
+    kidney:
+      - {column: amos_ct, label: left_kidney}
+      - {column: amos_ct, label: right_kidney}
+
+# Canonical method order (CLAUDE.md): baseline, auglab_default, synthseg_noEM,
+# synthseg_EM, v26_6_2 (alone), srcsm (7th arm), OURS val000, OURS val100.
+# Updated 2026-07-29: OURS was pointing at the stale pre-dual-val
+# train025_val100 checkpoint -- now the current train050_val000/val100 pair.
+runs:
+  - chaos_t1in_baseline_20260614_153230
+  - chaos_t1in_auglab_default_20260611_120000
+  - chaos_t1in_synthseg_noEM_train100_val000_20260611_120000
+  - chaos_t1in_synthseg_EM_train100_val000_20260611_120000
+  - chaos_t1in_srcsm_20260710_011817_srcmatch
+  - chaos_t1in_auglabAug_v26_6_2_train050_val000_20260615_213615
+  - chaos_t1in_auglabAug_v26_6_2_train050_val100_20260616_112420

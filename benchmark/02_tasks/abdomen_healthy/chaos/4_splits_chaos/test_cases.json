@@ -1,0 +1,49 @@
+{
+  "mr_internal_test": [
+    "MR05",
+    "MR19",
+    "MR36",
+    "MR38"
+  ],
+  "ct_test": [
+    "CT01",
+    "CT02",
+    "CT05",
+    "CT06",
+    "CT08",
+    "CT10",
+    "CT14",
+    "CT16",
+    "CT18",
+    "CT19",
+    "CT21",
+    "CT22",
+    "CT23",
+    "CT24",
+    "CT25",
+    "CT26",
+    "CT27",
+    "CT28",
+    "CT29",
+    "CT30"
+  ],
+  "mr_test_modalities": [
+    "t1in",
+    "t1out",
+    "t2spir"
+  ],
+  "ct_test_modalities": [
+    "ct"
+  ],
+  "scoreable_organs": {
+    "MR": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "CT": [
+      1
+    ]
+  }
+}

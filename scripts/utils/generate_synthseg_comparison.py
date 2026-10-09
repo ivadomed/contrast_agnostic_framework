@@ -17,8 +17,8 @@ Spatial augmentations are disabled so outputs are in the same space as the input
 
 Usage (4 GPUs):
   for rank in 0 1 2 3; do
-    set_slot $rank .venv/bin/python scripts/generate_synthseg_comparison.py \\
-      --mode modeA --rank $rank --world-size 4 > /tmp/ss_modeA_r${rank}.log 2>&1 &
+    run_job --gpus 1 --slot $rank --wait -- .venv/bin/python scripts/generate_synthseg_comparison.py \\
+      --mode modeA --rank $rank --world-size 4
   done
 """
 from __future__ import annotations
@@ -32,7 +32,7 @@ import ctypes, glob, os as _os
 # sudo strips LD_LIBRARY_PATH; load venv CUDA libs with ctypes so TF finds the GPU.
 for _lib in sorted(glob.glob(str(
         Path(__file__).resolve().parents[1] /
-        ".venv/lib/python3.12/site-packages/nvidia/*/lib/*.so*"))):
+        ".venv/lib/python3.*/site-packages/nvidia/*/lib/*.so*"))):
     try: ctypes.CDLL(_lib)
     except OSError: pass
 _os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
@@ -191,10 +191,11 @@ def main():
     log.info("%d pending / %d total", len(pending), len(t1w_files))
 
     import os, ctypes, glob
-    # set_slot controls cgroups only — set CUDA_VISIBLE_DEVICES explicitly per rank.
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.rank)
+    # set_slot doesn't set CUDA_VISIBLE_DEVICES; on Slurm the scheduler does (GPU 0).
+    # setdefault preserves the scheduler's binding while falling back for set_slot.
+    os.environ.setdefault("CUDA_VISIBLE_DEVICES", str(args.rank))
     for _lib in sorted(glob.glob(str(
-            PROJECT_ROOT / ".venv/lib/python3.12/site-packages/nvidia/*/lib/*.so*"))):
+            PROJECT_ROOT / ".venv/lib/python3.*/site-packages/nvidia/*/lib/*.so*"))):
         try: ctypes.CDLL(_lib)
         except OSError: pass
     os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")

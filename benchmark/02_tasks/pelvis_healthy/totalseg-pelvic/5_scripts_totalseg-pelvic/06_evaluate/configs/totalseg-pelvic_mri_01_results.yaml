@@ -1,0 +1,31 @@
+# totalseg-pelvic MRI-trained models — per-modality results table (own-contrast +
+# cross-contrast). See totalseg-pelvic_ct_01_results.yaml's header for the shared notes.
+#
+# ⚠️ TEMPLATE — RUN_IDs below are placeholders. Fill in the real RUN_ID for each method
+# once 04_14_run_all_mri.sh has actually produced them.
+title: "totalseg-pelvic MRI-trained — cross-contrast results"
+output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
+output_prefix: "01_results"
+# See totalseg-pelvic_ct_01_results.yaml's note — explicit sig_ref needed since our
+# short RUN_IDs don't embed the full descriptive method name REF_SUBSTR looks for.
+# Do NOT remove sig_ref — the "sig. vs ref" column silently disappears without it.
+sig_ref: mri_ours_20260916_072453
+column_order: [ct, mri]
+
+sources:
+  - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
+
+# NOTE 2026-09-16: `runs:` is a LIST of real RUN_ID strings (see the CT config's matching
+# note for why — this schema, not the {method: run_id} dict).
+#
+# FIXED 2026-09-21: see totalseg-pelvic_ct_01_results.yaml's matching note — the 3
+# ablation-ladder rungs were wrongly mixed into this headline table. Moved to
+# configs/totalseg-pelvic_mri_ablations.yaml.
+runs:
+  - mri_baseline_20260916_072453
+  - mri_auglab_default_20260916_072453
+  - mri_synthseg_noEM_20260916_072453
+  - mri_synthseg_EM_20260916_072453
+  - mri_srcsm_20260916_072453_srcmatch
+  - mri_ours_20260916_072453
+  - totalseg-pelvic_mri_v26_6_2_train050_val000_20261005_223058

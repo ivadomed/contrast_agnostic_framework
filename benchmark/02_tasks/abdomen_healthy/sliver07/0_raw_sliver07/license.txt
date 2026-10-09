@@ -1,0 +1,18 @@
+This data should follow these rules, stated on https://sliver07.grand-challenge.org/Rules/
+
+The following rules apply to those who register a team, download data and submit results:
+
+The original data sets and associated segmentation data downloaded here, or any data derived from these data sets, will not be given nor distributed under any circumstances to persons not belonging to the registered team.
+The data on this site is to be used exclusively for the purpose of developing segmentation algorithms of the liver. Use of the data for any other purposes requires explicit permission from the maintainers of this site, listed at the bottom of this page.
+Commercial use of segmentation algorithms that use the supplied data (test or training cases) as training material is forbidden.
+In scientific publications (journal publications, conference papers, technical reports, presentations at conferences and meetings) that use the data from this website, you must cite the following paper:
+
+T. Heimann, B. van Ginneken, M. Styner, Y. Arzhaeva, V. Aurich, C. Bauer, A. Beck, C. Becker, R. Beichel, G. Bekes, F. Bello, G. Binnig, H. Bischof, A. Bornik, P.M.M. Cashman, Y. Chi, A. Cordova, B.M. Dawant, M. Fidrich, J. Furst, D. Furukawa, L. Grenacher, J. Hornegger, D. Kainmueller, R.I. Kitney, H. Kobatake, H. Lamecker, Th. Lange, J. Lee, B. Lennon, R. Li, S. Li, H.-P. Meinzer, G. Nemeth, D.S. Raicu, A.-M. Rau, E.M. van Rikxoort, M. Rousson, L. Rusko, K.A. Saddi, G. Schmidt, D. Seghers, A. Shimizu, P. Slagmolen, E. Sorantin, G. Soza, R. Susomboon, J.M. Waite, A. Wimmer, I. Wolf, "Comparison and Evaluation of Methods for Liver Segmentation from CT datasets", IEEE Transactions on Medical Imaging, volume 28, number 8, pp. 1251-1265, 2009. 
+
+This paper can be downloaded from IEEE Explore if you have a subscription or here from the Diagnostic Image Analysis Group web site.
+Teams are allowed to use images from this site of their own results and images without any results overlaid or only reference results overlaid, for illustrations in their papers and scientific presentations.
+Teams must not report results of liver segmentation algorithms on only the training data of this website. Instead, teams must always include results on the test data as well. Those results will be obtained by submitting the results of your system to this website.
+Results uploaded to this website will be listed on this site, and by submitting you grant permission to do so.
+You must notify the maintainers of this site about any of your publications that use the data on this site, in order for us to maintain a list of publications associated with this dataset.
+Each submitted result must be accompanied by a pdf file describing the workings of the system. The maintainers of this site reserve the right to refuse to evaluate systems whose description does not meet minimal requirements. See here for more explanation about the required description.
+The maintainers of this site may use the submitted results for future research studies, for example by investigating methods that combine results from multiple systems. If your results will be used, your work will be referenced.

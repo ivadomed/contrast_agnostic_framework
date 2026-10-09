@@ -1,0 +1,42 @@
+# totalseg-pelvic — combined training modalities (CT + MRI pooled), the shape the
+# cross-DATASET meta_task_heatmap consumes (scripts/evaluate/meta_task_heatmap.yaml), same
+# pattern as chaos_combined_01_results.yaml / autopet_combined_01_results.yaml (two real
+# training modalities, pooled 3+3 folds = one equally-weighted 6-fold mean per method via
+# cross_fold_class_mean).
+#
+# ⚠️ TEMPLATE — fill in real RUN_IDs in totalseg-pelvic_ct_01_results.yaml /
+# totalseg-pelvic_mri_01_results.yaml first; this config reads the SAME run ids via the
+# `runs:` map per modality below (kept in sync by hand for now, same as autopet's).
+title: "totalseg-pelvic — combined (CT + MRI training modalities) results"
+output_dir: "${METRICS_ROOT}/totalseg_pelvic_model/combined_contrasts"
+output_prefix: "01_results"
+ref: auglabAug_v26_6_2_train050_val000
+column_order: [ct, mri]
+
+# FIXED 2026-09-21: the 3 causal-ablation-ladder rungs (baseline_kmeans / +label_remap /
+# +voronoi) were wrongly mixed into this headline table (same bug as the ct/mri per-
+# modality configs — see their matching notes). Removed here; see
+# configs/totalseg-pelvic_{ct,mri}_ablations.yaml for the ladder rungs on their own.
+modalities:
+  - name: ct
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/ct"
+    runs:
+      baseline: ct_baseline_20260916_072434
+      auglab_default: ct_auglab_default_20260916_072434
+      synthseg_noEM: ct_synthseg_noEM_20260916_072434
+      synthseg_EM: ct_synthseg_EM_20260916_072434
+      srcsm: ct_srcsm_20260916_072434_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: ct_srcsm_20260916_072434)
+      auglabAug_v26_6_2_train050_val000: ct_ours_20260916_072434
+      v26_6_2_train050_val000: totalseg-pelvic_ct_v26_6_2_train050_val000_20261005_223025
+  - name: mri
+    sources:
+      - metrics_dir: "${METRICS_ROOT}/totalseg_pelvic_model/mri"
+    runs:
+      baseline: mri_baseline_20260916_072453
+      auglab_default: mri_auglab_default_20260916_072453
+      synthseg_noEM: mri_synthseg_noEM_20260916_072453
+      synthseg_EM: mri_synthseg_EM_20260916_072453
+      srcsm: mri_srcsm_20260916_072453_srcmatch   # SRCSM as published = SRC + test-time source matching (2026-10-07; plain SRC run: mri_srcsm_20260916_072453)
+      auglabAug_v26_6_2_train050_val000: mri_ours_20260916_072453
+      v26_6_2_train050_val000: totalseg-pelvic_mri_v26_6_2_train050_val000_20261005_223058

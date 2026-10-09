@@ -6,7 +6,7 @@ full volume, and times each component of the train_step with proper CUDA
 synchronisation.  Reports per-component ms and the fwd/bwd vs. data split so we
 know where to spend optimisation effort.
 
-Run:  set_slot 0 .venv/bin/python scripts/experiments/profile_v26_6_step.py
+Run:  run_job --gpus 1 --slot 0 --wait -- .venv/bin/python scripts/experiments/profile_v26_6_step.py
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-PREP = ROOT / "datasets/on-harmony/2_nnUNet_on-harmony/preprocessed/Dataset030_OnHarmonyT1w"
+PREP = ROOT / "benchmark/02_tasks/brain_healthy/on-harmony/2_nnUNet_on-harmony/preprocessed/Dataset030_OnHarmonyT1w"
 N_WARMUP = 5
 N_ITERS = 20
 

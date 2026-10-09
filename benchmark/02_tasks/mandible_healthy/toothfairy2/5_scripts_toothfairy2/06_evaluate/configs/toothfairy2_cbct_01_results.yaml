@@ -1,0 +1,20 @@
+# ToothFairy2's OWN held-out CBCT test set — this dataset only, no external sources.
+#
+# Scoring is MANDIBLE (toothfairy2 label 1). That is the standard for this task as of
+# 2026-09-18 — no qualifier in the name, because there is no longer an alternative view.
+# The superseded ones (the 3-class in-domain characterisation and the mandible-UNION
+# scoring, the latter built on a premise since disproven) are archived under
+# benchmark/03_archive/toothfairy2_mandible_superseded_eval_20260918/.
+#
+# For results that MIX datasets see toothfairy2_cross_dataset_01_results.yaml.
+title: "ToothFairy2 — own held-out CBCT (6-method suite, in-domain)"
+metrics_dir: "${PROJECT_ROOT}/benchmark/02_tasks/mandible_healthy/toothfairy2/8_results_toothfairy2/02_metrics/toothfairy2_model/cbct"
+output_prefix: "01_results"
+in_domain_contrast: cbct
+runs:
+  - toothfairy2_cbct_baseline_20260908_013025
+  - toothfairy2_cbct_auglab_default_20260908_013025
+  - toothfairy2_cbct_synthseg_noEM_20260908_013025
+  - toothfairy2_cbct_synthseg_EM_20260908_013027
+  - toothfairy2_cbct_srcsm_20260908_013027_srcmatch
+  - toothfairy2_cbct_auglabAug_v26_6_2_train050_val000_20260908_013027

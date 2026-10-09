@@ -1,0 +1,19 @@
+title: "BraTS 2024 Glioma T1n — results (incl. srcsm 7th arm)"
+metrics_dir: "${METRICS_ROOT}/brats2024_glioma_model/t1n"
+output_prefix: "01_results"
+in_domain_contrast: t1n
+
+# Fixed 7-method order (no others): baseline, synthseg_noEM, synthseg_EM,
+# auglab_default, srcsm, auglabAug_v26_6_2 train050_val000, then train050_val100.
+# v26_6_2-alone and the train025_val100 auglabAug variant are dropped from this
+# table. srcsm predicted+evaluated 2026-07-29 (was PENDING as of 2026-07-24 — the
+# checkpoint has existed since 2026-07-09, same run id already used in
+# cross_dataset_t1n_01_results.yaml; this file's placeholder was just stale).
+runs:
+  - brats2024-glioma_t1n_baseline_20260622_044535
+  - brats2024-glioma_t1n_synthseg_noEM_20260622_044535
+  - brats2024-glioma_t1n_synthseg_EM_20260622_044535
+  - brats2024-glioma_t1n_auglab_default_20260622_044535
+  - brats2024-glioma_t1n_srcsm_20260709_122015_srcmatch
+  - brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val000_20260710_040303
+  - brats2024-glioma_t1n_auglabAug_v26_6_2_train050_val100_20260725_113540

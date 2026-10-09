@@ -1,0 +1,674 @@
+[
+  {
+    "subject": "sub-03286",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-03286/ses-NOT2ING001/dwi/sub-03286_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-03286/ses-NOT2ING001/dwi/sub-03286_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-03286_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-03286",
+    "session": "ses-NOT3GEM001",
+    "scanner": "NOT3GEM",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-03286/ses-NOT3GEM001/dwi/sub-03286_ses-NOT3GEM001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-03286/ses-NOT3GEM001/dwi/sub-03286_ses-NOT3GEM001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-03286_ses-NOT3GEM001_dwi_ap"
+  },
+  {
+    "subject": "sub-03286",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-03286/ses-OXF2PRI001/dwi/sub-03286_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-03286/ses-OXF2PRI001/dwi/sub-03286_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-03286_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-03286",
+    "session": "ses-OXF3TRI001",
+    "scanner": "OXF3TRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-03286/ses-OXF3TRI001/dwi/sub-03286_ses-OXF3TRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-03286/ses-OXF3TRI001/dwi/sub-03286_ses-OXF3TRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-03286_ses-OXF3TRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-03997",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-03997/ses-NOT2ING001/dwi/sub-03997_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-03997/ses-NOT2ING001/dwi/sub-03997_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-03997_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-03997",
+    "session": "ses-NOT3GEM001",
+    "scanner": "NOT3GEM",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-03997/ses-NOT3GEM001/dwi/sub-03997_ses-NOT3GEM001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-03997/ses-NOT3GEM001/dwi/sub-03997_ses-NOT3GEM001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-03997_ses-NOT3GEM001_dwi_ap"
+  },
+  {
+    "subject": "sub-03997",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-03997/ses-OXF2PRI001/dwi/sub-03997_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-03997/ses-OXF2PRI001/dwi/sub-03997_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-03997_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-03997",
+    "session": "ses-OXF3TRI001",
+    "scanner": "OXF3TRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-03997/ses-OXF3TRI001/dwi/sub-03997_ses-OXF3TRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-03997/ses-OXF3TRI001/dwi/sub-03997_ses-OXF3TRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-03997_ses-OXF3TRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-10975",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-10975/ses-NOT2ING001/dwi/sub-10975_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-10975/ses-NOT2ING001/dwi/sub-10975_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-10975_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-10975",
+    "session": "ses-NOT3GEM001",
+    "scanner": "NOT3GEM",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-10975/ses-NOT3GEM001/dwi/sub-10975_ses-NOT3GEM001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-10975/ses-NOT3GEM001/dwi/sub-10975_ses-NOT3GEM001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-10975_ses-NOT3GEM001_dwi_ap"
+  },
+  {
+    "subject": "sub-10975",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-10975/ses-OXF2PRI001/dwi/sub-10975_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-10975/ses-OXF2PRI001/dwi/sub-10975_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-10975_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-10975",
+    "session": "ses-OXF3TRI001",
+    "scanner": "OXF3TRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-10975/ses-OXF3TRI001/dwi/sub-10975_ses-OXF3TRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-10975/ses-OXF3TRI001/dwi/sub-10975_ses-OXF3TRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-10975_ses-OXF3TRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-13192",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-13192/ses-NOT2ING001/dwi/sub-13192_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-13192/ses-NOT2ING001/dwi/sub-13192_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-13192_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-13192",
+    "session": "ses-NOT3GEM001",
+    "scanner": "NOT3GEM",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-13192/ses-NOT3GEM001/dwi/sub-13192_ses-NOT3GEM001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-13192/ses-NOT3GEM001/dwi/sub-13192_ses-NOT3GEM001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-13192_ses-NOT3GEM001_dwi_ap"
+  },
+  {
+    "subject": "sub-13192",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-13192/ses-OXF2PRI001/dwi/sub-13192_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-13192/ses-OXF2PRI001/dwi/sub-13192_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-13192_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-13192",
+    "session": "ses-OXF3TRI001",
+    "scanner": "OXF3TRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-13192/ses-OXF3TRI001/dwi/sub-13192_ses-OXF3TRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-13192/ses-OXF3TRI001/dwi/sub-13192_ses-OXF3TRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-13192_ses-OXF3TRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-13305",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-13305/ses-NOT2ING001/dwi/sub-13305_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-13305/ses-NOT2ING001/dwi/sub-13305_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-13305_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-13305",
+    "session": "ses-NOT3GEM001",
+    "scanner": "NOT3GEM",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-13305/ses-NOT3GEM001/dwi/sub-13305_ses-NOT3GEM001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-13305/ses-NOT3GEM001/dwi/sub-13305_ses-NOT3GEM001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-13305_ses-NOT3GEM001_dwi_ap"
+  },
+  {
+    "subject": "sub-13305",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-13305/ses-OXF2PRI001/dwi/sub-13305_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-13305/ses-OXF2PRI001/dwi/sub-13305_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-13305_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-13305",
+    "session": "ses-OXF3TRI001",
+    "scanner": "OXF3TRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-13305/ses-OXF3TRI001/dwi/sub-13305_ses-OXF3TRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-13305/ses-OXF3TRI001/dwi/sub-13305_ses-OXF3TRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-13305_ses-OXF3TRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-14221",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14221/ses-NOT2ING001/dwi/sub-14221_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14221/ses-NOT2ING001/dwi/sub-14221_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14221_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-14221",
+    "session": "ses-NOT3GEM001",
+    "scanner": "NOT3GEM",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14221/ses-NOT3GEM001/dwi/sub-14221_ses-NOT3GEM001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14221/ses-NOT3GEM001/dwi/sub-14221_ses-NOT3GEM001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14221_ses-NOT3GEM001_dwi_ap"
+  },
+  {
+    "subject": "sub-14221",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14221/ses-OXF2PRI001/dwi/sub-14221_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14221/ses-OXF2PRI001/dwi/sub-14221_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14221_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-14221",
+    "session": "ses-OXF3TRI001",
+    "scanner": "OXF3TRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14221/ses-OXF3TRI001/dwi/sub-14221_ses-OXF3TRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14221/ses-OXF3TRI001/dwi/sub-14221_ses-OXF3TRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14221_ses-OXF3TRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-NOT2ING001/dwi/sub-14229_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-NOT2ING001/dwi/sub-14229_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-NOT3GEM001",
+    "scanner": "NOT3GEM",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-NOT3GEM001/dwi/sub-14229_ses-NOT3GEM001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-NOT3GEM001/dwi/sub-14229_ses-NOT3GEM001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-NOT3GEM001_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-OXF2PRI001/dwi/sub-14229_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-OXF2PRI001/dwi/sub-14229_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-OXF2PRI002",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-OXF2PRI002/dwi/sub-14229_ses-OXF2PRI002_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-OXF2PRI002/dwi/sub-14229_ses-OXF2PRI002_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-OXF2PRI002_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-OXF2PRI003",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-OXF2PRI003/dwi/sub-14229_ses-OXF2PRI003_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-OXF2PRI003/dwi/sub-14229_ses-OXF2PRI003_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-OXF2PRI003_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-OXF2PRI004",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-OXF2PRI004/dwi/sub-14229_ses-OXF2PRI004_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-OXF2PRI004/dwi/sub-14229_ses-OXF2PRI004_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-OXF2PRI004_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-OXF2PRI005",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-OXF2PRI005/dwi/sub-14229_ses-OXF2PRI005_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-OXF2PRI005/dwi/sub-14229_ses-OXF2PRI005_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-OXF2PRI005_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-OXF2PRI006",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-OXF2PRI006/dwi/sub-14229_ses-OXF2PRI006_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-OXF2PRI006/dwi/sub-14229_ses-OXF2PRI006_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-OXF2PRI006_dwi_ap"
+  },
+  {
+    "subject": "sub-14229",
+    "session": "ses-OXF3TRI001",
+    "scanner": "OXF3TRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14229/ses-OXF3TRI001/dwi/sub-14229_ses-OXF3TRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14229/ses-OXF3TRI001/dwi/sub-14229_ses-OXF3TRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14229_ses-OXF3TRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-14482",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14482/ses-NOT2ING001/dwi/sub-14482_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14482/ses-NOT2ING001/dwi/sub-14482_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14482_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-14482",
+    "session": "ses-NOT3GEM001",
+    "scanner": "NOT3GEM",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14482/ses-NOT3GEM001/dwi/sub-14482_ses-NOT3GEM001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14482/ses-NOT3GEM001/dwi/sub-14482_ses-NOT3GEM001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14482_ses-NOT3GEM001_dwi_ap"
+  },
+  {
+    "subject": "sub-14482",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14482/ses-OXF2PRI001/dwi/sub-14482_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14482/ses-OXF2PRI001/dwi/sub-14482_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14482_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-14482",
+    "session": "ses-OXF3TRI001",
+    "scanner": "OXF3TRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-14482/ses-OXF3TRI001/dwi/sub-14482_ses-OXF3TRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-14482/ses-OXF3TRI001/dwi/sub-14482_ses-OXF3TRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-14482_ses-OXF3TRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-NOT2ING001/dwi/sub-15320_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-NOT2ING001/dwi/sub-15320_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-NOT2ING002",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-NOT2ING002/dwi/sub-15320_ses-NOT2ING002_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-NOT2ING002/dwi/sub-15320_ses-NOT2ING002_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-NOT2ING002_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-NOT2ING003",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-NOT2ING003/dwi/sub-15320_ses-NOT2ING003_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-NOT2ING003/dwi/sub-15320_ses-NOT2ING003_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-NOT2ING003_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-NOT2ING004",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-NOT2ING004/dwi/sub-15320_ses-NOT2ING004_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-NOT2ING004/dwi/sub-15320_ses-NOT2ING004_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-NOT2ING004_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-NOT2ING005",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-NOT2ING005/dwi/sub-15320_ses-NOT2ING005_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-NOT2ING005/dwi/sub-15320_ses-NOT2ING005_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-NOT2ING005_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-NOT2ING006",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-NOT2ING006/dwi/sub-15320_ses-NOT2ING006_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-NOT2ING006/dwi/sub-15320_ses-NOT2ING006_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-NOT2ING006_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-NOT4GEP001",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-NOT4GEP001/dwi/sub-15320_ses-NOT4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-NOT4GEP001/dwi/sub-15320_ses-NOT4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-NOT4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-OXF2PRI001/dwi/sub-15320_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-OXF2PRI001/dwi/sub-15320_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-15320",
+    "session": "ses-OXF4GEP001",
+    "scanner": "OXF4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-15320/ses-OXF4GEP001/dwi/sub-15320_ses-OXF4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-15320/ses-OXF4GEP001/dwi/sub-15320_ses-OXF4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-15320_ses-OXF4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-NOT2ING001/dwi/sub-16745_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-NOT2ING001/dwi/sub-16745_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-NOT4GEP001",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-NOT4GEP001/dwi/sub-16745_ses-NOT4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-NOT4GEP001/dwi/sub-16745_ses-NOT4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-NOT4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-NOT4GEP002",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-NOT4GEP002/dwi/sub-16745_ses-NOT4GEP002_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-NOT4GEP002/dwi/sub-16745_ses-NOT4GEP002_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-NOT4GEP002_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-NOT4GEP003",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-NOT4GEP003/dwi/sub-16745_ses-NOT4GEP003_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-NOT4GEP003/dwi/sub-16745_ses-NOT4GEP003_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-NOT4GEP003_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-NOT4GEP004",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-NOT4GEP004/dwi/sub-16745_ses-NOT4GEP004_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-NOT4GEP004/dwi/sub-16745_ses-NOT4GEP004_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-NOT4GEP004_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-NOT4GEP005",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-NOT4GEP005/dwi/sub-16745_ses-NOT4GEP005_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-NOT4GEP005/dwi/sub-16745_ses-NOT4GEP005_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-NOT4GEP005_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-NOT4GEP006",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-NOT4GEP006/dwi/sub-16745_ses-NOT4GEP006_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-NOT4GEP006/dwi/sub-16745_ses-NOT4GEP006_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-NOT4GEP006_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-OXF2PRI001/dwi/sub-16745_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-OXF2PRI001/dwi/sub-16745_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-16745",
+    "session": "ses-OXF4GEP001",
+    "scanner": "OXF4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16745/ses-OXF4GEP001/dwi/sub-16745_ses-OXF4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16745/ses-OXF4GEP001/dwi/sub-16745_ses-OXF4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16745_ses-OXF4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-NOT2ING001/dwi/sub-16766_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-NOT2ING001/dwi/sub-16766_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-NOT4GEP001",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-NOT4GEP001/dwi/sub-16766_ses-NOT4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-NOT4GEP001/dwi/sub-16766_ses-NOT4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-NOT4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-OXF2PRI001/dwi/sub-16766_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-OXF2PRI001/dwi/sub-16766_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-OXF2PRI002",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-OXF2PRI002/dwi/sub-16766_ses-OXF2PRI002_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-OXF2PRI002/dwi/sub-16766_ses-OXF2PRI002_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-OXF2PRI002_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-OXF2PRI003",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-OXF2PRI003/dwi/sub-16766_ses-OXF2PRI003_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-OXF2PRI003/dwi/sub-16766_ses-OXF2PRI003_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-OXF2PRI003_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-OXF2PRI004",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-OXF2PRI004/dwi/sub-16766_ses-OXF2PRI004_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-OXF2PRI004/dwi/sub-16766_ses-OXF2PRI004_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-OXF2PRI004_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-OXF2PRI005",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-OXF2PRI005/dwi/sub-16766_ses-OXF2PRI005_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-OXF2PRI005/dwi/sub-16766_ses-OXF2PRI005_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-OXF2PRI005_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-OXF2PRI006",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-OXF2PRI006/dwi/sub-16766_ses-OXF2PRI006_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-OXF2PRI006/dwi/sub-16766_ses-OXF2PRI006_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-OXF2PRI006_dwi_ap"
+  },
+  {
+    "subject": "sub-16766",
+    "session": "ses-OXF4GEP001",
+    "scanner": "OXF4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16766/ses-OXF4GEP001/dwi/sub-16766_ses-OXF4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16766/ses-OXF4GEP001/dwi/sub-16766_ses-OXF4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16766_ses-OXF4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16793",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16793/ses-NOT2ING001/dwi/sub-16793_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16793/ses-NOT2ING001/dwi/sub-16793_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16793_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-16793",
+    "session": "ses-NOT4GEP001",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16793/ses-NOT4GEP001/dwi/sub-16793_ses-NOT4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16793/ses-NOT4GEP001/dwi/sub-16793_ses-NOT4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16793_ses-NOT4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16793",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16793/ses-OXF2PRI001/dwi/sub-16793_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16793/ses-OXF2PRI001/dwi/sub-16793_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16793_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-16793",
+    "session": "ses-OXF4GEP001",
+    "scanner": "OXF4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16793/ses-OXF4GEP001/dwi/sub-16793_ses-OXF4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16793/ses-OXF4GEP001/dwi/sub-16793_ses-OXF4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16793_ses-OXF4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16794",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16794/ses-NOT2ING001/dwi/sub-16794_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16794/ses-NOT2ING001/dwi/sub-16794_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16794_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-16794",
+    "session": "ses-NOT4GEP001",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16794/ses-NOT4GEP001/dwi/sub-16794_ses-NOT4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16794/ses-NOT4GEP001/dwi/sub-16794_ses-NOT4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16794_ses-NOT4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16794",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16794/ses-OXF2PRI001/dwi/sub-16794_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16794/ses-OXF2PRI001/dwi/sub-16794_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16794_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-16794",
+    "session": "ses-OXF4GEP001",
+    "scanner": "OXF4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16794/ses-OXF4GEP001/dwi/sub-16794_ses-OXF4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16794/ses-OXF4GEP001/dwi/sub-16794_ses-OXF4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16794_ses-OXF4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16841",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16841/ses-NOT2ING001/dwi/sub-16841_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16841/ses-NOT2ING001/dwi/sub-16841_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16841_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-16841",
+    "session": "ses-NOT4GEP001",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16841/ses-NOT4GEP001/dwi/sub-16841_ses-NOT4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16841/ses-NOT4GEP001/dwi/sub-16841_ses-NOT4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16841_ses-NOT4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16841",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16841/ses-OXF2PRI001/dwi/sub-16841_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16841/ses-OXF2PRI001/dwi/sub-16841_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16841_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-16841",
+    "session": "ses-OXF4GEP001",
+    "scanner": "OXF4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16841/ses-OXF4GEP001/dwi/sub-16841_ses-OXF4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16841/ses-OXF4GEP001/dwi/sub-16841_ses-OXF4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16841_ses-OXF4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16974",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16974/ses-NOT2ING001/dwi/sub-16974_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16974/ses-NOT2ING001/dwi/sub-16974_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16974_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-16974",
+    "session": "ses-NOT4GEP001",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16974/ses-NOT4GEP001/dwi/sub-16974_ses-NOT4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16974/ses-NOT4GEP001/dwi/sub-16974_ses-NOT4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16974_ses-NOT4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16974",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16974/ses-OXF2PRI001/dwi/sub-16974_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16974/ses-OXF2PRI001/dwi/sub-16974_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16974_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-16974",
+    "session": "ses-OXF4GEP001",
+    "scanner": "OXF4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16974/ses-OXF4GEP001/dwi/sub-16974_ses-OXF4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16974/ses-OXF4GEP001/dwi/sub-16974_ses-OXF4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16974_ses-OXF4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16981",
+    "session": "ses-NOT2ING001",
+    "scanner": "NOT2ING",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16981/ses-NOT2ING001/dwi/sub-16981_ses-NOT2ING001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16981/ses-NOT2ING001/dwi/sub-16981_ses-NOT2ING001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16981_ses-NOT2ING001_dwi_ap"
+  },
+  {
+    "subject": "sub-16981",
+    "session": "ses-NOT4GEP001",
+    "scanner": "NOT4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16981/ses-NOT4GEP001/dwi/sub-16981_ses-NOT4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16981/ses-NOT4GEP001/dwi/sub-16981_ses-NOT4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16981_ses-NOT4GEP001_dwi_ap"
+  },
+  {
+    "subject": "sub-16981",
+    "session": "ses-OXF2PRI001",
+    "scanner": "OXF2PRI",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16981/ses-OXF2PRI001/dwi/sub-16981_ses-OXF2PRI001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16981/ses-OXF2PRI001/dwi/sub-16981_ses-OXF2PRI001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16981_ses-OXF2PRI001_dwi_ap"
+  },
+  {
+    "subject": "sub-16981",
+    "session": "ses-OXF4GEP001",
+    "scanner": "OXF4GEP",
+    "dwi_ap": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/sub-16981/ses-OXF4GEP001/dwi/sub-16981_ses-OXF4GEP001_dir-AP_dwi.nii.gz",
+    "mask": "/project/aip-jcohen/paulh/mri_synthesis_project/datasets/on-harmony/1_BIDS_on-harmony/brain-onharmony/derivatives/labels/sub-16981/ses-OXF4GEP001/dwi/sub-16981_ses-OXF4GEP001_dir-AP_dwi_label-synthseg_dseg.nii.gz",
+    "case_id": "sub-16981_ses-OXF4GEP001_dwi_ap"
+  }
+]

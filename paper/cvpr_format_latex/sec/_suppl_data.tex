@@ -1,0 +1,168 @@
+All evaluation is performed on held-out test cases only. Each model is trained
+on one modality of its task and evaluated on every test contrast of that task,
+the training contrast included; training and
+validation subjects never appear in any reported number.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\begin{tabular}{lP{2.0cm}P{4.1cm}P{1.7cm}P{4.3cm}rc}
+\toprule
+Task & Target & Trained on (one modality at a time) & Other test contrasts & External test cohorts & Test cases & Ladder \\
+\midrule
+\multicolumn{7}{l}{\emph{Appearance-defined}} \\
+Glioma & glioma, 4 sub-regions & BraTS2024-GLI~\cite{deverdier2024brats2024}: T1n, T1c, T2w, FLAIR & -- & -- & 70 & \checkmark \\
+MS & MS lesions & Open-MS~\cite{lesjak2018openms}: FLAIR, T1w & T2w & -- & 8 & \checkmark \\
+Breast & tumor & I-SPY2~\cite{li2022ispy2}: T1-CE, T2w & -- & Duke~\cite{saha2018duke,garrucho2025mamamia}, I-SPY1~\cite{hylton2012ispy1}: T1-CE, pre-contrast; ACRIN-6698~\cite{partridge2018acrin6698}: DWI & 84 + 829 & \checkmark \\
+\midrule
+\multicolumn{7}{l}{\emph{Interface-bounded}} \\
+Abdomen & liver, kidneys, spleen & CHAOS~\cite{kavur2021chaos}: T1in, T2spir & T1out, CT & AMOS~\cite{ji2022amos}: CT, T2w; SLIVER07~\cite{heimann2009comparison}: CT & 24 + 140 & \checkmark \\
+Brain & 31 brain regions & ON-Harmony~\cite{warrington2025onharmony}: T1w, T2w, DWI & BOLD, EPI, GRE & -- & 8$^\dagger$ & \checkmark \\
+Mandible & mandible & ToothFairy2~\cite{bolelli2025toothfairy2}: CBCT & -- & HaN-Seg~\cite{podobnik2023hanseg}: CT, MR-T1; PDDCA~\cite{raudaschl2017pddca}: CT & 71 + 82 & \checkmark \\
+Spine & vertebrae, discs, canal & CT/Dixon cohort: CT, Dixon in-phase & Dixon fat, water & SPIDER~\cite{vandergraaf2024spider}: T1w, T2w & 29 + 171/219 & -- \\
+Pelvis & 11 bones and muscles & TotalSegmentator~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}: CT, MRI$^\ddagger$ & -- & -- & 30/27 & \checkmark \\
+\bottomrule
+\end{tabular}
+\caption{Per-task dataset roster (summary in \cref{tab:tasks}, main paper). Test
+cases: own held-out split + external cohorts; ``$x$/$y$'' gives the counts of
+two contrasts where they differ (per dataset and contrast: \cref{tab:suppl-datasets}).
+Ladder: the task has the causal ablation of \cref{subsec:e-ablation}.
+$^\dagger$Sessions of four subjects. $^\ddagger$Different patients for CT and MRI.}
+\label{tab:datasets}
+\end{table*}
+
+\paragraph{Glioma (BraTS2024-GLI~\cite{deverdier2024brats2024}).} Post-treatment
+glioma sub-region segmentation (necrotic core, surrounding non-enhancing FLAIR
+hyperintensity (SNFH), enhancing tumor, resection cavity), trained on each of
+T1n, T1c, T2w and FLAIR and evaluated on all four.
+
+\paragraph{MS (Open-MS~\cite{lesjak2018openms}).} MS-lesion segmentation with
+manual consensus annotations, evaluated across FLAIR, T1w and T2w.
+
+\paragraph{Breast (I-SPY2; external: Duke, I-SPY1, ACRIN-6698~\cite{li2022ispy2,saha2018duke,garrucho2025mamamia,hylton2012ispy1,partridge2018acrin6698}).}
+Breast-lesion segmentation on malignant-only cohorts. I-SPY2
+trains, on its first-post-contrast T1 (T1-CE) and its T2w; its reference is the
+trial's functional tumor volume mask. Three external cohorts are test-only.
+Duke and I-SPY1 come through the MAMA-MIA release, whose expert
+primary-lesion protocol both share, and contribute T1-CE and pre-contrast
+columns. ACRIN-6698, the diffusion sub-study of I-SPY2 with no patient in
+common with our I-SPY2 subjects, contributes the baseline diffusion-weighted
+acquisition with the trial's whole-tumor DWI region, a contrast neither
+training modality resembles. Because I-SPY2 is mostly acquired unilaterally,
+bilateral external volumes are cropped to the lesion side and, for the
+full-thorax acquisitions, also anterior-posteriorly to the breast-plus-chest-wall
+extent of I-SPY2's own crops; without the second crop every method's HD95 is
+dominated by the thorax. I-SPY2's DCE series are acquired unilaterally at some
+sites and bilaterally at others; both field-of-view variants are kept per
+patient, and the significance tests treat them as one patient.
+
+\paragraph{Abdomen (CHAOS~\cite{kavur2021chaos}; external: AMOS~\cite{ji2022amos}, SLIVER07~\cite{heimann2009comparison}).}
+Abdominal organ segmentation (liver, spleen, both kidneys), evaluated on the
+CHAOS MR contrasts (four held-out patients) and CT (20 held-out patients), and
+on two external cohorts: CT ($100$) and T2w MRI ($20$) from AMOS and liver-only
+CT ($20$) from SLIVER07. In the pooled CT group, liver comes from
+CHAOS, AMOS and SLIVER07 and spleen and kidneys from AMOS only (CHAOS CT is
+annotated for the liver only). The full-torso external volumes are cropped
+to the axial field of view of CHAOS before prediction (field-of-view matching,
+below).
+
+\paragraph{Brain (ON-Harmony~\cite{warrington2025onharmony}).} 31-region healthy-brain
+segmentation. Reference labels are \emph{silver standard}: FreeSurfer
+parcellations~\cite{fischl2012freesurfer} of each session's T1w, grouped into 31
+regions and rigidly registered with ANTs into the native space of the same
+session's other contrasts. They are
+not manual annotations, so absolute Dice here is agreement with an automated
+reference; every method is scored against the same reference. The test set is
+eight sessions of four subjects, each scanned at two sites.
+
+\paragraph{Mandible (ToothFairy2; external: HaN-Seg, PDDCA~\cite{bolelli2025toothfairy2,podobnik2023hanseg,raudaschl2017pddca}).}
+Mandible segmentation, trained on dental cone-beam CT, the one non-CT, non-MRI
+training modality here. ToothFairy2's annotation coverage is
+cohort-dependent, so every column of this task is scored on the mandible alone
+(teeth excluded, matching the external references), which keeps the numbers
+being averaged commensurable. ToothFairy2 acquires CBCT only, so apart from its
+own 71 CBCT test cases its held-out contrasts all come from other datasets:
+HaN-Seg CT ($42$ cases) and MR-T1 ($41$) and PDDCA CT ($40$), the two CT sources
+pooled as one contrast group. ToothFairy2's volumes
+are stored superior-inferior inverted relative to the external cohorts --- an
+inversion invisible to the image header, found by checking anatomy directly ---
+so the external test volumes are flipped into ToothFairy2's convention before
+inference, which leaves Dice and HD95 unchanged under the rigid transform. The
+correction matters for the comparison: a method without flip augmentation
+(SRCSM) was penalized by the inversion far more than the others, and it is
+after this correction that SRCSM leads this task.
+
+\paragraph{Spine (CT/Dixon cohort; external: SPIDER~\cite{vandergraaf2024spider}).} Vertebrae, intervertebral
+discs and spinal canal. Results for this task were computed on a separate pipeline with the same
+method suite except SRCSM, trained on CT
+and Dixon in-phase MRI of a CT/Dixon cohort and tested on that cohort's held-out
+CT and Dixon fat, in-phase and water images and on the T1w and T2w of SPIDER.
+Dice and HD95 are computed on each whole structure per label. No SRCSM arm was run, so Spine
+is absent from every SRCSM comparison.
+
+\paragraph{Pelvis (TotalSegmentator~\cite{wasserthal2023totalseg,dantonoli2025totalsegmri}).}
+Eleven pelvic and hip musculoskeletal structures (both hips, sacrum, and the
+gluteus maximus, medius and minimus and iliopsoas on each side), from the
+TotalSegmentator CT and MRI releases. The two are
+unpaired cohorts, and the MRI release mixes sequences by design, so its MRI
+column is a sequence-heterogeneous test rather than one named contrast. CT is
+subsampled to 200 cases to keep training time comparable with the other tasks.
+
+\paragraph{Field-of-view matching.} A model tested on a field of view it never
+saw in training can fail for reasons that have nothing to do with contrast or
+modality. Where an external cohort images more of the body than the training
+cohort, we therefore crop its volumes before prediction, so that the shift
+left between training and test is, as far as possible, the contrast or
+modality alone. Abdomen (AMOS, SLIVER07): the axial slab CHAOS covers, placed
+with the median CHAOS margins around the kidneys (AMOS) or the liver
+(SLIVER07). Mandible (HaN-Seg, PDDCA): a $144\times128\times80$\,mm box centered
+on the mandible, close to the 90th percentile of ToothFairy2's training
+extent, enlarged (at most to $154\times154\times89$\,mm) only when needed to
+contain the whole mandible. Breast (Duke, ACRIN-6698): the lesion-side
+half of bilateral volumes, then, for full-thorax acquisitions, an
+anterior-posterior window from $27$\,mm in front of the skin to $147$\,mm
+behind it, the measured geometry of I-SPY2's unilateral acquisitions, extended
+if needed to contain the lesion; I-SPY1 is natively unilateral and is not
+cropped. The network sees, and is scored on, only the cropped volume, and the
+crops are identical for every method.
+
+% TODO(Paul): Spine training-subject count (separate pipeline) -- replace n/a.
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}llrl@{}}
+\toprule
+Task & Dataset (role) & Train & Test cases \\
+\midrule
+Glioma   & BraTS2024-GLI (train)      & 630  & 70 \\
+MS       & Open-MS (train)            & 22   & 8 \\
+Breast   & I-SPY2 (train)             & 476  & 84 patients$^a$ \\
+         & Duke (external)            & --   & 291 \\
+         & I-SPY1 (external)          & --   & 167$^b$ \\
+         & ACRIN-6698 (external)      & --   & 371 \\
+Abdomen  & CHAOS (train)              & 16   & 4 MR, 20 CT \\
+         & AMOS (external)            & --   & 100 CT, 20 T2w \\
+         & SLIVER07 (external)        & --   & 20 CT \\
+Brain    & ON-Harmony (train)         & 84$^c$ & 8 sessions \\
+Mandible & ToothFairy2 (train)        & 408  & 71 \\
+         & HaN-Seg (external)         & --   & 42 CT, 41 MR-T1 \\
+         & PDDCA (external)           & --   & 40 CT \\
+Spine    & CT/Dixon cohort (train)    & n/a$^d$ & 27--29 per contrast \\
+         & SPIDER (external)          & --   & 171 T1w, 219 T2w \\
+Pelvis   & TotalSegmentator CT (train)  & 170 & 30 \\
+         & TotalSegmentator MRI (train) & 156 & 27 \\
+\bottomrule
+\end{tabular}
+\caption{Every dataset, by task. Train: subjects in the three train/validation
+folds (identical across folds and methods); external cohorts are test-only.
+Test cases per contrast where they differ. ON-Harmony counts are scan sessions
+(the eight test sessions are four subjects, each scanned at two sites).
+$^a$One held-out patient can yield two T2w images (both field-of-view variants).
+$^b$After excluding three bilateral cancers and one implant by a rule fixed
+before prediction. $^c$$76$ for the T2w-trained models. $^d$Trained on a
+separate pipeline. Pelvis MRI keeps $183$ of the $298$ released cases.}
+\label{tab:suppl-datasets}
+\end{table}

@@ -11,10 +11,10 @@ Calls SynthSeg predict() once per rank (not per subject) so the TF model
 is loaded only once, making throughput much faster.
 
 Usage (4 GPUs, one rank each):
-  set_slot 0 .venv/bin/python scripts/run_synthseg_predict.py --rank 0 --world-size 4 > /tmp/ss_r0.log 2>&1 &
-  set_slot 1 .venv/bin/python scripts/run_synthseg_predict.py --rank 1 --world-size 4 > /tmp/ss_r1.log 2>&1 &
-  set_slot 2 .venv/bin/python scripts/run_synthseg_predict.py --rank 2 --world-size 4 > /tmp/ss_r2.log 2>&1 &
-  set_slot 3 .venv/bin/python scripts/run_synthseg_predict.py --rank 3 --world-size 4 > /tmp/ss_r3.log 2>&1 &
+  run_job --gpus 1 --slot 0 --wait --log /tmp/ss_r0.log -- .venv/bin/python scripts/run_synthseg_predict.py --rank 0 --world-size 4
+  run_job --gpus 1 --slot 1 --wait --log /tmp/ss_r1.log -- .venv/bin/python scripts/run_synthseg_predict.py --rank 1 --world-size 4
+  run_job --gpus 1 --slot 2 --wait --log /tmp/ss_r2.log -- .venv/bin/python scripts/run_synthseg_predict.py --rank 2 --world-size 4
+  run_job --gpus 1 --slot 3 --wait --log /tmp/ss_r3.log -- .venv/bin/python scripts/run_synthseg_predict.py --rank 3 --world-size 4
 """
 from __future__ import annotations
 
@@ -48,11 +48,12 @@ def main():
     args = parse_args()
 
     import os, ctypes, glob
-    # set_slot does NOT set CUDA_VISIBLE_DEVICES — restrict this rank to its GPU.
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.rank)
+    # set_slot doesn't set CUDA_VISIBLE_DEVICES; on Slurm the scheduler does (GPU 0).
+    # setdefault preserves the scheduler's binding while falling back for set_slot.
+    os.environ.setdefault("CUDA_VISIBLE_DEVICES", str(args.rank))
     # sudo strips LD_LIBRARY_PATH; load venv CUDA libs via ctypes so TF finds them.
     for _lib in sorted(glob.glob(str(
-            PROJECT_ROOT / ".venv/lib/python3.12/site-packages/nvidia/*/lib/*.so*"))):
+            PROJECT_ROOT / ".venv/lib/python3.*/site-packages/nvidia/*/lib/*.so*"))):
         try: ctypes.CDLL(_lib)
         except OSError: pass
     os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")

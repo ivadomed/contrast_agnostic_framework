@@ -1,0 +1,19 @@
+# 2026-10-01: *_uniap = L-R lesion-side crop + skin-anchored A-P crop to the I-SPY2 unilateral
+# training geometry (02_nnunet/02_04_derive_ap_crop.sh). Replaces the L-R-only *_uni eval
+# (archived at benchmark/03_archive/duke-breast-mri_lr_only_unicrop_eval_20261001/).
+# duke-breast-mri (291 cases, UNILATERAL crop) -- PRE-CONTRAST test contrast,
+# ISPY2 T1WCE-trained models. FOV-matched sibling of
+# duke_precontrast_t1wce_01_results.yaml -- see duke_t1wce_uni_t1wce_01_results.yaml
+# for the FOV-matching rationale.
+title: "duke-breast-mri (291 cases, unilateral crop) -- PRE-CONTRAST, ISPY2 T1WCE-trained models"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce/precontrast_uniap"
+output_prefix: "01_results"
+sig_ref: "ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655"
+
+runs:
+  - ispy2_t1wce_baseline_20260905_163655
+  - ispy2_t1wce_auglab_default_20260905_163655
+  - ispy2_t1wce_synthseg_noEM_20260905_163655
+  - ispy2_t1wce_synthseg_EM_20260905_163655
+  - ispy2_t1wce_srcsm_20260905_163655_srcmatch
+  - ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655

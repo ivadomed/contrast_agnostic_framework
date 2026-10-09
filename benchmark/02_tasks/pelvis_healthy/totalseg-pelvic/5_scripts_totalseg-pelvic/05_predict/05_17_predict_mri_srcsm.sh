@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Predict with the MRI-trained srcsm model, over ct/mri.
+# Usage: bash 05_17_predict_mri_srcsm.sh <RUN_ID> [FOLD] [items...]
+set -euo pipefail
+source "$(dirname "$0")/../00_utils/env_mri.sh"
+METHOD="srcsm"
+TRAINER="nnUNetTrainerTotalsegPelvicAugLabDefault"
+CATEGORY="auglab"
+DATASET_ID="130"   # fixed — imagesTs_* consolidated under Dataset130, see 05_01 header
+source "$(dirname "$0")/05_01_predict_common.sh" "$@"

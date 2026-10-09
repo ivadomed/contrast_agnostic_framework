@@ -1,0 +1,109 @@
+All methods share one nnU-Net~\cite{isensee2021nnunet} configuration; only
+the input augmentation differs. Nothing below is tuned per task.
+
+\paragraph{Training schedule.} 3D full-resolution nnU-Net, SGD with Nesterov
+momentum $0.99$, initial learning rate $10^{-2}$ with the nnU-Net
+\texttt{polyLR} decay, $250$ mini-batches per epoch, combined Dice and
+cross-entropy loss, deep supervision on. Patch size, spacing and batch size
+are whatever the nnU-Net planner selects for that dataset, identically for
+every method. The epoch budget is fixed per task and shared by all methods
+on it: $2500$ (Glioma), $2000$ (Brain, MS), $1000$ (Mandible, Breast) and $200$ (Abdomen, Pelvis); Spine was trained on a separate pipeline.
+Each method is trained as three models on three train/validation folds, all
+scored on the same held-out test set; folds are the same across methods.
+
+\paragraph{PALETTE-Aug hyper-parameters.} Set once and never tuned per dataset:
+$k$-means class count drawn per sample from $\{2,\dots,6\}$, skipped in
+favor of a single global remap with probability $0.10$; Voronoi
+sub-parcellation of each intensity class with probability $0.60$ (else left
+as one region); signed affine coefficient $\alpha \in \pm U(0.5, 2.0)$
+applied per sub-region as in \cref{eq:affine} (always applied, to whatever
+partition results from the $k$-means/Voronoi steps); per-label affine
+decoupling applied independently per label with probability $0.5$ (skipped
+for any label with under $4$ foreground voxels in that sample); Gaussian
+blur $\sigma$ drawn from $\{0,0,0,0.3,0.5,0.8\}$, applied twice (after the
+region-level and after the label-level remap), so applied half the time at
+each point. The transform is applied on the GPU, on-the-fly, to a fixed
+$50\%$ of training
+iterations; the remaining half of iterations use the
+un-transformed real image.
+
+\paragraph{Validation-time configuration.} Every reported model, every
+competitor and every ladder rung included, selects its best checkpoint on
+real-contrast validation images (\emph{val000}). \emph{val100} applies
+PALETTE-Aug to the entire validation split instead; it is reported only in
+\cref{sec:suppl-val100}.
+
+\paragraph{Competitor configurations.} Both SynthSeg variants run through
+Auglab's GPU implementation of the SynthSeg generator, with uniform intensity
+priors and with the generator's own spatial and flip steps disabled (the
+pipeline's spatial augmentation is shared by all methods). They receive each
+task's training label map; SynthSeg-EM additionally subdivides it on the fly
+by expectation-maximization clustering of the image ($2$ sub-regions per
+foreground label, $3$--$10$ for the background, $20$ iterations), where the
+original work precomputes these maps~\cite[\S5.4]{billot2023synthseg}. Each
+sub-region then receives a randomly sampled intensity, as in SynthSeg. Both
+SynthSeg variants and SRCSM synthesize on every training iteration because
+their original papers train that way, so we keep that setting when running
+them; PALETTE-Aug synthesizes on $50\%$ of iterations
+(\cref{tab:suppl-aug-probs} lists every augmentation's probability). SRCSM is run as
+published, including its test-time source matching: each test image is
+histogram-matched to the average intensity histogram of the training images
+(re-implemented from the authors' code), with two adjustments for our data:
+MR intensities are clipped at $0$ first (resampling leaves small negative
+values that would otherwise map the background to a tissue intensity) and the
+CT window is $[-1024, 3071]$ instead of $[-1023, 1024]$ (CBCT and bone exceed
+$1024$). Held-out cases are never part of the source histogram. Every method is
+predicted with the same nnU-Net predictor, without test-time augmentation. SRCSM and Auglab otherwise use their published default
+configurations. No competing method was re-tuned in our favor, and all use
+the same folds, schedule and epoch budget as above.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llccccccc}
+\toprule
+ & Transform & nnU-Net & SynthSeg-noEM & SynthSeg-EM & SRCSM & Auglab & PALETTE alone & PALETTE-Aug \\
+\midrule
+Synthesis & SynthSeg generator & -- & 1.0 & 1.0 & -- & -- & -- & -- \\
+ & semantic random convolution & -- & -- & -- & 1.0 & -- & -- & -- \\
+ & PALETTE transform & -- & -- & -- & -- & -- & 0.5 & 0.5 \\
+\midrule
+Intensity & Gaussian noise & 0.1 & 0.1 & 0.1 & -- & 0.1 & -- & 0.1 \\
+ & Gaussian blur & 0.2 & 0.2 & 0.2 & -- & 0.2 & -- & 0.2 \\
+ & brightness & 0.15 & 0.15 & 0.15 & -- & 0.15 & -- & 0.15 \\
+ & contrast & 0.15 & 0.15 & 0.15 & -- & 0.15 & -- & 0.15 \\
+ & gamma / inverted gamma & 0.3 / 0.1 & 0.3 / 0.1 & 0.3 / 0.1 & -- & 0.3 / 0.1 & -- & 0.3 / 0.1 \\
+ & simulated low resolution & 0.25 & 0.25 & 0.25 & -- & 0.25 & -- & 0.25 \\
+ & bias field & -- & 0.15 & 0.15 & -- & 0.15 & -- & 0.15 \\
+ & random intensity function & -- & 0.1 & 0.1 & -- & 0.1 & -- & 0.1 \\
+ & Scharr / unsharp mask & -- & -- & -- & -- & 0.25 / 0.25 & -- & 0.25 / 0.25 \\
+ & random convolution & -- & -- & -- & -- & 0.2 & -- & 0.2 \\
+ & label-wise intensity redistribution & -- & -- & -- & -- & 0.4 & -- & 0.4 \\
+ & intensity inversion & -- & -- & -- & -- & 0.25 & -- & 0.25 \\
+ & histogram equalization & -- & -- & -- & -- & 0.25 & -- & 0.25 \\
+\midrule
+Spatial & rotation / scaling & 0.2 / 0.2 & 0.2 / 0.2 & 0.2 / 0.2 & -- & 0.2 / 0.2 & 0.2 / 0.2 & 0.2 / 0.2 \\
+ & affine + elastic deformation & -- & -- & -- & 1.0 & -- & -- & -- \\
+ & flip & 0.5$^a$ & 0.5 & 0.5 & -- & 0.5 & 0.5 & 0.5 \\
+\bottomrule
+\end{tabular}
+\caption{Per-iteration probability of each augmentation, per method (--: not
+applied). The synthesis rows are each method's own contrast step: the SynthSeg
+variants and SRCSM synthesize on every iteration, as in their original papers,
+PALETTE alone and PALETTE-Aug on half of them. PALETTE alone (the ladder's
+real-fill rung) has no intensity augmentation besides the PALETTE transform. The remaining rows are the method's generic
+augmentation pipeline: nnU-Net's defaults for nnU-Net, Auglab's for the
+Auglab-based methods (the SynthSeg variants switch off Auglab's
+appearance-randomizing operators, which would otherwise act on top of the
+synthetic image), and SRCSM's own spatial recipe. $^a$nnU-Net mirroring, each
+axis independently.}
+\label{tab:suppl-aug-probs}
+\end{table*}
+
+\paragraph{Compute.} Training was performed on NVIDIA L40S and H100 GPUs. A
+single fold costs from under an hour (Abdomen, $200$ epochs) to roughly three
+days (Glioma, $2500$ epochs); the full study is dominated by the six
+methods $\times$ sixteen settings $\times$ three folds of the main comparison
+(Spine's two settings were trained on a separate pipeline, without SRCSM),
+plus the sixteen ablation ladders of \cref{subsec:e-ablation}.

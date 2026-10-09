@@ -1,0 +1,14 @@
+# acrin6698 (ACRIN-6698 T0 DWI, b=800 trace, lesion-side unilateral crop) -- ISPY2 T2W-trained
+# models. Held-out contrast for this direction. Inline sig. vs ref = OURS train050_val000.
+title: "acrin6698 (ACRIN-6698 T0) dwi_uniap -- ISPY2 T2W-trained models"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t2w/dwi_uniap"
+output_prefix: "01_results"
+sig_ref: "ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655"
+
+runs:
+  - ispy2_t2w_baseline_20260905_163655
+  - ispy2_t2w_auglab_default_20260905_163655
+  - ispy2_t2w_synthseg_noEM_20260905_163655
+  - ispy2_t2w_synthseg_EM_20260905_163655
+  - ispy2_t2w_srcsm_20260905_163655_srcmatch
+  - ispy2_t2w_auglabAug_v26_6_2_train050_val000_20260905_163655

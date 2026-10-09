@@ -1,0 +1,61 @@
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+\paragraph{A possible reason for the largest effects.} Liver, spleen and kidney are
+encapsulated organs with a clear physical boundary, and edge-following methods
+have long segmented them well~\cite{lee2007gaclivers}. An
+augmentation that scrambles their internal texture but keeps the boundary loses
+little. Diffuse glioma has no such boundary: tumor cells infiltrate beyond both
+the enhancing margin and the FLAIR abnormality~\cite{gliomamargins2025,flairectomy2022},
+so the target must be inferred from appearance. MS lesions, though typically
+well demarcated, are identified by abnormal signal within white matter, and
+texture features separate them from normal-appearing white
+matter~\cite{zhang2008mstexture}. This account interprets the intervention of
+\cref{subsec:e-ablation}; it is not independent evidence.
+
+\paragraph{Not every appearance-defined target gains much.} Glioma T2w and
+FLAIR show no Dice gain, and Breast gains only slightly:
+$+2.7$ Dice from T2w training and $+0.4$ from T1-CE. We have two hypotheses. First, the effect depends sharply on the
+training contrast (Glioma: $+12.7$ from T1c, $+6.0$ from T1n, $+1.1$ and
+$-1.3$ from T2w and FLAIR), so whether its texture transfers may matter as much as the
+target; with T2w training, real fill helps some labels and hurts others
+(\cref{tab:per-label-delta}). Second, Breast pools four cohorts from different
+trials, which may dilute a cohort-specific effect. On interface-bounded
+tasks, where texture adds little relative to the starting Dice, most of the
+gain arrives with the texture-free partition rungs (\cref{tab:ladder-full}),
+that is, from the wide range of region-to-region contrasts PALETTE-Aug
+samples.
+
+\paragraph{Limitations.} We assign each target to a group by its anatomy, not
+by a measured boundary statistic, and the grouping is ours. Target type is
+confounded with difficulty: all interface-bounded rows but one start above
+$63\%$ noise-fill Dice and every appearance-defined row below $42\%$. We
+therefore lead with the absolute Dice change; dividing by the starting Dice
+favors the appearance-defined rows, and as a share of the remaining error
+($100\%$ minus noise-fill Dice) Abdomen T2spir would rank first. The
+exception, Pelvis CT, starts at $34\%$ and gains $+5.9$, below the four
+large appearance-defined gains.
+The between-group comparison is descriptive: a permutation test on the
+seven per-task gains gives $p=0.2$. MS has eight test patients and Brain eight
+sessions of four subjects, the floor of a paired test, and Brain's
+session-level tests are optimistic. Spine was run on a separate
+pipeline and has no SRCSM arm. The cross-task test covers new patients, not new tasks; with the task as the
+unit, the advantage over SRCSM is not significant.
+We applied each competitor as its paper proposes and did not place SRCSM or
+SynthSeg inside the Auglab pipeline; PALETTE alone, without Auglab, already
+beats each of them (\cref{subsec:e-main}).
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Preserving real image texture helps most where the target is defined by
+tissue appearance (brain tumor, MS lesions: $+4.6$ and $+9.2$ Dice per task)
+rather than by an anatomical interface (at most $+3.5$), though not on every
+appearance-defined target. PALETTE-Aug, which preserves texture, needs no
+dense label map and was never tuned to a task, wins the eight-task benchmark
+overall. All code is public
+(link withheld for review), as are all datasets but the Spine training cohort.
+%%%%%%%%% ACKNOWLEDGEMENTS - if applicable, uncomment for camera-ready
+% \paragraph{Acknowledgements.} This work was enabled in part by support
+% provided by the Digital Research Alliance of Canada (alliancecan.ca) and
+% computational resources on the Killarney/Vulcan clusters.

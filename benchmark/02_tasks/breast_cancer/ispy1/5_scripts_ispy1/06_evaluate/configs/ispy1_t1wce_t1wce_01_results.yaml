@@ -1,0 +1,15 @@
+# ispy1 (167 I-SPY1 cases, MAMA-MIA expert masks) -- 't1wce' test item, ISPY2 T1WCE-trained models.
+# Natively unilateral sagittal 1.5T (4 bilateral-FOV cases lesion-side cropped) -- see
+# 02_nnunet/02_01_convert_test.py. Inline sig. vs ref = OURS train050_val000.
+title: "ispy1 (167 cases) t1wce -- ISPY2 T1WCE-trained models"
+metrics_dir: "${METRICS_ROOT}/ispy2_model/t1wce/t1wce"
+output_prefix: "01_results"
+sig_ref: "ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655"
+
+runs:
+  - ispy2_t1wce_baseline_20260905_163655
+  - ispy2_t1wce_auglab_default_20260905_163655
+  - ispy2_t1wce_synthseg_noEM_20260905_163655
+  - ispy2_t1wce_synthseg_EM_20260905_163655
+  - ispy2_t1wce_srcsm_20260905_163655_srcmatch
+  - ispy2_t1wce_auglabAug_v26_6_2_train050_val000_20260905_163655

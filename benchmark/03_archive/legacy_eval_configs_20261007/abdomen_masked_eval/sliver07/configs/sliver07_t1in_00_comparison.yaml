@@ -1,0 +1,20 @@
+# SLIVER07 — MR->CT generalization, chaos-t1in-trained models.
+# Same fixed 7-method order/run-id list as chaos's own chaos_t1in_03_results.yaml.
+# GT here is liver-only, so the per-organ report (via
+# 00_commun_scripts/00_03_evaluate/aggregate_per_organ_from_config.py) collapses
+# to a single "liver" column -- same information as the old hand-rolled
+# 06_02_aggregate_results.py, just produced through the shared per-organ
+# aggregator instead of a bespoke loader.
+title: "SLIVER07 — MR→CT Generalization Results (chaos-trained models)"
+metrics_dir: "${METRICS_ROOT}/chaos_model/t1in"
+output_dir: "${METRICS_ROOT}/chaos_model/t1in"
+output_prefix: "01_comparison"
+
+runs:
+  - chaos_t1in_baseline_20260614_153230
+  - chaos_t1in_auglab_default_20260611_120000
+  - chaos_t1in_synthseg_noEM_train100_val000_20260611_120000
+  - chaos_t1in_synthseg_EM_train100_val000_20260611_120000
+  - chaos_t1in_srcsm_20260710_011817
+  - chaos_t1in_auglabAug_v26_6_2_train050_val000_20260615_213615
+  - chaos_t1in_auglabAug_v26_6_2_train050_val100_20260616_112420

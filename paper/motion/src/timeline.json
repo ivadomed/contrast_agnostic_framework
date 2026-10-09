@@ -1,0 +1,101 @@
+{
+ "_doc": "Shared by src/Main.tsx (picture) and scripts/sound_design.py (soundtrack). 30 fps, 120 BPM: one beat = 15 frames; every scene length is a whole number of beats so cuts land on the beat.",
+ "fps": 30,
+ "bpm": 120,
+ "scenes": [
+  [
+   "mosaic",
+   150
+  ],
+  [
+   "problem",
+   285
+  ],
+  [
+   "transform",
+   255
+  ],
+  [
+   "gallery",
+   240
+  ],
+  [
+   "draws",
+   300
+  ],
+  [
+   "bench",
+   270
+  ],
+  [
+   "texture",
+   270
+  ],
+  [
+   "ablation",
+   240
+  ],
+  [
+   "end",
+   120
+  ]
+ ],
+ "mosaicTitle": 70,
+ "problem": {
+  "pass1": [
+   22,
+   70
+  ],
+  "pred": 70,
+  "badge": 92,
+  "row2": 95,
+  "move": [
+   100,
+   132
+  ],
+  "start2": 140,
+  "seg": 45,
+  "pass2": [
+   4,
+   22
+  ]
+ },
+ "transformSpeed": 2.3529,
+ "transformSteps": [
+  0,
+  90,
+  200,
+  310,
+  420
+ ],
+ "transformSweep": [
+  430,
+  500
+ ],
+ "gallery": {
+  "t0": 18,
+  "stagger": 6,
+  "scan": 14,
+  "period": 16,
+  "xf": 4
+ },
+ "draws": {
+  "start": 24,
+  "P0": 24,
+  "P1": 10,
+  "RAMP": 250,
+  "xf": 3,
+  "pass": 0.55,
+  "pred": [
+   0.55,
+   0.75
+  ]
+ },
+ "bars": {
+  "delay": 10,
+  "step": 7,
+  "star": 30
+ },
+ "bench": 8,
+ "ablation": 7
+}

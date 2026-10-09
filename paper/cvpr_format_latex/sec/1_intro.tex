@@ -1,0 +1,106 @@
+\section{Introduction}
+\label{sec:intro}
+
+Medical image segmentation models are often trained on one acquisition
+setting~\cite{guan2022dasurvey} and frequently applied to another: a different
+scanner, sequence, or imaging modality than the one seen during
+training~\cite{ghafoorian2017transfer,karani2018lifelong}. MRI contrast is a
+protocol choice, not a physical constant, so the same anatomy has different
+intensities across sequences~\cite{bitar2006pulsesequences}. A network trained only on
+T1-weighted brain images can fail outright on T2-weighted or FLAIR
+images~\cite{billot2023synthseg}. Acquiring and
+annotating training data for every contrast a model might encounter is not
+practical: manual segmentation is expensive, and clinical sites rarely share
+raw data across institutions~\cite{liu2021feddg,wang2020dofe}. The setting that matters for deployment is therefore single-source domain
+generalization: train on one labeled dataset in one contrast, then generalize
+to unseen contrasts and modalities without target-domain
+data~\cite{zhang2020bigaug,ouyang2022gin,su2023slaug,xu2021randconv}.
+
+The dominant single-source strategy is label-generative domain randomization,
+popularized by SynthSeg~\cite{billot2023synthseg}. SynthSeg does not use the
+real image at all: it builds each training image from a label map, filling
+every labeled structure with Gaussian noise of a randomly drawn mean and
+variance. The label map must be \emph{dense}, a voxel-wise parcellation of
+the whole image rather than the sparse annotation a segmentation dataset
+normally provides. The resulting images have arbitrary, unrealistic contrast,
+forcing the network to rely on shape and layout~\cite{billot2023synthseg}.
+This is effective, but carries two structural costs. First, it is
+\emph{label-driven}: the dense parcellation it needs is richer than the task's
+own annotation. SynthSeg trains on whole-brain parcellations with dozens of
+labeled structures~\cite{billot2023synthseg}, whereas an MS dataset such as
+Open-MS annotates only the lesions~\cite{lesjak2018openms}; obtaining the
+parcellation reintroduces the expensive labeling the method aims to avoid. Second, and less discussed, it
+\emph{does not preserve texture}: replacing every labeled region with
+piecewise Gaussian noise discards the real gradients, partial-volume
+boundaries, and unlabeled fine structure the acquired scan contains. Layout
+survives; texture does not.
+
+We ask when keeping texture, rather than discarding it, helps contrast
+robustness. Our central finding is that
+the answer depends on the \emph{task}: preserving real intensity structure
+helps most where the target is defined by tissue appearance, and much less
+where an anatomical interface separates it from its surroundings. Prior work shows that texture carries diagnostic signal in appearance-defined
+tasks: texture features separate MS lesions from normal-appearing white
+matter~\cite{zhang2008mstexture}, and diffuse glioma infiltrates beyond every
+margin visible on conventional MRI~\cite{gliomamargins2025,flairectomy2022}.
+
+\textbf{PALETTE-Aug}, our single-source augmentation, keeps this texture and
+needs no dense label map. PALETTE-Aug groups the foreground intensities of a
+scan into classes with 1-D $k$-means, splits each class into spatial
+sub-regions with a Voronoi partition, and applies a signed random affine remap
+to the \emph{real} intensities of each sub-region. Edges, gradients and partial-volume detail therefore survive inside each
+sub-region, because existing intensities are remapped rather than replaced by
+noise. Only the contrast between regions is randomized, and without a
+target: PALETTE-Aug can produce any contrast, including implausible ones such
+as inverted intensities, because it is not tied to a specific target contrast.
+An optional step also re-randomizes each labeled structure; it uses whatever
+labels exist, a dense label map or just the task's own segmentation labels.
+
+We then test when texture matters, with a controlled ablation in sixteen
+training settings. We keep PALETTE-Aug's partition and region target means and
+change only what fills each region: the region's own image content, affinely
+remapped so that its gradients and fine structure survive (texture kept), or
+Gaussian noise (texture removed). The four largest Dice gains are all on
+appearance-defined targets: brain tumor ($+12.7$ points from T1c training,
+$+6.0$ from T1n) and MS lesions ($+10.9$ from FLAIR, $+7.6$ from T1w), against
+at most $+5.9$ in any interface-bounded setting. Pooled per task, the swap adds
+$+9.2$ Dice on MS and $+4.6$ on brain tumor, against at most $+3.5$ on an
+interface-bounded task. The converse does not hold: breast lesions, also
+appearance-defined, gain only $+1.5$, and several appearance-defined settings
+show no gain, so we state the result in one direction only
+(\S\ref{subsec:e-ablation}). A
+segmentation-free gradient measurement confirms that the swap changes texture:
+noise fill keeps only the partition edges, and real fill recovers most of the
+source texture.
+
+We train one nnU-Net~\cite{isensee2021nnunet} configuration, varying only the
+epoch budget per dataset, and evaluate cross-contrast and cross-modality
+transfer on eight tasks: healthy brain, MS lesion, brain tumor,
+abdominal organ, mandible, breast lesion, spine and pelvis. We compare against
+nnU-Net with its default augmentation; the released SynthSeg (SynthSeg-noEM)
+and its expectation-maximization variant for cardiac
+MRI~\cite[\S5.4]{billot2023synthseg} (SynthSeg-EM), whose code was not
+released, so we re-implemented it; SRCSM~\cite{thaler2025semrandconv}; and the
+Auglab augmentation pipeline~\cite{molinier2026auglab}. PALETTE-Aug wins the benchmark
+overall: it has the best Dice on seven of the eight tasks and significantly beats
+every competitor on five of them. Pooling all tasks into one test, it is
+significantly better than each competitor on both Dice and boundary distance,
+though not on every task.
+
+In summary, we make the following contributions:
+\begin{itemize}
+    \item \textbf{When texture preservation matters, tested by intervention.}
+    Replacing noise fill with the real-intensity remap, with the partition fixed,
+    gives its largest gains on appearance-defined targets, though not on every
+    one. A segmentation-free gradient measurement
+    confirms that the swap changes texture.
+    \item \textbf{PALETTE-Aug}, a single-source contrast augmentation that
+    needs no dense label map, only the task's own labels. In every comparison
+    it runs as one added operator inside the Auglab pipeline; the ablation also
+    tests it alone.
+    \item \textbf{Breadth evidence.} Across cross-contrast and cross-modality
+    transfer on eight tasks and seventeen datasets, with one
+    configuration reused throughout, PALETTE-Aug wins the benchmark overall: it is best on seven tasks and
+    significantly beats every competitor on five; where it does not win, we
+    test whether the leader is truly ahead.
+\end{itemize}

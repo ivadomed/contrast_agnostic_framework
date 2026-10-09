@@ -1,7 +1,0 @@
-project_name_generator: mri-synthesis-3d
-project_name_segmenter: segmenter
-run_name: null
-save_dir: wandb
-
-log_model: false
-offline: false
