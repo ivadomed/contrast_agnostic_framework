@@ -105,8 +105,15 @@ def main():
                 zt = z - box[2].start; zbt = tuple(slice(s.start - b.start, s.stop - b.start) for s, b in zip(zb, box[:2]))
                 if not (0 <= zt < tgm.shape[2]) or min(zbt[0].start, zbt[1].start) < 0 or zbt[0].stop > tgm.shape[0] or zbt[1].stop > tgm.shape[1]:
                     same = False
-            if not same:
-                zt = int(np.argmax(tgm.sum((0, 1)))); zbt = zoom_box(tgm[:, :, zt], rng)
+            if not same:   # own grid: among the 5 fullest label slices x 6 random windows, keep the one with the most image content and label
+                best = None
+                for zc in np.argsort(tgm.sum((0, 1)))[::-1][:5]:
+                    for _ in range(6):
+                        cand = zoom_box(tgm[:, :, zc], rng); w = tr[box][:, :, zc][cand]
+                        sc = (w != 0).mean() + 2 * tgm[:, :, zc][cand].mean()
+                        if best is None or sc > best[0]:
+                            best = (sc, int(zc), cand)
+                _, zt, zbt = best
             show(axes[r, 0], tr[box][:, :, zt][zbt], None, title=f"{case}: {cell['train_lab']} (training contrast{'' if same else ', own grid'}){who}")
             axes[r, 0].contour((tgm[:, :, zt][zbt]).T.astype(float), levels=[0.5], colors=["#eb6834"], linewidths=0.8)
             for j, k in enumerate(ARMS):
