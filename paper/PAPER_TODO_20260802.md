@@ -1,5 +1,15 @@
 # Paper TODO — CURRENT STATUS (2026-10-08, rung-4 lblvor update IN PROGRESS). Everything below the next block is history.
 
+## Rung 4.5 FLAT fill launched (2026-10-08, Paul: noise removal or texture addition?)
+- Rung 4.5 = PALETTE with every region at its target mean + PALETTE's label step (no noise, no texture): 4.5->5 isolates
+  texture addition exactly; 4->4.5 = noise removal (+ the label-step difference: rung 4 refills labels with Voronoi noise
+  cells). Verified before launch (scripts/cluster/rung45_flat/verify_flatfill.py + slice PNGs).
+- Training: 13 settings x 3 folds on Vulcan (controllers queued), on-harmony x 3 on TamIA (one H100 node, ~34 h, then rsync
+  to Vulcan + scripts/cluster/rung45_flat/post_run.sh). Pancreas not included (not in the paper).
+- Analysis ready: paper/scripts/compute_flatfill_decomposition.py --metric dice|hd95 (paper's task-level test on the pairs
+  (4,4.5) and (4.5,5); self-check reproduces the current fill-swap numbers). Paper text/figure: TODO once numbers land
+  (likely a short paragraph in 4.3 + a 3-segment bar or a row pair in tab:dissociation; decide with Paul).
+
 ## Open items from Paul's section-4 review (2026-10-08)
 - LATENCY (TODO in 4_experiments.tex, "Training and evaluation"): report PALETTE's training cost (per-iteration GPU time of
   the transform, wall time per fold vs Auglab). The DualVal trainer (synthetic-validation pass) roughly doubles wall time
