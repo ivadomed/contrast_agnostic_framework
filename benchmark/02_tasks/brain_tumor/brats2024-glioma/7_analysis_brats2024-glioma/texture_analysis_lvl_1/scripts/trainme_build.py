@@ -51,7 +51,7 @@ def zscore(img):
 
 
 def patch_box(seg, size):
-    idx = np.argwhere(seg > 0); c = idx.mean(0).astype(int)
+    idx = np.argwhere(seg > 0); c = idx.mean(0).astype(int); size = np.minimum(size, seg.shape)   # a patch larger than the volume (pelvic MRI) -> whole axis
     lo = np.clip(c - np.array(size) // 2, 0, np.array(seg.shape) - np.array(size)); hi = lo + np.array(size)
     return tuple(slice(a, b) for a, b in zip(lo, hi))
 
