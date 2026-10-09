@@ -19,12 +19,12 @@ while read -r rid; do
   [ -n "${rid}" ] || continue
   tc="$(sed -E 's/^on-harmony_(T1w|T2w|dwi_ap)_.*/\1/' <<<"${rid}")"
   src="${TS}/${tc}/auglab/${rid}"; dst="${VS}/${tc}/auglab/${rid}"
-  n=$(ssh tamia.alliancecan.ca "ls ${src}/Dataset*/*/fold_{0,1,2}/checkpoint_{best,final}.pth 2>/dev/null | wc -l")
+  n=$(ssh -n tamia.alliancecan.ca "ls ${src}/Dataset*/*/fold_{0,1,2}/checkpoint_{best,final}.pth 2>/dev/null | wc -l")
   [ "$n" = 6 ] || { echo "[r45-onh] ${rid}: ${n}/6 checkpoints on TamIA -- training not finished, skip"; continue; }
   echo "[r45-onh] ${rid}: checkpoints complete -> ${dst}"
   [ "${DRY}" = 1 ] && continue
   mkdir -p "${dst}"
-  rsync -a "tamia.alliancecan.ca:${src}/" "${dst}/"
+  rsync -a "tamia.alliancecan.ca:${src}/" "${dst}/" < /dev/null
   m=$(ls "${dst}"/Dataset*/*/fold_{0,1,2}/checkpoint_{best,final}.pth 2>/dev/null | wc -l)
   [ "$m" = 6 ] || { echo "[r45-onh] ${rid}: only ${m}/6 checkpoints after rsync -- NOT queueing"; continue; }
   name="r45post_${rid}"; name="${name:0:120}"
